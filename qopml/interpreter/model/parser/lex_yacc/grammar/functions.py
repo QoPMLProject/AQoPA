@@ -5,27 +5,22 @@ Created on 22-04-2013
 '''
 
 from qopml.interpreter.model.parser.lex_yacc.parser import LexYaccParserExtension
-from qopml.interpreter.model.parser.lex_yacc.builder import LexYaccBuilder
 from qopml.interpreter.model import Function
 import sys
 
 
-class Builder(LexYaccBuilder):
+class Builder():
     """
     Builder for creating function objects
     """
     
-    def build(self, cls, token):
+    def build_function(self, token):
         """
             FUN IDENTIFIER function_params SEMICOLON 
             FUN IDENTIFIER function_params function_comment SEMICOLON
             FUN IDENTIFIER function_params function_qopml_params SEMICOLON
             FUN IDENTIFIER function_params function_qopml_params function_comment SEMICOLON
         """
-                
-        if cls != Function:
-            return None
-        
         f = Function(token[2], params=token[3])
         
         if len(token) == 6:
@@ -51,6 +46,8 @@ class ParserExtension(LexYaccParserExtension):
         
         self.open_blocks_cnt = 0
         self.fun_left_brackets_cnt = 0
+        
+        self.builder = Builder()
 
     ##########################################
     #           RESERVED WORDS
@@ -122,7 +119,7 @@ class ParserExtension(LexYaccParserExtension):
             | FUN IDENTIFIER function_params function_qopml_params SEMICOLON
             | FUN IDENTIFIER function_params function_qopml_params function_comment SEMICOLON
         """
-        self.parser.store.functions.append(self.parser.builder.build(Function, t))
+        self.parser.store.functions.append(self.builder.build_function(t))
     
     def function_comment(self, t):
         """

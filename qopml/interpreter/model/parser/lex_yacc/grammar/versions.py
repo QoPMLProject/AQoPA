@@ -5,30 +5,17 @@ Created on 22-04-2013
 '''
 
 from qopml.interpreter.model.parser.lex_yacc.parser import LexYaccParserExtension
-from qopml.interpreter.model.parser.lex_yacc.builder import LexYaccBuilder
-from qopml.interpreter.model import Function, Channel
 
 
-class Builder(LexYaccBuilder):
+class Builder():
     """
     Builder for creating channel objects
     """
     
-    def build(self, cls, token):
+    def build_version(self, token):
         """
-        channel : CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON
         """
-        if cls != Channel:
-            return []
-        
-        channels = []
-        for name in token[2]:
-            buffer_size = token[4]
-            if isinstance(buffer_size, str) and buffer_size == "*":
-                buffer_size = -1
-            channels.append(Channel(name, buffer_size))
-        return channels
-
+        pass
 
 class ParserExtension(LexYaccParserExtension):
     """
@@ -37,71 +24,158 @@ class ParserExtension(LexYaccParserExtension):
     
     def __init__(self):
         LexYaccParserExtension.__init__(self)
+
+        self.open_blocks_cnt = 0
+        
+        self.builder = Builder()
         
     ##########################################
     #           RESERVED WORDS
     ##########################################
     
-    def word_channels_specification(self, t):
-        t.lexer.push_state('channels')
+    def word_versions_specification(self, t):
+        t.lexer.push_state('versions')
         return t
     
     ##########################################
     #                TOKENS
     ##########################################
-
+    
+    def token_block_open(self, t):
+        r'{'
+        self.open_blocks_cnt += 1
+        return t
+    
     def token_block_close(self, t):
         r'}'
-        
-        t.lexer.pop_state()
+        self.open_blocks_cnt -= 1
+        if self.open_blocks_cnt == 0:
+            t.lexer.pop_state()
         return t
     
     ##########################################
     #                RULES
     ##########################################
     
-    def channels_specification(self, t):
+    def versions_specification(self, t):
         """
-        specification : CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE
-        """
-        pass
-    
-    
-    def channels_list(self, t):
-        """
-        channels_list : channel 
-                    | channels_list channel
+        specification : VERSIONS_SPECIFICATION BLOCK_OPEN versions_list BLOCK_CLOSE
         """
         pass
     
-    def channel(self, t):
-        """
-        channel : CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON
-        """
-        for ch in self.parser.builder.build(Channel, t):
-            self.parser.store.channels.append(ch)
     
-    def channel_buffor(self, t):
+    def versions_list(self, t):
         """
-        channel_buffor : STAR
-            | INTEGER
+        versions_list : version 
+                    | versions_list version
         """
-        t[0] = t[1]
+        pass
+    
+    def version(self, t):
+        """
+        version : VERSION INTEGER BLOCK_OPEN version_run_hosts BLOCK_CLOSE
+        """
+        pass
+    
+    def version_run_hosts(self, t):
+        """
+        version_run_hosts : version_run_host
+                        | version_run_hosts version_run_host
+        """
+        pass
+    
+    def version_run_host(self, t):
+        """
+        version_run_host : RUN HOST IDENTIFIER version_channels BLOCK_OPEN BLOCK_CLOSE
+                        | RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN BLOCK_CLOSE
+                        | RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN BLOCK_CLOSE
+                        | RUN HOST IDENTIFIER version_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
+                        | RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN version_run_processes BLOCK_CLOSE
+                        | RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
+        """
+        pass
+    
+    def version_repetition(self, t):
+        """
+        version_repetition : BLOCK_OPEN INTEGER BLOCK_CLOSE
+        """
+        pass
+    
+    def version_channels(self, t):
+        """
+        version_channels : LPARAN RPARAN
+                        | LPARAN STAR RPARAN
+                        | LPARAN identifiers_list RPARAN
+        """
+        pass
+    
+    def version_repetition_channels(self, t):
+        """
+        version_repetition_channels : SQ_LPARAN qualified_identifiers_list SQ_RPARAN
+        """
+        pass
+    
+    def version_run_processes(self, t):
+        """
+        version_run_processes : version_run_process
+                            | version_run_processes version_run_process
+        """
+        pass
+    
+    def version_run_process(self, t):
+        """
+        version_run_process : version_run_process_base
+                        | version_run_process_base ARROW_RIGHT version_run_process_follower
+        """
+        pass
+    
+    def version_run_process_base(self, t):
+        """
+        version_run_process_base : RUN IDENTIFIER version_subprocesses_list
+                                | RUN IDENTIFIER version_subprocesses_list version_repetition
+                                | RUN IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels
+        """
+        pass
+    
+    def version_run_process_follower(self, t):
+        """
+        version_run_process_follower : RUN IDENTIFIER version_subprocesses_list
+        """
+        pass
+    
+    def version_subprocesses_list(self, t):
+        """
+        version_subprocesses_list : LPARAN RPARAN
+                        | LPARAN STAR RPARAN
+                        | LPARAN identifiers_list RPARAN
+        """
     
     def _extend(self):
         
-        self.parser.add_state('channels', 'inclusive')
-
-        self.parser.add_reserved_word('channels', 'CHANNELS_SPECIFICATION', func=self.word_channels_specification)
-        self.parser.add_reserved_word('channel', 'CHANNEL', state='channels')
-
-        self.parser.add_token('BLOCK_CLOSE', func=self.token_block_close, states=['channels'])
+        self.parser.add_state('versions', 'inclusive')
         
+        self.parser.add_reserved_word('versions', 'VERSIONS_SPECIFICATION', func=self.word_versions_specification)
+        self.parser.add_reserved_word('version', 'VERSION', state='versions')
+        self.parser.add_reserved_word('run', 'RUN', state='versions')
+        self.parser.add_reserved_word('host', 'HOST', state='versions')
 
-        self.parser.add_rule(self.channels_specification)
-        self.parser.add_rule(self.channels_list)
-        self.parser.add_rule(self.channel)
-        self.parser.add_rule(self.channel_buffor)
+        self.parser.add_token('BLOCK_OPEN', func=self.token_block_open, states=['versions'])
+        self.parser.add_token('BLOCK_CLOSE', func=self.token_block_close, states=['versions'])
+        self.parser.add_token('ARROW_RIGHT', r'\-\>', states=['versions'])
+
+        self.parser.add_rule(self.versions_specification)
+        self.parser.add_rule(self.versions_list)
+        self.parser.add_rule(self.version)
+        self.parser.add_rule(self.version_run_hosts)
+        self.parser.add_rule(self.version_run_host)
+        self.parser.add_rule(self.version_repetition)
+        self.parser.add_rule(self.version_channels)
+        self.parser.add_rule(self.version_repetition_channels)
+        self.parser.add_rule(self.version_run_processes)
+        self.parser.add_rule(self.version_run_process)
+        self.parser.add_rule(self.version_run_process_base)
+        self.parser.add_rule(self.version_run_process_follower)
+        self.parser.add_rule(self.version_subprocesses_list)
         
 
     

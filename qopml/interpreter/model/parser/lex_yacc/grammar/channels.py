@@ -5,22 +5,18 @@ Created on 22-04-2013
 '''
 
 from qopml.interpreter.model.parser.lex_yacc.parser import LexYaccParserExtension
-from qopml.interpreter.model.parser.lex_yacc.builder import LexYaccBuilder
-from qopml.interpreter.model import Function, Channel
+from qopml.interpreter.model import Channel
 
 
-class Builder(LexYaccBuilder):
+class Builder():
     """
     Builder for creating channel objects
     """
     
-    def build(self, cls, token):
+    def build_channels(self, token):
         """
         channel : CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON
         """
-        if cls != Channel:
-            return []
-        
         channels = []
         for name in token[2]:
             buffer_size = token[4]
@@ -37,6 +33,8 @@ class ParserExtension(LexYaccParserExtension):
     
     def __init__(self):
         LexYaccParserExtension.__init__(self)
+        
+        self.builder = Builder()
         
     ##########################################
     #           RESERVED WORDS
@@ -78,7 +76,7 @@ class ParserExtension(LexYaccParserExtension):
         """
         channel : CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON
         """
-        for ch in self.parser.builder.build(Channel, t):
+        for ch in self.builder.build_channels(t):
             self.parser.store.channels.append(ch)
     
     def channel_buffor(self, t):

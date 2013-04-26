@@ -3,7 +3,6 @@ Created by PLY version 3.4 (http://www.dabeaz.com/ply)
 Unused terminals:
 
     FLOAT
-    QUALIFIED_IDENTIFIER
 
 Grammar
 
@@ -14,811 +13,926 @@ Rule 3     expression_conditional -> BOOL
 Rule 4     expression_tuple -> LPARAN RPARAN
 Rule 5     expression_tuple -> LPARAN expression_function_arguments RPARAN
 Rule 6     expression_tuple_element -> IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN
-Rule 7     specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE
-Rule 8     expression_function_arguments -> expression_simple
-Rule 9     expression_function_arguments -> expression_function_arguments COMMA expression_simple
-Rule 10    specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE
-Rule 11    equations_list -> equation
-Rule 12    equations_list -> equations_list equation
-Rule 13    expression_call_function -> IDENTIFIER LPARAN RPARAN
-Rule 14    expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN
-Rule 15    expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
-Rule 16    expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
-Rule 17    channels_list -> channel
-Rule 18    channels_list -> channels_list channel
-Rule 19    model -> specification
-Rule 20    model -> model specification
-Rule 21    equation -> EQUATION equation_complex_expression EQUAL equation_simple_expression SEMICOLON
-Rule 22    channel -> CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON
-Rule 23    identifiers_list -> IDENTIFIER
-Rule 24    identifiers_list -> identifiers_list COMMA IDENTIFIER
-Rule 25    expression_function_qop_arguments -> TEXT
-Rule 26    expression_function_qop_arguments -> expression_function_qop_arguments COMMA TEXT
-Rule 27    equation_complex_expression -> IDENTIFIER LPARAN equation_function_arguments RPARAN
-Rule 28    equation_complex_expression -> IDENTIFIER LPARAN RPARAN
-Rule 29    channel_buffor -> STAR
-Rule 30    channel_buffor -> INTEGER
-Rule 31    expression_simple -> expression_call_function
-Rule 32    expression_simple -> expression_tuple_element
-Rule 33    expression_simple -> expression_tuple
-Rule 34    expression_simple -> IDENTIFIER
-Rule 35    expression_simple -> BOOL
-Rule 36    equation_simple_expression -> IDENTIFIER
-Rule 37    equation_simple_expression -> BOOL
-Rule 38    expression_comaprison -> expression_simple EQUAL EQUAL expression_simple
-Rule 39    equation_function_arguments -> equation_expression
-Rule 40    equation_function_arguments -> equation_function_arguments COMMA equation_expression
-Rule 41    specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE
-Rule 42    equation_expression -> equation_complex_expression
-Rule 43    equation_expression -> equation_simple_expression
-Rule 44    functions_list -> function
-Rule 45    functions_list -> functions_list function
-Rule 46    function -> FUN IDENTIFIER function_params SEMICOLON
-Rule 47    function -> FUN IDENTIFIER function_params function_comment SEMICOLON
-Rule 48    function -> FUN IDENTIFIER function_params function_qopml_params SEMICOLON
-Rule 49    function -> FUN IDENTIFIER function_params function_qopml_params function_comment SEMICOLON
-Rule 50    function_comment -> LPARAN COMMENT RPARAN
-Rule 51    function_params -> LPARAN RPARAN
-Rule 52    function_params -> LPARAN identifiers_list RPARAN
-Rule 53    function_qopml_params -> SQ_LPARAN function_qopml_params_list SQ_RPARAN
-Rule 54    function_qopml_params_list -> function_qop_param
-Rule 55    function_qopml_params_list -> function_qopml_params_list function_qop_param
-Rule 56    function_qop_param -> IDENTIFIER COLON identifiers_list
+Rule 7     specification -> VERSIONS_SPECIFICATION BLOCK_OPEN versions_list BLOCK_CLOSE
+Rule 8     specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE
+Rule 9     specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE
+Rule 10    expression_function_arguments -> expression_simple
+Rule 11    expression_function_arguments -> expression_function_arguments COMMA expression_simple
+Rule 12    versions_list -> version
+Rule 13    versions_list -> versions_list version
+Rule 14    channels_list -> channel
+Rule 15    channels_list -> channels_list channel
+Rule 16    equations_list -> equation
+Rule 17    equations_list -> equations_list equation
+Rule 18    expression_call_function -> IDENTIFIER LPARAN RPARAN
+Rule 19    expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN
+Rule 20    expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+Rule 21    expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+Rule 22    model -> specification
+Rule 23    model -> model specification
+Rule 24    version -> VERSION INTEGER BLOCK_OPEN version_run_hosts BLOCK_CLOSE
+Rule 25    channel -> CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON
+Rule 26    equation -> EQUATION equation_complex_expression EQUAL equation_simple_expression SEMICOLON
+Rule 27    identifiers_list -> IDENTIFIER
+Rule 28    identifiers_list -> identifiers_list COMMA IDENTIFIER
+Rule 29    expression_function_qop_arguments -> TEXT
+Rule 30    expression_function_qop_arguments -> expression_function_qop_arguments COMMA TEXT
+Rule 31    version_run_hosts -> version_run_host
+Rule 32    version_run_hosts -> version_run_hosts version_run_host
+Rule 33    equation_complex_expression -> IDENTIFIER LPARAN equation_function_arguments RPARAN
+Rule 34    equation_complex_expression -> IDENTIFIER LPARAN RPARAN
+Rule 35    channel_buffor -> STAR
+Rule 36    channel_buffor -> INTEGER
+Rule 37    expression_simple -> expression_call_function
+Rule 38    expression_simple -> expression_tuple_element
+Rule 39    expression_simple -> expression_tuple
+Rule 40    expression_simple -> IDENTIFIER
+Rule 41    expression_simple -> BOOL
+Rule 42    version_run_host -> RUN HOST IDENTIFIER version_channels BLOCK_OPEN BLOCK_CLOSE
+Rule 43    version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN BLOCK_CLOSE
+Rule 44    version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN BLOCK_CLOSE
+Rule 45    version_run_host -> RUN HOST IDENTIFIER version_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
+Rule 46    version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN version_run_processes BLOCK_CLOSE
+Rule 47    version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
+Rule 48    equation_simple_expression -> IDENTIFIER
+Rule 49    equation_simple_expression -> BOOL
+Rule 50    qualified_identifiers_list -> QUALIFIED_IDENTIFIER
+Rule 51    qualified_identifiers_list -> qualified_identifiers_list COMMA QUALIFIED_IDENTIFIER
+Rule 52    expression_comaprison -> expression_simple EQUAL EQUAL expression_simple
+Rule 53    equation_function_arguments -> equation_expression
+Rule 54    equation_function_arguments -> equation_function_arguments COMMA equation_expression
+Rule 55    version_repetition -> BLOCK_OPEN INTEGER BLOCK_CLOSE
+Rule 56    specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE
+Rule 57    version_channels -> LPARAN RPARAN
+Rule 58    version_channels -> LPARAN STAR RPARAN
+Rule 59    version_channels -> LPARAN identifiers_list RPARAN
+Rule 60    functions_list -> function
+Rule 61    functions_list -> functions_list function
+Rule 62    equation_expression -> equation_complex_expression
+Rule 63    equation_expression -> equation_simple_expression
+Rule 64    version_repetition_channels -> SQ_LPARAN qualified_identifiers_list SQ_RPARAN
+Rule 65    function -> FUN IDENTIFIER function_params SEMICOLON
+Rule 66    function -> FUN IDENTIFIER function_params function_comment SEMICOLON
+Rule 67    function -> FUN IDENTIFIER function_params function_qopml_params SEMICOLON
+Rule 68    function -> FUN IDENTIFIER function_params function_qopml_params function_comment SEMICOLON
+Rule 69    version_run_processes -> version_run_process
+Rule 70    version_run_processes -> version_run_processes version_run_process
+Rule 71    function_comment -> LPARAN COMMENT RPARAN
+Rule 72    version_run_process -> version_run_process_base
+Rule 73    version_run_process -> version_run_process_base ARROW_RIGHT version_run_process_follower
+Rule 74    function_params -> LPARAN RPARAN
+Rule 75    function_params -> LPARAN identifiers_list RPARAN
+Rule 76    version_run_process_base -> RUN IDENTIFIER version_subprocesses_list
+Rule 77    version_run_process_base -> RUN IDENTIFIER version_subprocesses_list version_repetition
+Rule 78    version_run_process_base -> RUN IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels
+Rule 79    version_run_process_follower -> RUN IDENTIFIER version_subprocesses_list
+Rule 80    function_qopml_params -> SQ_LPARAN function_qopml_params_list SQ_RPARAN
+Rule 81    version_subprocesses_list -> LPARAN RPARAN
+Rule 82    version_subprocesses_list -> LPARAN STAR RPARAN
+Rule 83    version_subprocesses_list -> LPARAN identifiers_list RPARAN
+Rule 84    function_qopml_params_list -> function_qop_param
+Rule 85    function_qopml_params_list -> function_qopml_params_list function_qop_param
+Rule 86    function_qop_param -> IDENTIFIER COLON identifiers_list
 
 Terminals, with rules where they appear
 
-BLOCK_CLOSE          : 7 10 41
-BLOCK_OPEN           : 7 10 41
-BOOL                 : 3 35 37
-CHANNEL              : 22
-CHANNELS_SPECIFICATION : 10
-COLON                : 56
-COMMA                : 9 24 26 40
-COMMENT              : 50
-EQUAL                : 21 38 38
-EQUATION             : 21
-EQUATIONS_SPECIFICATION : 7
+ARROW_RIGHT          : 73
+BLOCK_CLOSE          : 7 8 9 24 42 43 44 45 46 47 55 56
+BLOCK_OPEN           : 7 8 9 24 42 43 44 45 46 47 55 56
+BOOL                 : 3 41 49
+CHANNEL              : 25
+CHANNELS_SPECIFICATION : 8
+COLON                : 86
+COMMA                : 11 28 30 51 54
+COMMENT              : 71
+EQUAL                : 26 52 52
+EQUATION             : 26
+EQUATIONS_SPECIFICATION : 9
 FLOAT                : 
-FUN                  : 46 47 48 49
-FUNCTIONS_SPECIFICATION : 41
-IDENTIFIER           : 6 13 14 15 16 23 24 27 28 34 36 46 47 48 49 56
-INTEGER              : 6 30
-LPARAN               : 4 5 13 14 15 16 22 27 28 50 51 52
-QUALIFIED_IDENTIFIER : 
-RPARAN               : 4 5 13 14 15 16 22 27 28 50 51 52
-SEMICOLON            : 21 22 46 47 48 49
-SQ_LPARAN            : 6 15 16 53
-SQ_RPARAN            : 6 15 16 53
-STAR                 : 29
-TEXT                 : 25 26
+FUN                  : 65 66 67 68
+FUNCTIONS_SPECIFICATION : 56
+HOST                 : 42 43 44 45 46 47
+IDENTIFIER           : 6 18 19 20 21 27 28 33 34 40 42 43 44 45 46 47 48 65 66 67 68 76 77 78 79 86
+INTEGER              : 6 24 36 55
+LPARAN               : 4 5 18 19 20 21 25 33 34 57 58 59 71 74 75 81 82 83
+QUALIFIED_IDENTIFIER : 50 51
+RPARAN               : 4 5 18 19 20 21 25 33 34 57 58 59 71 74 75 81 82 83
+RUN                  : 42 43 44 45 46 47 76 77 78 79
+SEMICOLON            : 25 26 65 66 67 68
+SQ_LPARAN            : 6 20 21 64 80
+SQ_RPARAN            : 6 20 21 64 80
+STAR                 : 35 58 82
+TEXT                 : 29 30
+VERSION              : 24
+VERSIONS_SPECIFICATION : 7
 error                : 
 
 Nonterminals, with rules where they appear
 
-channel              : 17 18
-channel_buffor       : 22
-channels_list        : 10 18
-equation             : 11 12
-equation_complex_expression : 21 42
-equation_expression  : 39 40
-equation_function_arguments : 27 40
-equation_simple_expression : 21 43
-equations_list       : 7 12
-expression_call_function : 31
+channel              : 14 15
+channel_buffor       : 25
+channels_list        : 8 15
+equation             : 16 17
+equation_complex_expression : 26 62
+equation_expression  : 53 54
+equation_function_arguments : 33 54
+equation_simple_expression : 26 63
+equations_list       : 9 17
+expression_call_function : 37
 expression_comaprison : 2
 expression_conditional : 
-expression_function_arguments : 1 5 9 14 16
-expression_function_qop_arguments : 15 16 26
-expression_simple    : 8 9 38 38
-expression_tuple     : 33
-expression_tuple_element : 32
-function             : 44 45
-function_comment     : 47 49
-function_params      : 46 47 48 49
-function_qop_param   : 54 55
-function_qopml_params : 48 49
-function_qopml_params_list : 53 55
-functions_list       : 41 45
-identifiers_list     : 22 24 52 56
-model                : 20 0
-specification        : 19 20
+expression_function_arguments : 1 5 11 19 21
+expression_function_qop_arguments : 20 21 30
+expression_simple    : 10 11 52 52
+expression_tuple     : 39
+expression_tuple_element : 38
+function             : 60 61
+function_comment     : 66 68
+function_params      : 65 66 67 68
+function_qop_param   : 84 85
+function_qopml_params : 67 68
+function_qopml_params_list : 80 85
+functions_list       : 56 61
+identifiers_list     : 25 28 59 75 83 86
+model                : 23 0
+qualified_identifiers_list : 51 64
+specification        : 22 23
+version              : 12 13
+version_channels     : 42 43 44 45 46 47
+version_repetition   : 43 44 46 47 77 78
+version_repetition_channels : 44 47 78
+version_run_host     : 31 32
+version_run_hosts    : 24 32
+version_run_process  : 69 70
+version_run_process_base : 72 73
+version_run_process_follower : 73
+version_run_processes : 45 46 47 70
+version_subprocesses_list : 76 77 78 79
+versions_list        : 7 13
 
 Parsing method: LALR
 
 state 0
 
     (0) S' -> . model
-    (19) model -> . specification
-    (20) model -> . model specification
+    (22) model -> . specification
+    (23) model -> . model specification
     (1) specification -> . expression_function_arguments
-    (7) specification -> . EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE
-    (10) specification -> . CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE
-    (41) specification -> . FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE
-    (8) expression_function_arguments -> . expression_simple
-    (9) expression_function_arguments -> . expression_function_arguments COMMA expression_simple
-    (31) expression_simple -> . expression_call_function
-    (32) expression_simple -> . expression_tuple_element
-    (33) expression_simple -> . expression_tuple
-    (34) expression_simple -> . IDENTIFIER
-    (35) expression_simple -> . BOOL
-    (13) expression_call_function -> . IDENTIFIER LPARAN RPARAN
-    (14) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN
-    (15) expression_call_function -> . IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
-    (16) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (7) specification -> . VERSIONS_SPECIFICATION BLOCK_OPEN versions_list BLOCK_CLOSE
+    (8) specification -> . CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE
+    (9) specification -> . EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE
+    (56) specification -> . FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE
+    (10) expression_function_arguments -> . expression_simple
+    (11) expression_function_arguments -> . expression_function_arguments COMMA expression_simple
+    (37) expression_simple -> . expression_call_function
+    (38) expression_simple -> . expression_tuple_element
+    (39) expression_simple -> . expression_tuple
+    (40) expression_simple -> . IDENTIFIER
+    (41) expression_simple -> . BOOL
+    (18) expression_call_function -> . IDENTIFIER LPARAN RPARAN
+    (19) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN
+    (20) expression_call_function -> . IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (21) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
     (6) expression_tuple_element -> . IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN
     (4) expression_tuple -> . LPARAN RPARAN
     (5) expression_tuple -> . LPARAN expression_function_arguments RPARAN
 
-    EQUATIONS_SPECIFICATION shift and go to state 1
+    VERSIONS_SPECIFICATION shift and go to state 7
     CHANNELS_SPECIFICATION shift and go to state 5
+    EQUATIONS_SPECIFICATION shift and go to state 1
     FUNCTIONS_SPECIFICATION shift and go to state 3
     IDENTIFIER      shift and go to state 6
-    BOOL            shift and go to state 11
-    LPARAN          shift and go to state 9
+    BOOL            shift and go to state 12
+    LPARAN          shift and go to state 10
 
-    expression_tuple_element       shift and go to state 8
-    expression_call_function       shift and go to state 10
+    expression_tuple_element       shift and go to state 9
+    expression_call_function       shift and go to state 11
     specification                  shift and go to state 4
     expression_tuple               shift and go to state 2
-    expression_function_arguments  shift and go to state 12
-    model                          shift and go to state 13
-    expression_simple              shift and go to state 7
+    expression_function_arguments  shift and go to state 13
+    model                          shift and go to state 14
+    expression_simple              shift and go to state 8
 
 state 1
 
-    (7) specification -> EQUATIONS_SPECIFICATION . BLOCK_OPEN equations_list BLOCK_CLOSE
-
-    BLOCK_OPEN      shift and go to state 14
-
-
-state 2
-
-    (33) expression_simple -> expression_tuple .
-
-    COMMA           reduce using rule 33 (expression_simple -> expression_tuple .)
-    EQUATIONS_SPECIFICATION reduce using rule 33 (expression_simple -> expression_tuple .)
-    CHANNELS_SPECIFICATION reduce using rule 33 (expression_simple -> expression_tuple .)
-    FUNCTIONS_SPECIFICATION reduce using rule 33 (expression_simple -> expression_tuple .)
-    IDENTIFIER      reduce using rule 33 (expression_simple -> expression_tuple .)
-    BOOL            reduce using rule 33 (expression_simple -> expression_tuple .)
-    LPARAN          reduce using rule 33 (expression_simple -> expression_tuple .)
-    $end            reduce using rule 33 (expression_simple -> expression_tuple .)
-    RPARAN          reduce using rule 33 (expression_simple -> expression_tuple .)
-
-
-state 3
-
-    (41) specification -> FUNCTIONS_SPECIFICATION . BLOCK_OPEN functions_list BLOCK_CLOSE
+    (9) specification -> EQUATIONS_SPECIFICATION . BLOCK_OPEN equations_list BLOCK_CLOSE
 
     BLOCK_OPEN      shift and go to state 15
 
 
-state 4
+state 2
 
-    (19) model -> specification .
+    (39) expression_simple -> expression_tuple .
 
-    EQUATIONS_SPECIFICATION reduce using rule 19 (model -> specification .)
-    CHANNELS_SPECIFICATION reduce using rule 19 (model -> specification .)
-    FUNCTIONS_SPECIFICATION reduce using rule 19 (model -> specification .)
-    IDENTIFIER      reduce using rule 19 (model -> specification .)
-    BOOL            reduce using rule 19 (model -> specification .)
-    LPARAN          reduce using rule 19 (model -> specification .)
-    $end            reduce using rule 19 (model -> specification .)
+    COMMA           reduce using rule 39 (expression_simple -> expression_tuple .)
+    VERSIONS_SPECIFICATION reduce using rule 39 (expression_simple -> expression_tuple .)
+    CHANNELS_SPECIFICATION reduce using rule 39 (expression_simple -> expression_tuple .)
+    EQUATIONS_SPECIFICATION reduce using rule 39 (expression_simple -> expression_tuple .)
+    FUNCTIONS_SPECIFICATION reduce using rule 39 (expression_simple -> expression_tuple .)
+    IDENTIFIER      reduce using rule 39 (expression_simple -> expression_tuple .)
+    BOOL            reduce using rule 39 (expression_simple -> expression_tuple .)
+    LPARAN          reduce using rule 39 (expression_simple -> expression_tuple .)
+    $end            reduce using rule 39 (expression_simple -> expression_tuple .)
+    RPARAN          reduce using rule 39 (expression_simple -> expression_tuple .)
 
 
-state 5
+state 3
 
-    (10) specification -> CHANNELS_SPECIFICATION . BLOCK_OPEN channels_list BLOCK_CLOSE
+    (56) specification -> FUNCTIONS_SPECIFICATION . BLOCK_OPEN functions_list BLOCK_CLOSE
 
     BLOCK_OPEN      shift and go to state 16
 
 
+state 4
+
+    (22) model -> specification .
+
+    VERSIONS_SPECIFICATION reduce using rule 22 (model -> specification .)
+    CHANNELS_SPECIFICATION reduce using rule 22 (model -> specification .)
+    EQUATIONS_SPECIFICATION reduce using rule 22 (model -> specification .)
+    FUNCTIONS_SPECIFICATION reduce using rule 22 (model -> specification .)
+    IDENTIFIER      reduce using rule 22 (model -> specification .)
+    BOOL            reduce using rule 22 (model -> specification .)
+    LPARAN          reduce using rule 22 (model -> specification .)
+    $end            reduce using rule 22 (model -> specification .)
+
+
+state 5
+
+    (8) specification -> CHANNELS_SPECIFICATION . BLOCK_OPEN channels_list BLOCK_CLOSE
+
+    BLOCK_OPEN      shift and go to state 17
+
+
 state 6
 
-    (34) expression_simple -> IDENTIFIER .
-    (13) expression_call_function -> IDENTIFIER . LPARAN RPARAN
-    (14) expression_call_function -> IDENTIFIER . LPARAN expression_function_arguments RPARAN
-    (15) expression_call_function -> IDENTIFIER . LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
-    (16) expression_call_function -> IDENTIFIER . LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (40) expression_simple -> IDENTIFIER .
+    (18) expression_call_function -> IDENTIFIER . LPARAN RPARAN
+    (19) expression_call_function -> IDENTIFIER . LPARAN expression_function_arguments RPARAN
+    (20) expression_call_function -> IDENTIFIER . LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (21) expression_call_function -> IDENTIFIER . LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
     (6) expression_tuple_element -> IDENTIFIER . SQ_LPARAN INTEGER SQ_RPARAN
 
   ! shift/reduce conflict for LPARAN resolved as shift
-    COMMA           reduce using rule 34 (expression_simple -> IDENTIFIER .)
-    EQUATIONS_SPECIFICATION reduce using rule 34 (expression_simple -> IDENTIFIER .)
-    CHANNELS_SPECIFICATION reduce using rule 34 (expression_simple -> IDENTIFIER .)
-    FUNCTIONS_SPECIFICATION reduce using rule 34 (expression_simple -> IDENTIFIER .)
-    IDENTIFIER      reduce using rule 34 (expression_simple -> IDENTIFIER .)
-    BOOL            reduce using rule 34 (expression_simple -> IDENTIFIER .)
-    $end            reduce using rule 34 (expression_simple -> IDENTIFIER .)
-    RPARAN          reduce using rule 34 (expression_simple -> IDENTIFIER .)
-    LPARAN          shift and go to state 17
-    SQ_LPARAN       shift and go to state 18
+    COMMA           reduce using rule 40 (expression_simple -> IDENTIFIER .)
+    VERSIONS_SPECIFICATION reduce using rule 40 (expression_simple -> IDENTIFIER .)
+    CHANNELS_SPECIFICATION reduce using rule 40 (expression_simple -> IDENTIFIER .)
+    EQUATIONS_SPECIFICATION reduce using rule 40 (expression_simple -> IDENTIFIER .)
+    FUNCTIONS_SPECIFICATION reduce using rule 40 (expression_simple -> IDENTIFIER .)
+    IDENTIFIER      reduce using rule 40 (expression_simple -> IDENTIFIER .)
+    BOOL            reduce using rule 40 (expression_simple -> IDENTIFIER .)
+    $end            reduce using rule 40 (expression_simple -> IDENTIFIER .)
+    RPARAN          reduce using rule 40 (expression_simple -> IDENTIFIER .)
+    LPARAN          shift and go to state 18
+    SQ_LPARAN       shift and go to state 19
 
-  ! LPARAN          [ reduce using rule 34 (expression_simple -> IDENTIFIER .) ]
+  ! LPARAN          [ reduce using rule 40 (expression_simple -> IDENTIFIER .) ]
 
 
 state 7
 
-    (8) expression_function_arguments -> expression_simple .
+    (7) specification -> VERSIONS_SPECIFICATION . BLOCK_OPEN versions_list BLOCK_CLOSE
 
-    COMMA           reduce using rule 8 (expression_function_arguments -> expression_simple .)
-    EQUATIONS_SPECIFICATION reduce using rule 8 (expression_function_arguments -> expression_simple .)
-    CHANNELS_SPECIFICATION reduce using rule 8 (expression_function_arguments -> expression_simple .)
-    FUNCTIONS_SPECIFICATION reduce using rule 8 (expression_function_arguments -> expression_simple .)
-    IDENTIFIER      reduce using rule 8 (expression_function_arguments -> expression_simple .)
-    BOOL            reduce using rule 8 (expression_function_arguments -> expression_simple .)
-    LPARAN          reduce using rule 8 (expression_function_arguments -> expression_simple .)
-    $end            reduce using rule 8 (expression_function_arguments -> expression_simple .)
-    RPARAN          reduce using rule 8 (expression_function_arguments -> expression_simple .)
+    BLOCK_OPEN      shift and go to state 20
 
 
 state 8
 
-    (32) expression_simple -> expression_tuple_element .
+    (10) expression_function_arguments -> expression_simple .
 
-    COMMA           reduce using rule 32 (expression_simple -> expression_tuple_element .)
-    EQUATIONS_SPECIFICATION reduce using rule 32 (expression_simple -> expression_tuple_element .)
-    CHANNELS_SPECIFICATION reduce using rule 32 (expression_simple -> expression_tuple_element .)
-    FUNCTIONS_SPECIFICATION reduce using rule 32 (expression_simple -> expression_tuple_element .)
-    IDENTIFIER      reduce using rule 32 (expression_simple -> expression_tuple_element .)
-    BOOL            reduce using rule 32 (expression_simple -> expression_tuple_element .)
-    LPARAN          reduce using rule 32 (expression_simple -> expression_tuple_element .)
-    $end            reduce using rule 32 (expression_simple -> expression_tuple_element .)
-    RPARAN          reduce using rule 32 (expression_simple -> expression_tuple_element .)
+    RPARAN          reduce using rule 10 (expression_function_arguments -> expression_simple .)
+    COMMA           reduce using rule 10 (expression_function_arguments -> expression_simple .)
+    VERSIONS_SPECIFICATION reduce using rule 10 (expression_function_arguments -> expression_simple .)
+    CHANNELS_SPECIFICATION reduce using rule 10 (expression_function_arguments -> expression_simple .)
+    EQUATIONS_SPECIFICATION reduce using rule 10 (expression_function_arguments -> expression_simple .)
+    FUNCTIONS_SPECIFICATION reduce using rule 10 (expression_function_arguments -> expression_simple .)
+    IDENTIFIER      reduce using rule 10 (expression_function_arguments -> expression_simple .)
+    BOOL            reduce using rule 10 (expression_function_arguments -> expression_simple .)
+    LPARAN          reduce using rule 10 (expression_function_arguments -> expression_simple .)
+    $end            reduce using rule 10 (expression_function_arguments -> expression_simple .)
 
 
 state 9
 
+    (38) expression_simple -> expression_tuple_element .
+
+    COMMA           reduce using rule 38 (expression_simple -> expression_tuple_element .)
+    VERSIONS_SPECIFICATION reduce using rule 38 (expression_simple -> expression_tuple_element .)
+    CHANNELS_SPECIFICATION reduce using rule 38 (expression_simple -> expression_tuple_element .)
+    EQUATIONS_SPECIFICATION reduce using rule 38 (expression_simple -> expression_tuple_element .)
+    FUNCTIONS_SPECIFICATION reduce using rule 38 (expression_simple -> expression_tuple_element .)
+    IDENTIFIER      reduce using rule 38 (expression_simple -> expression_tuple_element .)
+    BOOL            reduce using rule 38 (expression_simple -> expression_tuple_element .)
+    LPARAN          reduce using rule 38 (expression_simple -> expression_tuple_element .)
+    $end            reduce using rule 38 (expression_simple -> expression_tuple_element .)
+    RPARAN          reduce using rule 38 (expression_simple -> expression_tuple_element .)
+
+
+state 10
+
     (4) expression_tuple -> LPARAN . RPARAN
     (5) expression_tuple -> LPARAN . expression_function_arguments RPARAN
-    (8) expression_function_arguments -> . expression_simple
-    (9) expression_function_arguments -> . expression_function_arguments COMMA expression_simple
-    (31) expression_simple -> . expression_call_function
-    (32) expression_simple -> . expression_tuple_element
-    (33) expression_simple -> . expression_tuple
-    (34) expression_simple -> . IDENTIFIER
-    (35) expression_simple -> . BOOL
-    (13) expression_call_function -> . IDENTIFIER LPARAN RPARAN
-    (14) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN
-    (15) expression_call_function -> . IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
-    (16) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (10) expression_function_arguments -> . expression_simple
+    (11) expression_function_arguments -> . expression_function_arguments COMMA expression_simple
+    (37) expression_simple -> . expression_call_function
+    (38) expression_simple -> . expression_tuple_element
+    (39) expression_simple -> . expression_tuple
+    (40) expression_simple -> . IDENTIFIER
+    (41) expression_simple -> . BOOL
+    (18) expression_call_function -> . IDENTIFIER LPARAN RPARAN
+    (19) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN
+    (20) expression_call_function -> . IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (21) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
     (6) expression_tuple_element -> . IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN
     (4) expression_tuple -> . LPARAN RPARAN
     (5) expression_tuple -> . LPARAN expression_function_arguments RPARAN
 
-    RPARAN          shift and go to state 19
+    RPARAN          shift and go to state 21
     IDENTIFIER      shift and go to state 6
-    BOOL            shift and go to state 11
-    LPARAN          shift and go to state 9
+    BOOL            shift and go to state 12
+    LPARAN          shift and go to state 10
 
-    expression_tuple_element       shift and go to state 8
-    expression_call_function       shift and go to state 10
+    expression_tuple_element       shift and go to state 9
+    expression_call_function       shift and go to state 11
     expression_tuple               shift and go to state 2
-    expression_function_arguments  shift and go to state 20
-    expression_simple              shift and go to state 7
-
-state 10
-
-    (31) expression_simple -> expression_call_function .
-
-    COMMA           reduce using rule 31 (expression_simple -> expression_call_function .)
-    EQUATIONS_SPECIFICATION reduce using rule 31 (expression_simple -> expression_call_function .)
-    CHANNELS_SPECIFICATION reduce using rule 31 (expression_simple -> expression_call_function .)
-    FUNCTIONS_SPECIFICATION reduce using rule 31 (expression_simple -> expression_call_function .)
-    IDENTIFIER      reduce using rule 31 (expression_simple -> expression_call_function .)
-    BOOL            reduce using rule 31 (expression_simple -> expression_call_function .)
-    LPARAN          reduce using rule 31 (expression_simple -> expression_call_function .)
-    $end            reduce using rule 31 (expression_simple -> expression_call_function .)
-    RPARAN          reduce using rule 31 (expression_simple -> expression_call_function .)
-
+    expression_function_arguments  shift and go to state 22
+    expression_simple              shift and go to state 8
 
 state 11
 
-    (35) expression_simple -> BOOL .
+    (37) expression_simple -> expression_call_function .
 
-    COMMA           reduce using rule 35 (expression_simple -> BOOL .)
-    EQUATIONS_SPECIFICATION reduce using rule 35 (expression_simple -> BOOL .)
-    CHANNELS_SPECIFICATION reduce using rule 35 (expression_simple -> BOOL .)
-    FUNCTIONS_SPECIFICATION reduce using rule 35 (expression_simple -> BOOL .)
-    IDENTIFIER      reduce using rule 35 (expression_simple -> BOOL .)
-    BOOL            reduce using rule 35 (expression_simple -> BOOL .)
-    LPARAN          reduce using rule 35 (expression_simple -> BOOL .)
-    $end            reduce using rule 35 (expression_simple -> BOOL .)
-    RPARAN          reduce using rule 35 (expression_simple -> BOOL .)
+    COMMA           reduce using rule 37 (expression_simple -> expression_call_function .)
+    VERSIONS_SPECIFICATION reduce using rule 37 (expression_simple -> expression_call_function .)
+    CHANNELS_SPECIFICATION reduce using rule 37 (expression_simple -> expression_call_function .)
+    EQUATIONS_SPECIFICATION reduce using rule 37 (expression_simple -> expression_call_function .)
+    FUNCTIONS_SPECIFICATION reduce using rule 37 (expression_simple -> expression_call_function .)
+    IDENTIFIER      reduce using rule 37 (expression_simple -> expression_call_function .)
+    BOOL            reduce using rule 37 (expression_simple -> expression_call_function .)
+    LPARAN          reduce using rule 37 (expression_simple -> expression_call_function .)
+    $end            reduce using rule 37 (expression_simple -> expression_call_function .)
+    RPARAN          reduce using rule 37 (expression_simple -> expression_call_function .)
 
 
 state 12
 
-    (1) specification -> expression_function_arguments .
-    (9) expression_function_arguments -> expression_function_arguments . COMMA expression_simple
+    (41) expression_simple -> BOOL .
 
-    EQUATIONS_SPECIFICATION reduce using rule 1 (specification -> expression_function_arguments .)
+    COMMA           reduce using rule 41 (expression_simple -> BOOL .)
+    VERSIONS_SPECIFICATION reduce using rule 41 (expression_simple -> BOOL .)
+    CHANNELS_SPECIFICATION reduce using rule 41 (expression_simple -> BOOL .)
+    EQUATIONS_SPECIFICATION reduce using rule 41 (expression_simple -> BOOL .)
+    FUNCTIONS_SPECIFICATION reduce using rule 41 (expression_simple -> BOOL .)
+    IDENTIFIER      reduce using rule 41 (expression_simple -> BOOL .)
+    BOOL            reduce using rule 41 (expression_simple -> BOOL .)
+    LPARAN          reduce using rule 41 (expression_simple -> BOOL .)
+    $end            reduce using rule 41 (expression_simple -> BOOL .)
+    RPARAN          reduce using rule 41 (expression_simple -> BOOL .)
+
+
+state 13
+
+    (1) specification -> expression_function_arguments .
+    (11) expression_function_arguments -> expression_function_arguments . COMMA expression_simple
+
+    VERSIONS_SPECIFICATION reduce using rule 1 (specification -> expression_function_arguments .)
     CHANNELS_SPECIFICATION reduce using rule 1 (specification -> expression_function_arguments .)
+    EQUATIONS_SPECIFICATION reduce using rule 1 (specification -> expression_function_arguments .)
     FUNCTIONS_SPECIFICATION reduce using rule 1 (specification -> expression_function_arguments .)
     IDENTIFIER      reduce using rule 1 (specification -> expression_function_arguments .)
     BOOL            reduce using rule 1 (specification -> expression_function_arguments .)
     LPARAN          reduce using rule 1 (specification -> expression_function_arguments .)
     $end            reduce using rule 1 (specification -> expression_function_arguments .)
-    COMMA           shift and go to state 21
+    COMMA           shift and go to state 23
 
-
-state 13
-
-    (0) S' -> model .
-    (20) model -> model . specification
-    (1) specification -> . expression_function_arguments
-    (7) specification -> . EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE
-    (10) specification -> . CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE
-    (41) specification -> . FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE
-    (8) expression_function_arguments -> . expression_simple
-    (9) expression_function_arguments -> . expression_function_arguments COMMA expression_simple
-    (31) expression_simple -> . expression_call_function
-    (32) expression_simple -> . expression_tuple_element
-    (33) expression_simple -> . expression_tuple
-    (34) expression_simple -> . IDENTIFIER
-    (35) expression_simple -> . BOOL
-    (13) expression_call_function -> . IDENTIFIER LPARAN RPARAN
-    (14) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN
-    (15) expression_call_function -> . IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
-    (16) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
-    (6) expression_tuple_element -> . IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN
-    (4) expression_tuple -> . LPARAN RPARAN
-    (5) expression_tuple -> . LPARAN expression_function_arguments RPARAN
-
-    EQUATIONS_SPECIFICATION shift and go to state 1
-    CHANNELS_SPECIFICATION shift and go to state 5
-    FUNCTIONS_SPECIFICATION shift and go to state 3
-    IDENTIFIER      shift and go to state 6
-    BOOL            shift and go to state 11
-    LPARAN          shift and go to state 9
-
-    expression_tuple_element       shift and go to state 8
-    expression_call_function       shift and go to state 10
-    specification                  shift and go to state 22
-    expression_tuple               shift and go to state 2
-    expression_function_arguments  shift and go to state 12
-    expression_simple              shift and go to state 7
 
 state 14
 
-    (7) specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN . equations_list BLOCK_CLOSE
-    (11) equations_list -> . equation
-    (12) equations_list -> . equations_list equation
-    (21) equation -> . EQUATION equation_complex_expression EQUAL equation_simple_expression SEMICOLON
-
-    EQUATION        shift and go to state 25
-
-    equation                       shift and go to state 24
-    equations_list                 shift and go to state 23
-
-state 15
-
-    (41) specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN . functions_list BLOCK_CLOSE
-    (44) functions_list -> . function
-    (45) functions_list -> . functions_list function
-    (46) function -> . FUN IDENTIFIER function_params SEMICOLON
-    (47) function -> . FUN IDENTIFIER function_params function_comment SEMICOLON
-    (48) function -> . FUN IDENTIFIER function_params function_qopml_params SEMICOLON
-    (49) function -> . FUN IDENTIFIER function_params function_qopml_params function_comment SEMICOLON
-
-    FUN             shift and go to state 28
-
-    function                       shift and go to state 26
-    functions_list                 shift and go to state 27
-
-state 16
-
-    (10) specification -> CHANNELS_SPECIFICATION BLOCK_OPEN . channels_list BLOCK_CLOSE
-    (17) channels_list -> . channel
-    (18) channels_list -> . channels_list channel
-    (22) channel -> . CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON
-
-    CHANNEL         shift and go to state 31
-
-    channel                        shift and go to state 29
-    channels_list                  shift and go to state 30
-
-state 17
-
-    (13) expression_call_function -> IDENTIFIER LPARAN . RPARAN
-    (14) expression_call_function -> IDENTIFIER LPARAN . expression_function_arguments RPARAN
-    (15) expression_call_function -> IDENTIFIER LPARAN . RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
-    (16) expression_call_function -> IDENTIFIER LPARAN . expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
-    (8) expression_function_arguments -> . expression_simple
-    (9) expression_function_arguments -> . expression_function_arguments COMMA expression_simple
-    (31) expression_simple -> . expression_call_function
-    (32) expression_simple -> . expression_tuple_element
-    (33) expression_simple -> . expression_tuple
-    (34) expression_simple -> . IDENTIFIER
-    (35) expression_simple -> . BOOL
-    (13) expression_call_function -> . IDENTIFIER LPARAN RPARAN
-    (14) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN
-    (15) expression_call_function -> . IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
-    (16) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (0) S' -> model .
+    (23) model -> model . specification
+    (1) specification -> . expression_function_arguments
+    (7) specification -> . VERSIONS_SPECIFICATION BLOCK_OPEN versions_list BLOCK_CLOSE
+    (8) specification -> . CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE
+    (9) specification -> . EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE
+    (56) specification -> . FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE
+    (10) expression_function_arguments -> . expression_simple
+    (11) expression_function_arguments -> . expression_function_arguments COMMA expression_simple
+    (37) expression_simple -> . expression_call_function
+    (38) expression_simple -> . expression_tuple_element
+    (39) expression_simple -> . expression_tuple
+    (40) expression_simple -> . IDENTIFIER
+    (41) expression_simple -> . BOOL
+    (18) expression_call_function -> . IDENTIFIER LPARAN RPARAN
+    (19) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN
+    (20) expression_call_function -> . IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (21) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
     (6) expression_tuple_element -> . IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN
     (4) expression_tuple -> . LPARAN RPARAN
     (5) expression_tuple -> . LPARAN expression_function_arguments RPARAN
 
-    RPARAN          shift and go to state 32
+    VERSIONS_SPECIFICATION shift and go to state 7
+    CHANNELS_SPECIFICATION shift and go to state 5
+    EQUATIONS_SPECIFICATION shift and go to state 1
+    FUNCTIONS_SPECIFICATION shift and go to state 3
     IDENTIFIER      shift and go to state 6
-    BOOL            shift and go to state 11
-    LPARAN          shift and go to state 9
+    BOOL            shift and go to state 12
+    LPARAN          shift and go to state 10
 
-    expression_tuple_element       shift and go to state 8
-    expression_call_function       shift and go to state 10
+    expression_tuple_element       shift and go to state 9
+    expression_call_function       shift and go to state 11
+    specification                  shift and go to state 24
     expression_tuple               shift and go to state 2
-    expression_function_arguments  shift and go to state 33
-    expression_simple              shift and go to state 7
+    expression_function_arguments  shift and go to state 13
+    expression_simple              shift and go to state 8
+
+state 15
+
+    (9) specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN . equations_list BLOCK_CLOSE
+    (16) equations_list -> . equation
+    (17) equations_list -> . equations_list equation
+    (26) equation -> . EQUATION equation_complex_expression EQUAL equation_simple_expression SEMICOLON
+
+    EQUATION        shift and go to state 27
+
+    equation                       shift and go to state 26
+    equations_list                 shift and go to state 25
+
+state 16
+
+    (56) specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN . functions_list BLOCK_CLOSE
+    (60) functions_list -> . function
+    (61) functions_list -> . functions_list function
+    (65) function -> . FUN IDENTIFIER function_params SEMICOLON
+    (66) function -> . FUN IDENTIFIER function_params function_comment SEMICOLON
+    (67) function -> . FUN IDENTIFIER function_params function_qopml_params SEMICOLON
+    (68) function -> . FUN IDENTIFIER function_params function_qopml_params function_comment SEMICOLON
+
+    FUN             shift and go to state 30
+
+    function                       shift and go to state 28
+    functions_list                 shift and go to state 29
+
+state 17
+
+    (8) specification -> CHANNELS_SPECIFICATION BLOCK_OPEN . channels_list BLOCK_CLOSE
+    (14) channels_list -> . channel
+    (15) channels_list -> . channels_list channel
+    (25) channel -> . CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON
+
+    CHANNEL         shift and go to state 33
+
+    channel                        shift and go to state 31
+    channels_list                  shift and go to state 32
 
 state 18
 
-    (6) expression_tuple_element -> IDENTIFIER SQ_LPARAN . INTEGER SQ_RPARAN
+    (18) expression_call_function -> IDENTIFIER LPARAN . RPARAN
+    (19) expression_call_function -> IDENTIFIER LPARAN . expression_function_arguments RPARAN
+    (20) expression_call_function -> IDENTIFIER LPARAN . RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (21) expression_call_function -> IDENTIFIER LPARAN . expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (10) expression_function_arguments -> . expression_simple
+    (11) expression_function_arguments -> . expression_function_arguments COMMA expression_simple
+    (37) expression_simple -> . expression_call_function
+    (38) expression_simple -> . expression_tuple_element
+    (39) expression_simple -> . expression_tuple
+    (40) expression_simple -> . IDENTIFIER
+    (41) expression_simple -> . BOOL
+    (18) expression_call_function -> . IDENTIFIER LPARAN RPARAN
+    (19) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN
+    (20) expression_call_function -> . IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (21) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (6) expression_tuple_element -> . IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN
+    (4) expression_tuple -> . LPARAN RPARAN
+    (5) expression_tuple -> . LPARAN expression_function_arguments RPARAN
 
-    INTEGER         shift and go to state 34
+    RPARAN          shift and go to state 34
+    IDENTIFIER      shift and go to state 6
+    BOOL            shift and go to state 12
+    LPARAN          shift and go to state 10
 
+    expression_tuple_element       shift and go to state 9
+    expression_call_function       shift and go to state 11
+    expression_tuple               shift and go to state 2
+    expression_function_arguments  shift and go to state 35
+    expression_simple              shift and go to state 8
 
 state 19
 
+    (6) expression_tuple_element -> IDENTIFIER SQ_LPARAN . INTEGER SQ_RPARAN
+
+    INTEGER         shift and go to state 36
+
+
+state 20
+
+    (7) specification -> VERSIONS_SPECIFICATION BLOCK_OPEN . versions_list BLOCK_CLOSE
+    (12) versions_list -> . version
+    (13) versions_list -> . versions_list version
+    (24) version -> . VERSION INTEGER BLOCK_OPEN version_run_hosts BLOCK_CLOSE
+
+    VERSION         shift and go to state 39
+
+    versions_list                  shift and go to state 38
+    version                        shift and go to state 37
+
+state 21
+
     (4) expression_tuple -> LPARAN RPARAN .
 
+    RPARAN          reduce using rule 4 (expression_tuple -> LPARAN RPARAN .)
     COMMA           reduce using rule 4 (expression_tuple -> LPARAN RPARAN .)
-    EQUATIONS_SPECIFICATION reduce using rule 4 (expression_tuple -> LPARAN RPARAN .)
+    VERSIONS_SPECIFICATION reduce using rule 4 (expression_tuple -> LPARAN RPARAN .)
     CHANNELS_SPECIFICATION reduce using rule 4 (expression_tuple -> LPARAN RPARAN .)
+    EQUATIONS_SPECIFICATION reduce using rule 4 (expression_tuple -> LPARAN RPARAN .)
     FUNCTIONS_SPECIFICATION reduce using rule 4 (expression_tuple -> LPARAN RPARAN .)
     IDENTIFIER      reduce using rule 4 (expression_tuple -> LPARAN RPARAN .)
     BOOL            reduce using rule 4 (expression_tuple -> LPARAN RPARAN .)
     LPARAN          reduce using rule 4 (expression_tuple -> LPARAN RPARAN .)
     $end            reduce using rule 4 (expression_tuple -> LPARAN RPARAN .)
-    RPARAN          reduce using rule 4 (expression_tuple -> LPARAN RPARAN .)
 
 
-state 20
+state 22
 
     (5) expression_tuple -> LPARAN expression_function_arguments . RPARAN
-    (9) expression_function_arguments -> expression_function_arguments . COMMA expression_simple
+    (11) expression_function_arguments -> expression_function_arguments . COMMA expression_simple
 
-    RPARAN          shift and go to state 35
-    COMMA           shift and go to state 21
+    RPARAN          shift and go to state 40
+    COMMA           shift and go to state 23
 
 
-state 21
+state 23
 
-    (9) expression_function_arguments -> expression_function_arguments COMMA . expression_simple
-    (31) expression_simple -> . expression_call_function
-    (32) expression_simple -> . expression_tuple_element
-    (33) expression_simple -> . expression_tuple
-    (34) expression_simple -> . IDENTIFIER
-    (35) expression_simple -> . BOOL
-    (13) expression_call_function -> . IDENTIFIER LPARAN RPARAN
-    (14) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN
-    (15) expression_call_function -> . IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
-    (16) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (11) expression_function_arguments -> expression_function_arguments COMMA . expression_simple
+    (37) expression_simple -> . expression_call_function
+    (38) expression_simple -> . expression_tuple_element
+    (39) expression_simple -> . expression_tuple
+    (40) expression_simple -> . IDENTIFIER
+    (41) expression_simple -> . BOOL
+    (18) expression_call_function -> . IDENTIFIER LPARAN RPARAN
+    (19) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN
+    (20) expression_call_function -> . IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (21) expression_call_function -> . IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
     (6) expression_tuple_element -> . IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN
     (4) expression_tuple -> . LPARAN RPARAN
     (5) expression_tuple -> . LPARAN expression_function_arguments RPARAN
 
     IDENTIFIER      shift and go to state 6
-    BOOL            shift and go to state 11
-    LPARAN          shift and go to state 9
+    BOOL            shift and go to state 12
+    LPARAN          shift and go to state 10
 
-    expression_tuple_element       shift and go to state 8
-    expression_call_function       shift and go to state 10
+    expression_tuple_element       shift and go to state 9
+    expression_call_function       shift and go to state 11
     expression_tuple               shift and go to state 2
-    expression_simple              shift and go to state 36
-
-state 22
-
-    (20) model -> model specification .
-
-    EQUATIONS_SPECIFICATION reduce using rule 20 (model -> model specification .)
-    CHANNELS_SPECIFICATION reduce using rule 20 (model -> model specification .)
-    FUNCTIONS_SPECIFICATION reduce using rule 20 (model -> model specification .)
-    IDENTIFIER      reduce using rule 20 (model -> model specification .)
-    BOOL            reduce using rule 20 (model -> model specification .)
-    LPARAN          reduce using rule 20 (model -> model specification .)
-    $end            reduce using rule 20 (model -> model specification .)
-
-
-state 23
-
-    (7) specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list . BLOCK_CLOSE
-    (12) equations_list -> equations_list . equation
-    (21) equation -> . EQUATION equation_complex_expression EQUAL equation_simple_expression SEMICOLON
-
-    BLOCK_CLOSE     shift and go to state 37
-    EQUATION        shift and go to state 25
-
-    equation                       shift and go to state 38
+    expression_simple              shift and go to state 41
 
 state 24
 
-    (11) equations_list -> equation .
+    (23) model -> model specification .
 
-    BLOCK_CLOSE     reduce using rule 11 (equations_list -> equation .)
-    EQUATION        reduce using rule 11 (equations_list -> equation .)
+    VERSIONS_SPECIFICATION reduce using rule 23 (model -> model specification .)
+    CHANNELS_SPECIFICATION reduce using rule 23 (model -> model specification .)
+    EQUATIONS_SPECIFICATION reduce using rule 23 (model -> model specification .)
+    FUNCTIONS_SPECIFICATION reduce using rule 23 (model -> model specification .)
+    IDENTIFIER      reduce using rule 23 (model -> model specification .)
+    BOOL            reduce using rule 23 (model -> model specification .)
+    LPARAN          reduce using rule 23 (model -> model specification .)
+    $end            reduce using rule 23 (model -> model specification .)
 
 
 state 25
 
-    (21) equation -> EQUATION . equation_complex_expression EQUAL equation_simple_expression SEMICOLON
-    (27) equation_complex_expression -> . IDENTIFIER LPARAN equation_function_arguments RPARAN
-    (28) equation_complex_expression -> . IDENTIFIER LPARAN RPARAN
+    (9) specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list . BLOCK_CLOSE
+    (17) equations_list -> equations_list . equation
+    (26) equation -> . EQUATION equation_complex_expression EQUAL equation_simple_expression SEMICOLON
 
-    IDENTIFIER      shift and go to state 40
+    BLOCK_CLOSE     shift and go to state 42
+    EQUATION        shift and go to state 27
 
-    equation_complex_expression    shift and go to state 39
+    equation                       shift and go to state 43
 
 state 26
 
-    (44) functions_list -> function .
+    (16) equations_list -> equation .
 
-    BLOCK_CLOSE     reduce using rule 44 (functions_list -> function .)
-    FUN             reduce using rule 44 (functions_list -> function .)
+    BLOCK_CLOSE     reduce using rule 16 (equations_list -> equation .)
+    EQUATION        reduce using rule 16 (equations_list -> equation .)
 
 
 state 27
 
-    (41) specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list . BLOCK_CLOSE
-    (45) functions_list -> functions_list . function
-    (46) function -> . FUN IDENTIFIER function_params SEMICOLON
-    (47) function -> . FUN IDENTIFIER function_params function_comment SEMICOLON
-    (48) function -> . FUN IDENTIFIER function_params function_qopml_params SEMICOLON
-    (49) function -> . FUN IDENTIFIER function_params function_qopml_params function_comment SEMICOLON
+    (26) equation -> EQUATION . equation_complex_expression EQUAL equation_simple_expression SEMICOLON
+    (33) equation_complex_expression -> . IDENTIFIER LPARAN equation_function_arguments RPARAN
+    (34) equation_complex_expression -> . IDENTIFIER LPARAN RPARAN
 
-    BLOCK_CLOSE     shift and go to state 42
-    FUN             shift and go to state 28
+    IDENTIFIER      shift and go to state 45
 
-    function                       shift and go to state 41
+    equation_complex_expression    shift and go to state 44
 
 state 28
 
-    (46) function -> FUN . IDENTIFIER function_params SEMICOLON
-    (47) function -> FUN . IDENTIFIER function_params function_comment SEMICOLON
-    (48) function -> FUN . IDENTIFIER function_params function_qopml_params SEMICOLON
-    (49) function -> FUN . IDENTIFIER function_params function_qopml_params function_comment SEMICOLON
+    (60) functions_list -> function .
 
-    IDENTIFIER      shift and go to state 43
+    BLOCK_CLOSE     reduce using rule 60 (functions_list -> function .)
+    FUN             reduce using rule 60 (functions_list -> function .)
 
 
 state 29
 
-    (17) channels_list -> channel .
+    (56) specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list . BLOCK_CLOSE
+    (61) functions_list -> functions_list . function
+    (65) function -> . FUN IDENTIFIER function_params SEMICOLON
+    (66) function -> . FUN IDENTIFIER function_params function_comment SEMICOLON
+    (67) function -> . FUN IDENTIFIER function_params function_qopml_params SEMICOLON
+    (68) function -> . FUN IDENTIFIER function_params function_qopml_params function_comment SEMICOLON
 
-    BLOCK_CLOSE     reduce using rule 17 (channels_list -> channel .)
-    CHANNEL         reduce using rule 17 (channels_list -> channel .)
+    BLOCK_CLOSE     shift and go to state 47
+    FUN             shift and go to state 30
 
+    function                       shift and go to state 46
 
 state 30
 
-    (10) specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list . BLOCK_CLOSE
-    (18) channels_list -> channels_list . channel
-    (22) channel -> . CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON
+    (65) function -> FUN . IDENTIFIER function_params SEMICOLON
+    (66) function -> FUN . IDENTIFIER function_params function_comment SEMICOLON
+    (67) function -> FUN . IDENTIFIER function_params function_qopml_params SEMICOLON
+    (68) function -> FUN . IDENTIFIER function_params function_qopml_params function_comment SEMICOLON
 
-    BLOCK_CLOSE     shift and go to state 44
-    CHANNEL         shift and go to state 31
+    IDENTIFIER      shift and go to state 48
 
-    channel                        shift and go to state 45
 
 state 31
 
-    (22) channel -> CHANNEL . identifiers_list LPARAN channel_buffor RPARAN SEMICOLON
-    (23) identifiers_list -> . IDENTIFIER
-    (24) identifiers_list -> . identifiers_list COMMA IDENTIFIER
+    (14) channels_list -> channel .
 
-    IDENTIFIER      shift and go to state 47
+    BLOCK_CLOSE     reduce using rule 14 (channels_list -> channel .)
+    CHANNEL         reduce using rule 14 (channels_list -> channel .)
 
-    identifiers_list               shift and go to state 46
 
 state 32
 
-    (13) expression_call_function -> IDENTIFIER LPARAN RPARAN .
-    (15) expression_call_function -> IDENTIFIER LPARAN RPARAN . SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (8) specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list . BLOCK_CLOSE
+    (15) channels_list -> channels_list . channel
+    (25) channel -> . CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON
 
-    COMMA           reduce using rule 13 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
-    EQUATIONS_SPECIFICATION reduce using rule 13 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
-    CHANNELS_SPECIFICATION reduce using rule 13 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
-    FUNCTIONS_SPECIFICATION reduce using rule 13 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
-    IDENTIFIER      reduce using rule 13 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
-    BOOL            reduce using rule 13 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
-    LPARAN          reduce using rule 13 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
-    $end            reduce using rule 13 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
-    RPARAN          reduce using rule 13 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
-    SQ_LPARAN       shift and go to state 48
+    BLOCK_CLOSE     shift and go to state 49
+    CHANNEL         shift and go to state 33
 
+    channel                        shift and go to state 50
 
 state 33
 
-    (14) expression_call_function -> IDENTIFIER LPARAN expression_function_arguments . RPARAN
-    (16) expression_call_function -> IDENTIFIER LPARAN expression_function_arguments . RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
-    (9) expression_function_arguments -> expression_function_arguments . COMMA expression_simple
+    (25) channel -> CHANNEL . identifiers_list LPARAN channel_buffor RPARAN SEMICOLON
+    (27) identifiers_list -> . IDENTIFIER
+    (28) identifiers_list -> . identifiers_list COMMA IDENTIFIER
 
-    RPARAN          shift and go to state 49
-    COMMA           shift and go to state 21
+    IDENTIFIER      shift and go to state 52
 
+    identifiers_list               shift and go to state 51
 
 state 34
 
-    (6) expression_tuple_element -> IDENTIFIER SQ_LPARAN INTEGER . SQ_RPARAN
+    (18) expression_call_function -> IDENTIFIER LPARAN RPARAN .
+    (20) expression_call_function -> IDENTIFIER LPARAN RPARAN . SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
 
-    SQ_RPARAN       shift and go to state 50
+    COMMA           reduce using rule 18 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
+    VERSIONS_SPECIFICATION reduce using rule 18 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
+    CHANNELS_SPECIFICATION reduce using rule 18 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
+    EQUATIONS_SPECIFICATION reduce using rule 18 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
+    FUNCTIONS_SPECIFICATION reduce using rule 18 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
+    IDENTIFIER      reduce using rule 18 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
+    BOOL            reduce using rule 18 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
+    LPARAN          reduce using rule 18 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
+    $end            reduce using rule 18 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
+    RPARAN          reduce using rule 18 (expression_call_function -> IDENTIFIER LPARAN RPARAN .)
+    SQ_LPARAN       shift and go to state 53
 
 
 state 35
 
+    (19) expression_call_function -> IDENTIFIER LPARAN expression_function_arguments . RPARAN
+    (21) expression_call_function -> IDENTIFIER LPARAN expression_function_arguments . RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (11) expression_function_arguments -> expression_function_arguments . COMMA expression_simple
+
+    RPARAN          shift and go to state 54
+    COMMA           shift and go to state 23
+
+
+state 36
+
+    (6) expression_tuple_element -> IDENTIFIER SQ_LPARAN INTEGER . SQ_RPARAN
+
+    SQ_RPARAN       shift and go to state 55
+
+
+state 37
+
+    (12) versions_list -> version .
+
+    BLOCK_CLOSE     reduce using rule 12 (versions_list -> version .)
+    VERSION         reduce using rule 12 (versions_list -> version .)
+
+
+state 38
+
+    (7) specification -> VERSIONS_SPECIFICATION BLOCK_OPEN versions_list . BLOCK_CLOSE
+    (13) versions_list -> versions_list . version
+    (24) version -> . VERSION INTEGER BLOCK_OPEN version_run_hosts BLOCK_CLOSE
+
+    BLOCK_CLOSE     shift and go to state 57
+    VERSION         shift and go to state 39
+
+    version                        shift and go to state 56
+
+state 39
+
+    (24) version -> VERSION . INTEGER BLOCK_OPEN version_run_hosts BLOCK_CLOSE
+
+    INTEGER         shift and go to state 58
+
+
+state 40
+
     (5) expression_tuple -> LPARAN expression_function_arguments RPARAN .
 
+    RPARAN          reduce using rule 5 (expression_tuple -> LPARAN expression_function_arguments RPARAN .)
     COMMA           reduce using rule 5 (expression_tuple -> LPARAN expression_function_arguments RPARAN .)
-    EQUATIONS_SPECIFICATION reduce using rule 5 (expression_tuple -> LPARAN expression_function_arguments RPARAN .)
+    VERSIONS_SPECIFICATION reduce using rule 5 (expression_tuple -> LPARAN expression_function_arguments RPARAN .)
     CHANNELS_SPECIFICATION reduce using rule 5 (expression_tuple -> LPARAN expression_function_arguments RPARAN .)
+    EQUATIONS_SPECIFICATION reduce using rule 5 (expression_tuple -> LPARAN expression_function_arguments RPARAN .)
     FUNCTIONS_SPECIFICATION reduce using rule 5 (expression_tuple -> LPARAN expression_function_arguments RPARAN .)
     IDENTIFIER      reduce using rule 5 (expression_tuple -> LPARAN expression_function_arguments RPARAN .)
     BOOL            reduce using rule 5 (expression_tuple -> LPARAN expression_function_arguments RPARAN .)
     LPARAN          reduce using rule 5 (expression_tuple -> LPARAN expression_function_arguments RPARAN .)
     $end            reduce using rule 5 (expression_tuple -> LPARAN expression_function_arguments RPARAN .)
-    RPARAN          reduce using rule 5 (expression_tuple -> LPARAN expression_function_arguments RPARAN .)
-
-
-state 36
-
-    (9) expression_function_arguments -> expression_function_arguments COMMA expression_simple .
-
-    COMMA           reduce using rule 9 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
-    EQUATIONS_SPECIFICATION reduce using rule 9 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
-    CHANNELS_SPECIFICATION reduce using rule 9 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
-    FUNCTIONS_SPECIFICATION reduce using rule 9 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
-    IDENTIFIER      reduce using rule 9 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
-    BOOL            reduce using rule 9 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
-    LPARAN          reduce using rule 9 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
-    $end            reduce using rule 9 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
-    RPARAN          reduce using rule 9 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
-
-
-state 37
-
-    (7) specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .
-
-    EQUATIONS_SPECIFICATION reduce using rule 7 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
-    CHANNELS_SPECIFICATION reduce using rule 7 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
-    FUNCTIONS_SPECIFICATION reduce using rule 7 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
-    IDENTIFIER      reduce using rule 7 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
-    BOOL            reduce using rule 7 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
-    LPARAN          reduce using rule 7 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
-    $end            reduce using rule 7 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
-
-
-state 38
-
-    (12) equations_list -> equations_list equation .
-
-    BLOCK_CLOSE     reduce using rule 12 (equations_list -> equations_list equation .)
-    EQUATION        reduce using rule 12 (equations_list -> equations_list equation .)
-
-
-state 39
-
-    (21) equation -> EQUATION equation_complex_expression . EQUAL equation_simple_expression SEMICOLON
-
-    EQUAL           shift and go to state 51
-
-
-state 40
-
-    (27) equation_complex_expression -> IDENTIFIER . LPARAN equation_function_arguments RPARAN
-    (28) equation_complex_expression -> IDENTIFIER . LPARAN RPARAN
-
-    LPARAN          shift and go to state 52
 
 
 state 41
 
-    (45) functions_list -> functions_list function .
+    (11) expression_function_arguments -> expression_function_arguments COMMA expression_simple .
 
-    BLOCK_CLOSE     reduce using rule 45 (functions_list -> functions_list function .)
-    FUN             reduce using rule 45 (functions_list -> functions_list function .)
+    RPARAN          reduce using rule 11 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
+    COMMA           reduce using rule 11 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
+    VERSIONS_SPECIFICATION reduce using rule 11 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
+    CHANNELS_SPECIFICATION reduce using rule 11 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
+    EQUATIONS_SPECIFICATION reduce using rule 11 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
+    FUNCTIONS_SPECIFICATION reduce using rule 11 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
+    IDENTIFIER      reduce using rule 11 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
+    BOOL            reduce using rule 11 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
+    LPARAN          reduce using rule 11 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
+    $end            reduce using rule 11 (expression_function_arguments -> expression_function_arguments COMMA expression_simple .)
 
 
 state 42
 
-    (41) specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .
+    (9) specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .
 
-    EQUATIONS_SPECIFICATION reduce using rule 41 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
-    CHANNELS_SPECIFICATION reduce using rule 41 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
-    FUNCTIONS_SPECIFICATION reduce using rule 41 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
-    IDENTIFIER      reduce using rule 41 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
-    BOOL            reduce using rule 41 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
-    LPARAN          reduce using rule 41 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
-    $end            reduce using rule 41 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
+    VERSIONS_SPECIFICATION reduce using rule 9 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
+    CHANNELS_SPECIFICATION reduce using rule 9 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
+    EQUATIONS_SPECIFICATION reduce using rule 9 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
+    FUNCTIONS_SPECIFICATION reduce using rule 9 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
+    IDENTIFIER      reduce using rule 9 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
+    BOOL            reduce using rule 9 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
+    LPARAN          reduce using rule 9 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
+    $end            reduce using rule 9 (specification -> EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE .)
 
 
 state 43
 
-    (46) function -> FUN IDENTIFIER . function_params SEMICOLON
-    (47) function -> FUN IDENTIFIER . function_params function_comment SEMICOLON
-    (48) function -> FUN IDENTIFIER . function_params function_qopml_params SEMICOLON
-    (49) function -> FUN IDENTIFIER . function_params function_qopml_params function_comment SEMICOLON
-    (51) function_params -> . LPARAN RPARAN
-    (52) function_params -> . LPARAN identifiers_list RPARAN
+    (17) equations_list -> equations_list equation .
 
-    LPARAN          shift and go to state 53
+    BLOCK_CLOSE     reduce using rule 17 (equations_list -> equations_list equation .)
+    EQUATION        reduce using rule 17 (equations_list -> equations_list equation .)
 
-    function_params                shift and go to state 54
 
 state 44
 
-    (10) specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .
+    (26) equation -> EQUATION equation_complex_expression . EQUAL equation_simple_expression SEMICOLON
 
-    EQUATIONS_SPECIFICATION reduce using rule 10 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
-    CHANNELS_SPECIFICATION reduce using rule 10 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
-    FUNCTIONS_SPECIFICATION reduce using rule 10 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
-    IDENTIFIER      reduce using rule 10 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
-    BOOL            reduce using rule 10 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
-    LPARAN          reduce using rule 10 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
-    $end            reduce using rule 10 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
+    EQUAL           shift and go to state 59
 
 
 state 45
 
-    (18) channels_list -> channels_list channel .
+    (33) equation_complex_expression -> IDENTIFIER . LPARAN equation_function_arguments RPARAN
+    (34) equation_complex_expression -> IDENTIFIER . LPARAN RPARAN
 
-    BLOCK_CLOSE     reduce using rule 18 (channels_list -> channels_list channel .)
-    CHANNEL         reduce using rule 18 (channels_list -> channels_list channel .)
+    LPARAN          shift and go to state 60
 
 
 state 46
 
-    (22) channel -> CHANNEL identifiers_list . LPARAN channel_buffor RPARAN SEMICOLON
-    (24) identifiers_list -> identifiers_list . COMMA IDENTIFIER
+    (61) functions_list -> functions_list function .
 
-    LPARAN          shift and go to state 55
-    COMMA           shift and go to state 56
+    BLOCK_CLOSE     reduce using rule 61 (functions_list -> functions_list function .)
+    FUN             reduce using rule 61 (functions_list -> functions_list function .)
 
 
 state 47
 
-    (23) identifiers_list -> IDENTIFIER .
+    (56) specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .
 
-    COMMA           reduce using rule 23 (identifiers_list -> IDENTIFIER .)
-    SQ_RPARAN       reduce using rule 23 (identifiers_list -> IDENTIFIER .)
-    IDENTIFIER      reduce using rule 23 (identifiers_list -> IDENTIFIER .)
-    RPARAN          reduce using rule 23 (identifiers_list -> IDENTIFIER .)
-    LPARAN          reduce using rule 23 (identifiers_list -> IDENTIFIER .)
+    VERSIONS_SPECIFICATION reduce using rule 56 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
+    CHANNELS_SPECIFICATION reduce using rule 56 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
+    EQUATIONS_SPECIFICATION reduce using rule 56 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
+    FUNCTIONS_SPECIFICATION reduce using rule 56 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
+    IDENTIFIER      reduce using rule 56 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
+    BOOL            reduce using rule 56 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
+    LPARAN          reduce using rule 56 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
+    $end            reduce using rule 56 (specification -> FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE .)
 
 
 state 48
 
-    (15) expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN . expression_function_qop_arguments SQ_RPARAN
-    (25) expression_function_qop_arguments -> . TEXT
-    (26) expression_function_qop_arguments -> . expression_function_qop_arguments COMMA TEXT
+    (65) function -> FUN IDENTIFIER . function_params SEMICOLON
+    (66) function -> FUN IDENTIFIER . function_params function_comment SEMICOLON
+    (67) function -> FUN IDENTIFIER . function_params function_qopml_params SEMICOLON
+    (68) function -> FUN IDENTIFIER . function_params function_qopml_params function_comment SEMICOLON
+    (74) function_params -> . LPARAN RPARAN
+    (75) function_params -> . LPARAN identifiers_list RPARAN
 
-    TEXT            shift and go to state 58
+    LPARAN          shift and go to state 61
 
-    expression_function_qop_arguments shift and go to state 57
+    function_params                shift and go to state 62
 
 state 49
 
-    (14) expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .
-    (16) expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN . SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+    (8) specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .
 
-    COMMA           reduce using rule 14 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
-    EQUATIONS_SPECIFICATION reduce using rule 14 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
-    CHANNELS_SPECIFICATION reduce using rule 14 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
-    FUNCTIONS_SPECIFICATION reduce using rule 14 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
-    IDENTIFIER      reduce using rule 14 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
-    BOOL            reduce using rule 14 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
-    LPARAN          reduce using rule 14 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
-    $end            reduce using rule 14 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
-    RPARAN          reduce using rule 14 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
-    SQ_LPARAN       shift and go to state 59
+    VERSIONS_SPECIFICATION reduce using rule 8 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
+    CHANNELS_SPECIFICATION reduce using rule 8 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
+    EQUATIONS_SPECIFICATION reduce using rule 8 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
+    FUNCTIONS_SPECIFICATION reduce using rule 8 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
+    IDENTIFIER      reduce using rule 8 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
+    BOOL            reduce using rule 8 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
+    LPARAN          reduce using rule 8 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
+    $end            reduce using rule 8 (specification -> CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE .)
 
 
 state 50
+
+    (15) channels_list -> channels_list channel .
+
+    BLOCK_CLOSE     reduce using rule 15 (channels_list -> channels_list channel .)
+    CHANNEL         reduce using rule 15 (channels_list -> channels_list channel .)
+
+
+state 51
+
+    (25) channel -> CHANNEL identifiers_list . LPARAN channel_buffor RPARAN SEMICOLON
+    (28) identifiers_list -> identifiers_list . COMMA IDENTIFIER
+
+    LPARAN          shift and go to state 63
+    COMMA           shift and go to state 64
+
+
+state 52
+
+    (27) identifiers_list -> IDENTIFIER .
+
+    RPARAN          reduce using rule 27 (identifiers_list -> IDENTIFIER .)
+    COMMA           reduce using rule 27 (identifiers_list -> IDENTIFIER .)
+    LPARAN          reduce using rule 27 (identifiers_list -> IDENTIFIER .)
+    SQ_RPARAN       reduce using rule 27 (identifiers_list -> IDENTIFIER .)
+    IDENTIFIER      reduce using rule 27 (identifiers_list -> IDENTIFIER .)
+
+
+state 53
+
+    (20) expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN . expression_function_qop_arguments SQ_RPARAN
+    (29) expression_function_qop_arguments -> . TEXT
+    (30) expression_function_qop_arguments -> . expression_function_qop_arguments COMMA TEXT
+
+    TEXT            shift and go to state 66
+
+    expression_function_qop_arguments shift and go to state 65
+
+state 54
+
+    (19) expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .
+    (21) expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN . SQ_LPARAN expression_function_qop_arguments SQ_RPARAN
+
+    COMMA           reduce using rule 19 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
+    VERSIONS_SPECIFICATION reduce using rule 19 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
+    CHANNELS_SPECIFICATION reduce using rule 19 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
+    EQUATIONS_SPECIFICATION reduce using rule 19 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
+    FUNCTIONS_SPECIFICATION reduce using rule 19 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
+    IDENTIFIER      reduce using rule 19 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
+    BOOL            reduce using rule 19 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
+    LPARAN          reduce using rule 19 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
+    $end            reduce using rule 19 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
+    RPARAN          reduce using rule 19 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN .)
+    SQ_LPARAN       shift and go to state 67
+
+
+state 55
 
     (6) expression_tuple_element -> IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN .
 
     RPARAN          reduce using rule 6 (expression_tuple_element -> IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN .)
     COMMA           reduce using rule 6 (expression_tuple_element -> IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN .)
-    EQUATIONS_SPECIFICATION reduce using rule 6 (expression_tuple_element -> IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN .)
+    VERSIONS_SPECIFICATION reduce using rule 6 (expression_tuple_element -> IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN .)
     CHANNELS_SPECIFICATION reduce using rule 6 (expression_tuple_element -> IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN .)
+    EQUATIONS_SPECIFICATION reduce using rule 6 (expression_tuple_element -> IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN .)
     FUNCTIONS_SPECIFICATION reduce using rule 6 (expression_tuple_element -> IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN .)
     IDENTIFIER      reduce using rule 6 (expression_tuple_element -> IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN .)
     BOOL            reduce using rule 6 (expression_tuple_element -> IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN .)
@@ -826,508 +940,1141 @@ state 50
     $end            reduce using rule 6 (expression_tuple_element -> IDENTIFIER SQ_LPARAN INTEGER SQ_RPARAN .)
 
 
-state 51
-
-    (21) equation -> EQUATION equation_complex_expression EQUAL . equation_simple_expression SEMICOLON
-    (36) equation_simple_expression -> . IDENTIFIER
-    (37) equation_simple_expression -> . BOOL
-
-    IDENTIFIER      shift and go to state 62
-    BOOL            shift and go to state 61
-
-    equation_simple_expression     shift and go to state 60
-
-state 52
-
-    (27) equation_complex_expression -> IDENTIFIER LPARAN . equation_function_arguments RPARAN
-    (28) equation_complex_expression -> IDENTIFIER LPARAN . RPARAN
-    (39) equation_function_arguments -> . equation_expression
-    (40) equation_function_arguments -> . equation_function_arguments COMMA equation_expression
-    (42) equation_expression -> . equation_complex_expression
-    (43) equation_expression -> . equation_simple_expression
-    (27) equation_complex_expression -> . IDENTIFIER LPARAN equation_function_arguments RPARAN
-    (28) equation_complex_expression -> . IDENTIFIER LPARAN RPARAN
-    (36) equation_simple_expression -> . IDENTIFIER
-    (37) equation_simple_expression -> . BOOL
-
-    RPARAN          shift and go to state 64
-    IDENTIFIER      shift and go to state 68
-    BOOL            shift and go to state 61
-
-    equation_simple_expression     shift and go to state 65
-    equation_function_arguments    shift and go to state 63
-    equation_expression            shift and go to state 66
-    equation_complex_expression    shift and go to state 67
-
-state 53
-
-    (51) function_params -> LPARAN . RPARAN
-    (52) function_params -> LPARAN . identifiers_list RPARAN
-    (23) identifiers_list -> . IDENTIFIER
-    (24) identifiers_list -> . identifiers_list COMMA IDENTIFIER
-
-    RPARAN          shift and go to state 69
-    IDENTIFIER      shift and go to state 47
-
-    identifiers_list               shift and go to state 70
-
-state 54
-
-    (46) function -> FUN IDENTIFIER function_params . SEMICOLON
-    (47) function -> FUN IDENTIFIER function_params . function_comment SEMICOLON
-    (48) function -> FUN IDENTIFIER function_params . function_qopml_params SEMICOLON
-    (49) function -> FUN IDENTIFIER function_params . function_qopml_params function_comment SEMICOLON
-    (50) function_comment -> . LPARAN COMMENT RPARAN
-    (53) function_qopml_params -> . SQ_LPARAN function_qopml_params_list SQ_RPARAN
-
-    SEMICOLON       shift and go to state 72
-    LPARAN          shift and go to state 71
-    SQ_LPARAN       shift and go to state 74
-
-    function_comment               shift and go to state 73
-    function_qopml_params          shift and go to state 75
-
-state 55
-
-    (22) channel -> CHANNEL identifiers_list LPARAN . channel_buffor RPARAN SEMICOLON
-    (29) channel_buffor -> . STAR
-    (30) channel_buffor -> . INTEGER
-
-    STAR            shift and go to state 76
-    INTEGER         shift and go to state 78
-
-    channel_buffor                 shift and go to state 77
-
 state 56
 
-    (24) identifiers_list -> identifiers_list COMMA . IDENTIFIER
+    (13) versions_list -> versions_list version .
 
-    IDENTIFIER      shift and go to state 79
+    BLOCK_CLOSE     reduce using rule 13 (versions_list -> versions_list version .)
+    VERSION         reduce using rule 13 (versions_list -> versions_list version .)
 
 
 state 57
 
-    (15) expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments . SQ_RPARAN
-    (26) expression_function_qop_arguments -> expression_function_qop_arguments . COMMA TEXT
+    (7) specification -> VERSIONS_SPECIFICATION BLOCK_OPEN versions_list BLOCK_CLOSE .
 
-    SQ_RPARAN       shift and go to state 81
-    COMMA           shift and go to state 80
+    VERSIONS_SPECIFICATION reduce using rule 7 (specification -> VERSIONS_SPECIFICATION BLOCK_OPEN versions_list BLOCK_CLOSE .)
+    CHANNELS_SPECIFICATION reduce using rule 7 (specification -> VERSIONS_SPECIFICATION BLOCK_OPEN versions_list BLOCK_CLOSE .)
+    EQUATIONS_SPECIFICATION reduce using rule 7 (specification -> VERSIONS_SPECIFICATION BLOCK_OPEN versions_list BLOCK_CLOSE .)
+    FUNCTIONS_SPECIFICATION reduce using rule 7 (specification -> VERSIONS_SPECIFICATION BLOCK_OPEN versions_list BLOCK_CLOSE .)
+    IDENTIFIER      reduce using rule 7 (specification -> VERSIONS_SPECIFICATION BLOCK_OPEN versions_list BLOCK_CLOSE .)
+    BOOL            reduce using rule 7 (specification -> VERSIONS_SPECIFICATION BLOCK_OPEN versions_list BLOCK_CLOSE .)
+    LPARAN          reduce using rule 7 (specification -> VERSIONS_SPECIFICATION BLOCK_OPEN versions_list BLOCK_CLOSE .)
+    $end            reduce using rule 7 (specification -> VERSIONS_SPECIFICATION BLOCK_OPEN versions_list BLOCK_CLOSE .)
 
 
 state 58
 
-    (25) expression_function_qop_arguments -> TEXT .
+    (24) version -> VERSION INTEGER . BLOCK_OPEN version_run_hosts BLOCK_CLOSE
 
-    SQ_RPARAN       reduce using rule 25 (expression_function_qop_arguments -> TEXT .)
-    COMMA           reduce using rule 25 (expression_function_qop_arguments -> TEXT .)
+    BLOCK_OPEN      shift and go to state 68
 
 
 state 59
 
-    (16) expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN . expression_function_qop_arguments SQ_RPARAN
-    (25) expression_function_qop_arguments -> . TEXT
-    (26) expression_function_qop_arguments -> . expression_function_qop_arguments COMMA TEXT
+    (26) equation -> EQUATION equation_complex_expression EQUAL . equation_simple_expression SEMICOLON
+    (48) equation_simple_expression -> . IDENTIFIER
+    (49) equation_simple_expression -> . BOOL
 
-    TEXT            shift and go to state 58
+    IDENTIFIER      shift and go to state 71
+    BOOL            shift and go to state 70
 
-    expression_function_qop_arguments shift and go to state 82
+    equation_simple_expression     shift and go to state 69
 
 state 60
 
-    (21) equation -> EQUATION equation_complex_expression EQUAL equation_simple_expression . SEMICOLON
+    (33) equation_complex_expression -> IDENTIFIER LPARAN . equation_function_arguments RPARAN
+    (34) equation_complex_expression -> IDENTIFIER LPARAN . RPARAN
+    (53) equation_function_arguments -> . equation_expression
+    (54) equation_function_arguments -> . equation_function_arguments COMMA equation_expression
+    (62) equation_expression -> . equation_complex_expression
+    (63) equation_expression -> . equation_simple_expression
+    (33) equation_complex_expression -> . IDENTIFIER LPARAN equation_function_arguments RPARAN
+    (34) equation_complex_expression -> . IDENTIFIER LPARAN RPARAN
+    (48) equation_simple_expression -> . IDENTIFIER
+    (49) equation_simple_expression -> . BOOL
 
-    SEMICOLON       shift and go to state 83
+    RPARAN          shift and go to state 73
+    IDENTIFIER      shift and go to state 77
+    BOOL            shift and go to state 70
 
+    equation_simple_expression     shift and go to state 74
+    equation_function_arguments    shift and go to state 72
+    equation_expression            shift and go to state 75
+    equation_complex_expression    shift and go to state 76
 
 state 61
 
-    (37) equation_simple_expression -> BOOL .
+    (74) function_params -> LPARAN . RPARAN
+    (75) function_params -> LPARAN . identifiers_list RPARAN
+    (27) identifiers_list -> . IDENTIFIER
+    (28) identifiers_list -> . identifiers_list COMMA IDENTIFIER
 
-    SEMICOLON       reduce using rule 37 (equation_simple_expression -> BOOL .)
-    RPARAN          reduce using rule 37 (equation_simple_expression -> BOOL .)
-    COMMA           reduce using rule 37 (equation_simple_expression -> BOOL .)
+    RPARAN          shift and go to state 78
+    IDENTIFIER      shift and go to state 52
 
+    identifiers_list               shift and go to state 79
 
 state 62
 
-    (36) equation_simple_expression -> IDENTIFIER .
+    (65) function -> FUN IDENTIFIER function_params . SEMICOLON
+    (66) function -> FUN IDENTIFIER function_params . function_comment SEMICOLON
+    (67) function -> FUN IDENTIFIER function_params . function_qopml_params SEMICOLON
+    (68) function -> FUN IDENTIFIER function_params . function_qopml_params function_comment SEMICOLON
+    (71) function_comment -> . LPARAN COMMENT RPARAN
+    (80) function_qopml_params -> . SQ_LPARAN function_qopml_params_list SQ_RPARAN
 
-    SEMICOLON       reduce using rule 36 (equation_simple_expression -> IDENTIFIER .)
+    SEMICOLON       shift and go to state 81
+    LPARAN          shift and go to state 80
+    SQ_LPARAN       shift and go to state 83
 
+    function_comment               shift and go to state 82
+    function_qopml_params          shift and go to state 84
 
 state 63
 
-    (27) equation_complex_expression -> IDENTIFIER LPARAN equation_function_arguments . RPARAN
-    (40) equation_function_arguments -> equation_function_arguments . COMMA equation_expression
+    (25) channel -> CHANNEL identifiers_list LPARAN . channel_buffor RPARAN SEMICOLON
+    (35) channel_buffor -> . STAR
+    (36) channel_buffor -> . INTEGER
 
-    RPARAN          shift and go to state 84
-    COMMA           shift and go to state 85
+    STAR            shift and go to state 85
+    INTEGER         shift and go to state 87
 
+    channel_buffor                 shift and go to state 86
 
 state 64
 
-    (28) equation_complex_expression -> IDENTIFIER LPARAN RPARAN .
+    (28) identifiers_list -> identifiers_list COMMA . IDENTIFIER
 
-    RPARAN          reduce using rule 28 (equation_complex_expression -> IDENTIFIER LPARAN RPARAN .)
-    COMMA           reduce using rule 28 (equation_complex_expression -> IDENTIFIER LPARAN RPARAN .)
-    EQUAL           reduce using rule 28 (equation_complex_expression -> IDENTIFIER LPARAN RPARAN .)
+    IDENTIFIER      shift and go to state 88
 
 
 state 65
 
-    (43) equation_expression -> equation_simple_expression .
+    (20) expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments . SQ_RPARAN
+    (30) expression_function_qop_arguments -> expression_function_qop_arguments . COMMA TEXT
 
-    RPARAN          reduce using rule 43 (equation_expression -> equation_simple_expression .)
-    COMMA           reduce using rule 43 (equation_expression -> equation_simple_expression .)
+    SQ_RPARAN       shift and go to state 90
+    COMMA           shift and go to state 89
 
 
 state 66
 
-    (39) equation_function_arguments -> equation_expression .
+    (29) expression_function_qop_arguments -> TEXT .
 
-    RPARAN          reduce using rule 39 (equation_function_arguments -> equation_expression .)
-    COMMA           reduce using rule 39 (equation_function_arguments -> equation_expression .)
+    SQ_RPARAN       reduce using rule 29 (expression_function_qop_arguments -> TEXT .)
+    COMMA           reduce using rule 29 (expression_function_qop_arguments -> TEXT .)
 
 
 state 67
 
-    (42) equation_expression -> equation_complex_expression .
+    (21) expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN . expression_function_qop_arguments SQ_RPARAN
+    (29) expression_function_qop_arguments -> . TEXT
+    (30) expression_function_qop_arguments -> . expression_function_qop_arguments COMMA TEXT
 
-    RPARAN          reduce using rule 42 (equation_expression -> equation_complex_expression .)
-    COMMA           reduce using rule 42 (equation_expression -> equation_complex_expression .)
+    TEXT            shift and go to state 66
 
+    expression_function_qop_arguments shift and go to state 91
 
 state 68
 
-    (27) equation_complex_expression -> IDENTIFIER . LPARAN equation_function_arguments RPARAN
-    (28) equation_complex_expression -> IDENTIFIER . LPARAN RPARAN
-    (36) equation_simple_expression -> IDENTIFIER .
+    (24) version -> VERSION INTEGER BLOCK_OPEN . version_run_hosts BLOCK_CLOSE
+    (31) version_run_hosts -> . version_run_host
+    (32) version_run_hosts -> . version_run_hosts version_run_host
+    (42) version_run_host -> . RUN HOST IDENTIFIER version_channels BLOCK_OPEN BLOCK_CLOSE
+    (43) version_run_host -> . RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN BLOCK_CLOSE
+    (44) version_run_host -> . RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN BLOCK_CLOSE
+    (45) version_run_host -> . RUN HOST IDENTIFIER version_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (46) version_run_host -> . RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (47) version_run_host -> . RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
 
-    LPARAN          shift and go to state 52
-    RPARAN          reduce using rule 36 (equation_simple_expression -> IDENTIFIER .)
-    COMMA           reduce using rule 36 (equation_simple_expression -> IDENTIFIER .)
+    RUN             shift and go to state 92
 
+    version_run_host               shift and go to state 93
+    version_run_hosts              shift and go to state 94
 
 state 69
 
-    (51) function_params -> LPARAN RPARAN .
+    (26) equation -> EQUATION equation_complex_expression EQUAL equation_simple_expression . SEMICOLON
 
-    SEMICOLON       reduce using rule 51 (function_params -> LPARAN RPARAN .)
-    LPARAN          reduce using rule 51 (function_params -> LPARAN RPARAN .)
-    SQ_LPARAN       reduce using rule 51 (function_params -> LPARAN RPARAN .)
+    SEMICOLON       shift and go to state 95
 
 
 state 70
 
-    (52) function_params -> LPARAN identifiers_list . RPARAN
-    (24) identifiers_list -> identifiers_list . COMMA IDENTIFIER
+    (49) equation_simple_expression -> BOOL .
 
-    RPARAN          shift and go to state 86
-    COMMA           shift and go to state 56
+    RPARAN          reduce using rule 49 (equation_simple_expression -> BOOL .)
+    COMMA           reduce using rule 49 (equation_simple_expression -> BOOL .)
+    SEMICOLON       reduce using rule 49 (equation_simple_expression -> BOOL .)
 
 
 state 71
 
-    (50) function_comment -> LPARAN . COMMENT RPARAN
+    (48) equation_simple_expression -> IDENTIFIER .
 
-    COMMENT         shift and go to state 87
+    SEMICOLON       reduce using rule 48 (equation_simple_expression -> IDENTIFIER .)
 
 
 state 72
 
-    (46) function -> FUN IDENTIFIER function_params SEMICOLON .
+    (33) equation_complex_expression -> IDENTIFIER LPARAN equation_function_arguments . RPARAN
+    (54) equation_function_arguments -> equation_function_arguments . COMMA equation_expression
 
-    BLOCK_CLOSE     reduce using rule 46 (function -> FUN IDENTIFIER function_params SEMICOLON .)
-    FUN             reduce using rule 46 (function -> FUN IDENTIFIER function_params SEMICOLON .)
+    RPARAN          shift and go to state 96
+    COMMA           shift and go to state 97
 
 
 state 73
 
-    (47) function -> FUN IDENTIFIER function_params function_comment . SEMICOLON
+    (34) equation_complex_expression -> IDENTIFIER LPARAN RPARAN .
 
-    SEMICOLON       shift and go to state 88
+    RPARAN          reduce using rule 34 (equation_complex_expression -> IDENTIFIER LPARAN RPARAN .)
+    COMMA           reduce using rule 34 (equation_complex_expression -> IDENTIFIER LPARAN RPARAN .)
+    EQUAL           reduce using rule 34 (equation_complex_expression -> IDENTIFIER LPARAN RPARAN .)
 
 
 state 74
 
-    (53) function_qopml_params -> SQ_LPARAN . function_qopml_params_list SQ_RPARAN
-    (54) function_qopml_params_list -> . function_qop_param
-    (55) function_qopml_params_list -> . function_qopml_params_list function_qop_param
-    (56) function_qop_param -> . IDENTIFIER COLON identifiers_list
+    (63) equation_expression -> equation_simple_expression .
 
-    IDENTIFIER      shift and go to state 90
+    RPARAN          reduce using rule 63 (equation_expression -> equation_simple_expression .)
+    COMMA           reduce using rule 63 (equation_expression -> equation_simple_expression .)
 
-    function_qopml_params_list     shift and go to state 89
-    function_qop_param             shift and go to state 91
 
 state 75
 
-    (48) function -> FUN IDENTIFIER function_params function_qopml_params . SEMICOLON
-    (49) function -> FUN IDENTIFIER function_params function_qopml_params . function_comment SEMICOLON
-    (50) function_comment -> . LPARAN COMMENT RPARAN
+    (53) equation_function_arguments -> equation_expression .
 
-    SEMICOLON       shift and go to state 92
-    LPARAN          shift and go to state 71
+    RPARAN          reduce using rule 53 (equation_function_arguments -> equation_expression .)
+    COMMA           reduce using rule 53 (equation_function_arguments -> equation_expression .)
 
-    function_comment               shift and go to state 93
 
 state 76
 
-    (29) channel_buffor -> STAR .
+    (62) equation_expression -> equation_complex_expression .
 
-    RPARAN          reduce using rule 29 (channel_buffor -> STAR .)
+    RPARAN          reduce using rule 62 (equation_expression -> equation_complex_expression .)
+    COMMA           reduce using rule 62 (equation_expression -> equation_complex_expression .)
 
 
 state 77
 
-    (22) channel -> CHANNEL identifiers_list LPARAN channel_buffor . RPARAN SEMICOLON
+    (33) equation_complex_expression -> IDENTIFIER . LPARAN equation_function_arguments RPARAN
+    (34) equation_complex_expression -> IDENTIFIER . LPARAN RPARAN
+    (48) equation_simple_expression -> IDENTIFIER .
 
-    RPARAN          shift and go to state 94
+    LPARAN          shift and go to state 60
+    RPARAN          reduce using rule 48 (equation_simple_expression -> IDENTIFIER .)
+    COMMA           reduce using rule 48 (equation_simple_expression -> IDENTIFIER .)
 
 
 state 78
 
-    (30) channel_buffor -> INTEGER .
+    (74) function_params -> LPARAN RPARAN .
 
-    RPARAN          reduce using rule 30 (channel_buffor -> INTEGER .)
+    SEMICOLON       reduce using rule 74 (function_params -> LPARAN RPARAN .)
+    LPARAN          reduce using rule 74 (function_params -> LPARAN RPARAN .)
+    SQ_LPARAN       reduce using rule 74 (function_params -> LPARAN RPARAN .)
 
 
 state 79
 
-    (24) identifiers_list -> identifiers_list COMMA IDENTIFIER .
+    (75) function_params -> LPARAN identifiers_list . RPARAN
+    (28) identifiers_list -> identifiers_list . COMMA IDENTIFIER
 
-    COMMA           reduce using rule 24 (identifiers_list -> identifiers_list COMMA IDENTIFIER .)
-    SQ_RPARAN       reduce using rule 24 (identifiers_list -> identifiers_list COMMA IDENTIFIER .)
-    IDENTIFIER      reduce using rule 24 (identifiers_list -> identifiers_list COMMA IDENTIFIER .)
-    RPARAN          reduce using rule 24 (identifiers_list -> identifiers_list COMMA IDENTIFIER .)
-    LPARAN          reduce using rule 24 (identifiers_list -> identifiers_list COMMA IDENTIFIER .)
+    RPARAN          shift and go to state 98
+    COMMA           shift and go to state 64
 
 
 state 80
 
-    (26) expression_function_qop_arguments -> expression_function_qop_arguments COMMA . TEXT
+    (71) function_comment -> LPARAN . COMMENT RPARAN
 
-    TEXT            shift and go to state 95
+    COMMENT         shift and go to state 99
 
 
 state 81
 
-    (15) expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .
+    (65) function -> FUN IDENTIFIER function_params SEMICOLON .
 
-    COMMA           reduce using rule 15 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    EQUATIONS_SPECIFICATION reduce using rule 15 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    CHANNELS_SPECIFICATION reduce using rule 15 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    FUNCTIONS_SPECIFICATION reduce using rule 15 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    IDENTIFIER      reduce using rule 15 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    BOOL            reduce using rule 15 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    LPARAN          reduce using rule 15 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    $end            reduce using rule 15 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    RPARAN          reduce using rule 15 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    BLOCK_CLOSE     reduce using rule 65 (function -> FUN IDENTIFIER function_params SEMICOLON .)
+    FUN             reduce using rule 65 (function -> FUN IDENTIFIER function_params SEMICOLON .)
 
 
 state 82
 
-    (16) expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments . SQ_RPARAN
-    (26) expression_function_qop_arguments -> expression_function_qop_arguments . COMMA TEXT
+    (66) function -> FUN IDENTIFIER function_params function_comment . SEMICOLON
 
-    SQ_RPARAN       shift and go to state 96
-    COMMA           shift and go to state 80
+    SEMICOLON       shift and go to state 100
 
 
 state 83
 
-    (21) equation -> EQUATION equation_complex_expression EQUAL equation_simple_expression SEMICOLON .
+    (80) function_qopml_params -> SQ_LPARAN . function_qopml_params_list SQ_RPARAN
+    (84) function_qopml_params_list -> . function_qop_param
+    (85) function_qopml_params_list -> . function_qopml_params_list function_qop_param
+    (86) function_qop_param -> . IDENTIFIER COLON identifiers_list
 
-    BLOCK_CLOSE     reduce using rule 21 (equation -> EQUATION equation_complex_expression EQUAL equation_simple_expression SEMICOLON .)
-    EQUATION        reduce using rule 21 (equation -> EQUATION equation_complex_expression EQUAL equation_simple_expression SEMICOLON .)
+    IDENTIFIER      shift and go to state 102
 
+    function_qopml_params_list     shift and go to state 101
+    function_qop_param             shift and go to state 103
 
 state 84
 
-    (27) equation_complex_expression -> IDENTIFIER LPARAN equation_function_arguments RPARAN .
+    (67) function -> FUN IDENTIFIER function_params function_qopml_params . SEMICOLON
+    (68) function -> FUN IDENTIFIER function_params function_qopml_params . function_comment SEMICOLON
+    (71) function_comment -> . LPARAN COMMENT RPARAN
 
-    RPARAN          reduce using rule 27 (equation_complex_expression -> IDENTIFIER LPARAN equation_function_arguments RPARAN .)
-    COMMA           reduce using rule 27 (equation_complex_expression -> IDENTIFIER LPARAN equation_function_arguments RPARAN .)
-    EQUAL           reduce using rule 27 (equation_complex_expression -> IDENTIFIER LPARAN equation_function_arguments RPARAN .)
+    SEMICOLON       shift and go to state 104
+    LPARAN          shift and go to state 80
 
+    function_comment               shift and go to state 105
 
 state 85
 
-    (40) equation_function_arguments -> equation_function_arguments COMMA . equation_expression
-    (42) equation_expression -> . equation_complex_expression
-    (43) equation_expression -> . equation_simple_expression
-    (27) equation_complex_expression -> . IDENTIFIER LPARAN equation_function_arguments RPARAN
-    (28) equation_complex_expression -> . IDENTIFIER LPARAN RPARAN
-    (36) equation_simple_expression -> . IDENTIFIER
-    (37) equation_simple_expression -> . BOOL
+    (35) channel_buffor -> STAR .
 
-    IDENTIFIER      shift and go to state 68
-    BOOL            shift and go to state 61
+    RPARAN          reduce using rule 35 (channel_buffor -> STAR .)
 
-    equation_simple_expression     shift and go to state 65
-    equation_expression            shift and go to state 97
-    equation_complex_expression    shift and go to state 67
 
 state 86
 
-    (52) function_params -> LPARAN identifiers_list RPARAN .
+    (25) channel -> CHANNEL identifiers_list LPARAN channel_buffor . RPARAN SEMICOLON
 
-    SEMICOLON       reduce using rule 52 (function_params -> LPARAN identifiers_list RPARAN .)
-    LPARAN          reduce using rule 52 (function_params -> LPARAN identifiers_list RPARAN .)
-    SQ_LPARAN       reduce using rule 52 (function_params -> LPARAN identifiers_list RPARAN .)
+    RPARAN          shift and go to state 106
 
 
 state 87
 
-    (50) function_comment -> LPARAN COMMENT . RPARAN
+    (36) channel_buffor -> INTEGER .
 
-    RPARAN          shift and go to state 98
+    RPARAN          reduce using rule 36 (channel_buffor -> INTEGER .)
 
 
 state 88
 
-    (47) function -> FUN IDENTIFIER function_params function_comment SEMICOLON .
+    (28) identifiers_list -> identifiers_list COMMA IDENTIFIER .
 
-    BLOCK_CLOSE     reduce using rule 47 (function -> FUN IDENTIFIER function_params function_comment SEMICOLON .)
-    FUN             reduce using rule 47 (function -> FUN IDENTIFIER function_params function_comment SEMICOLON .)
+    RPARAN          reduce using rule 28 (identifiers_list -> identifiers_list COMMA IDENTIFIER .)
+    COMMA           reduce using rule 28 (identifiers_list -> identifiers_list COMMA IDENTIFIER .)
+    LPARAN          reduce using rule 28 (identifiers_list -> identifiers_list COMMA IDENTIFIER .)
+    SQ_RPARAN       reduce using rule 28 (identifiers_list -> identifiers_list COMMA IDENTIFIER .)
+    IDENTIFIER      reduce using rule 28 (identifiers_list -> identifiers_list COMMA IDENTIFIER .)
 
 
 state 89
 
-    (53) function_qopml_params -> SQ_LPARAN function_qopml_params_list . SQ_RPARAN
-    (55) function_qopml_params_list -> function_qopml_params_list . function_qop_param
-    (56) function_qop_param -> . IDENTIFIER COLON identifiers_list
+    (30) expression_function_qop_arguments -> expression_function_qop_arguments COMMA . TEXT
 
-    SQ_RPARAN       shift and go to state 99
-    IDENTIFIER      shift and go to state 90
+    TEXT            shift and go to state 107
 
-    function_qop_param             shift and go to state 100
 
 state 90
 
-    (56) function_qop_param -> IDENTIFIER . COLON identifiers_list
+    (20) expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .
 
-    COLON           shift and go to state 101
+    COMMA           reduce using rule 20 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    VERSIONS_SPECIFICATION reduce using rule 20 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    CHANNELS_SPECIFICATION reduce using rule 20 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    EQUATIONS_SPECIFICATION reduce using rule 20 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    FUNCTIONS_SPECIFICATION reduce using rule 20 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    IDENTIFIER      reduce using rule 20 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    BOOL            reduce using rule 20 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    LPARAN          reduce using rule 20 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    $end            reduce using rule 20 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    RPARAN          reduce using rule 20 (expression_call_function -> IDENTIFIER LPARAN RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
 
 
 state 91
 
-    (54) function_qopml_params_list -> function_qop_param .
+    (21) expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments . SQ_RPARAN
+    (30) expression_function_qop_arguments -> expression_function_qop_arguments . COMMA TEXT
 
-    SQ_RPARAN       reduce using rule 54 (function_qopml_params_list -> function_qop_param .)
-    IDENTIFIER      reduce using rule 54 (function_qopml_params_list -> function_qop_param .)
+    SQ_RPARAN       shift and go to state 108
+    COMMA           shift and go to state 89
 
 
 state 92
 
-    (48) function -> FUN IDENTIFIER function_params function_qopml_params SEMICOLON .
+    (42) version_run_host -> RUN . HOST IDENTIFIER version_channels BLOCK_OPEN BLOCK_CLOSE
+    (43) version_run_host -> RUN . HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN BLOCK_CLOSE
+    (44) version_run_host -> RUN . HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN BLOCK_CLOSE
+    (45) version_run_host -> RUN . HOST IDENTIFIER version_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (46) version_run_host -> RUN . HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (47) version_run_host -> RUN . HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
 
-    BLOCK_CLOSE     reduce using rule 48 (function -> FUN IDENTIFIER function_params function_qopml_params SEMICOLON .)
-    FUN             reduce using rule 48 (function -> FUN IDENTIFIER function_params function_qopml_params SEMICOLON .)
+    HOST            shift and go to state 109
 
 
 state 93
 
-    (49) function -> FUN IDENTIFIER function_params function_qopml_params function_comment . SEMICOLON
+    (31) version_run_hosts -> version_run_host .
 
-    SEMICOLON       shift and go to state 102
+    BLOCK_CLOSE     reduce using rule 31 (version_run_hosts -> version_run_host .)
+    RUN             reduce using rule 31 (version_run_hosts -> version_run_host .)
 
 
 state 94
 
-    (22) channel -> CHANNEL identifiers_list LPARAN channel_buffor RPARAN . SEMICOLON
+    (24) version -> VERSION INTEGER BLOCK_OPEN version_run_hosts . BLOCK_CLOSE
+    (32) version_run_hosts -> version_run_hosts . version_run_host
+    (42) version_run_host -> . RUN HOST IDENTIFIER version_channels BLOCK_OPEN BLOCK_CLOSE
+    (43) version_run_host -> . RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN BLOCK_CLOSE
+    (44) version_run_host -> . RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN BLOCK_CLOSE
+    (45) version_run_host -> . RUN HOST IDENTIFIER version_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (46) version_run_host -> . RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (47) version_run_host -> . RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
 
-    SEMICOLON       shift and go to state 103
+    BLOCK_CLOSE     shift and go to state 111
+    RUN             shift and go to state 92
 
+    version_run_host               shift and go to state 110
 
 state 95
 
-    (26) expression_function_qop_arguments -> expression_function_qop_arguments COMMA TEXT .
+    (26) equation -> EQUATION equation_complex_expression EQUAL equation_simple_expression SEMICOLON .
 
-    SQ_RPARAN       reduce using rule 26 (expression_function_qop_arguments -> expression_function_qop_arguments COMMA TEXT .)
-    COMMA           reduce using rule 26 (expression_function_qop_arguments -> expression_function_qop_arguments COMMA TEXT .)
+    BLOCK_CLOSE     reduce using rule 26 (equation -> EQUATION equation_complex_expression EQUAL equation_simple_expression SEMICOLON .)
+    EQUATION        reduce using rule 26 (equation -> EQUATION equation_complex_expression EQUAL equation_simple_expression SEMICOLON .)
 
 
 state 96
 
-    (16) expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .
+    (33) equation_complex_expression -> IDENTIFIER LPARAN equation_function_arguments RPARAN .
 
-    COMMA           reduce using rule 16 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    EQUATIONS_SPECIFICATION reduce using rule 16 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    CHANNELS_SPECIFICATION reduce using rule 16 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    FUNCTIONS_SPECIFICATION reduce using rule 16 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    IDENTIFIER      reduce using rule 16 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    BOOL            reduce using rule 16 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    LPARAN          reduce using rule 16 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    $end            reduce using rule 16 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
-    RPARAN          reduce using rule 16 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    RPARAN          reduce using rule 33 (equation_complex_expression -> IDENTIFIER LPARAN equation_function_arguments RPARAN .)
+    COMMA           reduce using rule 33 (equation_complex_expression -> IDENTIFIER LPARAN equation_function_arguments RPARAN .)
+    EQUAL           reduce using rule 33 (equation_complex_expression -> IDENTIFIER LPARAN equation_function_arguments RPARAN .)
 
 
 state 97
 
-    (40) equation_function_arguments -> equation_function_arguments COMMA equation_expression .
+    (54) equation_function_arguments -> equation_function_arguments COMMA . equation_expression
+    (62) equation_expression -> . equation_complex_expression
+    (63) equation_expression -> . equation_simple_expression
+    (33) equation_complex_expression -> . IDENTIFIER LPARAN equation_function_arguments RPARAN
+    (34) equation_complex_expression -> . IDENTIFIER LPARAN RPARAN
+    (48) equation_simple_expression -> . IDENTIFIER
+    (49) equation_simple_expression -> . BOOL
 
-    RPARAN          reduce using rule 40 (equation_function_arguments -> equation_function_arguments COMMA equation_expression .)
-    COMMA           reduce using rule 40 (equation_function_arguments -> equation_function_arguments COMMA equation_expression .)
+    IDENTIFIER      shift and go to state 77
+    BOOL            shift and go to state 70
 
+    equation_simple_expression     shift and go to state 74
+    equation_expression            shift and go to state 112
+    equation_complex_expression    shift and go to state 76
 
 state 98
 
-    (50) function_comment -> LPARAN COMMENT RPARAN .
+    (75) function_params -> LPARAN identifiers_list RPARAN .
 
-    SEMICOLON       reduce using rule 50 (function_comment -> LPARAN COMMENT RPARAN .)
+    SEMICOLON       reduce using rule 75 (function_params -> LPARAN identifiers_list RPARAN .)
+    LPARAN          reduce using rule 75 (function_params -> LPARAN identifiers_list RPARAN .)
+    SQ_LPARAN       reduce using rule 75 (function_params -> LPARAN identifiers_list RPARAN .)
 
 
 state 99
 
-    (53) function_qopml_params -> SQ_LPARAN function_qopml_params_list SQ_RPARAN .
+    (71) function_comment -> LPARAN COMMENT . RPARAN
 
-    SEMICOLON       reduce using rule 53 (function_qopml_params -> SQ_LPARAN function_qopml_params_list SQ_RPARAN .)
-    LPARAN          reduce using rule 53 (function_qopml_params -> SQ_LPARAN function_qopml_params_list SQ_RPARAN .)
+    RPARAN          shift and go to state 113
 
 
 state 100
 
-    (55) function_qopml_params_list -> function_qopml_params_list function_qop_param .
+    (66) function -> FUN IDENTIFIER function_params function_comment SEMICOLON .
 
-    SQ_RPARAN       reduce using rule 55 (function_qopml_params_list -> function_qopml_params_list function_qop_param .)
-    IDENTIFIER      reduce using rule 55 (function_qopml_params_list -> function_qopml_params_list function_qop_param .)
+    BLOCK_CLOSE     reduce using rule 66 (function -> FUN IDENTIFIER function_params function_comment SEMICOLON .)
+    FUN             reduce using rule 66 (function -> FUN IDENTIFIER function_params function_comment SEMICOLON .)
 
 
 state 101
 
-    (56) function_qop_param -> IDENTIFIER COLON . identifiers_list
-    (23) identifiers_list -> . IDENTIFIER
-    (24) identifiers_list -> . identifiers_list COMMA IDENTIFIER
+    (80) function_qopml_params -> SQ_LPARAN function_qopml_params_list . SQ_RPARAN
+    (85) function_qopml_params_list -> function_qopml_params_list . function_qop_param
+    (86) function_qop_param -> . IDENTIFIER COLON identifiers_list
 
-    IDENTIFIER      shift and go to state 47
+    SQ_RPARAN       shift and go to state 114
+    IDENTIFIER      shift and go to state 102
 
-    identifiers_list               shift and go to state 104
+    function_qop_param             shift and go to state 115
 
 state 102
 
-    (49) function -> FUN IDENTIFIER function_params function_qopml_params function_comment SEMICOLON .
+    (86) function_qop_param -> IDENTIFIER . COLON identifiers_list
 
-    BLOCK_CLOSE     reduce using rule 49 (function -> FUN IDENTIFIER function_params function_qopml_params function_comment SEMICOLON .)
-    FUN             reduce using rule 49 (function -> FUN IDENTIFIER function_params function_qopml_params function_comment SEMICOLON .)
+    COLON           shift and go to state 116
 
 
 state 103
 
-    (22) channel -> CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON .
+    (84) function_qopml_params_list -> function_qop_param .
 
-    BLOCK_CLOSE     reduce using rule 22 (channel -> CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON .)
-    CHANNEL         reduce using rule 22 (channel -> CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON .)
+    SQ_RPARAN       reduce using rule 84 (function_qopml_params_list -> function_qop_param .)
+    IDENTIFIER      reduce using rule 84 (function_qopml_params_list -> function_qop_param .)
 
 
 state 104
 
-    (56) function_qop_param -> IDENTIFIER COLON identifiers_list .
-    (24) identifiers_list -> identifiers_list . COMMA IDENTIFIER
+    (67) function -> FUN IDENTIFIER function_params function_qopml_params SEMICOLON .
 
-    SQ_RPARAN       reduce using rule 56 (function_qop_param -> IDENTIFIER COLON identifiers_list .)
-    IDENTIFIER      reduce using rule 56 (function_qop_param -> IDENTIFIER COLON identifiers_list .)
-    COMMA           shift and go to state 56
+    BLOCK_CLOSE     reduce using rule 67 (function -> FUN IDENTIFIER function_params function_qopml_params SEMICOLON .)
+    FUN             reduce using rule 67 (function -> FUN IDENTIFIER function_params function_qopml_params SEMICOLON .)
+
+
+state 105
+
+    (68) function -> FUN IDENTIFIER function_params function_qopml_params function_comment . SEMICOLON
+
+    SEMICOLON       shift and go to state 117
+
+
+state 106
+
+    (25) channel -> CHANNEL identifiers_list LPARAN channel_buffor RPARAN . SEMICOLON
+
+    SEMICOLON       shift and go to state 118
+
+
+state 107
+
+    (30) expression_function_qop_arguments -> expression_function_qop_arguments COMMA TEXT .
+
+    SQ_RPARAN       reduce using rule 30 (expression_function_qop_arguments -> expression_function_qop_arguments COMMA TEXT .)
+    COMMA           reduce using rule 30 (expression_function_qop_arguments -> expression_function_qop_arguments COMMA TEXT .)
+
+
+state 108
+
+    (21) expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .
+
+    COMMA           reduce using rule 21 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    VERSIONS_SPECIFICATION reduce using rule 21 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    CHANNELS_SPECIFICATION reduce using rule 21 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    EQUATIONS_SPECIFICATION reduce using rule 21 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    FUNCTIONS_SPECIFICATION reduce using rule 21 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    IDENTIFIER      reduce using rule 21 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    BOOL            reduce using rule 21 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    LPARAN          reduce using rule 21 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    $end            reduce using rule 21 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+    RPARAN          reduce using rule 21 (expression_call_function -> IDENTIFIER LPARAN expression_function_arguments RPARAN SQ_LPARAN expression_function_qop_arguments SQ_RPARAN .)
+
+
+state 109
+
+    (42) version_run_host -> RUN HOST . IDENTIFIER version_channels BLOCK_OPEN BLOCK_CLOSE
+    (43) version_run_host -> RUN HOST . IDENTIFIER version_channels version_repetition BLOCK_OPEN BLOCK_CLOSE
+    (44) version_run_host -> RUN HOST . IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN BLOCK_CLOSE
+    (45) version_run_host -> RUN HOST . IDENTIFIER version_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (46) version_run_host -> RUN HOST . IDENTIFIER version_channels version_repetition BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (47) version_run_host -> RUN HOST . IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
+
+    IDENTIFIER      shift and go to state 119
+
+
+state 110
+
+    (32) version_run_hosts -> version_run_hosts version_run_host .
+
+    BLOCK_CLOSE     reduce using rule 32 (version_run_hosts -> version_run_hosts version_run_host .)
+    RUN             reduce using rule 32 (version_run_hosts -> version_run_hosts version_run_host .)
+
+
+state 111
+
+    (24) version -> VERSION INTEGER BLOCK_OPEN version_run_hosts BLOCK_CLOSE .
+
+    BLOCK_CLOSE     reduce using rule 24 (version -> VERSION INTEGER BLOCK_OPEN version_run_hosts BLOCK_CLOSE .)
+    VERSION         reduce using rule 24 (version -> VERSION INTEGER BLOCK_OPEN version_run_hosts BLOCK_CLOSE .)
+
+
+state 112
+
+    (54) equation_function_arguments -> equation_function_arguments COMMA equation_expression .
+
+    RPARAN          reduce using rule 54 (equation_function_arguments -> equation_function_arguments COMMA equation_expression .)
+    COMMA           reduce using rule 54 (equation_function_arguments -> equation_function_arguments COMMA equation_expression .)
+
+
+state 113
+
+    (71) function_comment -> LPARAN COMMENT RPARAN .
+
+    SEMICOLON       reduce using rule 71 (function_comment -> LPARAN COMMENT RPARAN .)
+
+
+state 114
+
+    (80) function_qopml_params -> SQ_LPARAN function_qopml_params_list SQ_RPARAN .
+
+    SEMICOLON       reduce using rule 80 (function_qopml_params -> SQ_LPARAN function_qopml_params_list SQ_RPARAN .)
+    LPARAN          reduce using rule 80 (function_qopml_params -> SQ_LPARAN function_qopml_params_list SQ_RPARAN .)
+
+
+state 115
+
+    (85) function_qopml_params_list -> function_qopml_params_list function_qop_param .
+
+    SQ_RPARAN       reduce using rule 85 (function_qopml_params_list -> function_qopml_params_list function_qop_param .)
+    IDENTIFIER      reduce using rule 85 (function_qopml_params_list -> function_qopml_params_list function_qop_param .)
+
+
+state 116
+
+    (86) function_qop_param -> IDENTIFIER COLON . identifiers_list
+    (27) identifiers_list -> . IDENTIFIER
+    (28) identifiers_list -> . identifiers_list COMMA IDENTIFIER
+
+    IDENTIFIER      shift and go to state 52
+
+    identifiers_list               shift and go to state 120
+
+state 117
+
+    (68) function -> FUN IDENTIFIER function_params function_qopml_params function_comment SEMICOLON .
+
+    BLOCK_CLOSE     reduce using rule 68 (function -> FUN IDENTIFIER function_params function_qopml_params function_comment SEMICOLON .)
+    FUN             reduce using rule 68 (function -> FUN IDENTIFIER function_params function_qopml_params function_comment SEMICOLON .)
+
+
+state 118
+
+    (25) channel -> CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON .
+
+    BLOCK_CLOSE     reduce using rule 25 (channel -> CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON .)
+    CHANNEL         reduce using rule 25 (channel -> CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON .)
+
+
+state 119
+
+    (42) version_run_host -> RUN HOST IDENTIFIER . version_channels BLOCK_OPEN BLOCK_CLOSE
+    (43) version_run_host -> RUN HOST IDENTIFIER . version_channels version_repetition BLOCK_OPEN BLOCK_CLOSE
+    (44) version_run_host -> RUN HOST IDENTIFIER . version_channels version_repetition version_repetition_channels BLOCK_OPEN BLOCK_CLOSE
+    (45) version_run_host -> RUN HOST IDENTIFIER . version_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (46) version_run_host -> RUN HOST IDENTIFIER . version_channels version_repetition BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (47) version_run_host -> RUN HOST IDENTIFIER . version_channels version_repetition version_repetition_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (57) version_channels -> . LPARAN RPARAN
+    (58) version_channels -> . LPARAN STAR RPARAN
+    (59) version_channels -> . LPARAN identifiers_list RPARAN
+
+    LPARAN          shift and go to state 121
+
+    version_channels               shift and go to state 122
+
+state 120
+
+    (86) function_qop_param -> IDENTIFIER COLON identifiers_list .
+    (28) identifiers_list -> identifiers_list . COMMA IDENTIFIER
+
+    SQ_RPARAN       reduce using rule 86 (function_qop_param -> IDENTIFIER COLON identifiers_list .)
+    IDENTIFIER      reduce using rule 86 (function_qop_param -> IDENTIFIER COLON identifiers_list .)
+    COMMA           shift and go to state 64
+
+
+state 121
+
+    (57) version_channels -> LPARAN . RPARAN
+    (58) version_channels -> LPARAN . STAR RPARAN
+    (59) version_channels -> LPARAN . identifiers_list RPARAN
+    (27) identifiers_list -> . IDENTIFIER
+    (28) identifiers_list -> . identifiers_list COMMA IDENTIFIER
+
+    RPARAN          shift and go to state 124
+    STAR            shift and go to state 123
+    IDENTIFIER      shift and go to state 52
+
+    identifiers_list               shift and go to state 125
+
+state 122
+
+    (42) version_run_host -> RUN HOST IDENTIFIER version_channels . BLOCK_OPEN BLOCK_CLOSE
+    (43) version_run_host -> RUN HOST IDENTIFIER version_channels . version_repetition BLOCK_OPEN BLOCK_CLOSE
+    (44) version_run_host -> RUN HOST IDENTIFIER version_channels . version_repetition version_repetition_channels BLOCK_OPEN BLOCK_CLOSE
+    (45) version_run_host -> RUN HOST IDENTIFIER version_channels . BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (46) version_run_host -> RUN HOST IDENTIFIER version_channels . version_repetition BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (47) version_run_host -> RUN HOST IDENTIFIER version_channels . version_repetition version_repetition_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (55) version_repetition -> . BLOCK_OPEN INTEGER BLOCK_CLOSE
+
+    BLOCK_OPEN      shift and go to state 126
+
+    version_repetition             shift and go to state 127
+
+state 123
+
+    (58) version_channels -> LPARAN STAR . RPARAN
+
+    RPARAN          shift and go to state 128
+
+
+state 124
+
+    (57) version_channels -> LPARAN RPARAN .
+
+    BLOCK_OPEN      reduce using rule 57 (version_channels -> LPARAN RPARAN .)
+
+
+state 125
+
+    (59) version_channels -> LPARAN identifiers_list . RPARAN
+    (28) identifiers_list -> identifiers_list . COMMA IDENTIFIER
+
+    RPARAN          shift and go to state 129
+    COMMA           shift and go to state 64
+
+
+state 126
+
+    (42) version_run_host -> RUN HOST IDENTIFIER version_channels BLOCK_OPEN . BLOCK_CLOSE
+    (45) version_run_host -> RUN HOST IDENTIFIER version_channels BLOCK_OPEN . version_run_processes BLOCK_CLOSE
+    (55) version_repetition -> BLOCK_OPEN . INTEGER BLOCK_CLOSE
+    (69) version_run_processes -> . version_run_process
+    (70) version_run_processes -> . version_run_processes version_run_process
+    (72) version_run_process -> . version_run_process_base
+    (73) version_run_process -> . version_run_process_base ARROW_RIGHT version_run_process_follower
+    (76) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list
+    (77) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list version_repetition
+    (78) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels
+
+    BLOCK_CLOSE     shift and go to state 132
+    INTEGER         shift and go to state 135
+    RUN             shift and go to state 130
+
+    version_run_process_base       shift and go to state 131
+    version_run_processes          shift and go to state 134
+    version_run_process            shift and go to state 133
+
+state 127
+
+    (43) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition . BLOCK_OPEN BLOCK_CLOSE
+    (44) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition . version_repetition_channels BLOCK_OPEN BLOCK_CLOSE
+    (46) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition . BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (47) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition . version_repetition_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
+    (64) version_repetition_channels -> . SQ_LPARAN qualified_identifiers_list SQ_RPARAN
+
+    BLOCK_OPEN      shift and go to state 136
+    SQ_LPARAN       shift and go to state 137
+
+    version_repetition_channels    shift and go to state 138
+
+state 128
+
+    (58) version_channels -> LPARAN STAR RPARAN .
+
+    BLOCK_OPEN      reduce using rule 58 (version_channels -> LPARAN STAR RPARAN .)
+
+
+state 129
+
+    (59) version_channels -> LPARAN identifiers_list RPARAN .
+
+    BLOCK_OPEN      reduce using rule 59 (version_channels -> LPARAN identifiers_list RPARAN .)
+
+
+state 130
+
+    (76) version_run_process_base -> RUN . IDENTIFIER version_subprocesses_list
+    (77) version_run_process_base -> RUN . IDENTIFIER version_subprocesses_list version_repetition
+    (78) version_run_process_base -> RUN . IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels
+
+    IDENTIFIER      shift and go to state 139
+
+
+state 131
+
+    (72) version_run_process -> version_run_process_base .
+    (73) version_run_process -> version_run_process_base . ARROW_RIGHT version_run_process_follower
+
+    BLOCK_CLOSE     reduce using rule 72 (version_run_process -> version_run_process_base .)
+    RUN             reduce using rule 72 (version_run_process -> version_run_process_base .)
+    ARROW_RIGHT     shift and go to state 140
+
+
+state 132
+
+    (42) version_run_host -> RUN HOST IDENTIFIER version_channels BLOCK_OPEN BLOCK_CLOSE .
+
+    BLOCK_CLOSE     reduce using rule 42 (version_run_host -> RUN HOST IDENTIFIER version_channels BLOCK_OPEN BLOCK_CLOSE .)
+    RUN             reduce using rule 42 (version_run_host -> RUN HOST IDENTIFIER version_channels BLOCK_OPEN BLOCK_CLOSE .)
+
+
+state 133
+
+    (69) version_run_processes -> version_run_process .
+
+    BLOCK_CLOSE     reduce using rule 69 (version_run_processes -> version_run_process .)
+    RUN             reduce using rule 69 (version_run_processes -> version_run_process .)
+
+
+state 134
+
+    (45) version_run_host -> RUN HOST IDENTIFIER version_channels BLOCK_OPEN version_run_processes . BLOCK_CLOSE
+    (70) version_run_processes -> version_run_processes . version_run_process
+    (72) version_run_process -> . version_run_process_base
+    (73) version_run_process -> . version_run_process_base ARROW_RIGHT version_run_process_follower
+    (76) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list
+    (77) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list version_repetition
+    (78) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels
+
+    BLOCK_CLOSE     shift and go to state 142
+    RUN             shift and go to state 130
+
+    version_run_process_base       shift and go to state 131
+    version_run_process            shift and go to state 141
+
+state 135
+
+    (55) version_repetition -> BLOCK_OPEN INTEGER . BLOCK_CLOSE
+
+    BLOCK_CLOSE     shift and go to state 143
+
+
+state 136
+
+    (43) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN . BLOCK_CLOSE
+    (46) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN . version_run_processes BLOCK_CLOSE
+    (69) version_run_processes -> . version_run_process
+    (70) version_run_processes -> . version_run_processes version_run_process
+    (72) version_run_process -> . version_run_process_base
+    (73) version_run_process -> . version_run_process_base ARROW_RIGHT version_run_process_follower
+    (76) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list
+    (77) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list version_repetition
+    (78) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels
+
+    BLOCK_CLOSE     shift and go to state 144
+    RUN             shift and go to state 130
+
+    version_run_process_base       shift and go to state 131
+    version_run_processes          shift and go to state 145
+    version_run_process            shift and go to state 133
+
+state 137
+
+    (64) version_repetition_channels -> SQ_LPARAN . qualified_identifiers_list SQ_RPARAN
+    (50) qualified_identifiers_list -> . QUALIFIED_IDENTIFIER
+    (51) qualified_identifiers_list -> . qualified_identifiers_list COMMA QUALIFIED_IDENTIFIER
+
+    QUALIFIED_IDENTIFIER shift and go to state 147
+
+    qualified_identifiers_list     shift and go to state 146
+
+state 138
+
+    (44) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels . BLOCK_OPEN BLOCK_CLOSE
+    (47) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels . BLOCK_OPEN version_run_processes BLOCK_CLOSE
+
+    BLOCK_OPEN      shift and go to state 148
+
+
+state 139
+
+    (76) version_run_process_base -> RUN IDENTIFIER . version_subprocesses_list
+    (77) version_run_process_base -> RUN IDENTIFIER . version_subprocesses_list version_repetition
+    (78) version_run_process_base -> RUN IDENTIFIER . version_subprocesses_list version_repetition version_repetition_channels
+    (81) version_subprocesses_list -> . LPARAN RPARAN
+    (82) version_subprocesses_list -> . LPARAN STAR RPARAN
+    (83) version_subprocesses_list -> . LPARAN identifiers_list RPARAN
+
+    LPARAN          shift and go to state 150
+
+    version_subprocesses_list      shift and go to state 149
+
+state 140
+
+    (73) version_run_process -> version_run_process_base ARROW_RIGHT . version_run_process_follower
+    (79) version_run_process_follower -> . RUN IDENTIFIER version_subprocesses_list
+
+    RUN             shift and go to state 151
+
+    version_run_process_follower   shift and go to state 152
+
+state 141
+
+    (70) version_run_processes -> version_run_processes version_run_process .
+
+    BLOCK_CLOSE     reduce using rule 70 (version_run_processes -> version_run_processes version_run_process .)
+    RUN             reduce using rule 70 (version_run_processes -> version_run_processes version_run_process .)
+
+
+state 142
+
+    (45) version_run_host -> RUN HOST IDENTIFIER version_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE .
+
+    BLOCK_CLOSE     reduce using rule 45 (version_run_host -> RUN HOST IDENTIFIER version_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE .)
+    RUN             reduce using rule 45 (version_run_host -> RUN HOST IDENTIFIER version_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE .)
+
+
+state 143
+
+    (55) version_repetition -> BLOCK_OPEN INTEGER BLOCK_CLOSE .
+
+    SQ_LPARAN       reduce using rule 55 (version_repetition -> BLOCK_OPEN INTEGER BLOCK_CLOSE .)
+    ARROW_RIGHT     reduce using rule 55 (version_repetition -> BLOCK_OPEN INTEGER BLOCK_CLOSE .)
+    BLOCK_CLOSE     reduce using rule 55 (version_repetition -> BLOCK_OPEN INTEGER BLOCK_CLOSE .)
+    RUN             reduce using rule 55 (version_repetition -> BLOCK_OPEN INTEGER BLOCK_CLOSE .)
+    BLOCK_OPEN      reduce using rule 55 (version_repetition -> BLOCK_OPEN INTEGER BLOCK_CLOSE .)
+
+
+state 144
+
+    (43) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN BLOCK_CLOSE .
+
+    BLOCK_CLOSE     reduce using rule 43 (version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN BLOCK_CLOSE .)
+    RUN             reduce using rule 43 (version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN BLOCK_CLOSE .)
+
+
+state 145
+
+    (46) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN version_run_processes . BLOCK_CLOSE
+    (70) version_run_processes -> version_run_processes . version_run_process
+    (72) version_run_process -> . version_run_process_base
+    (73) version_run_process -> . version_run_process_base ARROW_RIGHT version_run_process_follower
+    (76) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list
+    (77) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list version_repetition
+    (78) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels
+
+    BLOCK_CLOSE     shift and go to state 153
+    RUN             shift and go to state 130
+
+    version_run_process_base       shift and go to state 131
+    version_run_process            shift and go to state 141
+
+state 146
+
+    (64) version_repetition_channels -> SQ_LPARAN qualified_identifiers_list . SQ_RPARAN
+    (51) qualified_identifiers_list -> qualified_identifiers_list . COMMA QUALIFIED_IDENTIFIER
+
+    SQ_RPARAN       shift and go to state 155
+    COMMA           shift and go to state 154
+
+
+state 147
+
+    (50) qualified_identifiers_list -> QUALIFIED_IDENTIFIER .
+
+    SQ_RPARAN       reduce using rule 50 (qualified_identifiers_list -> QUALIFIED_IDENTIFIER .)
+    COMMA           reduce using rule 50 (qualified_identifiers_list -> QUALIFIED_IDENTIFIER .)
+
+
+state 148
+
+    (44) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN . BLOCK_CLOSE
+    (47) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN . version_run_processes BLOCK_CLOSE
+    (69) version_run_processes -> . version_run_process
+    (70) version_run_processes -> . version_run_processes version_run_process
+    (72) version_run_process -> . version_run_process_base
+    (73) version_run_process -> . version_run_process_base ARROW_RIGHT version_run_process_follower
+    (76) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list
+    (77) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list version_repetition
+    (78) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels
+
+    BLOCK_CLOSE     shift and go to state 156
+    RUN             shift and go to state 130
+
+    version_run_process_base       shift and go to state 131
+    version_run_processes          shift and go to state 157
+    version_run_process            shift and go to state 133
+
+state 149
+
+    (76) version_run_process_base -> RUN IDENTIFIER version_subprocesses_list .
+    (77) version_run_process_base -> RUN IDENTIFIER version_subprocesses_list . version_repetition
+    (78) version_run_process_base -> RUN IDENTIFIER version_subprocesses_list . version_repetition version_repetition_channels
+    (55) version_repetition -> . BLOCK_OPEN INTEGER BLOCK_CLOSE
+
+    ARROW_RIGHT     reduce using rule 76 (version_run_process_base -> RUN IDENTIFIER version_subprocesses_list .)
+    BLOCK_CLOSE     reduce using rule 76 (version_run_process_base -> RUN IDENTIFIER version_subprocesses_list .)
+    RUN             reduce using rule 76 (version_run_process_base -> RUN IDENTIFIER version_subprocesses_list .)
+    BLOCK_OPEN      shift and go to state 158
+
+    version_repetition             shift and go to state 159
+
+state 150
+
+    (81) version_subprocesses_list -> LPARAN . RPARAN
+    (82) version_subprocesses_list -> LPARAN . STAR RPARAN
+    (83) version_subprocesses_list -> LPARAN . identifiers_list RPARAN
+    (27) identifiers_list -> . IDENTIFIER
+    (28) identifiers_list -> . identifiers_list COMMA IDENTIFIER
+
+    RPARAN          shift and go to state 161
+    STAR            shift and go to state 160
+    IDENTIFIER      shift and go to state 52
+
+    identifiers_list               shift and go to state 162
+
+state 151
+
+    (79) version_run_process_follower -> RUN . IDENTIFIER version_subprocesses_list
+
+    IDENTIFIER      shift and go to state 163
+
+
+state 152
+
+    (73) version_run_process -> version_run_process_base ARROW_RIGHT version_run_process_follower .
+
+    BLOCK_CLOSE     reduce using rule 73 (version_run_process -> version_run_process_base ARROW_RIGHT version_run_process_follower .)
+    RUN             reduce using rule 73 (version_run_process -> version_run_process_base ARROW_RIGHT version_run_process_follower .)
+
+
+state 153
+
+    (46) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN version_run_processes BLOCK_CLOSE .
+
+    BLOCK_CLOSE     reduce using rule 46 (version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN version_run_processes BLOCK_CLOSE .)
+    RUN             reduce using rule 46 (version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN version_run_processes BLOCK_CLOSE .)
+
+
+state 154
+
+    (51) qualified_identifiers_list -> qualified_identifiers_list COMMA . QUALIFIED_IDENTIFIER
+
+    QUALIFIED_IDENTIFIER shift and go to state 164
+
+
+state 155
+
+    (64) version_repetition_channels -> SQ_LPARAN qualified_identifiers_list SQ_RPARAN .
+
+    ARROW_RIGHT     reduce using rule 64 (version_repetition_channels -> SQ_LPARAN qualified_identifiers_list SQ_RPARAN .)
+    BLOCK_CLOSE     reduce using rule 64 (version_repetition_channels -> SQ_LPARAN qualified_identifiers_list SQ_RPARAN .)
+    RUN             reduce using rule 64 (version_repetition_channels -> SQ_LPARAN qualified_identifiers_list SQ_RPARAN .)
+    BLOCK_OPEN      reduce using rule 64 (version_repetition_channels -> SQ_LPARAN qualified_identifiers_list SQ_RPARAN .)
+
+
+state 156
+
+    (44) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN BLOCK_CLOSE .
+
+    BLOCK_CLOSE     reduce using rule 44 (version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN BLOCK_CLOSE .)
+    RUN             reduce using rule 44 (version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN BLOCK_CLOSE .)
+
+
+state 157
+
+    (47) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN version_run_processes . BLOCK_CLOSE
+    (70) version_run_processes -> version_run_processes . version_run_process
+    (72) version_run_process -> . version_run_process_base
+    (73) version_run_process -> . version_run_process_base ARROW_RIGHT version_run_process_follower
+    (76) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list
+    (77) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list version_repetition
+    (78) version_run_process_base -> . RUN IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels
+
+    BLOCK_CLOSE     shift and go to state 165
+    RUN             shift and go to state 130
+
+    version_run_process_base       shift and go to state 131
+    version_run_process            shift and go to state 141
+
+state 158
+
+    (55) version_repetition -> BLOCK_OPEN . INTEGER BLOCK_CLOSE
+
+    INTEGER         shift and go to state 135
+
+
+state 159
+
+    (77) version_run_process_base -> RUN IDENTIFIER version_subprocesses_list version_repetition .
+    (78) version_run_process_base -> RUN IDENTIFIER version_subprocesses_list version_repetition . version_repetition_channels
+    (64) version_repetition_channels -> . SQ_LPARAN qualified_identifiers_list SQ_RPARAN
+
+    ARROW_RIGHT     reduce using rule 77 (version_run_process_base -> RUN IDENTIFIER version_subprocesses_list version_repetition .)
+    BLOCK_CLOSE     reduce using rule 77 (version_run_process_base -> RUN IDENTIFIER version_subprocesses_list version_repetition .)
+    RUN             reduce using rule 77 (version_run_process_base -> RUN IDENTIFIER version_subprocesses_list version_repetition .)
+    SQ_LPARAN       shift and go to state 137
+
+    version_repetition_channels    shift and go to state 166
+
+state 160
+
+    (82) version_subprocesses_list -> LPARAN STAR . RPARAN
+
+    RPARAN          shift and go to state 167
+
+
+state 161
+
+    (81) version_subprocesses_list -> LPARAN RPARAN .
+
+    BLOCK_CLOSE     reduce using rule 81 (version_subprocesses_list -> LPARAN RPARAN .)
+    RUN             reduce using rule 81 (version_subprocesses_list -> LPARAN RPARAN .)
+    BLOCK_OPEN      reduce using rule 81 (version_subprocesses_list -> LPARAN RPARAN .)
+    ARROW_RIGHT     reduce using rule 81 (version_subprocesses_list -> LPARAN RPARAN .)
+
+
+state 162
+
+    (83) version_subprocesses_list -> LPARAN identifiers_list . RPARAN
+    (28) identifiers_list -> identifiers_list . COMMA IDENTIFIER
+
+    RPARAN          shift and go to state 168
+    COMMA           shift and go to state 64
+
+
+state 163
+
+    (79) version_run_process_follower -> RUN IDENTIFIER . version_subprocesses_list
+    (81) version_subprocesses_list -> . LPARAN RPARAN
+    (82) version_subprocesses_list -> . LPARAN STAR RPARAN
+    (83) version_subprocesses_list -> . LPARAN identifiers_list RPARAN
+
+    LPARAN          shift and go to state 150
+
+    version_subprocesses_list      shift and go to state 169
+
+state 164
+
+    (51) qualified_identifiers_list -> qualified_identifiers_list COMMA QUALIFIED_IDENTIFIER .
+
+    SQ_RPARAN       reduce using rule 51 (qualified_identifiers_list -> qualified_identifiers_list COMMA QUALIFIED_IDENTIFIER .)
+    COMMA           reduce using rule 51 (qualified_identifiers_list -> qualified_identifiers_list COMMA QUALIFIED_IDENTIFIER .)
+
+
+state 165
+
+    (47) version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE .
+
+    BLOCK_CLOSE     reduce using rule 47 (version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE .)
+    RUN             reduce using rule 47 (version_run_host -> RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE .)
+
+
+state 166
+
+    (78) version_run_process_base -> RUN IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels .
+
+    ARROW_RIGHT     reduce using rule 78 (version_run_process_base -> RUN IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels .)
+    BLOCK_CLOSE     reduce using rule 78 (version_run_process_base -> RUN IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels .)
+    RUN             reduce using rule 78 (version_run_process_base -> RUN IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels .)
+
+
+state 167
+
+    (82) version_subprocesses_list -> LPARAN STAR RPARAN .
+
+    BLOCK_CLOSE     reduce using rule 82 (version_subprocesses_list -> LPARAN STAR RPARAN .)
+    RUN             reduce using rule 82 (version_subprocesses_list -> LPARAN STAR RPARAN .)
+    BLOCK_OPEN      reduce using rule 82 (version_subprocesses_list -> LPARAN STAR RPARAN .)
+    ARROW_RIGHT     reduce using rule 82 (version_subprocesses_list -> LPARAN STAR RPARAN .)
+
+
+state 168
+
+    (83) version_subprocesses_list -> LPARAN identifiers_list RPARAN .
+
+    BLOCK_CLOSE     reduce using rule 83 (version_subprocesses_list -> LPARAN identifiers_list RPARAN .)
+    RUN             reduce using rule 83 (version_subprocesses_list -> LPARAN identifiers_list RPARAN .)
+    BLOCK_OPEN      reduce using rule 83 (version_subprocesses_list -> LPARAN identifiers_list RPARAN .)
+    ARROW_RIGHT     reduce using rule 83 (version_subprocesses_list -> LPARAN identifiers_list RPARAN .)
+
+
+state 169
+
+    (79) version_run_process_follower -> RUN IDENTIFIER version_subprocesses_list .
+
+    BLOCK_CLOSE     reduce using rule 79 (version_run_process_follower -> RUN IDENTIFIER version_subprocesses_list .)
+    RUN             reduce using rule 79 (version_run_process_follower -> RUN IDENTIFIER version_subprocesses_list .)
 
 WARNING: 
 WARNING: Conflicts:

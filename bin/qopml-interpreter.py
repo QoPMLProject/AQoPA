@@ -11,10 +11,6 @@ from qopml.interpreter.model.parser import get_parser
 from qopml.interpreter.model.store import create as create_store
 
 text = """
-i, aaa, d(a(), true, ff)[sss, 2sdf]
-"""
-
-"""
 functions
 {
   fun id() ( creating id of a side );
@@ -40,10 +36,50 @@ channels {
   channel ch5,ch6 (100);
 }
 
+versions
+{
+  version 1
+  {
+    run host TTP(*)
+    {
+      run TTP1(*)
+    }
+
+    run host B(*)
+    {
+      run B1(Bv1)
+    }
+
+    run host A(*)
+    {
+      run A1(Av1)
+    }
+  }
+
+
+  version 2
+  {
+    run host TTP(*)
+    {
+      run TTP1(*)
+    }
+
+    run host B(*)
+    {
+      run B1(Bv2)
+    }
+
+    run host A(*)
+    {
+      run A1(Av2)
+    }
+  }
+
+}
 """
 
 
-debug = True
+debug = False
 
 def main():
     
@@ -62,14 +98,12 @@ def main():
     parser = get_parser(store)
     parser.parse(text)
     
-    """
     for o in store.functions:
         print unicode(o)
     for o in store.channels:
         print unicode(o)
     for o in store.equations:
         print unicode(o)
-    """
 
 if __name__ == '__main__':
     main()

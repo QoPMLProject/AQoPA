@@ -47,15 +47,10 @@ class LexYaccParser(QoPMLModelParser):
         
         self.extensions = []     # objects that extend parser (instances of LexYaccParserExtension)
         
-        self.builder = None      # builder for creating parsed objects
         self.store = None        # store for built objects
     
     def add_extension(self, ext):
         self.extensions.append(ext)
-        return self
-    
-    def set_builder(self, builder):
-        self.builder = builder
         return self
     
     def set_store(self, store):
@@ -172,19 +167,16 @@ class LexYaccParser(QoPMLModelParser):
     
 def create(store):
     
-    from grammar import main, functions, channels, equations, expressions
-    from builder import create as create_builder
-    
-    builder = create_builder()
+    from grammar import main, functions, channels, equations, expressions, versions
     
     parser = LexYaccParser()
-    parser.set_builder(builder) \
-            .set_store(store) \
+    parser.set_store(store) \
             .add_extension(main.ParserExtension()) \
             .add_extension(functions.ParserExtension()) \
             .add_extension(channels.ParserExtension()) \
             .add_extension(equations.ParserExtension()) \
             .add_extension(expressions.ParserExtension()) \
+            .add_extension(versions.ParserExtension()) \
             .build()
             
     return parser

@@ -84,6 +84,17 @@ class ParserExtension(LexYaccParserExtension):
         else:
             t[0] = t[1]
             t[0].append(t[3])
+
+    def rule_qualified_identifiers_list(self, t):
+        """
+        qualified_identifiers_list : QUALIFIED_IDENTIFIER
+                    | qualified_identifiers_list COMMA QUALIFIED_IDENTIFIER
+        """
+        if len(t) == 2:
+            t[0] = [t[1]]
+        else:
+            t[0] = t[1]
+            t[0].append(t[3])
     
     def _extend(self):
         
@@ -112,6 +123,7 @@ class ParserExtension(LexYaccParserExtension):
         
         self.parser.add_rule(self.rule_model)
         self.parser.add_rule(self.rule_identifiers_list)
+        self.parser.add_rule(self.rule_qualified_identifiers_list)
         
         self.parser.start_symbol = 'model'
 
