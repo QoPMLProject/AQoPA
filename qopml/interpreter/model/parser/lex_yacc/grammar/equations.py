@@ -60,7 +60,7 @@ class ParserExtension(LexYaccParserExtension):
     
     def equations_specification(self, t):
         """
-        specification : EQUATIONS_SPECIFICATION BLOCK_OPEN equations_list BLOCK_CLOSE
+        specification : EQUATIONS_SPECIFICATION BLOCKOPEN equations_list BLOCKCLOSE
         """
         pass
     
@@ -120,7 +120,7 @@ class ParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('equations', 'EQUATIONS_SPECIFICATION', func=self.word_equations_specification)
         self.parser.add_reserved_word('eq', 'EQUATION', state='equations')
 
-        self.parser.add_token('BLOCK_CLOSE', func=self.token_block_close, states=['equations'])
+        self.parser.add_token('BLOCKCLOSE', func=self.token_block_close, states=['equations'])
         
 
         self.parser.add_rule(self.equations_specification)

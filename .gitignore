@@ -1,3 +1,7 @@
 .project
 .pydevproject
 *.pyc
+parser.out
+parsetab.py
+bin/parser.out
+bin/parsetab.py

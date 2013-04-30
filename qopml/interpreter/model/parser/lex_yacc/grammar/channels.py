@@ -60,7 +60,7 @@ class ParserExtension(LexYaccParserExtension):
     
     def channels_specification(self, t):
         """
-        specification : CHANNELS_SPECIFICATION BLOCK_OPEN channels_list BLOCK_CLOSE
+        specification : CHANNELS_SPECIFICATION BLOCKOPEN channels_list BLOCKCLOSE
         """
         pass
     
@@ -93,7 +93,7 @@ class ParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('channels', 'CHANNELS_SPECIFICATION', func=self.word_channels_specification)
         self.parser.add_reserved_word('channel', 'CHANNEL', state='channels')
 
-        self.parser.add_token('BLOCK_CLOSE', func=self.token_block_close, states=['channels'])
+        self.parser.add_token('BLOCKCLOSE', func=self.token_block_close, states=['channels'])
         
 
         self.parser.add_rule(self.channels_specification)

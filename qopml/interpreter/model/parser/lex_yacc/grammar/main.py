@@ -33,19 +33,28 @@ class ParserExtension(LexYaccParserExtension):
         states_stack.extend(t.lexer.lexstatestack)
         states_stack.append(t.lexer.current_state())
         
-         
         i = len(states_stack)-1
         while i >= 0:
             state = states_stack[i]
             if state in words:
                 state_words = words[state]
-                if t.value in state_words:
-                    word = state_words[t.value]
-                    # If function exists
-                    if word[1]:
-                        t = word[1](t)
-                    t.type = word[0]
-                    break
+                for state_word in state_words:
+                    
+                    tvalue = t.value
+                    state_word_value = state_word
+                    word_tuple = state_words[state_word]
+                    
+                    # if not case sensitive
+                    if not word_tuple[2]:
+                        tvalue = tvalue.lower()
+                        state_word_value = state_word_value.lower()
+                    
+                    if tvalue == state_word_value:
+                        # If function exists
+                        if word_tuple[1]:
+                            t = word_tuple[1](t)
+                        t.type = word_tuple[0]
+                        break
             i -= 1
             
         return t
@@ -103,9 +112,7 @@ class ParserExtension(LexYaccParserExtension):
         
         self.parser.add_token('COMMA', r',')
         self.parser.add_token('INTEGER', func=self.token_integer)
-        self.parser.add_token('FLOAT', func=self.token_float)
         self.parser.add_token('QUALIFIED_IDENTIFIER', r'[_a-zA-Z][_a-zA-Z0-9]*(\.[1-9][0-9]*)+')
-        #add_token('BIT_MULTIPLIER', r'[kmg]?(bits|bytes)')
         self.parser.add_token('IDENTIFIER', func=self.token_identifier)
         self.parser.add_token('TEXT', r'[-_A-Za-z0-9 ]+')  
         
@@ -116,10 +123,10 @@ class ParserExtension(LexYaccParserExtension):
         
         self.parser.add_token('LPARAN', r'\(')
         self.parser.add_token('RPARAN', r'\)')
-        self.parser.add_token('SQ_LPARAN', r'\[')
-        self.parser.add_token('SQ_RPARAN', r'\]')
-        self.parser.add_token('BLOCK_OPEN', r'{')
-        self.parser.add_token('BLOCK_CLOSE', r'}')
+        self.parser.add_token('SQLPARAN', r'\[')
+        self.parser.add_token('SQRPARAN', r'\]')
+        self.parser.add_token('BLOCKOPEN', r'{')
+        self.parser.add_token('BLOCKCLOSE', r'}')
         
         self.parser.add_rule(self.rule_model)
         self.parser.add_rule(self.rule_identifiers_list)

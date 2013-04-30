@@ -123,7 +123,7 @@ class LexYaccParser(QoPMLModelParser):
             field_name = states_str + '_' + name
         
         if regex and func:
-            raise ParserException('Cannot add tokent with both: regex and function.')
+            raise ParserException('Cannot add token with both: regex and function.')
         
         if regex:
             setattr(self, 't_%s' % field_name, regex)
@@ -133,7 +133,7 @@ class LexYaccParser(QoPMLModelParser):
         if precedence:
             self.add_precedence(name, precedence)
     
-    def add_reserved_word(self, word, token, func=None, state='INITIAL'):
+    def add_reserved_word(self, word, token, func=None, state='INITIAL', case_sensitive=True):
         """
         Adds token representing reserved word for particular state (INITIAL by default)
         """
@@ -142,7 +142,7 @@ class LexYaccParser(QoPMLModelParser):
         
         if state not in self.reserved_words:
             self.reserved_words[state] = {}
-        self.reserved_words[state][word]= (token, func)
+        self.reserved_words[state][word]= (token, func, case_sensitive)
     
     def get_reserved_words(self):
         """
@@ -167,7 +167,7 @@ class LexYaccParser(QoPMLModelParser):
     
 def create(store):
     
-    from grammar import main, functions, channels, equations, expressions, versions
+    from grammar import main, functions, channels, equations, expressions, instructions, versions, hosts, metrics
     
     parser = LexYaccParser()
     parser.set_store(store) \
@@ -176,7 +176,10 @@ def create(store):
             .add_extension(channels.ParserExtension()) \
             .add_extension(equations.ParserExtension()) \
             .add_extension(expressions.ParserExtension()) \
+            .add_extension(instructions.ParserExtension()) \
             .add_extension(versions.ParserExtension()) \
+            .add_extension(hosts.ParserExtension()) \
+            .add_extension(metrics.ParserExtension()) \
             .build()
             
     return parser

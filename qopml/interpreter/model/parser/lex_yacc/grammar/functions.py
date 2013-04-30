@@ -94,13 +94,17 @@ class ParserExtension(LexYaccParserExtension):
         t.lexer.pop_state()
         return t
     
+    def t_newline(self, t):
+        r'\n+'
+        t.lexer.lineno += t.value.count("\n")
+    
     ##########################################
     #                RULES
     ##########################################
     
     def functions_specification(self, t):
         """
-        specification : FUNCTIONS_SPECIFICATION BLOCK_OPEN functions_list BLOCK_CLOSE
+        specification : FUNCTIONS_SPECIFICATION BLOCKOPEN functions_list BLOCKCLOSE
         """
         pass
     
@@ -140,7 +144,7 @@ class ParserExtension(LexYaccParserExtension):
     
     def function_qopml_params(self, t):
         """
-        function_qopml_params : SQ_LPARAN function_qopml_params_list SQ_RPARAN
+        function_qopml_params : SQLPARAN function_qopml_params_list SQRPARAN
         """
         t[0] = t[2]
     
@@ -169,14 +173,15 @@ class ParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('functions', 'FUNCTIONS_SPECIFICATION', func=self.word_functions_specification,)
         self.parser.add_reserved_word('fun', 'FUN', func=self.word_fun, state='functions')
 
-        self.parser.add_token('BLOCK_OPEN', func=self.token_block_open, states=['functions'])
-        self.parser.add_token('BLOCK_CLOSE', func=self.token_block_close, states=['functions'])
+        self.parser.add_token('BLOCKOPEN', func=self.token_block_open, states=['functions'])
+        self.parser.add_token('BLOCKCLOSE', func=self.token_block_close, states=['functions'])
         self.parser.add_token('LPARAN', func=self.token_lparan, states=['functions'])
         self.parser.add_token('RPARAN', regex=r'\)', states=['functions'])
         
         # Function comment State
         self.parser.add_token('error', func=self.token_funcomment_error, states=['functioncomment'], include_in_tokens=False)
-        self.parser.add_token('ignore', " \t", states=['functioncomment'], include_in_tokens=False)
+        self.parser.add_token('ignore', "\t", states=['functioncomment'], include_in_tokens=False)
+        self.parser.add_token('newline', func=self.t_newline,  states=['functioncomment'], include_in_tokens=False)
         self.parser.add_token('COMMENT', r'[-_A-Za-z0-9 ]+', states=['functioncomment'])  
         self.parser.add_token('RPARAN', func=self.token_funcomment_rparan, states=['functioncomment'])
 

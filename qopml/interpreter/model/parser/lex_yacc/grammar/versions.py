@@ -5,6 +5,7 @@ Created on 22-04-2013
 '''
 
 from qopml.interpreter.model.parser.lex_yacc.parser import LexYaccParserExtension
+from qopml.interpreter.model import Version, VersionRunProcess
 
 
 class Builder():
@@ -14,8 +15,69 @@ class Builder():
     
     def build_version(self, token):
         """
+        version : VERSION INTEGER BLOCKOPEN version_run_hosts BLOCKCLOSE
+        """
+        v = Version(token[2])
+        for run_host in token[4]:
+            v.run_hosts.append(run_host)
+        return v
+    
+    def build_run_host(self, token):
+        """
+        version_run_host : RUN HOST IDENTIFIER version_channels BLOCKOPEN BLOCKCLOSE
+                        | RUN HOST IDENTIFIER version_channels version_repetition BLOCKOPEN BLOCKCLOSE
+                        | RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCKOPEN BLOCKCLOSE
+                        | RUN HOST IDENTIFIER version_channels BLOCKOPEN version_run_processes BLOCKCLOSE
+                        | RUN HOST IDENTIFIER version_channels version_repetition BLOCKOPEN version_run_processes BLOCKCLOSE
+                        | RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCKOPEN version_run_processes BLOCKCLOSE
         """
         pass
+    
+    def build_run_process(self, token):
+        """
+        version_run_process : version_run_process_base
+                        | version_run_process_base ARROWRIGHT version_run_process_follower
+        """
+        run_process = token[1]
+        if len(token) == 4:
+            run_process.follower = token[3]
+        return run_process 
+    
+    def build_run_process_base(self, token):
+        """
+        version_run_process_base : RUN IDENTIFIER version_subprocesses_list
+                                | RUN IDENTIFIER version_subprocesses_list version_repetition
+                                | RUN IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels
+        """
+        run_process = VersionRunProcess(token[2])
+        
+        if '*' in token[3]:
+            run_process.all_subprocesses_active = True
+        else:
+            for identifier in token[3]:
+                run_process.active_subprocesses.append(identifier)
+        
+        if len(token) > 4:
+            run_process.repetitions = token[4]
+        
+        if len(token) > 5:
+            for identifier in token[5]:
+                run_process.repeated_channels.append(identifier)
+        
+        return run_process
+    
+    def build_run_process_follower(self, token):
+        """
+        version_run_process_follower : RUN IDENTIFIER version_subprocesses_list
+        """
+        run_process = VersionRunProcess(token[2])
+        
+        if '*' in token[3]:
+            run_process.all_subprocesses_active = True
+        else:
+            for identifier in token[3]:
+                run_process.active_subprocesses.append(identifier)
+        return run_process
 
 class ParserExtension(LexYaccParserExtension):
     """
@@ -59,7 +121,7 @@ class ParserExtension(LexYaccParserExtension):
     
     def versions_specification(self, t):
         """
-        specification : VERSIONS_SPECIFICATION BLOCK_OPEN versions_list BLOCK_CLOSE
+        specification : VERSIONS_SPECIFICATION BLOCKOPEN versions_list BLOCKCLOSE
         """
         pass
     
@@ -73,33 +135,38 @@ class ParserExtension(LexYaccParserExtension):
     
     def version(self, t):
         """
-        version : VERSION INTEGER BLOCK_OPEN version_run_hosts BLOCK_CLOSE
+        version : VERSION INTEGER BLOCKOPEN version_run_hosts BLOCKCLOSE
         """
-        pass
+        self.parser.store.versions.append(self.builder.build_version(t))
     
     def version_run_hosts(self, t):
         """
         version_run_hosts : version_run_host
                         | version_run_hosts version_run_host
         """
-        pass
+        if len(t) == 3:
+            t[0] = t[1]
+            t[0].append(t[2])
+        else:
+            t[0] = []
+            t[0].append(t[1])
     
     def version_run_host(self, t):
         """
-        version_run_host : RUN HOST IDENTIFIER version_channels BLOCK_OPEN BLOCK_CLOSE
-                        | RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN BLOCK_CLOSE
-                        | RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN BLOCK_CLOSE
-                        | RUN HOST IDENTIFIER version_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
-                        | RUN HOST IDENTIFIER version_channels version_repetition BLOCK_OPEN version_run_processes BLOCK_CLOSE
-                        | RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCK_OPEN version_run_processes BLOCK_CLOSE
+        version_run_host : RUN HOST IDENTIFIER version_channels BLOCKOPEN BLOCKCLOSE
+                        | RUN HOST IDENTIFIER version_channels version_repetition BLOCKOPEN BLOCKCLOSE
+                        | RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCKOPEN BLOCKCLOSE
+                        | RUN HOST IDENTIFIER version_channels BLOCKOPEN version_run_processes BLOCKCLOSE
+                        | RUN HOST IDENTIFIER version_channels version_repetition BLOCKOPEN version_run_processes BLOCKCLOSE
+                        | RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCKOPEN version_run_processes BLOCKCLOSE
         """
-        pass
+        t[0] = self.builder.build_run_host(t)
     
     def version_repetition(self, t):
         """
-        version_repetition : BLOCK_OPEN INTEGER BLOCK_CLOSE
+        version_repetition : BLOCKOPEN INTEGER BLOCKCLOSE
         """
-        pass
+        t[0] = t[2]
     
     def version_channels(self, t):
         """
@@ -107,27 +174,37 @@ class ParserExtension(LexYaccParserExtension):
                         | LPARAN STAR RPARAN
                         | LPARAN identifiers_list RPARAN
         """
-        pass
+        if len(t) == 2:
+            t[0] = []
+        elif len(t) == 2:
+            t[0] = ['*']
+        elif len(t) > 2:
+            t[0] = t[2]
     
     def version_repetition_channels(self, t):
         """
-        version_repetition_channels : SQ_LPARAN qualified_identifiers_list SQ_RPARAN
+        version_repetition_channels : SQLPARAN qualified_identifiers_list SQRPARAN
         """
-        pass
+        t[0] = t[2]
     
     def version_run_processes(self, t):
         """
         version_run_processes : version_run_process
                             | version_run_processes version_run_process
         """
-        pass
+        if len(t) == 3:
+            t[0] = t[1]
+            t[0].append(t[2])
+        else:
+            t[0] = []
+            t[0].append(t[1])
     
     def version_run_process(self, t):
         """
         version_run_process : version_run_process_base
-                        | version_run_process_base ARROW_RIGHT version_run_process_follower
+                        | version_run_process_base ARROWRIGHT version_run_process_follower
         """
-        pass
+        t[0] = self.builder.build_run_process(t)
     
     def version_run_process_base(self, t):
         """
@@ -135,13 +212,13 @@ class ParserExtension(LexYaccParserExtension):
                                 | RUN IDENTIFIER version_subprocesses_list version_repetition
                                 | RUN IDENTIFIER version_subprocesses_list version_repetition version_repetition_channels
         """
-        pass
+        t[0] = self.builder.build_run_process_base(t)
     
     def version_run_process_follower(self, t):
         """
         version_run_process_follower : RUN IDENTIFIER version_subprocesses_list
         """
-        pass
+        t[0] = self.builder.build_run_process_follower(t)
     
     def version_subprocesses_list(self, t):
         """
@@ -149,6 +226,12 @@ class ParserExtension(LexYaccParserExtension):
                         | LPARAN STAR RPARAN
                         | LPARAN identifiers_list RPARAN
         """
+        if len(t) == 2:
+            t[0] = []
+        elif len(t) == 2:
+            t[0] = ['*']
+        elif len(t) > 2:
+            t[0] = t[2]
     
     def _extend(self):
         
@@ -159,9 +242,9 @@ class ParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('run', 'RUN', state='versions')
         self.parser.add_reserved_word('host', 'HOST', state='versions')
 
-        self.parser.add_token('BLOCK_OPEN', func=self.token_block_open, states=['versions'])
-        self.parser.add_token('BLOCK_CLOSE', func=self.token_block_close, states=['versions'])
-        self.parser.add_token('ARROW_RIGHT', r'\-\>', states=['versions'])
+        self.parser.add_token('BLOCKOPEN', func=self.token_block_open, states=['versions'])
+        self.parser.add_token('BLOCKCLOSE', func=self.token_block_close, states=['versions'])
+        self.parser.add_token('ARROWRIGHT', r'\-\>', states=['versions'])
 
         self.parser.add_rule(self.versions_specification)
         self.parser.add_rule(self.versions_list)
