@@ -3,9 +3,7 @@ Created on 22-04-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
-
-from qopml.interpreter.model.parser.lex_yacc.parser import LexYaccParserExtension
-import sys
+from qopml.interpreter.model.parser.lex_yacc import LexYaccParserExtension
 
 class ParserExtension(LexYaccParserExtension):
     

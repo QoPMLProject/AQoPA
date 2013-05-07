@@ -6,9 +6,10 @@ Created on 22-04-2013
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+from qopml.interpreter.model.parser import ParserException
+from qopml.interpreter.simulator import EnvironmentDefinitionException
+from qopml.interpreter.app import Interpreter, Builder
 
-from qopml.interpreter.model.parser import get_parser
-from qopml.interpreter.model.store import create as create_store
 
 text = """
 metrics
@@ -44,9 +45,6 @@ metrics
   set host A(host1.1);
   
 }
-"""
-
-"""
 
 hosts {
   
@@ -219,15 +217,14 @@ versions
 }
 """
 
-
-
-debug = True
+debug = False
 
 def main():
     
     if debug:
-        store = create_store()
-        parser = get_parser(store)
+        builder = Builder()
+        store = builder.build_store()
+        parser = builder.build_parser(store, [])
         parser.lexer.input(text)
         while True:
             print  parser.lexer.current_state()
@@ -236,12 +233,24 @@ def main():
                 break
             print tok
             print ""
+        print parser.get_syntax_errors()
     
-    store = create_store()
     
-    parser = get_parser(store)
-    parser.parse(text)
-    
+    interpreter = Interpreter()
+    try:
+        interpreter.set_qopml_model(text)
+        interpreter.run()
+    except EnvironmentDefinitionException, e:
+        print "Error on creatiung environment: %s" % e
+        return
+    except ParserException, e:
+        print "Parsing error: %s" % e
+        if len(e.syntax_errors):
+            print "Syntax errors:"
+            sys.stderr.write('\n'.join(e.syntax_errors))
+        return
+        
+    store = interpreter.store
     
     for o in store.functions:
         print unicode(o)
@@ -252,6 +261,14 @@ def main():
     for o in store.versions:
         print unicode(o)
     for o in store.hosts:
+        print unicode(o)
+    for o in store.metrics_configurations:
+        print unicode(o)
+    for o in store.metrics_sets:
+        print unicode(o)
+    for o in store.metrics_datas:
+        print unicode(o)
+    for o in store.versions:
         print unicode(o)
 
 if __name__ == '__main__':

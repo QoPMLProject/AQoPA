@@ -1,5 +1,8 @@
 '''
-Created on 22-04-2013
+Created on 07-05-2013
 
-@author: damian
+@author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
+
+# Expressions Manager
+# Metrics Manager ?

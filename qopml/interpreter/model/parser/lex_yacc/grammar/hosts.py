@@ -4,12 +4,11 @@ Created on 22-04-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 
-from qopml.interpreter.model.parser.lex_yacc.parser import LexYaccParserExtension
+from qopml.interpreter.model.parser.lex_yacc import LexYaccParserExtension
 from qopml.interpreter.model import Host, SCHEDULE_ALGORITHM_FIFO, HostProcess,\
     HostSubprocess
 from ply.lex import Lexer
 import re
-import sys
 
 
 class Builder():
@@ -147,7 +146,7 @@ class ParserExtension(LexYaccParserExtension):
         return t
     
     def token_error(self, t):
-        sys.stderr.write("Line [%s:%s]: Illegal character '%s' \n" % (t.lexer.lineno, t.lexer.lexpos, t.value[0]))
+        self.syntax_errors.append("Line [%s:%s]: Illegal character '%s' \n" % (t.lexer.lineno, t.lexer.lexpos, t.value[0]))
     
     def t_newline(self, t):
         r'\n+'

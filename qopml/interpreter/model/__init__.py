@@ -266,5 +266,61 @@ class VersionRunProcess():
             s += " -> %s" % unicode(self.follower)
         return s
     
+
+################################
+#        Metrics
+################################
+
+class MetricsConfiguration():
     
+    def __init__(self, name, specifications):
+        self.name = name
+        self.specifications = specifications
+        
+    def __unicode__(self):
+        return u"conf %s { ... }" % self.name
+
+class MetricsSet():
+    
+    def __init__(self, host_name, configuration_name):
+        self.host_name = host_name
+        self.configuration_name = configuration_name     
+    
+    def __unicode__(self):
+        return u"set host %s (%s) { ... }" % (self.host_name, self.configuration_name)
+    
+class MetricsData():
+    
+    def __init__(self, name, blocks, plus = False, star = False):
+        self.name = name
+        self.blocks = blocks
+        self.star = star
+        self.plus = plus
+        
+    def __unicode__(self):
+        return u"data %s { ... }" % self.name
+        
+class MetricsPrimitiveBlock():
+    
+    def __init__(self, header, metrics):
+        self.header = header
+        self.metrics = metrics
+        
+class MetricsPrimitiveHeader():
+    
+    def __init__(self, params, services_params):
+        self.params = params
+        self.services_params = services_params
+        
+class MetricsServiceParam():
+    
+    def __init__(self, service_name, param_name, unit=None):
+        self.service_name = service_name 
+        self.param_name = param_name
+        self.unit = unit
+        
+class MetricsPrimitive():
+    
+    def __init__(self, arguments):
+        self.arguments = arguments
     

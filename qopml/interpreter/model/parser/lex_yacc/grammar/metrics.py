@@ -4,13 +4,73 @@ Created on 22-04-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 
-import sys
-from qopml.interpreter.model.parser.lex_yacc.parser import LexYaccParserExtension
+from qopml.interpreter.model.parser.lex_yacc import LexYaccParserExtension
+from qopml.interpreter.model import MetricsConfiguration, MetricsData,\
+    MetricsPrimitiveBlock, MetricsPrimitiveHeader, MetricsPrimitive, MetricsSet,\
+    MetricsServiceParam
 
 
 class Builder():
 
-    pass
+    def create_metrics_configuration(self, token):
+        """
+        metrics_configuration : METRICS_CONFIGURATION LPARAN IDENTIFIER RPARAN BLOCKOPEN metrics_configuration_params BLOCKCLOSE
+        """
+        return MetricsConfiguration(token[3], token[6])
+    
+    def create_metrics_data(self, token):
+        """
+        metrics_data : METRICS_DATA LPARAN IDENTIFIER RPARAN BLOCKOPEN metrics_data_blocks BLOCKCLOSE
+                    | METRICS_DATA PLUS LPARAN QUALIFIED_IDENTIFIER RPARAN BLOCKOPEN metrics_data_blocks BLOCKCLOSE
+                    | METRICS_DATA STAR LPARAN QUALIFIED_IDENTIFIER RPARAN BLOCKOPEN metrics_data_blocks BLOCKCLOSE
+        """
+        
+        if len(token) == 8:
+            name = token[3]
+            blocks = token[6]
+            md = MetricsData(name, blocks)
+        elif len(token) == 9:
+            name = token[4]
+            blocks = token[7]
+            plus = token[2] == '+' 
+            star = token[2] == '*'
+            md = MetricsData(name, blocks, plus, star)
+            
+        return md 
+    
+    def create_metrics_block(self, token):
+        """
+        metrics_data_block : metrics_primitives_head metrics_primitives 
+        """
+        return MetricsPrimitiveBlock(token[1], token[2])
+    
+    def create_metrics_header(self, token):
+        """
+        metrics_primitives_head : METRICS_PRIMITIVES_HEAD metrics_params metrics_services_params SEMICOLON
+        """
+        return MetricsPrimitiveHeader(token[2], token[3])
+    
+    def create_metrics_primitive(self, token):
+        """
+        metrics_primitive : METRICS_PRIMITIVE metrics_primitive_arguments SEMICOLON
+        """
+        return MetricsPrimitive(token[2])
+    
+    def create_metrics_set(self, token):
+        """
+        metrics_set : METRICS_SET METRICS_HOST IDENTIFIER LPARAN IDENTIFIER RPARAN SEMICOLON
+                | METRICS_SET METRICS_HOST IDENTIFIER LPARAN QUALIFIED_IDENTIFIER RPARAN SEMICOLON
+        """
+        return MetricsSet(token[3], token[5])
+    
+    def create_metrics_services_param_size(self, token):
+        """
+        metrics_services_param : SQLPARAN SIZE COLON metrics_services_size_type_unit LPARAN metrics_services_size_unit RPARAN SQRPARAN
+                            | SQLPARAN SIZE COLON metrics_services_size_type_non_unit SQRPARAN
+        """
+        unit = token[6] if len(token) == 9 else None
+        return MetricsServiceParam(token[2], token[4], unit)
+        
 
 class ParserExtension(LexYaccParserExtension):
     """
@@ -49,6 +109,11 @@ class ParserExtension(LexYaccParserExtension):
     ##########################################
     #                TOKENS
     ##########################################
+    
+    def token_metrics_block_close(self, t):
+        r"\}"
+        t.lexer.pop_state()
+        return t
 
     def token_metricsconfiguration_block_open(self, t):
         r"\{"
@@ -97,7 +162,7 @@ class ParserExtension(LexYaccParserExtension):
         return t
     
     def token_error(self, t):
-        sys.stderr.write("Line [%s:%s]: Illegal character '%s' \n" % (t.lexer.lineno, t.lexer.lexpos, t.value[0]))
+        self.syntax_errors.append("Line [%s:%s]: Illegal character '%s' \n" % (t.lexer.lineno, t.lexer.lexpos, t.value[0]))
     
     def t_newline(self, t):
         r'\n+'
@@ -126,20 +191,25 @@ class ParserExtension(LexYaccParserExtension):
         """
         metrics_configuration : METRICS_CONFIGURATION LPARAN IDENTIFIER RPARAN BLOCKOPEN metrics_configuration_params BLOCKCLOSE
         """
-        pass
+        self.parser.store.metrics_configurations.append(self.builder.create_metrics_configuration(t))
     
     def metrics_configuration_params(self, t):
         """
         metrics_configuration_params : metrics_configuration_param
                                     | metrics_configuration_params metrics_configuration_param
         """
-        pass
+        if len(t) == 2:
+            t[0] = []
+            t[0].append(t[1])
+        else:
+            t[0] = t[1]
+            t[0].append(t[2])
     
     def metrics_configuration_param(self, t):
         """
         metrics_configuration_param : IDENTIFIER EQUAL PARAMVALUE SEMICOLON
         """
-        pass
+        t[0] = (t[1], t[2])
     
     def metrics_datas(self, t):
         """
@@ -154,72 +224,97 @@ class ParserExtension(LexYaccParserExtension):
                     | METRICS_DATA PLUS LPARAN QUALIFIED_IDENTIFIER RPARAN BLOCKOPEN metrics_data_blocks BLOCKCLOSE
                     | METRICS_DATA STAR LPARAN QUALIFIED_IDENTIFIER RPARAN BLOCKOPEN metrics_data_blocks BLOCKCLOSE
         """
-        pass
+        self.parser.store.metrics_datas.append(self.builder.create_metrics_data(t))
         
     def metrics_data_blocks(self, t):
         """
         metrics_data_blocks : metrics_data_block
                             | metrics_data_blocks HASH metrics_data_block
         """
-        pass
+        if len(t) == 2:
+            t[0] = []
+            t[0].append(t[1])
+        else:
+            t[0] = t[1]
+            t[0].append(t[2])
     
     def metrics_data_block(self, t):
         """
         metrics_data_block : metrics_primitives_head metrics_primitives 
         """
-        pass
+        t[0] = self.builder.create_metrics_block(t)
     
     def metrics_primitives_head(self, t):
         """
         metrics_primitives_head : METRICS_PRIMITIVES_HEAD metrics_params metrics_services_params SEMICOLON
         """
-        pass
+        t[0] = self.builder.create_metrics_header(t)
     
     def metrics_params(self, t):
         """
         metrics_params : metrics_param
                         | metrics_params metrics_param
         """
-        pass
+        if len(t) == 2:
+            t[0] = []
+            t[0].append(t[1])
+        else:
+            t[0] = t[1]
+            t[0].append(t[2])
     
     def metrics_param(self, t):
         """
         metrics_param : SQLPARAN IDENTIFIER SQRPARAN
         """
-        pass
+        t[0] = t[2]
     
     def metrics_services_params(self, t):
         """
         metrics_services_params : metrics_services_param
                             | metrics_services_params metrics_services_param
         """
-        pass
+        if len(t) == 2:
+            t[0] = []
+            t[0].append(t[1])
+        else:
+            t[0] = t[1]
+            t[0].append(t[2])
 
     def metrics_primitives(self, t):
         """
         metrics_primitives : metrics_primitive
                             | metrics_primitives metrics_primitive
         """
-        pass
+        if len(t) == 2:
+            t[0] = []
+            t[0].append(t[1])
+        else:
+            t[0] = t[1]
+            t[0].append(t[2])
     
     def metrics_primitive(self, t):
         """
         metrics_primitive : METRICS_PRIMITIVE metrics_primitive_arguments SEMICOLON
         """
-        pass
+        t[0] = self.builder.create_metrics_primitive(t)
     
     def metrics_primitive_arguments(self, t):
         """
         metrics_primitive_arguments : metrics_primitive_argument
                                 | metrics_primitive_arguments metrics_primitive_argument
         """
-        pass
+        if len(t) == 2:
+            t[0] = []
+            t[0].append(t[1])
+        else:
+            t[0] = t[1]
+            t[0].append(t[2])
         
     def metrics_primitive_argument(self, t):
         """
         metrics_primitive_argument : SQLPARAN ARGUMENTVALUE SQRPARAN
         """
-        pass
+        t[0] = t[2]
     
     def metrics_sets(self, t):
         """
@@ -233,7 +328,7 @@ class ParserExtension(LexYaccParserExtension):
         metrics_set : METRICS_SET METRICS_HOST IDENTIFIER LPARAN IDENTIFIER RPARAN SEMICOLON
                 | METRICS_SET METRICS_HOST IDENTIFIER LPARAN QUALIFIED_IDENTIFIER RPARAN SEMICOLON
         """
-        pass
+        self.parser.store.metrics_sets.append(self.builder.create_metrics_set(t))
 
     #######################
     #    Metrics Size
@@ -244,25 +339,25 @@ class ParserExtension(LexYaccParserExtension):
         metrics_services_param : SQLPARAN SIZE COLON metrics_services_size_type_unit LPARAN metrics_services_size_unit RPARAN SQRPARAN
                             | SQLPARAN SIZE COLON metrics_services_size_type_non_unit SQRPARAN
         """
-        pass
+        t[0] = self.builder.create_metrics_services_param_size(t)
     
     def metrics_services_size_type_unit(self, t):
         """
         metrics_services_size_type_unit : EXACT
         """
-        pass
+        t[0] = t[1].lower()
     
     def metrics_services_size_type_non_unit(self, t):
         """
         metrics_services_size_type_non_unit : RATIO
         """
-        pass
+        t[0] = t[1].lower()
     
     def metrics_services_size_unit(self, t):
         """
         metrics_services_size_unit : B
         """
-        pass
+        t[0] = t[1].lower()
     
     
     
@@ -288,6 +383,7 @@ class ParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('primitive', 'METRICS_PRIMITIVE', func=self.word_metricsdata_primitive, state='metricsdata')
     
         self.parser.add_token('QUALIFIED_IDENTIFIER', r'[_a-zA-Z][_a-zA-Z0-9]*(\.[1-9][0-9]*)+', states=['metrics', 'metricsdata'])
+        self.parser.add_token('BLOCKCLOSE', func=self.token_metrics_block_close, states=['metrics'])
 
         # METRICS CONFIGURATION    
         self.parser.add_token('BLOCKOPEN', func=self.token_metricsconfiguration_block_open, states=['metricsconfiguration'])

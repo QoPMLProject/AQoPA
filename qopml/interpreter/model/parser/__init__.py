@@ -4,6 +4,17 @@ Created on 22-04-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 
+class ParserException(Exception):   
+    
+    def __init__(self, *args, **kwargs):
+        super(ParserException, self).__init__(*args)
+        
+        self.syntax_errors = []
+        if 'syntax_errors' in kwargs:
+            self.syntax_errors = kwargs['syntax_errors']
+            del kwargs['syntax_errors']
+
+
 class QoPMLModelParser():
     
     def parse(self, s):
@@ -15,16 +26,12 @@ class QoPMLModelParser():
         """
         raise NotImplementedError()
     
-class ParserException(Exception):   
-    pass 
-
-# At the moment, only lex/yacc parser is available
-# Therefore, no fancy parser builder and api is created for modules
-# Modules at the moment can think of only lex/yacc parser and
-# use its small api
-def get_parser(store):
-    from qopml.interpreter.model.parser.lex_yacc import parser
-    return parser.create(store)
+    def get_syntax_errors(self):
+        """
+        Returns list of syntax errors.
+        """
+        raise NotImplementedError()
+    
 
 
     

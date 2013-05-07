@@ -17,5 +17,3 @@ class QoPMLModelStore():
     init_version_number     = []
     
 
-def create():
-    return QoPMLModelStore()

@@ -4,7 +4,7 @@ Created on 22-04-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 
-from qopml.interpreter.model.parser.lex_yacc.parser import LexYaccParserExtension
+from qopml.interpreter.model.parser.lex_yacc import LexYaccParserExtension
 from qopml.interpreter.model import Equation, BooleanExpression,\
     IdentifierExpression, CallFunctionExpression
 
