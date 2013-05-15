@@ -4,6 +4,26 @@ Created on 23-04-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 
+################################################
+#             Names functions
+################################################
+        
+def original_name(name):
+    """
+    Return name without indexes.
+    """
+    return name.split('.')[0]
+
+def name_indexes(name):
+    """
+    Return indexes of name.
+    """
+    indexes = name.split('.')
+    if len(indexes) == 0:
+        indexes = []
+    else:
+        indexes = indexes[1:]
+    return [ int(i) for i in indexes ]
 
 ################################################
 #              QoPML Model Elements
@@ -148,9 +168,6 @@ class AssignmentInstruction():
     def __unicode__(self):
         return u"%s = %s;" % (unicode(self.variable_identifier), unicode(self.expression))
     
-COMMUNICATION_TYPE_IN = 1
-COMMUNICATION_TYPE_OUT = 1
-    
 class CommunicationInstruction():
     
     def __init__(self, communication_type, channel_name, variables_names):
@@ -203,25 +220,138 @@ class HostProcess():
         self.instructions_list = instructions_list
         self.all_channels_active = False
         self.active_channels = []
+    
         self.follower = None
+        
+    def add_name_index(self, index):
+        """
+        Add index to the name. 
+        Before: name = ch, index = 1. After: name = ch.1
+        """
+        self.name += ".%d" % index
+        
+    def connect_with_channel(self, channel):
+        """
+        Assigns channel to this host.
+        """
+        if channel.original_name not in self._channels_map:
+            self._channels_map[channel.original_name] = []
+        if channel in self._channels_map[channel.original_name].append(channel):
+            return
+        self._channels_map[channel.original_name].append(channel)
+        channel.connect_with_host(self)
+    
+    def find_channel(self, name):
+        """
+        Search for and retuen assigned channel by name (including indexes)
+        """
+        original_channel_name = original_name(name)
+        indexes = name_indexes(name)
+
+        if original_channel_name not in self._channels_map:
+            return None
+        channels = self._channels_map[original_channel_name]
+        if len(channels) == 0:
+            return None
+        
+        for ch in channels:
+            # Check if channels has the same original name
+            if ch.original_name == name:
+                i = 0
+                #Check if channels have the same indexes
+                ch_indexes = ch.indexes
+                while i < len(indexes):
+                    if indexes[i] != ch_indexes[i]:
+                        break
+                    i += 1
+                # If while loop was broken
+                if i < len(indexes):
+                    continue
+                else:
+                    # All indexes were the same
+                    return ch
+        return None
         
     def __unicode__(self):
         return u"process %s" % unicode(self.name)
         
-SCHEDULE_ALGORITHM_ROUND_ROBIN  = 1
-SCHEDULE_ALGORITHM_FIFO         = 2
+        self._channels_map = {}
+        
         
 class Host():
     
     def __init__(self, name, schedule_algorithm, instructions_list, predefined_values=[]):
         self.name = name
+        self.schedule_algorithm = schedule_algorithm
         self.instructions_list = instructions_list
         self.predefined_values = predefined_values
         self.all_channels_active = False
         self.active_channels = []
         
+        self.variables = {}
+        self._channels_map = {}
+        self._scheduler = None
+        
     def __unicode__(self):
         return u"host %s" % unicode(self.name)
+        
+    def add_name_index(self, index):
+        """
+        Add index to the name. 
+        Before: name = ch, index = 1. After: name = ch.1
+        """
+        self.name += ".%d" % index
+        
+    def set_scheduler(self, scheduler):
+        """Set scheduler"""
+        self._scheduler = scheduler
+        
+    def set_variable(self, name, value):
+        """Set hotst's variable"""
+        self.variables[name]= value
+        
+    def connect_with_channel(self, channel):
+        """
+        Assigns channel to this host.
+        """
+        if channel.original_name not in self._channels_map:
+            self._channels_map[channel.original_name] = []
+        if channel in self._channels_map[channel.original_name].append(channel):
+            return
+        self._channels_map[channel.original_name].append(channel)
+        channel.connect_with_host(self)
+    
+    def find_channel(self, name):
+        """
+        Search for and retuen assigned channel by name (including indexes)
+        """
+        original_channel_name = original_name(name)
+        indexes = name_indexes(name)
+
+        if original_channel_name not in self._channels_map:
+            return None
+        channels = self._channels_map[original_channel_name]
+        if len(channels) == 0:
+            return None
+        
+        for ch in channels:
+            # Check if channels has the same original name
+            if ch.original_name == name:
+                i = 0
+                #Check if channels have the same indexes
+                ch_indexes = ch.indexes
+                while i < len(indexes):
+                    if indexes[i] != ch_indexes[i]:
+                        break
+                    i += 1
+                # If while loop was broken
+                if i < len(indexes):
+                    continue
+                else:
+                    # All indexes were the same
+                    return ch
+        return None
+        
     
 
 ################################

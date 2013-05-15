@@ -5,7 +5,7 @@ Created on 22-04-2013
 '''
 
 from qopml.interpreter.model.parser.lex_yacc import LexYaccParserExtension
-from qopml.interpreter.model import Host, SCHEDULE_ALGORITHM_FIFO, HostProcess,\
+from qopml.interpreter.model import Host, HostProcess,\
     HostSubprocess
 from ply.lex import Lexer
 import re

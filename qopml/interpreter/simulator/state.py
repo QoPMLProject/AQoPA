@@ -15,6 +15,9 @@ class Context():
     
     def __init__(self):
         self.hosts = []
+        
+        self.expression_checker = None
+        self.expression_reducer = None
     
     @property
     def channels(self):

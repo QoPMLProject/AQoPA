@@ -236,6 +236,8 @@ def main():
         print parser.get_syntax_errors()
     
     
+    #####################################
+    
     interpreter = Interpreter()
     try:
         interpreter.set_qopml_model(text)
@@ -249,7 +251,10 @@ def main():
             print "Syntax errors:"
             sys.stderr.write('\n'.join(e.syntax_errors))
         return
-        
+    
+    #####################################
+    
+    """    
     store = interpreter.store
     
     for o in store.functions:
@@ -270,6 +275,7 @@ def main():
         print unicode(o)
     for o in store.versions:
         print unicode(o)
-
+    """
+    
 if __name__ == '__main__':
     main()

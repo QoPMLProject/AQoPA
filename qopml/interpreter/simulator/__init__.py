@@ -6,7 +6,14 @@ Created on 07-05-2013
 from qopml.interpreter.simulator.state import HOOK_TYPE_PRE_HOST_LIST_EXECUTION
 
 class EnvironmentDefinitionException(Exception):
-    pass
+    
+    def __init__(self, *args, **kwargs):
+        super(Exception, self).__init__(*args)
+        
+        self.syntax_errors = []
+        if 'errors' in kwargs:
+            self.errors = kwargs['errors']
+            del kwargs['errors']
 
 class RuntimeException(Exception):
     pass

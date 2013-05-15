@@ -16,4 +16,10 @@ class QoPMLModelStore():
     metrics_sets            = []
     init_version_number     = []
     
+    
+    def find_host(self, name):
+        for h in self.hosts:
+            if h.name == name:
+                return h
+        return None
 
