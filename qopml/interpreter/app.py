@@ -61,8 +61,13 @@ class Builder():
         """
         Validate, build and return simulation equations build from parsed equations.
         """
-        validator = equation.EquationsValidator()
-        return validator.build_equations(store.equations, functions)
+        validator = equation.Validator()
+        validator.validate(store.equations, functions)
+        
+        equations = []
+        for parsed_equation in store.equations:
+            equations.append(equation.Equation(parsed_equation.composite, parsed_equation.simple))
+        return equations
     
     def _build_hosts(self, store, version, functions, expression_checker):
         """
