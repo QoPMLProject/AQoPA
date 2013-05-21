@@ -166,7 +166,6 @@ functions
 
 equations {
   eq dec(enc(data,K),K) = data;
-  eq f1(f2(true,K),K) = false;
 }
 
 channels {
@@ -243,13 +242,18 @@ def main():
         interpreter.set_qopml_model(text)
         interpreter.run()
     except EnvironmentDefinitionException, e:
-        print "Error on creatiung environment: %s" % e
+        print "Error on creating environment: %s" % e
+        if len(e.errors) > 0:
+            print "Errors:"
+            sys.stderr.write('\n'.join(e.errors))
+            print
         return
     except ParserException, e:
         print "Parsing error: %s" % e
         if len(e.syntax_errors):
             print "Syntax errors:"
             sys.stderr.write('\n'.join(e.syntax_errors))
+            print
         return
     
     #####################################

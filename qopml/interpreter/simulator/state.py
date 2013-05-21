@@ -14,17 +14,12 @@ class Hook():
 class Context():
     
     def __init__(self):
-        self.hosts = []
+        self.hosts = []                 # List of all hosts in this context
+        self.channels = []              # List of all channels in this context
+        self.functions = []             # List of all functions in this context
         
         self.expression_checker = None
         self.expression_reducer = None
-    
-    @property
-    def channels(self):
-        """
-        Returns list of all channels of this context.
-        """
-        pass
     
     def all_hosts_finished(self):
         """

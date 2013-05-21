@@ -518,11 +518,79 @@ class Builder():
                                 
         return built_channels
         
-    def _build_metrics_manager(self, store):
+    def _build_metrics_manager(self, store, hosts):
         """
         Build and return metrics manager.
         """
-        return metrics.Manager()
+        host_metrics = []
+        
+        for metrics_data in store.metrics_datas:
+            
+            blocks = []
+            # Build list of metrics blocks
+            for block in metrics_data.blocks:
+                
+                params = block.header.params[1:]
+                service_params = block.header.service_params
+                metrics_block = metrics.Block(params, service_params)
+                
+                for metric in block.metrics:
+                    m = metrics.Metric(metric.arguments[0], metric.arguments[1:len(params)+1], 
+                                       metric.arguments[len(params)+2:])
+                    metrics_block.metrics.append(m)
+                blocks.append(metrics_block)
+            
+            # get or create host metrics with given name
+            hm = None
+            for existing_hm in host_metrics:
+                if existing_hm.name == metrics_data.name:
+                    hm = existing_hm
+                    break
+            if hm is None:
+                hm = metrics.HostMetrics(metrics_data.name)
+                host_metrics.append(hm)
+            
+            if metrics_data.plus or metrics_data.star:
+                if metrics_data.plus:
+                    hm.plus_blocks = blocks
+                else: # star
+                    hm.star_blocks = blocks
+                    
+                # If host metrics does not have normal block
+                # Search for them and assign if found in host metrics 
+                # with simple name (not qualified like hm1.1)
+                if len(hm.normal_blocks) == 0:
+                    hm_original_name = original_name(hm.name)
+                    hm_original = None
+                    
+                    for existing_hm in host_metrics:
+                        if original_name(existing_hm.name) == hm_original_name and existing_hm != hm:
+                            hm_original = existing_hm
+                            break
+                        
+                    if hm_original:
+                        hm.normal_blocks = hm_original.normal_blocks
+                        
+            else: # metrics_data normal
+                hm_original_name = original_name(hm.name)
+                
+                # Assign normal block to all host metrics with the same original name
+                for existing_hm in host_metrics:
+                    if original_name(existing_hm.name) == hm_original_name:
+                        # Assign notmal block to all host metrics with the same original name
+                        # (including the current one - possibly created)
+                        existing_hm.normal_blocks = hm.normal_blocks 
+        
+        # Connect host metrics with hosts
+        for metrics_set in store.metrics_sets:
+            for h in hosts:
+                if h.original_name == metrics_set.host_name:
+                    for host_metric in host_metrics:
+                        if host_metric.name == metrics_set.configuration_name:
+                            host_metric.connected_hosts.append(h)
+                            break
+        
+        return metrics.Manager(host_metrics)
     
     def _build_context(self, store, version):
         """
@@ -532,12 +600,17 @@ class Builder():
         equations = self._build_equations(store, functions)
         expression_reducer = self._build_expression_reducer(equations)
         expression_checker = self._build_expression_checker()
-        hosts = self._build_hosts(store, version)
+        hosts = self._build_hosts(store, version, functions, expression_checker)
         channels = self._build_channels(store, version)
         metrics_manager = self._build_metrics_manager(store);
 
         c = state.Context()
-        
+        c.expression_checker = expression_checker
+        c.expression_reducer = expression_reducer
+        c.hosts = hosts
+        c.channels = channels
+        c.functions = functions
+        c.metrics_manager = metrics_manager
         return c
     
     def build_simulator(self, store, version):
@@ -623,7 +696,7 @@ class Interpreter():
         self._parse()
         
         for version in self.store.versions:
-            simulator = self.builder.build_simulator(version)
+            simulator = self.builder.build_simulator(self.store, version)
             thr = VersionThread(simulator)
             
             thr.run()

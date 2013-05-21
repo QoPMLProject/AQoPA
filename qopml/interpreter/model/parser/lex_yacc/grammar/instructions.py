@@ -6,9 +6,11 @@ Created on 22-04-2013
 
 from qopml.interpreter.model.parser.lex_yacc import LexYaccParserExtension
 from qopml.interpreter.model import AssignmentInstruction,\
-    COMMUNICATION_TYPE_OUT, COMMUNICATION_TYPE_IN, CommunicationInstruction,\
+    CommunicationInstruction,\
     WhileInstruction, IfInstruction, ContinueInstruction, FinishInstruction,\
     CallFunctionInstruction
+from qopml.interpreter.simulator.communication import COMMUNICATION_TYPE_OUT,\
+    COMMUNICATION_TYPE_IN
 
 
 class Builder():

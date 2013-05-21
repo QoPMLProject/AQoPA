@@ -86,6 +86,22 @@ class Validator():
         
         return False
     
+    def _expression_contains_identifier(self, expression, identifier):
+        """
+        Returns True if expression contains an identifier expression 
+        with name equal to second parameter.
+        """
+        if isinstance(expression, IdentifierExpression):
+            return expression.identifier == identifier
+        
+        if isinstance(expression, CallFunctionExpression):
+            for arg in expression.arguments:
+                if self._expression_contains_identifier(arg, identifier):
+                    return True
+            return False
+        
+        return False
+    
     def _validate_syntax(self, parsed_equations, functions):
         """
         Method check the syntax of equations:
@@ -101,7 +117,7 @@ class Validator():
                 errors.append(e.args[0])
                 
             if isinstance(eq.simple, IdentifierExpression):
-                if not self._expression_contains_identifier(eq.simple.identifier):
+                if not self._expression_contains_identifier(eq.composite, eq.simple.identifier):
                     errors.append("Equation '%s' does not have identifier from simple expression '%s' in composite expression."
                                   % (unicode(eq), eq.simple.identifier))
         if len(errors) > 0:
@@ -114,7 +130,7 @@ class Validator():
         """
         
         # Validate syntax - function names and parametrs counts
-        self._validate_syntax(parsed_equations)
+        self._validate_syntax(parsed_equations, functions)
         
         errors = []
         

@@ -5,7 +5,7 @@ Created on 22-04-2013
 '''
 
 from qopml.interpreter.model.parser.lex_yacc import LexYaccParserExtension
-from qopml.interpreter.model import Version, VersionRunProcess
+from qopml.interpreter.model import Version, VersionRunProcess, VersionRunHost
 
 
 class Builder():
@@ -31,7 +31,35 @@ class Builder():
                         | RUN HOST IDENTIFIER version_channels version_repetition BLOCKOPEN version_run_processes BLOCKCLOSE
                         | RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCKOPEN version_run_processes BLOCKCLOSE
         """
-        pass
+        run_host = VersionRunHost(token[3])
+        if '*' in token[4]:
+            run_host.all_channels_active = True
+        else:
+            run_host.active_channels = token[4]
+            
+        if len(token) == 8:
+            
+            if isinstance(token[5], int): # RUN HOST IDENTIFIER version_channels version_repetition BLOCKOPEN BLOCKCLOSE
+                run_host.repetitions = token[5]
+            else: # RUN HOST IDENTIFIER version_channels BLOCKOPEN version_run_processes BLOCKCLOSE
+                run_host.run_processes = token[5]
+                
+        elif len(token) == 9:
+            
+            if isinstance(token[6], list): # RUN HOST IDENTIFIER version_channels version_repetition version_repetition_channels BLOCKOPEN BLOCKCLOSE
+                run_host.repetitions = token[5]
+                run_host.repeated_channels = token[6]
+            else: # RUN HOST IDENTIFIER version_channels version_repetition BLOCKOPEN version_run_processes BLOCKCLOSE
+                run_host.repetitions = token[5]
+                run_host.run_processes = token[7]
+            
+        elif len(token) == 10:
+            run_host.repetitions = token[5]
+            run_host.repeated_channels = token[6]
+            run_host.run_processes = token[8]
+            
+            
+        return run_host    
     
     def build_run_process(self, token):
         """
@@ -174,12 +202,13 @@ class ParserExtension(LexYaccParserExtension):
                         | LPARAN STAR RPARAN
                         | LPARAN identifiers_list RPARAN
         """
-        if len(t) == 2:
+        if len(t) == 3:
             t[0] = []
-        elif len(t) == 2:
-            t[0] = ['*']
-        elif len(t) > 2:
-            t[0] = t[2]
+        elif len(t) == 4:
+            if t[2] == '*':
+                t[0] = ['*']
+            else:
+                t[0] = t[2]
     
     def version_repetition_channels(self, t):
         """
@@ -226,12 +255,13 @@ class ParserExtension(LexYaccParserExtension):
                         | LPARAN STAR RPARAN
                         | LPARAN identifiers_list RPARAN
         """
-        if len(t) == 2:
+        if len(t) == 3:
             t[0] = []
-        elif len(t) == 2:
-            t[0] = ['*']
-        elif len(t) > 2:
-            t[0] = t[2]
+        elif len(t) == 4:
+            if t[2] == '*':
+                t[0] = ['*']
+            else:
+                t[0] = t[2]
     
     def _extend(self):
         
