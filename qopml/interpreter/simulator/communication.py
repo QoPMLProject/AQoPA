@@ -5,9 +5,6 @@ Created on 07-05-2013
 '''
 from qopml.interpreter.model import original_name, name_indexes
 
-COMMUNICATION_TYPE_IN = 1
-COMMUNICATION_TYPE_OUT = 2
-
 class Channel():
     """
     Simulation channel.
@@ -20,16 +17,14 @@ class Channel():
         self._connected_processes    = []
         
     def clone(self):
-        return Channel(self.original_name)
+        return Channel(self.original_name())
         
-    @property
     def original_name(self):
         """
         Return original name of channel - without indexes.
         """
         return original_name(self.name)
     
-    @property
     def indexes(self):
         """
         Return name indexes of channel 

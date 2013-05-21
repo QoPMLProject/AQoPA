@@ -4,6 +4,8 @@ Created on 23-04-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 
+import copy
+
 ################################################
 #             Names functions
 ################################################
@@ -52,7 +54,9 @@ class Function():
             
         return u"fun %s(%s) %s %s" % (self.name, ', '.join(self.params), qop_params, comment)
         
-    
+
+COMMUNICATION_TYPE_IN = 1
+COMMUNICATION_TYPE_OUT = 2
     
 class Channel():
     
@@ -86,6 +90,9 @@ class BooleanExpression():
     def __unicode__(self):
         return u"true" if self.val else u"false"
     
+    def clone(self):
+        return copy.deepcopy(self)
+    
 class IdentifierExpression():
     
     def __init__(self, identifier):
@@ -93,6 +100,9 @@ class IdentifierExpression():
         
     def __unicode__(self):
         return unicode(self.identifier)
+    
+    def clone(self):
+        return copy.deepcopy(self)
     
 class CallFunctionExpression():
     
@@ -105,6 +115,11 @@ class CallFunctionExpression():
         return u"%s(%s)[%s];" % ( unicode(self.function_name), unicode(', '.join([ unicode(a) for a in self.arguments])),
                                   unicode(', '.join([ unicode(a) for a in self.qop_arguments])) )
         
+    def clone(self):
+        return CallFunctionExpression(copy.copy(self.function_name), 
+                                      [ a.clone() for a in self.arguments ],
+                                      [ copy.copy(a) for a in self.qop_arguments ])
+        
 class ComparisonExpression():
     
     def __init__(self, left, right):
@@ -114,6 +129,9 @@ class ComparisonExpression():
     def __unicode__(self):
         return "%s == %s" % (unicode(self.left), unicode(self.right))
     
+    def clone(self):
+        return ComparisonExpression(self.left.clone(), self.right.clone())
+    
 class TupleExpression():
     
     def __init__(self, elements):
@@ -121,6 +139,9 @@ class TupleExpression():
         
     def __unicode__(self):
         return u"(%s)" % unicode(', '.join(self.elements))
+    
+    def clone(self):
+        return TupleExpression([e.clone() for e in self.elements])
     
 class TupleElementExpression():
     
@@ -130,6 +151,9 @@ class TupleElementExpression():
         
     def __unicode__(self):
         return u"%s[%d]" % (unicode(self.variable_name), self.index)
+    
+    def clone(self):
+        return copy.deepcopy(self)
       
 ################################
 #        Instructions
@@ -222,6 +246,17 @@ class HostProcess():
         self.active_channels = []
     
         self.follower = None
+        self._channels_map = {}
+        
+    def clone(self):
+        p = HostProcess(self.original_name(), self.instructions_list)
+        p.all_channels_active = self.all_channels_active
+        p.active_channels = self.active_channels
+        return p
+        
+    def original_name(self):
+        """"""
+        return original_name(self.name)
         
     def add_name_index(self, index):
         """
@@ -234,11 +269,11 @@ class HostProcess():
         """
         Assigns channel to this host.
         """
-        if channel.original_name not in self._channels_map:
-            self._channels_map[channel.original_name] = []
-        if channel in self._channels_map[channel.original_name].append(channel):
+        if channel.original_name() not in self._channels_map:
+            self._channels_map[channel.original_name()] = []
+        if channel in self._channels_map[channel.original_name()]:
             return
-        self._channels_map[channel.original_name].append(channel)
+        self._channels_map[channel.original_name()].append(channel)
         channel.connect_with_host(self)
     
     def find_channel(self, name):
@@ -256,10 +291,10 @@ class HostProcess():
         
         for ch in channels:
             # Check if channels has the same original name
-            if ch.original_name == name:
+            if ch.original_name() == name:
                 i = 0
                 #Check if channels have the same indexes
-                ch_indexes = ch.indexes
+                ch_indexes = ch.indexes()
                 while i < len(indexes):
                     if indexes[i] != ch_indexes[i]:
                         break
@@ -295,6 +330,16 @@ class Host():
     def __unicode__(self):
         return u"host %s" % unicode(self.name)
         
+    def clone(self):
+        h = Host(self.original_name(), self.schedule_algorithm, self.instructions_list, self.predefined_values)
+        h.all_channels_active = self.all_channels_active
+        h.active_channels = self.active_channels
+        return h
+        
+    def original_name(self):
+        """"""
+        return original_name(self.name)
+        
     def add_name_index(self, index):
         """
         Add index to the name. 
@@ -314,11 +359,11 @@ class Host():
         """
         Assigns channel to this host.
         """
-        if channel.original_name not in self._channels_map:
-            self._channels_map[channel.original_name] = []
-        if channel in self._channels_map[channel.original_name].append(channel):
+        if channel.original_name() not in self._channels_map:
+            self._channels_map[channel.original_name()] = []
+        if channel in self._channels_map[channel.original_name()]:
             return
-        self._channels_map[channel.original_name].append(channel)
+        self._channels_map[channel.original_name()].append(channel)
         channel.connect_with_host(self)
     
     def find_channel(self, name):
@@ -336,10 +381,10 @@ class Host():
         
         for ch in channels:
             # Check if channels has the same original name
-            if ch.original_name == name:
+            if ch.original_name() == name:
                 i = 0
                 #Check if channels have the same indexes
-                ch_indexes = ch.indexes
+                ch_indexes = ch.indexes()
                 while i < len(indexes):
                     if indexes[i] != ch_indexes[i]:
                         break

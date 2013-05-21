@@ -212,6 +212,7 @@ class ParserExtension(LexYaccParserExtension):
         """
         host_predefined_value : HASH instruction_assignment
         """
+        t[0] = t[2]
     
     def host_body(self, t):
         """

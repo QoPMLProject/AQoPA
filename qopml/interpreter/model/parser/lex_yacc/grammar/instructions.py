@@ -8,9 +8,7 @@ from qopml.interpreter.model.parser.lex_yacc import LexYaccParserExtension
 from qopml.interpreter.model import AssignmentInstruction,\
     CommunicationInstruction,\
     WhileInstruction, IfInstruction, ContinueInstruction, FinishInstruction,\
-    CallFunctionInstruction
-from qopml.interpreter.simulator.communication import COMMUNICATION_TYPE_OUT,\
-    COMMUNICATION_TYPE_IN
+    CallFunctionInstruction, COMMUNICATION_TYPE_OUT, COMMUNICATION_TYPE_IN
 
 
 class Builder():

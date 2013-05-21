@@ -236,7 +236,7 @@ class ParserExtension(LexYaccParserExtension):
             t[0].append(t[1])
         else:
             t[0] = t[1]
-            t[0].append(t[2])
+            t[0].append(t[3])
     
     def metrics_data_block(self, t):
         """

@@ -3,6 +3,9 @@ Created on 07-05-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
+from qopml.interpreter.model import IdentifierExpression, CallFunctionExpression,\
+    TupleExpression
+from qopml.interpreter.simulator import RuntimeException
 
 class Checker():
     """
@@ -12,10 +15,21 @@ class Checker():
     
     def populate_variables(self, expression, variables):
         """
-        Replace variables names in expression with values 
-        of variables from variables list.
+        Returns new expression with replaced variables names 
+        with copies of values of variables from variables list.
         """
-        raise NotImplementedError()
+        if isinstance(expression, IdentifierExpression):
+            if expression.identifier not in variables:
+                raise RuntimeException("Variable '%s' does not exist" % expression.identifier)
+            return variables[expression.identifier].clone()
+            
+        if isinstance(expression, CallFunctionExpression):
+            pass
+        
+        if isinstance(expression, TupleExpression):
+            pass
+        
+        return expression.clone()
 
 class Reducer():
     """

@@ -42,7 +42,7 @@ class Builder():
             if isinstance(token[5], int): # RUN HOST IDENTIFIER version_channels version_repetition BLOCKOPEN BLOCKCLOSE
                 run_host.repetitions = token[5]
             else: # RUN HOST IDENTIFIER version_channels BLOCKOPEN version_run_processes BLOCKCLOSE
-                run_host.run_processes = token[5]
+                run_host.run_processes = token[6]
                 
         elif len(token) == 9:
             

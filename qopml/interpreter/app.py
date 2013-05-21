@@ -88,9 +88,9 @@ class Builder():
                 if isinstance(instruction, HostSubprocess):
                     subprocess = instruction
                     if subprocess.name in run_process.active_subprocesses:
-                        instructions_list.append(subprocess.clone())
+                        instructions_list.append(subprocess)
                 else:
-                    instructions_list.append(instruction.clone())
+                    instructions_list.append(instruction)
             
             process.instructions_list = instructions_list
             
@@ -104,7 +104,7 @@ class Builder():
                 for instr in instructions_list:
                     if not isinstance(instr, HostProcess):
                         continue
-                    if instr.process_name == process_name:
+                    if instr.name == process_name:
                         return instr
                 return None
             
@@ -119,7 +119,7 @@ class Builder():
                 update_process_instructions_list(process_prototype, run_process)
                 
                 # Define initial process number (if needed)
-                if run_process.process_name in processes_numbers:
+                if run_process.process_name not in processes_numbers:
                     processes_numbers[run_process.process_name] = 0
                 
                 # If process has follower
@@ -131,7 +131,7 @@ class Builder():
                     update_process_instructions_list(process_follower_prototype, run_process.follower)
                     
                     # Define initial process number for following process (if needed)
-                    if run_process.follower.process_name in processes_numbers:
+                    if run_process.follower.process_name not in processes_numbers:
                         processes_numbers[run_process.follower.process_name] = 0
                     
                 for i in range(0, run_process.repetitions):
@@ -189,15 +189,15 @@ class Builder():
         
         for run_host in version.run_hosts:
             
-            if run_host.host_name in hosts_numbers:
+            if run_host.host_name not in hosts_numbers:
                 hosts_numbers[run_host.host_name] = 0
             
             # Create prototype host for this "run host"
             host_prototype = store.find_host(run_host.host_name).clone()
             # Update its instructions list
-            update_instructions_list(host_prototype, version)
+            update_instructions_list(host_prototype, run_host)
             
-            
+            cloned_host = host_prototype
             for i in range(0, run_host.repetitions):
                 # Create next clone for next repetitions
                 if i > 0:
@@ -298,7 +298,7 @@ class Builder():
             channel_names = []
             if run_host.all_channels_active:
                 if host.all_channels_active:
-                    channel_names += [ c.original_name for c in original_channels ]
+                    channel_names += [ c.original_name() for c in original_channels ]
                 else:
                     channel_names += [ c for c in host.active_channels ]
             else:
@@ -447,7 +447,7 @@ class Builder():
                                     # Lets check if its second index (process index) is the same 
                                     # with repeated index
                                     
-                                    ch_indexes = channel.indexes
+                                    ch_indexes = channel.indexes()
                                     # If channel proces index (2nd) is different from repeated index
                                     if ch_indexes[1] != repeated_indexes[0]:
                                         ch_name = original_name(process_channel_repeated_name) + '.' +\
@@ -489,7 +489,7 @@ class Builder():
                                 if channel:
                                     # Get current host channel index 
                                     # from the second index of found channel indexes
-                                    ch_indexes = channel.indexes
+                                    ch_indexes = channel.indexes()
                                     current_host_channel_index = ch_indexes[0]
                                     
                                 for i in range(0, run_process.repetitions):
@@ -531,7 +531,7 @@ class Builder():
             for block in metrics_data.blocks:
                 
                 params = block.header.params[1:]
-                service_params = block.header.service_params
+                service_params = block.header.services_params
                 metrics_block = metrics.Block(params, service_params)
                 
                 for metric in block.metrics:
@@ -601,8 +601,8 @@ class Builder():
         expression_reducer = self._build_expression_reducer(equations)
         expression_checker = self._build_expression_checker()
         hosts = self._build_hosts(store, version, functions, expression_checker)
-        channels = self._build_channels(store, version)
-        metrics_manager = self._build_metrics_manager(store);
+        channels = self._build_channels(store, version, hosts)
+        metrics_manager = self._build_metrics_manager(store, hosts);
 
         c = state.Context()
         c.expression_checker = expression_checker
