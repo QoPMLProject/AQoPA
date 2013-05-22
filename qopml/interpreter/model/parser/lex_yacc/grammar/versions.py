@@ -143,6 +143,23 @@ class ParserExtension(LexYaccParserExtension):
             t.lexer.pop_state()
         return t
     
+    def token_sq_lparan(self, t):
+        r'\['
+        t.lexer.push_state('versionsrepeatedchannels')
+        return t
+    
+    def token_sq_rparan(self, t):
+        r'\]'
+        t.lexer.pop_state()
+        return t
+    
+    def token_error(self, t):
+        self.parser.syntax_errors.append("Line [%s:%s]: Illegal character '%s' \n" % (t.lexer.lineno, t.lexer.lexpos, t.value[0]))
+    
+    def t_newline(self, t):
+        r'\n+'
+        t.lexer.lineno += t.value.count("\n")
+    
     ##########################################
     #                RULES
     ##########################################
@@ -212,9 +229,28 @@ class ParserExtension(LexYaccParserExtension):
     
     def version_repetition_channels(self, t):
         """
-        version_repetition_channels : SQLPARAN qualified_identifiers_list SQRPARAN
+        version_repetition_channels : SQLPARAN version_repetition_channels_list SQRPARAN
         """
         t[0] = t[2]
+        
+    def version_repetition_channels_list(self, t):
+        """
+        version_repetition_channels_list : version_repetition_channel
+                                        | version_repetition_channels_list COMMA version_repetition_channel
+        """
+        if len(t) == 4:
+            t[0] = t[1]
+            t[0].append(t[3])
+        else:
+            t[0] = []
+            t[0].append(t[1])
+        
+    def version_repetition_channel(self, t):
+        """
+        version_repetition_channel : QUALIFIED_IDENTIFIER 
+                                | IDENTIFIER
+        """
+        t[0] = t[1]
     
     def version_run_processes(self, t):
         """
@@ -266,6 +302,7 @@ class ParserExtension(LexYaccParserExtension):
     def _extend(self):
         
         self.parser.add_state('versions', 'inclusive')
+        self.parser.add_state('versionsrepeatedchannels', 'exclusive')
         
         self.parser.add_reserved_word('versions', 'VERSIONS_SPECIFICATION', func=self.word_versions_specification)
         self.parser.add_reserved_word('version', 'VERSION', state='versions')
@@ -275,6 +312,17 @@ class ParserExtension(LexYaccParserExtension):
         self.parser.add_token('BLOCKOPEN', func=self.token_block_open, states=['versions'])
         self.parser.add_token('BLOCKCLOSE', func=self.token_block_close, states=['versions'])
         self.parser.add_token('ARROWRIGHT', r'\-\>', states=['versions'])
+        
+        self.parser.add_token('SQLPARAN', func=self.token_sq_lparan, states=['versions'])
+        self.parser.add_token('IDENTIFIER', r'[_a-zA-Z][_a-zA-Z0-9]*', states=['versionsrepeatedchannels'])
+        self.parser.add_token('QUALIFIED_IDENTIFIER', r'[_a-zA-Z][_a-zA-Z0-9]*(\.[0-9][0-9]*)+', 
+                              states=['versionsrepeatedchannels'])
+        self.parser.add_token('COMMA', r',', states=['versionsrepeatedchannels'])
+        self.parser.add_token('SQRPARAN', func=self.token_sq_rparan, states=['versionsrepeatedchannels'])
+        
+        self.parser.add_token('error', func=self.token_error, states=['versionsrepeatedchannels'], include_in_tokens=False)
+        self.parser.add_token('ignore', "\t ", states=['versionsrepeatedchannels'], include_in_tokens=False)
+        self.parser.add_token('newline', func=self.t_newline,  states=['versionsrepeatedchannels'], include_in_tokens=False)
 
         self.parser.add_rule(self.versions_specification)
         self.parser.add_rule(self.versions_list)
@@ -284,6 +332,8 @@ class ParserExtension(LexYaccParserExtension):
         self.parser.add_rule(self.version_repetition)
         self.parser.add_rule(self.version_channels)
         self.parser.add_rule(self.version_repetition_channels)
+        self.parser.add_rule(self.version_repetition_channels_list)
+        self.parser.add_rule(self.version_repetition_channel)
         self.parser.add_rule(self.version_run_processes)
         self.parser.add_rule(self.version_run_process)
         self.parser.add_rule(self.version_run_process_base)

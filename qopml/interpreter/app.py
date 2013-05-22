@@ -10,7 +10,13 @@ from qopml.interpreter.model.store import QoPMLModelStore
 from qopml.interpreter.model import HostProcess, name_indexes, original_name,\
     HostSubprocess
 from qopml.interpreter.simulator import Simulator, EnvironmentDefinitionException,\
-    expression, state, equation, metrics, communication, scheduler
+    expression, state, equation, metrics, communication, scheduler,\
+    RuntimeException
+from qopml.interpreter.simulator.state import Executor,\
+    AssignmentInstructionExecutor, IfInstructionExecutor,\
+    ProcessInstructionExecutor, SubprocessInstructionExecutor,\
+    FinishInstructionExecutor, CommunicationInstructionExecutor,\
+    ContinueInstructionExecutor, WhileInstructionExecutor
 
 class VersionThread(threading.Thread):
     """
@@ -22,7 +28,11 @@ class VersionThread(threading.Thread):
         self.simulator = simulator
         
     def run(self):
-        pass
+        try:
+            self.simulator.prepare()
+            self.simulator.run()
+        except RuntimeException, e:
+            print "Runtime error: " + str(e)
     
 class Builder():
     """
@@ -265,12 +275,14 @@ class Builder():
                 channel = find_channel(existing_channels, original_name(channel_name) + '.0.0')
                 channel = channel.clone()
                 indexes = name_indexes(channel_name)
-                if len(indexes) > 0:
-                    channel.add_name_index(indexes[0])
-                else:
-                    channel.add_name_index(0)
-                channel.add_name_index(0)
                 
+                for i in range(0, len(indexes)):
+                    channel.add_name_index(indexes[i])
+                indexes = name_indexes(channel.name)
+                
+                for i in range(len(indexes), 2):
+                    channel.add_name_index(0)
+                    
                 existing_channels.append(channel)
             return channel
         
@@ -409,7 +421,7 @@ class Builder():
                             process_channel_names.append(process_channel_name)
                             
                     for process_channel_name in process_channel_names:
-                
+                        
                         # Calculate the name of repeated channel (if it is repeated) 
                         # with indexes
                         process_channel_repeated_name = "" # Name of repeated channel (may be with indexes)
@@ -423,7 +435,7 @@ class Builder():
                             repeated_indexes = name_indexes(process_channel_repeated_name)
                             # If repeated channel is the same, that host is connected with (no indexes)
                             if len(repeated_indexes) == 0:
-                                channel = host.find_channel(process_channel_repeated_name)
+                                channel = built_host.find_channel(process_channel_repeated_name)
                                 # If host does not have channel with this name
                                 if  channel is None:
                                     # Generate channel name for this process
@@ -440,7 +452,7 @@ class Builder():
                                 # from all copies of process will be sent through channel ch1.x.1 
                                 # (where x is the number of channel ch1 in hist A.5 - firstly it would be propably 5)
                                 
-                                channel = host.find_channel(original_name(process_channel_repeated_name))
+                                channel = built_host.find_channel(original_name(process_channel_repeated_name))
                                 
                                 if channel:
                                     # Host has channel with this original name
@@ -458,17 +470,17 @@ class Builder():
                                     # Channel is not connected with host
                                     # Generate channel name for this process and host
                                     ch_name = original_name(process_channel_repeated_name) + '.' +\
-                                                str(host_number) + '.' + str(process_first_number)
+                                                str(host_number) + '.' + str(repeated_indexes[0])
                                     channel = get_or_create_channel(built_channels, ch_name)
                                  
                             elif len(repeated_indexes) == 2:
-                                    ch_name = process_channel_repeated_name
-                                    channel = get_or_create_channel(built_channels, ch_name)
+                                ch_name = process_channel_repeated_name
+                                channel = get_or_create_channel(built_channels, ch_name)
                                     
                             else:
                                 raise EnvironmentDefinitionException(
                                         'Invalid repeated channel definition %s in process %s (host %s)'\
-                                        % (process_channel_repeated_name, run_process.process_name, host.name))
+                                        % (process_channel_repeated_name, run_process.process_name, built_host.name))
                             
                             # Connect repeated channel with all repeated processes
                             # Repeated processes are found as list of next instructions in host's instructions list
@@ -477,7 +489,7 @@ class Builder():
                                 if not isinstance(process, HostProcess):
                                     raise EnvironmentDefinitionException(
                                         'Isntruction nr %d of host %s expected to be process.'\
-                                        % (instruction_index+i, host.name))
+                                        % (instruction_index+i, built_host.name))
                                 process.connect_with_channel(channel) 
                         
                         else: # Channel is not repeated
@@ -485,7 +497,7 @@ class Builder():
                                 current_host_channel_index = host_number
                                 
                                 # Check if host is connected with any channel of this original name
-                                channel = host.find_channel(original_name(process_channel_name))
+                                channel = built_host.find_channel(original_name(process_channel_name))
                                 if channel:
                                     # Get current host channel index 
                                     # from the second index of found channel indexes
@@ -503,10 +515,11 @@ class Builder():
                                     
                                     # Connect channel with process  
                                     process = built_host.instructions_list[instruction_index+i]
+                                    
                                     if not isinstance(process, HostProcess):
                                         raise EnvironmentDefinitionException(
                                             'Isntruction nr %d of host %s expected to be process.'\
-                                            % (instruction_index+i, host.name))
+                                            % (instruction_index+i, built_host.name))
                                     process.connect_with_channel(channel)
                     
                     # Update process numbers dict
@@ -613,11 +626,28 @@ class Builder():
         c.metrics_manager = metrics_manager
         return c
     
+    def build_executor(self):
+        """
+        Creates executor for simulation
+        """
+        e = Executor()
+        e.append_instruction_executor(AssignmentInstructionExecutor())
+        e.append_instruction_executor(ProcessInstructionExecutor())
+        e.append_instruction_executor(SubprocessInstructionExecutor())
+        e.append_instruction_executor(CommunicationInstructionExecutor())
+        e.append_instruction_executor(FinishInstructionExecutor())
+        e.append_instruction_executor(ContinueInstructionExecutor())
+        e.append_instruction_executor(IfInstructionExecutor())
+        e.append_instruction_executor(WhileInstructionExecutor())
+        return e
+    
     def build_simulator(self, store, version):
         """
         Creates simulator for particular version.
         """
-        return Simulator(self._build_context(store, version))
+        sim = Simulator(self._build_context(store, version))
+        sim.executor = self.build_executor()
+        return sim
     
     def build_parser(self, store, modules):
         """
@@ -692,12 +722,17 @@ class Interpreter():
         if len(parser.get_syntax_errors()) > 0:
             raise ParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
         
-    def run(self):
+    def prepare(self):
+        """ Prepares for run """
         self._parse()
         
         for version in self.store.versions:
             simulator = self.builder.build_simulator(self.store, version)
             thr = VersionThread(simulator)
+            self.threads.append(thr)
             
+    def run(self):
+        """ Runs all simulations """
+        for thr in self.threads:
             thr.run()
         

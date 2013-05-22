@@ -3,14 +3,15 @@ Created on 07-05-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
-from qopml.interpreter.simulator.state import HOOK_TYPE_PRE_HOST_LIST_EXECUTION
+from qopml.interpreter.simulator.state import HOOK_TYPE_PRE_HOST_LIST_EXECUTION,\
+    HookExecutor
 
 class EnvironmentDefinitionException(Exception):
     
     def __init__(self, *args, **kwargs):
         super(Exception, self).__init__(*args)
         
-        self.syntax_errors = []
+        self.errors = []
         if 'errors' in kwargs:
             self.errors = kwargs['errors']
             del kwargs['errors']
@@ -29,13 +30,24 @@ class Simulator():
         self._hooks = {}
         self._modules = []
         
-        self.before_instruction_executor = None
-        self.after_instruction_executor = None
+        self._executor = None
+        self._before_instruction_executor = HookExecutor()
+        self._after_instruction_executor = HookExecutor()
         
         self._first_loop = True
         
     def _execute_hook(self, hoot_type):
-        pass
+        raise NotImplementedError()
+    
+    def _install_modules(self):
+        """
+        Method installs registered modules.
+        """
+        if self._ready:
+            raise EnvironmentDefinitionException('Cannot install modules in prepared simulation. They were already installed.')
+        
+        for m in self._modules:
+            m.install(self)
     
     def _internal_goto_next_state(self):
         """
@@ -64,15 +76,40 @@ class Simulator():
                             
                 self.context.mark_all_hosts_unchanged()
                     
-        self.executor.execute_instruction(self.context)
+        self._executor.execute_instruction(self.context)
         self.context.goto_next_host()
     
     # Public
+    
+    @property
+    def executor(self):
+        """ executor getter """
+        return self._executor
+    
+    @executor.setter
+    def executor(self, executor):
+        """ executor setter """
+        self._executor = executor
+        self._executor.prepend_instruction_executor()(self._before_instruction_executor)
+        self._executor.append_instruction_executor(self._after_instruction_executor)
+    
+    def register_module(self, module):
+        """
+        Register module for simulation.
+        """
+        if self._ready:
+            raise EnvironmentDefinitionException('Cannot register module in prepared simulation.')
+        self._modules.append(module)
+        return self
     
     def prepare(self):
         """
         Prepare simulator to start.
         """
+        self._install_modules()
+        self._first_loop = True
+        self._ready = True
+        return self
         
     def register_hook(self, hook_type, hook):
         """

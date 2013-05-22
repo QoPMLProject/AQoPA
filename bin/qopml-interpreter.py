@@ -8,6 +8,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from qopml.interpreter.model.parser import ParserException
 from qopml.interpreter.simulator import EnvironmentDefinitionException
+from qopml.interpreter.simulator.state import PrintExecutor
 from qopml.interpreter.app import Interpreter, Builder
 
 
@@ -178,9 +179,9 @@ versions
 {
   version 1
   {
-    run host TTP(*)
+    run host TTP(*){2}[ ch1, ch2.2 ]
     {
-      run TTP1(*)
+      run TTP1(*){5}[ ch1.1.1 ]
     }
 
     run host B(*)
@@ -193,8 +194,7 @@ versions
       run A1(Av1)
     }
   }
-
-
+  
   version 2
   {
     run host TTP(*)
@@ -212,7 +212,6 @@ versions
       run A1(Av2)
     }
   }
-
 }
 """
 
@@ -232,14 +231,41 @@ def main():
                 break
             print tok
             print ""
-        print parser.get_syntax_errors()
+        print 'Errors: ' + str(parser.get_syntax_errors())
+        print ""
+        print ""
     
     
     #####################################
     
-    interpreter = Interpreter()
+    interpreter = Interpreter(builder=Builder())
     try:
         interpreter.set_qopml_model(text)
+
+        """
+        interpreter._parse()
+        
+        store = interpreter.store
+        builder = Builder()
+        version = store.versions[0]
+        simulator = builder.build_simulator(store, version)
+        
+        for h in simulator.context.hosts:
+            print h.name
+            for i in h._channels_map:
+                print ' - ' + i + ' ' + str([ ch.name for ch in h._channels_map[i] ])
+                
+            for p in h.instructions_list:
+                print ' -- p: ' + p.name
+                for i in p._channels_map:
+                    print ' ---- ' + i + ' ' + str([ ch.name for ch in p._channels_map[i] ])
+        """
+        
+        interpreter.prepare()
+        
+        for thread in interpreter.threads: 
+            thread.simulator.executor.append_instruction_executor(PrintExecutor(sys.stdout))
+        
         interpreter.run()
     except EnvironmentDefinitionException, e:
         print "Error on creating environment: %s" % e

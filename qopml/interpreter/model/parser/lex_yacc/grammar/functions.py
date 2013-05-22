@@ -85,7 +85,7 @@ class ParserExtension(LexYaccParserExtension):
 
     # Function Comment State
     def token_funcomment_error(self, t):
-        self.syntax_errors.append("Line [%s:%s]: Illegal character '%s' \n" % (t.lexer.lineno, t.lexer.lexpos, t.value[0]))
+        self.parser.syntax_errors.append("Line [%s:%s]: Illegal character '%s' \n" % (t.lexer.lineno, t.lexer.lexpos, t.value[0]))
     
     
     def token_funcomment_rparan(self, t):

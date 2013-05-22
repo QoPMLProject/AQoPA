@@ -146,7 +146,7 @@ class ParserExtension(LexYaccParserExtension):
         return t
     
     def token_error(self, t):
-        self.syntax_errors.append("Line [%s:%s]: Illegal character '%s' \n" % (t.lexer.lineno, t.lexer.lexpos, t.value[0]))
+        self.parser.syntax_errors.append("Line [%s:%s]: Illegal character '%s' \n" % (t.lexer.lineno, t.lexer.lexpos, t.value[0]))
     
     def t_newline(self, t):
         r'\n+'

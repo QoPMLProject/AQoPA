@@ -331,7 +331,15 @@ class Host():
         return u"host %s" % unicode(self.name)
         
     def clone(self):
-        h = Host(self.original_name(), self.schedule_algorithm, self.instructions_list, self.predefined_values)
+        
+        instructions_list = []
+        for i in self.instructions_list:
+            if isinstance(i, HostProcess):
+                instructions_list.append(i.clone())
+            else:
+                instructions_list.append(i)
+        
+        h = Host(self.original_name(), self.schedule_algorithm, instructions_list, self.predefined_values)
         h.all_channels_active = self.all_channels_active
         h.active_channels = self.active_channels
         return h
