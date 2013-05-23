@@ -405,6 +405,11 @@ class Host():
                     return ch
         return None
         
+    def goto_next_instructions_context(self):
+        raise NotImplementedError()
+        
+    def get_current_instructions_context(self):
+        raise NotImplementedError()
     
 
 ################################

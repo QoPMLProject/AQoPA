@@ -199,7 +199,40 @@ class Executor():
         Executes one instruction of context which is equal to going to the next state.
         The executed instruction is get from the current host of the context.
         """
-        raise NotImplementedError()
+        cpu_time_consumed = False
+        
+        # Execute instructions in one instructions context until 
+        # instruction that consumes cpu time is executes.
+        # Method also checks whether the host was not stopped or ended meanwhile
+        # and whether the context is not finished 
+        # (fe. when there is only information about instructions printed)  
+        while not cpu_time_consumed and not context.current_host().finished() \
+                and context.get_current_host().get_current_instructions_context().finished():
+            
+            instr = context.get_current_instruction()
+            custom_instructions_index_change = False
+            
+            for e in self.executors:
+                if e.can_execute_instruction(instr):
+                    
+                    # Execute current instruction by current executor. 
+                    # Executor can change index.
+                    e.execute_instruction(context)
+                    if e.consumes_cpu_time():
+                        cpu_time_consumed = True
+                        
+                    # Check if executor changes instructions index itself.
+                    if e.custom_instruction_index_change():
+                        custom_instructions_index_change = True
 
-
+            # If index is not changed by executor,
+            # method has to change it. 
+            if not custom_instructions_index_change:
+                context.get_current_host().get_current_instructions_context().goto_next_instruction()
+           
+        # Change the index of instructions in current host.
+        # It for example moves index to enxt instructions context.
+        # (Uses scheduler)     
+        context.get_current_host().goto_next_instructions_context()
+                
     
