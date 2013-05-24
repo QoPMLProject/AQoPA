@@ -30,6 +30,10 @@ class Checker():
             pass
         
         return expression.clone()
+    
+    
+    def result(self, condition, variables, functions):
+        raise NotImplementedError()
 
 class Reducer():
     """

@@ -5,6 +5,7 @@ Created on 23-04-2013
 '''
 
 import copy
+from qopml.interpreter.simulator import RuntimeException
 
 ################################################
 #             Names functions
@@ -205,8 +206,8 @@ class CommunicationInstruction():
         
 class IfInstruction():
     
-    def __init__(self, conditional, true_instructions, false_instructions=[]):
-        self.conditional = conditional
+    def __init__(self, condition, true_instructions, false_instructions=[]):
+        self.condition = condition
         self.true_instructions = true_instructions
         self.false_instructions = false_instructions
         
@@ -215,8 +216,8 @@ class IfInstruction():
         
 class WhileInstruction():
     
-    def __init__(self, conditional, instructions):
-        self.conditional = conditional
+    def __init__(self, condition, instructions):
+        self.condition = condition
         self.instructions = instructions
         
     def __unicode__(self):
@@ -323,7 +324,8 @@ class Host():
         self.all_channels_active = False
         self.active_channels = []
         
-        self.variables = {}
+        self._changed = False
+        self._variables = {}
         self._channels_map = {}
         self._scheduler = None
         
@@ -361,7 +363,17 @@ class Host():
         
     def set_variable(self, name, value):
         """Set hotst's variable"""
-        self.variables[name]= value
+        self._variables[name]= value
+        
+    def get_variable(self, name):
+        """ Get host's variable """
+        if name not in self._variables:
+            raise RuntimeException("Variable '%s' undefined in host '%s'" % (name, self.name))
+        return self._variables[name]
+        
+    def mark_changed(self):
+        """ Marks host changed. Means that host have changes in last state. """
+        self._changed = True
         
     def connect_with_channel(self, channel):
         """
@@ -411,6 +423,14 @@ class Host():
     def get_current_instructions_context(self):
         raise NotImplementedError()
     
+    def get_current_process(self):
+        raise NotImplementedError()
+    
+    def finish_successfuly(self):
+        raise NotImplementedError()
+    
+    def finish_failed(self, error):
+        raise NotImplementedError()
 
 ################################
 #        Versions

@@ -530,6 +530,12 @@ class Builder():
             hosts_numbers[run_host.host_name] += run_host.repetitions
                                 
         return built_channels
+    
+    def _build_channels_manager(self, channels):
+        """ 
+        Build channels manager
+        """
+        return communication.Manager(channels)
         
     def _build_metrics_manager(self, store, hosts):
         """
@@ -614,16 +620,17 @@ class Builder():
         expression_reducer = self._build_expression_reducer(equations)
         expression_checker = self._build_expression_checker()
         hosts = self._build_hosts(store, version, functions, expression_checker)
-        channels = self._build_channels(store, version, hosts)
         metrics_manager = self._build_metrics_manager(store, hosts);
+        channels = self._build_channels(store, version, hosts)
+        channels_manager = self._build_channels_manager(channels)
 
         c = state.Context()
+        c.functions = functions
+        c.hosts = hosts
         c.expression_checker = expression_checker
         c.expression_reducer = expression_reducer
-        c.hosts = hosts
-        c.channels = channels
-        c.functions = functions
         c.metrics_manager = metrics_manager
+        c.channels_manager = channels_manager
         return c
     
     def build_executor(self):

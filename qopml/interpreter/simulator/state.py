@@ -3,23 +3,36 @@ Created on 07-05-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
-
-# Hook, Context, Executor
-
-HOOK_TYPE_PRE_HOST_LIST_EXECUTION = 1
-
-class Hook():
-    pass
+from qopml.interpreter.model import BooleanExpression, IdentifierExpression,\
+    CallFunctionExpression, TupleExpression, TupleElementExpression,\
+    AssignmentInstruction, CommunicationInstruction, FinishInstruction,\
+    ContinueInstruction, CallFunctionInstruction, IfInstruction,\
+    WhileInstruction, HostProcess, HostSubprocess, COMMUNICATION_TYPE_OUT
+from qopml.interpreter.simulator import RuntimeException
 
 class Context():
     
     def __init__(self):
         self.hosts = []                 # List of all hosts in this context
-        self.channels = []              # List of all channels in this context
         self.functions = []             # List of all functions in this context
         
         self.expression_checker = None
         self.expression_reducer = None
+
+        self.metrics_manager = None
+        self.channels_manager = None
+    
+    def get_current_host(self):
+        """
+        Return host being executed at this step.
+        """
+        raise NotImplementedError()
+    
+    def get_current_instruction(self):
+        """
+        Return instruction being executed at this step.
+        """
+        raise NotImplementedError()
     
     def all_hosts_finished(self):
         """
@@ -55,6 +68,31 @@ class Context():
         """
         raise NotImplementedError()
     
+class Variable():
+    """ 
+    Host's variable 
+    """
+    
+    def __init__(self, name, expression):
+        self.name = name
+        self.expression = expression
+        
+# ----------- Hook
+
+HOOK_TYPE_PRE_HOST_LIST_EXECUTION = 1
+
+class Hook():
+    """
+    Hooks are executed in many places of simulation.
+    Hooks can be added by modules.
+    """
+    
+    def execute(self, context):
+        """
+        Method changes the context. 
+        """
+        raise NotImplementedError()
+        
 # ----------- Executor
     
 class InstructionExecutor():
@@ -94,24 +132,35 @@ class HookExecutor(InstructionExecutor):
     """
     
     def __init__(self):
-        self.hooks = []     # List of hooks
+        self._hooks = []     # List of hooks
     
     def add_hook(self, hook):
         """ Adds hook to the list """
-        self.hooks.append(hook)
+        self._hooks.append(hook)
         return self
     
     def remove_hook(self, hook):
         """ Removes hook from the list """
-        self.hooks.remove(hook)
+        self._hooks.remove(hook)
         return self
     
+    
     def execute_instruction(self, context):
-        """
-        Executes one instruction of context.
-        The executed instruction is get from the current host of the context.
-        """
-        raise NotImplementedError()
+        """ Overriden """
+        for h in self._hooks:
+            h.execute(context)
+        
+    def can_execute_instruction(self, instruction):
+        """ Overriden """
+        return True
+    
+    def custom_instruction_index_change(self):
+        """ Overriden """
+        return False
+    
+    def consumes_cpu_time(self):
+        """ Overriden """
+        return False
     
 class PrintExecutor(InstructionExecutor):
     """
@@ -120,6 +169,46 @@ class PrintExecutor(InstructionExecutor):
     
     def __init__(self, f):
         self.file = f       # File to write instruction to
+        
+    def execute_instruction(self, context):
+        """ Overriden """
+        self.file.write("Host: %s \t" % context.get_current_host().name)
+        
+        instruction = context.get_current_instruction()
+        
+        simples = [AssignmentInstruction, CommunicationInstruction, FinishInstruction, ContinueInstruction]
+        for s in simples:
+            if isinstance(instruction, s):
+                self.file.write(unicode(instruction))
+                
+        if isinstance(instruction, CallFunctionInstruction):
+            self.file.write(instruction.function_name + '(...)')
+            
+        if isinstance(instruction, IfInstruction):
+            self.file.write('if (%s) ...' % unicode(instruction.condition))
+            
+        if isinstance(instruction, WhileInstruction):
+            self.file.write('while (%s) ...' % unicode(instruction.condition))
+            
+        if isinstance(instruction, HostProcess):
+            self.file.write('process %s ...' % unicode(instruction.name))
+            
+        if isinstance(instruction, HostSubprocess):
+            self.file.write('subprocess %s ...' % unicode(instruction.name))
+                
+        self.file.write("\n") 
+        
+    def can_execute_instruction(self, instruction):
+        """ Overriden """
+        return True
+    
+    def custom_instruction_index_change(self):
+        """ Overriden """
+        return False
+    
+    def consumes_cpu_time(self):
+        """ Overriden """
+        return False
         
 class AssignmentInstructionExecutor(InstructionExecutor):
     """
@@ -130,49 +219,296 @@ class AssignmentInstructionExecutor(InstructionExecutor):
         """
         Computes the expression from current assignment instruction.
         """
-        raise NotImplementedError()
+        if isinstance(expression, BooleanExpression):
+            return expression.clone()
+        
+        if isinstance(expression, IdentifierExpression):
+            return context.expression_checker.populate_variables(expression, context.get_current_host().variables)
+        
+        if isinstance(expression, CallFunctionExpression):
+            return context.expression_checker.populate_variables(expression, context.get_current_host().variables)
+            
+        if isinstance(expression, TupleExpression):
+            return context.expression_checker.populate_variables(expression, context.get_current_host().variables)
+            
+        if isinstance(expression, TupleElementExpression):
+            
+            # Clone variable expression
+            tuple_expression = context.get_current_host().get_variable([expression.variable_name]).expression.clone()
+            
+            # If not tuple expression, try to reduce. Maybe the result will be a tuple.
+            if not isinstance(tuple_expression, TupleExpression):
+                tuple_expression = context.expression_reducer.reduce(tuple_expression)
+                
+            if not isinstance(tuple_expression, TupleExpression):
+                raise RuntimeException("Variable '%s' not tuple and cannot get its element %d" 
+                                        % (expression.variable_name, expression.index))
+                
+            if expression.index >= len(tuple_expression.elements):
+                raise RuntimeException("Tuple '%s' not tuple and cannot get its element %d" 
+                                        % (expression.variable_name, expression.index))
+            
+            return context.expression_checker.populate_variables(
+                            tuple_expression.elements[expression.index],
+                            context.get_current_host().variables)
+            
+        raise RuntimeException("Expression '%s' cannot be a value of variable.")
+
+    def execute_instruction(self, context):
+        """ Overriden """
+        instruction = context.get_current_instruction()
+        expression = self._compute_current_expression(instruction.expression, context)
+        context.get_current_host().set_variable(instruction.variable_name, expression)
+        
+        context.get_current_host().mark_changed()
+        
+    def can_execute_instruction(self, instruction):
+        """ Overriden """
+        return isinstance(instruction, AssignmentInstruction)
+    
+    def custom_instruction_index_change(self):
+        """ Overriden """
+        return False
+    
+    def consumes_cpu_time(self):
+        """ Overriden """
+        return True
 
 class ProcessInstructionExecutor(InstructionExecutor):
     """
     Executes process insructions.
     """
-    pass
+
+    def execute_instruction(self, context):
+        """ Overriden """
+        process_instruction = context.get_current_instruction()
+        current_process = context.get_current_host().get_current_process()
+        instructions_list = process_instruction.intructions_list
+
+        # If process has at least one instruction
+        if len(instructions_list) > 0:
+            context.get_current_host().get_current_instructions_context().add_instructions_list(instructions_list, current_process)
+        else: 
+            # Go to next instruction if proces has no instructions
+            context.get_current_host().get_current_instructions_context().goto_next_instruction()
+            
+        context.get_current_host().mark_changed()
+        
+    def can_execute_instruction(self, instruction):
+        """ Overriden """
+        return isinstance(instruction, HostProcess)
+    
+    def custom_instruction_index_change(self):
+        """ Overriden """
+        return True
+    
+    def consumes_cpu_time(self):
+        """ Overriden """
+        return False
 
 class SubprocessInstructionExecutor(InstructionExecutor):
     """
     Executes subprocess insructions.
     """
-    pass
+
+    def execute_instruction(self, context):
+        """ Overriden """
+        subprocess_instruction = context.get_current_instruction()
+        current_process = context.get_current_host().get_current_process()
+        instructions_list = subprocess_instruction.intructions_list
+
+        if len(instructions_list) > 0:
+            context.get_current_host().get_current_instructions_context().add_instructions_list(instructions_list, current_process)
+        else:
+            context.get_current_host().get_current_instructions_context().goto_next_instruction()
+            
+        context.get_current_host().mark_changed()
+        
+    def can_execute_instruction(self, instruction):
+        """ Overriden """
+        return isinstance(instruction, HostSubprocess)
+    
+    def custom_instruction_index_change(self):
+        """ Overriden """
+        return True
+    
+    def consumes_cpu_time(self):
+        """ Overriden """
+        return False
 
 class CommunicationInstructionExecutor(InstructionExecutor):
     """
     Executes communication in-out insructions.
     """
-    pass
+    
+    def execute_instruction(self, context):
+        """ Overriden """
+        instruction = context.get_current_instruction()
+        channel = context.channels_manager.find_channel_for_current_instruction(context)
+        
+        if not channel:
+            context.get_current_host().get_current_instructions_context().goto_next_instruction()
+            context.get_current_host().mark_changed()
+            return
+        
+        if instruction.communication_type == COMMUNICATION_TYPE_OUT:
+            params = instruction.variables_names
+            expressions = []
+            for p in params:
+                expressions.append(context.get_current_host().get_variable(p).get_expression().clone())
+                
+            channel.send_message(context.get_current_host(), expressions)
+            
+            context.get_current_host().get_current_instructions_context().goto_next_instruction()
+            context.get_current_host().mark_changed()
+            
+        else:
+            request = context.channels_manager.build_message_request(context.get_current_host(), instruction)
+            channel.wait_for_message(request)
+        
+    def can_execute_instruction(self, instruction):
+        """ Overriden """
+        return isinstance(instruction, CommunicationInstruction)
+    
+    def custom_instruction_index_change(self):
+        """ Overriden """
+        return True
+    
+    def consumes_cpu_time(self):
+        """ Overriden """
+        return True
 
 class FinishInstructionExecutor(InstructionExecutor):
     """
     Executes finish (end, stop) insructions.
     """
-    pass
+    
+    def execute_instruction(self, context):
+        """ Overriden """
+        command = context.get_current_instruction()
+        
+        if command == "end":
+            context.get_current_host().finish_successfuly()
+        else: # command == "stop"
+            context.get_current_host().finish_failed('Executed stop instruction')
+            
+        context.get_current_host().mark_changed()
+        
+    def can_execute_instruction(self, instruction):
+        """ Overriden """
+        return isinstance(instruction, FinishInstruction)
+    
+    def custom_instruction_index_change(self):
+        """ Overriden """
+        return False
+    
+    def consumes_cpu_time(self):
+        """ Overriden """
+        return True
 
 class ContinueInstructionExecutor(InstructionExecutor):
     """
     Executes continue insructions.
     """
-    pass
+    
+    def execute_instruction(self, context):
+        """ Overriden """
+        instructions_context = context.get_current_host().get_current_instructions_context()
+        instructions_context.stack.pop()
+        instructions_context.goto_next_instruction()
+        
+        context.get_current_host().mark_changed()
+        
+    def can_execute_instruction(self, instruction):
+        """ Overriden """
+        return isinstance(instruction, ContinueInstruction)
+    
+    def custom_instruction_index_change(self):
+        """ Overriden """
+        return True
+    
+    def consumes_cpu_time(self):
+        """ Overriden """
+        return True
     
 class IfInstructionExecutor(InstructionExecutor):
     """
     Executes if-clause insructions.
     """
-    pass
+    
+    def execute_instruction(self, context):
+        """ Overriden """
+        instruction = context.get_current_instruction()
+        current_process = context.get_current_host().get_current_process()
+        
+        contidion_result = context.expression_checker.result(instruction.condition, 
+                                        context.get_current_host().variables,
+                                        context.functions)
+        
+        instructions_list = []
+        if contidion_result:
+            instructions_list = instruction.true_instructions
+        else:
+            instructions_list = instruction.false_instructions
+            
+        if len(instructions_list) > 0:
+            context.get_current_host().get_current_instructions_context().add_instructions_list(
+                                                                            instructions_list, 
+                                                                            current_process)
+        else:
+            context.get_current_host().get_current_instructions_context().goto_next_instruction()
+        
+        context.get_current_host().mark_changed()
+        
+    def can_execute_instruction(self, instruction):
+        """ Overriden """
+        return isinstance(instruction, IfInstruction)
+    
+    def custom_instruction_index_change(self):
+        """ Overriden """
+        return True
+    
+    def consumes_cpu_time(self):
+        """ Overriden """
+        return True
     
 class WhileInstructionExecutor(InstructionExecutor):
     """
     Executes while-clause insructions.
     """
-    pass
+    
+    def execute_instruction(self, context):
+        """ Overriden """
+        instruction = context.get_current_instruction()
+        current_process = context.get_current_host().get_current_process()
+        
+        contidion_result = context.expression_checker.result(instruction.condition, 
+                                        context.get_current_host().variables,
+                                        context.functions)
+        
+        if contidion_result:
+            instructions_list = instruction.instructons_list
+            
+            if len(instructions_list) > 0:
+                context.get_current_host().get_current_instructions_context().add_instructions_list(
+                                                                                instructions_list, 
+                                                                                current_process)
+        else:
+            context.get_current_host().get_current_instructions_context().goto_next_instruction()
+        
+        context.get_current_host().mark_changed()
+        
+    def can_execute_instruction(self, instruction):
+        """ Overriden """
+        return isinstance(instruction, WhileInstruction)
+    
+    def custom_instruction_index_change(self):
+        """ Overriden """
+        return True
+    
+    def consumes_cpu_time(self):
+        """ Overriden """
+        return True
     
 class Executor():
     """

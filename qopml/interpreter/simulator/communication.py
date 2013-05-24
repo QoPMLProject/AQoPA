@@ -66,10 +66,23 @@ class Channel():
         Works only for asynchronous channels. For synchronous channels always is returned empty array.
         Returns at most number hosts.
         """
-        pass
+        raise NotImplementedError()
     
     def get_number_of_dropped_messages(self):
         """
         Return number of messages dropped on this channel  
         """
-        pass
+        raise NotImplementedError()
+    
+    def wait_for_message(self, request):
+        raise NotImplementedError()
+    
+    def send_message(self, host, expressions):
+        raise NotImplementedError()
+    
+class Manager():
+    """ Channels manager class """
+    
+    def __init__(self, channels):
+        self.channele = channels
+        
