@@ -112,6 +112,86 @@ class Hook():
         """
         raise NotImplementedError()
         
+# ----------- Instructions Context
+
+class InstructionsList:
+    
+    def __init__(self, instructions_list, process):
+        self.process = process 
+        self.instructions_list = instructions_list
+        self._current_instruction_index = 0
+        
+    def get_current_instruction(self):
+        """ """
+        return self.instructions_list[self._current_instruction_index]
+    
+    def goto_next_instruction(self):
+        """ """
+        self._current_instruction_index += 1
+        
+    def finished(self):
+        """
+        Returns True if list is finished. 
+        """
+        return self._current_instruction_index >= len(self.instructions_list)
+
+class InstructionsContext:
+    
+    def __init__(self):
+        self.stack = []        # Stack of instructions list
+        
+    def _get_current_list(self):
+        """
+        Returns currently executed list of instructions.
+        """
+        if len(self.stack) == 0:
+            return None
+        return self.stack[len(self.stack)-1]
+        
+    def get_current_instruction(self):
+        """
+        Returns currently executed instruction.
+        """
+        return self._get_current_list().get_current_instruction()
+        
+    def get_process_of_current_list(self):
+        """
+        Returns the process that current list is in.
+        """
+        return self._get_current_list().get_process()
+        
+    def add_instructions_list(self, instructions_list, process):
+        """
+        Add instructions list to the stack.
+        """
+        l = InstructionsList(instructions_list, process)
+        self.stack.append(l)
+        
+    def goto_next_instruction(self):
+        """
+        Moves context to the next instruction.
+        """
+        self._get_current_list().goto_next_instruction()
+        while not self.finished() and self._get_current_list().finished():
+            self.stack.pop()
+            
+            if not self.finished():
+                if self._get_current_list().get_current_instruction().is_loop():
+                    self._get_current_list().goto_next_instruction()
+        
+    def finished(self):
+        """
+        Returns True if context is finished.
+        """
+        if len(self.stack) == 0:
+            return True
+        
+        if len(self.stack) == 1 and self._get_current_list().finished():
+            return True
+        
+        return False
+        
+        
 # ----------- Executor
     
 class InstructionExecutor():
