@@ -78,12 +78,11 @@ class Context():
         """
         self._previous_host_index = self._current_host_index
         
+        self._current_host_index = (self._current_host_index + 1) % len(self.hosts)
+        
         # Go to next host until current host is not finihed
-        while self.get_current_host().finished():
+        while self._current_host_index != self._previous_host_index and self.get_current_host().finished():
             self._current_host_index = (self._current_host_index + 1) % len(self.hosts)
-            # If current index made a loop, stop
-            if self._current_host_index == self._previous_host_index:
-                break
     
 class Variable():
     """ 
@@ -116,7 +115,7 @@ class Hook():
 
 class InstructionsList:
     
-    def __init__(self, instructions_list, process):
+    def __init__(self, instructions_list, process=None):
         self.process = process 
         self.instructions_list = instructions_list
         self._current_instruction_index = 0
@@ -160,7 +159,7 @@ class InstructionsContext:
         """
         return self._get_current_list().get_process()
         
-    def add_instructions_list(self, instructions_list, process):
+    def add_instructions_list(self, instructions_list, process=None):
         """
         Add instructions list to the stack.
         """
