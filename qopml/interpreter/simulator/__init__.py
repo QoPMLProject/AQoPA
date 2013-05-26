@@ -4,7 +4,8 @@ Created on 07-05-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 from qopml.interpreter.simulator.state import HOOK_TYPE_PRE_HOST_LIST_EXECUTION,\
-    HookExecutor
+    HookExecutor, HOOK_TYPE_PRE_INSTRUCTION_EXECUTION,\
+    HOOK_TYPE_POST_INSTRUCTION_EXECUTION
 
 class EnvironmentDefinitionException(Exception):
     
@@ -36,15 +37,28 @@ class Simulator():
         
         self._first_loop = True
         
-    def _execute_hook(self, hoot_type):
-        raise NotImplementedError()
+    def _execute_hook(self, hook_type):
+        """
+        Execute all hooks of given type.
+        Pre instruction and post instruction hooks 
+        cannot be executet manually.
+        """
+        
+        if hook_type not in self._hooks:
+            return
+        
+        if hook_type in [HOOK_TYPE_PRE_INSTRUCTION_EXECUTION, HOOK_TYPE_POST_INSTRUCTION_EXECUTION]:
+            raise RuntimeException("Cannot execute pre instruction and post instruction hooks manually")
+        
+        for h in self._hooks[hook_type]:
+            h.execute(self.context)
     
     def _install_modules(self):
         """
         Method installs registered modules.
         """
         if self._ready:
-            raise EnvironmentDefinitionException('Cannot install modules in prepared simulation. They were already installed.')
+            raise EnvironmentDefinitionException('Cannot install modules in prepared simulation, they were already installed')
         
         for m in self._modules:
             m.install(self)

@@ -21,25 +21,31 @@ class Context():
 
         self.metrics_manager = None
         self.channels_manager = None
+        
+        self._current_host_index = 0
+        self._previous_host_index = -1
     
     def get_current_host(self):
         """
         Return host being executed at this step.
         """
-        raise NotImplementedError()
+        return self.hosts[self._current_host_index]
     
     def get_current_instruction(self):
         """
         Return instruction being executed at this step.
         """
-        raise NotImplementedError()
+        return self.get_current_host().get_current_instruction_context().get_current_instruction()
     
     def all_hosts_finished(self):
         """
         Returns True if all hosts are in FINISHED state
         and no next states can be generated.
         """
-        raise NotImplementedError()
+        for h in self.hosts:
+            if not h.finished():
+                return False
+        return True
     
     def hosts_loop_ended(self):
         """
@@ -47,26 +53,37 @@ class Context():
         Going to the next state is done for one host in next state generation step, so to finish
         the one loop for all (let N) host, simulater must call function N times.
         """
-        raise NotImplementedError()
+        return self._previous_host_index < 0 or self._previous_host_index >= self._current_host_index
     
     def any_host_changed(self):
         """
         Return True in any host has changed in last next state generation loop performed 
         for all hosts.
         """
-        raise NotImplementedError()
+        for h in self.hosts:
+            if not h.has_changed():
+                return True
+        return False
     
     def mark_all_hosts_unchanged(self):
         """
         Sets the state of all hosts to unchanged. Used before each next state generation loop.
         """
-        raise NotImplementedError()
+        for h in self.hosts:
+            h.mark_unchanged()
     
     def goto_next_host(self):
         """
         Context is moved to the next host so that next state generation step is performed for next host.
         """
-        raise NotImplementedError()
+        self._previous_host_index = self._current_host_index
+        
+        # Go to next host until current host is not finihed
+        while self.get_current_host().finished():
+            self._current_host_index = (self._current_host_index + 1) % len(self.hosts)
+            # If current index made a loop, stop
+            if self._current_host_index == self._previous_host_index:
+                break
     
 class Variable():
     """ 
@@ -79,7 +96,9 @@ class Variable():
         
 # ----------- Hook
 
-HOOK_TYPE_PRE_HOST_LIST_EXECUTION = 1
+HOOK_TYPE_PRE_HOST_LIST_EXECUTION       = 1
+HOOK_TYPE_PRE_INSTRUCTION_EXECUTION     = 2
+HOOK_TYPE_POST_INSTRUCTION_EXECUTION    = 3
 
 class Hook():
     """
