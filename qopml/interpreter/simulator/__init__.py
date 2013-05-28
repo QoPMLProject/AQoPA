@@ -6,19 +6,9 @@ Created on 07-05-2013
 from qopml.interpreter.simulator.state import HOOK_TYPE_PRE_HOST_LIST_EXECUTION,\
     HookExecutor, HOOK_TYPE_PRE_INSTRUCTION_EXECUTION,\
     HOOK_TYPE_POST_INSTRUCTION_EXECUTION
-
-class EnvironmentDefinitionException(Exception):
     
-    def __init__(self, *args, **kwargs):
-        super(Exception, self).__init__(*args)
-        
-        self.errors = []
-        if 'errors' in kwargs:
-            self.errors = kwargs['errors']
-            del kwargs['errors']
-
-class RuntimeException(Exception):
-    pass
+from qopml.interpreter.simulator.error import RuntimeException,\
+    EnvironmentDefinitionException
 
 class Simulator():
     """
@@ -69,7 +59,6 @@ class Simulator():
         The difference is that it does not check 
         whether simulation is finished.
         """
-        
         if self.context.hosts_loop_ended():
             self._execute_hook(HOOK_TYPE_PRE_HOST_LIST_EXECUTION)
             
@@ -80,13 +69,13 @@ class Simulator():
                 if not self.context.any_host_changed():
                     # Throw runtime error if any channel has message to be binded with receiver
                     # or if any channel has dropped a message
-                    for ch in self.context.channels:
+                    for ch in self.context.channels_manager.channels:
                         if len(ch.get_queue_of_sending_hosts(1)) > 0 or ch.get_number_of_dropped_messages() > 0:
                             raise RuntimeException(u"Infinite loop occured")
                         
                     for h in self.context.hosts:
-                        if not h.is_finished():
-                            h.finish_with_error(RuntimeException(u"Infinite loop occured"))
+                        if not h.finished():
+                            h.finish_failed(RuntimeException(u"Infinite loop occured"))
                             
                 self.context.mark_all_hosts_unchanged()
                     
@@ -95,17 +84,13 @@ class Simulator():
     
     # Public
     
-    @property
-    def executor(self):
+    def get_executor(self):
         """ executor getter """
         return self._executor
     
-    @executor.setter
-    def executor(self, executor):
+    def set_executor(self, executor):
         """ executor setter """
         self._executor = executor
-        self._executor.prepend_instruction_executor()(self._before_instruction_executor)
-        self._executor.append_instruction_executor(self._after_instruction_executor)
     
     def register_module(self, module):
         """
@@ -156,6 +141,9 @@ class Simulator():
         """
         if not self.is_ready_to_run():
             raise EnvironmentDefinitionException("Simulation is not yet ready to run")
+        
+        self._executor.prepend_instruction_executor(self._before_instruction_executor)
+        self._executor.append_instruction_executor(self._after_instruction_executor)
         
         while not self.is_simulation_finished():
             self._internal_goto_next_state()

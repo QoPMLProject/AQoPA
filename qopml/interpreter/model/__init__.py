@@ -5,7 +5,7 @@ Created on 23-04-2013
 '''
 
 import copy
-from qopml.interpreter.simulator import RuntimeException
+#from qopml.interpreter.simulator.error import RuntimeException
 
 ################################################
 #             Names functions
@@ -113,7 +113,7 @@ class CallFunctionExpression():
         self.qop_arguments = qop_arguments
         
     def __unicode__(self):
-        return u"%s(%s)[%s];" % ( unicode(self.function_name), unicode(', '.join([ unicode(a) for a in self.arguments])),
+        return u"%s(%s)[%s]" % ( unicode(self.function_name), unicode(', '.join([ unicode(a) for a in self.arguments])),
                                   unicode(', '.join([ unicode(a) for a in self.qop_arguments])) )
         
     def clone(self):
@@ -139,7 +139,7 @@ class TupleExpression():
         self.elements = elements
         
     def __unicode__(self):
-        return u"(%s)" % unicode(', '.join(self.elements))
+        return u"(%s)" % unicode(', '.join([unicode(e) for e in self.elements]))
     
     def clone(self):
         return TupleExpression([e.clone() for e in self.elements])
@@ -191,7 +191,7 @@ class AssignmentInstruction():
         self.expression = expression
         
     def __unicode__(self):
-        return u"%s = %s;" % (unicode(self.variable_identifier), unicode(self.expression))
+        return u"%s = %s;" % (unicode(self.variable_name), unicode(self.expression))
     
 class CommunicationInstruction():
     
@@ -202,7 +202,7 @@ class CommunicationInstruction():
         
     def __unicode__(self):
         type_name = 'in' if self.communication_type == COMMUNICATION_TYPE_IN else 'out'
-        return u"%s (%s: %s)" % (unicode(type_name), unicode(self.channel_name), unicode(', '.join(self.variables_names)))
+        return u"%s (%s: %s);" % (unicode(type_name), unicode(self.channel_name), unicode(', '.join(self.variables_names)))
         
 class IfInstruction():
     
@@ -245,73 +245,17 @@ class HostProcess():
         self.instructions_list = instructions_list
         self.all_channels_active = False
         self.active_channels = []
-    
+        
         self.follower = None
-        self._channels_map = {}
         
     def clone(self):
-        p = HostProcess(self.original_name(), self.instructions_list)
+        p = HostProcess(self.name, self.instructions_list)
         p.all_channels_active = self.all_channels_active
         p.active_channels = self.active_channels
         return p
         
-    def original_name(self):
-        """"""
-        return original_name(self.name)
-        
-    def add_name_index(self, index):
-        """
-        Add index to the name. 
-        Before: name = ch, index = 1. After: name = ch.1
-        """
-        self.name += ".%d" % index
-        
-    def connect_with_channel(self, channel):
-        """
-        Assigns channel to this host.
-        """
-        if channel.original_name() not in self._channels_map:
-            self._channels_map[channel.original_name()] = []
-        if channel in self._channels_map[channel.original_name()]:
-            return
-        self._channels_map[channel.original_name()].append(channel)
-        channel.connect_with_host(self)
-    
-    def find_channel(self, name):
-        """
-        Search for and retuen assigned channel by name (including indexes)
-        """
-        original_channel_name = original_name(name)
-        indexes = name_indexes(name)
-
-        if original_channel_name not in self._channels_map:
-            return None
-        channels = self._channels_map[original_channel_name]
-        if len(channels) == 0:
-            return None
-        
-        for ch in channels:
-            # Check if channels has the same original name
-            if ch.original_name() == name:
-                i = 0
-                #Check if channels have the same indexes
-                ch_indexes = ch.indexes()
-                while i < len(indexes):
-                    if indexes[i] != ch_indexes[i]:
-                        break
-                    i += 1
-                # If while loop was broken
-                if i < len(indexes):
-                    continue
-                else:
-                    # All indexes were the same
-                    return ch
-        return None
-        
     def __unicode__(self):
         return u"process %s" % unicode(self.name)
-        
-        self._channels_map = {}
         
         
 class Host():
@@ -323,11 +267,6 @@ class Host():
         self.predefined_values = predefined_values
         self.all_channels_active = False
         self.active_channels = []
-        
-        self._changed = False
-        self._variables = {}
-        self._channels_map = {}
-        self._scheduler = None
         
     def __unicode__(self):
         return u"host %s" % unicode(self.name)
@@ -341,97 +280,11 @@ class Host():
             else:
                 instructions_list.append(i)
         
-        h = Host(self.original_name(), self.schedule_algorithm, instructions_list, self.predefined_values)
+        h = Host(self.name, self.schedule_algorithm, instructions_list, self.predefined_values)
         h.all_channels_active = self.all_channels_active
         h.active_channels = self.active_channels
         return h
         
-    def original_name(self):
-        """"""
-        return original_name(self.name)
-        
-    def add_name_index(self, index):
-        """
-        Add index to the name. 
-        Before: name = ch, index = 1. After: name = ch.1
-        """
-        self.name += ".%d" % index
-        
-    def set_scheduler(self, scheduler):
-        """Set scheduler"""
-        self._scheduler = scheduler
-        
-    def set_variable(self, name, value):
-        """Set hotst's variable"""
-        self._variables[name]= value
-        
-    def get_variable(self, name):
-        """ Get host's variable """
-        if name not in self._variables:
-            raise RuntimeException("Variable '%s' undefined in host '%s'" % (name, self.name))
-        return self._variables[name]
-        
-    def mark_changed(self):
-        """ Marks host changed. Means that host have changes in last state. """
-        self._changed = True
-        
-    def connect_with_channel(self, channel):
-        """
-        Assigns channel to this host.
-        """
-        if channel.original_name() not in self._channels_map:
-            self._channels_map[channel.original_name()] = []
-        if channel in self._channels_map[channel.original_name()]:
-            return
-        self._channels_map[channel.original_name()].append(channel)
-        channel.connect_with_host(self)
-    
-    def find_channel(self, name):
-        """
-        Search for and retuen assigned channel by name (including indexes)
-        """
-        original_channel_name = original_name(name)
-        indexes = name_indexes(name)
-
-        if original_channel_name not in self._channels_map:
-            return None
-        channels = self._channels_map[original_channel_name]
-        if len(channels) == 0:
-            return None
-        
-        for ch in channels:
-            # Check if channels has the same original name
-            if ch.original_name() == name:
-                i = 0
-                #Check if channels have the same indexes
-                ch_indexes = ch.indexes()
-                while i < len(indexes):
-                    if indexes[i] != ch_indexes[i]:
-                        break
-                    i += 1
-                # If while loop was broken
-                if i < len(indexes):
-                    continue
-                else:
-                    # All indexes were the same
-                    return ch
-        return None
-        
-    def goto_next_instructions_context(self):
-        raise NotImplementedError()
-        
-    def get_current_instructions_context(self):
-        raise NotImplementedError()
-    
-    def get_current_process(self):
-        raise NotImplementedError()
-    
-    def finish_successfuly(self):
-        raise NotImplementedError()
-    
-    def finish_failed(self, error):
-        raise NotImplementedError()
-
 ################################
 #        Versions
 ################################

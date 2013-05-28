@@ -7,8 +7,10 @@ from qopml.interpreter.model import BooleanExpression, IdentifierExpression,\
     CallFunctionExpression, TupleExpression, TupleElementExpression,\
     AssignmentInstruction, CommunicationInstruction, FinishInstruction,\
     ContinueInstruction, CallFunctionInstruction, IfInstruction,\
-    WhileInstruction, HostProcess, HostSubprocess, COMMUNICATION_TYPE_OUT
-from qopml.interpreter.simulator import RuntimeException
+    WhileInstruction, HostSubprocess, COMMUNICATION_TYPE_OUT,\
+    original_name, name_indexes
+    
+from qopml.interpreter.simulator.error import RuntimeException
 
 class Context():
     
@@ -35,7 +37,7 @@ class Context():
         """
         Return instruction being executed at this step.
         """
-        return self.get_current_host().get_current_instruction_context().get_current_instruction()
+        return self.get_current_host().get_current_instructions_context().get_current_instruction()
     
     def all_hosts_finished(self):
         """
@@ -61,7 +63,7 @@ class Context():
         for all hosts.
         """
         for h in self.hosts:
-            if not h.has_changed():
+            if h.has_changed():
                 return True
         return False
     
@@ -84,15 +86,6 @@ class Context():
         while self._current_host_index != self._previous_host_index and self.get_current_host().finished():
             self._current_host_index = (self._current_host_index + 1) % len(self.hosts)
     
-class Variable():
-    """ 
-    Host's variable 
-    """
-    
-    def __init__(self, name, expression):
-        self.name = name
-        self.expression = expression
-        
 # ----------- Hook
 
 HOOK_TYPE_PRE_HOST_LIST_EXECUTION       = 1
@@ -110,6 +103,217 @@ class Hook():
         Method changes the context. 
         """
         raise NotImplementedError()
+        
+# ----------- Host Process
+
+HOST_STATUS_RUNNING = 1
+HOST_STATUS_FINISHED = 2
+
+class Host():
+    """
+    Simulation equivalent of host
+    """
+    
+    def __init__(self, name, instructions_list, predefined_variables={}):
+        self.name = name
+        self.instructions_list = instructions_list
+        self._variables = predefined_variables
+        
+        self._scheduler = None
+        self._channels_map = {}
+        self._changed = False
+        self._status = HOST_STATUS_RUNNING 
+        self._finish_error = None
+        
+    def __unicode__(self):
+        return u"host %s" % unicode(self.name)
+        
+    def original_name(self):
+        """"""
+        return original_name(self.name)
+        
+    def add_name_index(self, index):
+        """
+        Add index to the name. 
+        Before: name = ch, index = 1. After: name = ch.1
+        """
+        self.name += ".%d" % index
+        
+    def set_scheduler(self, scheduler):
+        """Set scheduler"""
+        self._scheduler = scheduler
+        
+    def set_variable(self, name, value):
+        """Set hotst's variable"""
+        self._variables[name] = value
+        
+    def get_variable(self, name):
+        """ Get host's variable """
+        if name not in self._variables:
+            raise RuntimeException("Variable '%s' undefined in host '%s'" % (name, self.name))
+        return self._variables[name]
+    
+    def get_variables(self):
+        """ Get variables dict """
+        return self._variables
+        
+    def mark_changed(self):
+        """ Marks host changed. Means that host have changes in last state. """
+        self._changed = True
+        
+    def mark_unchanged(self):
+        """ Marks host unchanged. Clears changes from last state. """
+        self._changed = False
+        
+    def has_changed(self):
+        """ Returns True if host has changed """
+        return self._changed
+        
+    def connect_with_channel(self, channel):
+        """
+        Assigns channel to this host.
+        """
+        if channel.original_name() not in self._channels_map:
+            self._channels_map[channel.original_name()] = []
+        if channel in self._channels_map[channel.original_name()]:
+            return
+        self._channels_map[channel.original_name()].append(channel)
+        channel.connect_with_host(self)
+    
+    def find_channel(self, name):
+        """
+        Search for and retuen assigned channel by name (including indexes)
+        """
+        original_channel_name = original_name(name)
+        indexes = name_indexes(name)
+
+        if original_channel_name not in self._channels_map:
+            return None
+        channels = self._channels_map[original_channel_name]
+        if len(channels) == 0:
+            return None
+        
+        for ch in channels:
+            # Check if channels has the same original name
+            if ch.original_name() == name:
+                i = 0
+                #Check if channels have the same indexes
+                ch_indexes = ch.indexes()
+                while i < len(indexes):
+                    if indexes[i] != ch_indexes[i]:
+                        break
+                    i += 1
+                # If while loop was broken
+                if i < len(indexes):
+                    continue
+                else:
+                    # All indexes were the same
+                    return ch
+        return None
+        
+    def goto_next_instructions_context(self):
+        """
+        Moves host to next instructions context.
+        """
+        self._scheduler.goto_next_instruction_context()
+        if self._scheduler.finished():
+            self.finish_successfuly()
+        
+    def get_current_instructions_context(self):
+        """ 
+        Returns the currnt instructions context retrived from scheduler.
+        """
+        return self._scheduler.get_current_context()
+    
+    def get_current_process(self):
+        """ """
+        return self.get_current_instructions_context().get_process_of_current_list()
+    
+    def finished(self):
+        """ 
+        Returns True when host is finished
+        """
+        return self._status == HOST_STATUS_FINISHED
+    
+    def finish_successfuly(self):
+        """
+        Finish host execution without error
+        """
+        self._status = HOST_STATUS_FINISHED
+        self._finish_error = None
+    
+    def finish_failed(self, error):
+        """
+        Finish host execution with error
+        """
+        self._status = HOST_STATUS_FINISHED
+        self._finish_error = error
+    
+    
+class Process():
+    
+    def __init__(self, name, instructions_list):
+        self.name = name
+        self.instructions_list = instructions_list
+    
+        self.follower = None
+        self._channels_map = {}
+        
+    def original_name(self):
+        """"""
+        return original_name(self.name)
+        
+    def add_name_index(self, index):
+        """
+        Add index to the name. 
+        Before: name = ch, index = 1. After: name = ch.1
+        """
+        self.name += ".%d" % index
+        
+    def connect_with_channel(self, channel):
+        """
+        Assigns channel to this host.
+        """
+        if channel.original_name() not in self._channels_map:
+            self._channels_map[channel.original_name()] = []
+        if channel in self._channels_map[channel.original_name()]:
+            return
+        self._channels_map[channel.original_name()].append(channel)
+        channel.connect_with_host(self)
+    
+    def find_channel(self, name):
+        """
+        Search for and retuen assigned channel by name (including indexes)
+        """
+        original_channel_name = original_name(name)
+        indexes = name_indexes(name)
+
+        if original_channel_name not in self._channels_map:
+            return None
+        channels = self._channels_map[original_channel_name]
+        if len(channels) == 0:
+            return None
+        
+        for ch in channels:
+            # Check if channels has the same original name
+            if ch.original_name() == name:
+                i = 0
+                #Check if channels have the same indexes
+                ch_indexes = ch.indexes()
+                while i < len(indexes):
+                    if indexes[i] != ch_indexes[i]:
+                        break
+                    i += 1
+                # If while loop was broken
+                if i < len(indexes):
+                    continue
+                else:
+                    # All indexes were the same
+                    return ch
+        return None
+        
+    def __unicode__(self):
+        return u"process %s" % unicode(self.name)
         
 # ----------- Instructions Context
 
@@ -157,7 +361,7 @@ class InstructionsContext:
         """
         Returns the process that current list is in.
         """
-        return self._get_current_list().get_process()
+        return self._get_current_list().process
         
     def add_instructions_list(self, instructions_list, process=None):
         """
@@ -288,7 +492,7 @@ class PrintExecutor(InstructionExecutor):
         if isinstance(instruction, WhileInstruction):
             self.file.write('while (%s) ...' % unicode(instruction.condition))
             
-        if isinstance(instruction, HostProcess):
+        if isinstance(instruction, Process):
             self.file.write('process %s ...' % unicode(instruction.name))
             
         if isinstance(instruction, HostSubprocess):
@@ -321,18 +525,18 @@ class AssignmentInstructionExecutor(InstructionExecutor):
             return expression.clone()
         
         if isinstance(expression, IdentifierExpression):
-            return context.expression_checker.populate_variables(expression, context.get_current_host().variables)
+            return context.expression_checker.populate_variables(expression, context.get_current_host().get_variables())
         
         if isinstance(expression, CallFunctionExpression):
-            return context.expression_checker.populate_variables(expression, context.get_current_host().variables)
+            return context.expression_checker.populate_variables(expression, context.get_current_host().get_variables())
             
         if isinstance(expression, TupleExpression):
-            return context.expression_checker.populate_variables(expression, context.get_current_host().variables)
+            return context.expression_checker.populate_variables(expression, context.get_current_host().get_variables())
             
         if isinstance(expression, TupleElementExpression):
             
             # Clone variable expression
-            tuple_expression = context.get_current_host().get_variable([expression.variable_name]).expression.clone()
+            tuple_expression = context.get_current_host().get_variable(expression.variable_name).clone()
             
             # If not tuple expression, try to reduce. Maybe the result will be a tuple.
             if not isinstance(tuple_expression, TupleExpression):
@@ -348,7 +552,7 @@ class AssignmentInstructionExecutor(InstructionExecutor):
             
             return context.expression_checker.populate_variables(
                             tuple_expression.elements[expression.index],
-                            context.get_current_host().variables)
+                            context.get_current_host().get_variables())
             
         raise RuntimeException("Expression '%s' cannot be a value of variable.")
 
@@ -394,7 +598,7 @@ class ProcessInstructionExecutor(InstructionExecutor):
         
     def can_execute_instruction(self, instruction):
         """ Overriden """
-        return isinstance(instruction, HostProcess)
+        return isinstance(instruction, Process)
     
     def custom_instruction_index_change(self):
         """ Overriden """
@@ -413,7 +617,7 @@ class SubprocessInstructionExecutor(InstructionExecutor):
         """ Overriden """
         subprocess_instruction = context.get_current_instruction()
         current_process = context.get_current_host().get_current_process()
-        instructions_list = subprocess_instruction.intructions_list
+        instructions_list = subprocess_instruction.instructions_list
 
         if len(instructions_list) > 0:
             context.get_current_host().get_current_instructions_context().add_instructions_list(instructions_list, current_process)
@@ -540,7 +744,7 @@ class IfInstructionExecutor(InstructionExecutor):
         current_process = context.get_current_host().get_current_process()
         
         contidion_result = context.expression_checker.result(instruction.condition, 
-                                        context.get_current_host().variables,
+                                        context.get_current_host().get_variables(),
                                         context.functions)
         
         instructions_list = []
@@ -581,7 +785,7 @@ class WhileInstructionExecutor(InstructionExecutor):
         current_process = context.get_current_host().get_current_process()
         
         contidion_result = context.expression_checker.result(instruction.condition, 
-                                        context.get_current_host().variables,
+                                        context.get_current_host().get_variables(),
                                         context.functions)
         
         if contidion_result:
@@ -634,14 +838,13 @@ class Executor():
         The executed instruction is get from the current host of the context.
         """
         cpu_time_consumed = False
-        
         # Execute instructions in one instructions context until 
         # instruction that consumes cpu time is executes.
         # Method also checks whether the host was not stopped or ended meanwhile
         # and whether the context is not finished 
-        # (fe. when there is only information about instructions printed)  
-        while not cpu_time_consumed and not context.current_host().finished() \
-                and context.get_current_host().get_current_instructions_context().finished():
+        # (fe. when there is only information about instructions printed)
+        while not cpu_time_consumed and not context.get_current_host().finished() \
+                and not context.get_current_host().get_current_instructions_context().finished():
             
             instr = context.get_current_instruction()
             custom_instructions_index_change = False
@@ -668,5 +871,4 @@ class Executor():
         # It for example moves index to enxt instructions context.
         # (Uses scheduler)     
         context.get_current_host().goto_next_instructions_context()
-                
     

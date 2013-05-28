@@ -9,14 +9,17 @@ from qopml.interpreter.model.parser import ParserException
 from qopml.interpreter.model.store import QoPMLModelStore
 from qopml.interpreter.model import HostProcess, name_indexes, original_name,\
     HostSubprocess
-from qopml.interpreter.simulator import Simulator, EnvironmentDefinitionException,\
-    expression, state, equation, metrics, communication, scheduler,\
-    RuntimeException
+from qopml.interpreter.simulator import Simulator,\
+    expression, state, equation, metrics, communication, scheduler
+    
 from qopml.interpreter.simulator.state import Executor,\
     AssignmentInstructionExecutor, IfInstructionExecutor,\
     ProcessInstructionExecutor, SubprocessInstructionExecutor,\
     FinishInstructionExecutor, CommunicationInstructionExecutor,\
-    ContinueInstructionExecutor, WhileInstructionExecutor
+    ContinueInstructionExecutor, WhileInstructionExecutor, Host, Process
+    
+from qopml.interpreter.simulator.error import EnvironmentDefinitionException,\
+    RuntimeException
 
 class VersionThread(threading.Thread):
     """
@@ -84,13 +87,13 @@ class Builder():
         Rebuild hosts - create new instances with updated instructions lists according to version.
         """
         
-        def update_process_instructions_list(process, run_process): 
+        def build_process_instructions_list(process, run_process): 
             """
-            Update processes instruction lists 
-            according to "run process" (repetitions) and follower 
+            Create process' instruction lists
+            according to "run process" 
             """
             if run_process.all_subprocesses_active:
-                return
+                return process.instructions_list
             
             instructions_list = []
             
@@ -102,11 +105,11 @@ class Builder():
                 else:
                     instructions_list.append(instruction)
             
-            process.instructions_list = instructions_list
+            return instructions_list
             
-        def update_instructions_list(host, run_host):
+        def build_host_instructions_list(parsed_host, run_host, repetition_number):
             """
-            Update host and its processes instruction lists 
+            Create host's  and its processes' instruction lists 
             according to "run host" (repetitions) 
             """
             
@@ -120,13 +123,16 @@ class Builder():
             
             
             processes_numbers = {}
-            instructions_list = []
+            host_instructions_list = []
             
             for run_process in run_host.run_processes:
-                # Create process prototype
-                process_prototype = find_process(host.instructions_list, run_process.process_name).clone()
-                # Update prototype instructions list
-                update_process_instructions_list(process_prototype, run_process)
+                
+                # Find parsed process
+                parsed_process = find_process(parsed_host.instructions_list, run_process.process_name)
+                
+                if parsed_process is None:
+                    raise EnvironmentDefinitionException("Process '%s' does not exist in host '%s'" % 
+                                                         (run_process.process_name, parsed_host.name))
                 
                 # Define initial process number (if needed)
                 if run_process.process_name not in processes_numbers:
@@ -134,60 +140,58 @@ class Builder():
                 
                 # If process has follower
                 if run_process.follower:
-                    # Create processr followe prototype
-                    process_follower_prototype = \
-                        find_process(host.instructions_list, run_process.follower.process_name).clone()
-                    # Update follower prototype instructions list
-                    update_process_instructions_list(process_follower_prototype, run_process.follower)
-                    
                     # Define initial process number for following process (if needed)
                     if run_process.follower.process_name not in processes_numbers:
                         processes_numbers[run_process.follower.process_name] = 0
                     
                 for i in range(0, run_process.repetitions):
                     
-                    # Get process prototype or create new one 
-                    if i == 0:
-                        process = process_prototype
-                    else:
-                        process = process_prototype.clone()
+                    # Create instructions list
+                    instructions_list = build_process_instructions_list(parsed_process, run_process)
+                    
+                    # Create new simulation process
+                    simulated_process = Process(parsed_process.name, instructions_list)
                     
                     # Update process index
                     process_number = processes_numbers[run_process.process_name] + i
-                    process.add_name_index(process_number)
+                    simulated_process.add_name_index(process_number)
                     
                     # Do the same fo the follower 
                     if run_process.follower:
-                        if i == 0:
-                            follower = process_follower_prototype
-                        else:
-                            follower = process_follower_prototype.clone()
+                        
+                        # Find process of follower
+                        follower_parsed_process = find_process(parsed_host.instructions_list, run_process.follower.process_name)
+                        
+                        # Build instructions list for follower
+                        follower_instructions_list = build_process_instructions_list(follower_parsed_process, run_process.follower)
+
+                        # Create simulated follower
+                        simulated_follower = Process(follower_parsed_process.name, follower_instructions_list)
                             
                         # Update follower index
                         follower_number = processes_numbers[run_process.follower.process_name] + i
-                        follower.add_name_index(follower_number)
+                        simulated_follower.add_name_index(follower_number)
                         
-                        process.follower = follower
+                        simulated_process.follower = simulated_follower
                         
-                    instructions_list.append(process)
+                    host_instructions_list.append(simulated_process)
             
-            host.instructions_list = instructions_list
+            return host_instructions_list
             
-        
-        def set_predefined_variables(host, expression_checker):
+        def set_predefined_variables(host, predefined_values, expression_checker):
             """
             Populate predefined values with expressions 
             and save them as variables in host
             """
-            for predefined_value in host.predefined_values:
+            for predefined_value in predefined_values:
                 host.set_variable(predefined_value.variable_name, 
-                                  expression_checker.populate_variables(predefined_value.expression, host.variables))
+                                  expression_checker.populate_variables(predefined_value.expression, host.get_variables()))
         
-        def set_scheduler(host):
+        def set_scheduler(host, algorithm):
             """
             Build and set host's scheduler
             """
-            host.set_scheduler(scheduler.create(host.schedule_algorithm))
+            host.set_scheduler(scheduler.create(host, algorithm))
         
         built_hosts = []
             
@@ -202,26 +206,26 @@ class Builder():
             if run_host.host_name not in hosts_numbers:
                 hosts_numbers[run_host.host_name] = 0
             
-            # Create prototype host for this "run host"
-            host_prototype = store.find_host(run_host.host_name).clone()
-            # Update its instructions list
-            update_instructions_list(host_prototype, run_host)
+            # Create prototype parsed host for this "run host"
+            parsed_host = store.find_host(run_host.host_name)
             
-            cloned_host = host_prototype
             for i in range(0, run_host.repetitions):
-                # Create next clone for next repetitions
-                if i > 0:
-                    cloned_host = host_prototype.clone()
+
+                # Build next instructions list for next repeated host                
+                instructions_list = build_host_instructions_list(parsed_host, run_host, i)
+                
+                simulation_host = Host(parsed_host.name, instructions_list)
                     
                 # Set the number of host    
                 host_number = hosts_numbers[run_host.host_name] + i
-                cloned_host.add_name_index(host_number)
+                simulation_host.add_name_index(host_number)
+                
+                # Set scheduler
+                set_scheduler(simulation_host, parsed_host.schedule_algorithm)
                 
                 # Save predefined values as variables
-                set_predefined_variables(cloned_host, expression_checker)
-                # Set scheduler
-                set_scheduler(cloned_host)
-                built_hosts.append(cloned_host)
+                set_predefined_variables(simulation_host, parsed_host.predefined_values, expression_checker)
+                built_hosts.append(simulation_host)
                 
             hosts_numbers[run_host.host_name] += run_host.repetitions 
             
@@ -254,13 +258,18 @@ class Builder():
                     return ch
             return None
         
-        def find_host(hosts, name):
-            """
-            Find host by name.
-            """
-            for h in hosts:
+        def find_built_host(built_hosts, name):
+            for h in built_hosts:
                 if h.name == name:
                     return h
+            return None
+            
+        def find_parsed_process(instructions_list, process_name):
+            for instr in instructions_list:
+                if not isinstance(instr, HostProcess):
+                    continue
+                if instr.name == process_name:
+                    return instr
             return None
         
         def get_or_create_channel(existing_channels, channel_name):
@@ -290,7 +299,7 @@ class Builder():
         original_channels = []
         
         for parsed_channel in store.channels:
-            channel = communication.Channel(parsed_channel.name)
+            channel = communication.Channel(parsed_channel.name, parsed_channel.buffor_size)
             channel.add_name_index(0)
             channel.add_name_index(0)
             built_channels.append(channel)
@@ -303,24 +312,24 @@ class Builder():
         hosts_numbers = {} 
         
         for run_host in version.run_hosts:
-            host = store.find_host(run_host.host_name)
+            parsed_host = store.find_host(run_host.host_name)
             # Load all channels names that host can use
             # Firstly it is checked in version, secondly in parsed host
             # List channel_names contains clean channel names (ch1, ch2) 
             channel_names = []
             if run_host.all_channels_active:
-                if host.all_channels_active:
+                if parsed_host.all_channels_active:
                     channel_names += [ c.original_name() for c in original_channels ]
                 else:
-                    channel_names += [ c for c in host.active_channels ]
+                    channel_names += [ c for c in parsed_host.active_channels ]
             else:
                 channel_names += [ c for c in run_host.active_channels ]
             # channel_names - clean names of channels that host can use
 
-            if host.name not in hosts_numbers:
-                hosts_numbers[host.name] = 0
+            if parsed_host.name not in hosts_numbers:
+                hosts_numbers[parsed_host.name] = 0
                 
-            host_first_number = hosts_numbers[host.name]
+            host_first_number = hosts_numbers[parsed_host.name]
             
             # HOST-CHANNELS ASSIGNATION
             # Algorithm:
@@ -359,7 +368,7 @@ class Builder():
                     for i in range(0, run_host.repetitions):
                         host_number = host_first_number + i
                         host_name = run_host.host_name + '.' + str(host_number)
-                        built_host = find_host(built_hosts, host_name)
+                        built_host = find_built_host(built_hosts, host_name)
                         built_host.connect_with_channel(channel)
                     
                 else: # Channel is not repeated
@@ -374,7 +383,7 @@ class Builder():
                         new_channel_name = channel_name + '.' + str(host_number) + '.0'
                         channel = get_or_create_channel(built_channels, new_channel_name)
                         
-                        built_host = find_host(built_hosts, host_name)
+                        built_host = find_built_host(built_hosts, host_name)
                         built_host.connect_with_channel(channel)
                         
             # PROCESS-CHANNEL ASSIGNATION
@@ -388,20 +397,22 @@ class Builder():
                 
                 host_number = host_first_number + i
                 host_name = run_host.host_name + '.' + str(host_number)
-                built_host = find_host(built_hosts, host_name) 
+                
+                built_host = find_built_host(built_hosts, host_name)
+                parsed_host = store.find_host(built_host.original_name()) 
                 
                 instruction_index = 0
                 for run_process in run_host.run_processes:
                     
                     # Find next process om host's instructions list
                     while instruction_index < len(built_host.instructions_list):
-                        if isinstance(built_host.instructions_list[instruction_index], HostProcess):
+                        if isinstance(built_host.instructions_list[instruction_index], Process):
                             break
                         instruction_index += 1
                         
                     # If no process found raise exception
                     if instruction_index >= len(built_host.instructions_list):
-                        raise EnvironmentDefinitionException('Process %s not found in host %s' % (run_process.process_name, ))
+                        raise EnvironmentDefinitionException("Process '%s' not found in host '%s'" % (run_process.process_name, built_host.name))
         
                     if run_process.process_name not in processes_numbers:
                         processes_numbers[run_process.process_name] = 0
@@ -410,14 +421,14 @@ class Builder():
                     process_first_number = processes_numbers[run_process.process_name]
                     
                     # Get process for this "run process"
-                    process = built_host.instructions_list[instruction_index]
+                    parsed_process = find_parsed_process(parsed_host.instructions_list, run_process.process_name)
                     
                     process_channel_names = []
                     # Get channel names uded by process
-                    if process.all_channels_active:
+                    if parsed_process.all_channels_active:
                         process_channel_names = channel_names
                     else:
-                        for process_channel_name in process.active_channels:
+                        for process_channel_name in parsed_process.active_channels:
                             process_channel_names.append(process_channel_name)
                             
                     for process_channel_name in process_channel_names:
@@ -485,12 +496,12 @@ class Builder():
                             # Connect repeated channel with all repeated processes
                             # Repeated processes are found as list of next instructions in host's instructions list
                             for i in range(0, run_process.repetitions):
-                                process = built_host.instructions_list[instruction_index+i]
-                                if not isinstance(process, HostProcess):
+                                built_process = built_host.instructions_list[instruction_index+i]
+                                if not isinstance(built_process, Process):
                                     raise EnvironmentDefinitionException(
                                         'Isntruction nr %d of host %s expected to be process.'\
                                         % (instruction_index+i, built_host.name))
-                                process.connect_with_channel(channel) 
+                                built_process.connect_with_channel(channel) 
                         
                         else: # Channel is not repeated
                             
@@ -514,13 +525,13 @@ class Builder():
                                     channel = get_or_create_channel(built_channels, ch_name)
                                     
                                     # Connect channel with process  
-                                    process = built_host.instructions_list[instruction_index+i]
+                                    built_process = built_host.instructions_list[instruction_index+i]
                                     
-                                    if not isinstance(process, HostProcess):
+                                    if not isinstance(built_process, Process):
                                         raise EnvironmentDefinitionException(
                                             'Isntruction nr %d of host %s expected to be process.'\
                                             % (instruction_index+i, built_host.name))
-                                    process.connect_with_channel(channel)
+                                    built_process.connect_with_channel(channel)
                     
                     # Update process numbers dict
                     processes_numbers[run_process.process_name] += run_process.repetitions
@@ -653,7 +664,7 @@ class Builder():
         Creates simulator for particular version.
         """
         sim = Simulator(self._build_context(store, version))
-        sim.executor = self.build_executor()
+        sim.set_executor(self.build_executor())
         return sim
     
     def build_parser(self, store, modules):

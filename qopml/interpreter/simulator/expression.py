@@ -5,7 +5,7 @@ Created on 07-05-2013
 '''
 from qopml.interpreter.model import IdentifierExpression, CallFunctionExpression,\
     TupleExpression
-from qopml.interpreter.simulator import RuntimeException
+from qopml.interpreter.simulator.error import RuntimeException
 
 class Checker():
     """
@@ -43,3 +43,6 @@ class Reducer():
     
     def __init__(self, equations):
         self.equations = equations
+        
+    def reduce(self, expression):
+        pass

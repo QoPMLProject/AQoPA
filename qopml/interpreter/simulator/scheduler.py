@@ -4,8 +4,7 @@ Created on 15-05-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 from qopml.interpreter.simulator.state import InstructionsContext,\
-    InstructionsList
-from qopml.interpreter.model import HostProcess
+    InstructionsList, Process
 
 class Scheduler():
     
@@ -64,6 +63,7 @@ class RoundRobinScheduler(Scheduler):
         self.host = host
         self.contexts = []
         self._current_context_index = 0
+        self._build_contexts()
     
     def _build_contexts(self):
         """ """
@@ -73,7 +73,7 @@ class RoundRobinScheduler(Scheduler):
         host_context_added = False
         for i in self.host.instructions_list:
             
-            if isinstance(i, HostProcess):
+            if isinstance(i, Process):
                 process = i
                 
                 if len(process.instructions_list) > 0:
@@ -81,7 +81,7 @@ class RoundRobinScheduler(Scheduler):
                     self.contexts.append(process_context)
                     
                     process_context.add_instructions_list(
-                                        process_context.instructions_list, 
+                                        process.instructions_list, 
                                         process)
             else:
                 host_instructions_list.append(i)
@@ -116,9 +116,9 @@ class RoundRobinScheduler(Scheduler):
 SCHEDULE_ALGORITHM_ROUND_ROBIN  = 'rr'
 SCHEDULE_ALGORITHM_FIFO         = 'fifo'
 
-def create(algorithm):
+def create(host, algorithm):
     if algorithm == SCHEDULE_ALGORITHM_FIFO:
-        return FifoScheduler()
+        return FifoScheduler(host)
     elif  algorithm == SCHEDULE_ALGORITHM_ROUND_ROBIN:
-        return RoundRobinScheduler()
+        return RoundRobinScheduler(host)
     

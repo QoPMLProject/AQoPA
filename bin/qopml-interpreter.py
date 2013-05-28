@@ -6,10 +6,12 @@ Created on 22-04-2013
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+
 from qopml.interpreter.model.parser import ParserException
 from qopml.interpreter.simulator import EnvironmentDefinitionException
 from qopml.interpreter.simulator.state import PrintExecutor
 from qopml.interpreter.app import Interpreter, Builder
+from qopml.interpreter.simulator.error import RuntimeException
 
 
 text = """
@@ -194,7 +196,10 @@ versions
       run A1(Av1)
     }
   }
-  
+}
+"""
+
+"""
   version 2
   {
     run host TTP(*)
@@ -212,7 +217,6 @@ versions
       run A1(Av2)
     }
   }
-}
 """
 
 debug = False
@@ -264,7 +268,7 @@ def main():
         interpreter.prepare()
         
         for thread in interpreter.threads: 
-            thread.simulator.executor.append_instruction_executor(PrintExecutor(sys.stdout))
+            thread.simulator.get_executor().append_instruction_executor(PrintExecutor(sys.stdout))
         
         interpreter.run()
     except EnvironmentDefinitionException, e:
@@ -281,7 +285,9 @@ def main():
             sys.stderr.write('\n'.join(e.syntax_errors))
             print
         return
-    
+    except RuntimeException, e:
+        print "Runtime error: %s" % e
+        return
     #####################################
     
     """    

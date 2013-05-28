@@ -5,8 +5,7 @@ Created on 14-05-2013
 '''
 from qopml.interpreter.model import CallFunctionExpression, IdentifierExpression,\
     BooleanExpression
-from qopml.interpreter.simulator import EnvironmentDefinitionException
-from types import InstanceType
+from qopml.interpreter.simulator.error import EnvironmentDefinitionException
 
 class Equation():
     """
