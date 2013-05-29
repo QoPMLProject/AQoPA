@@ -86,7 +86,7 @@ class Equation():
 class BooleanExpression():
     
     def __init__(self, val):
-        self.val = val
+        self.val = bool(val)
         
     def __unicode__(self):
         return u"true" if self.val else u"false"

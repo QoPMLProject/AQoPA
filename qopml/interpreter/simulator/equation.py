@@ -14,6 +14,74 @@ class Equation():
     def __init__(self, composite, simple):
         self.composite = composite
         self.simple = simple
+        
+    def _are_equal(self, left_expression, right_expression):
+        """
+        Method returns True, when expressions are equal.
+        Equality covers: called function names, logic values, identifiers names.
+        """
+        if type(left_expression) != type(right_expression):
+            return False
+        
+        if isinstance(left_expression, BooleanExpression):
+            return left_expression.val == right_expression.val
+        
+        if isinstance(left_expression, IdentifierExpression):
+            return left_expression.identifier == right_expression.identifier
+        
+        if isinstance(left_expression, CallFunctionExpression):
+            if left_expression.function_name != right_expression.function_name:
+                return False
+            if len(left_expression.arguments) != len(right_expression.arguments):
+                return False
+            
+            for i in range(0, len(left_expression.arguments)):
+                if not self._are_equal(left_expression.arguments[i], right_expression.arguments[i]):
+                    return False
+            return True
+        
+    def _can_reduce(self, reduced_expression, composite_expression, variables):
+        """
+        Method returns True if reduced_expression can be reduced with composite_expression.
+        Recursive strategy.
+        
+        composite_expression is a paremeter, because it is changed while nesting reduction check.
+        Otherwise it would be possible to retrieve it from composite field of self.
+        
+        In variables parameter method saves values of identifiers from composite_expression.
+        Method saves expression from reduced_expression for each identifier from composite_expression
+        which stand in the same place. 
+        """
+        if isinstance(composite_expression, IdentifierExpression):
+            if composite_expression.identifier not in variables:
+                variables[composite_expression.identifier] = reduced_expression
+                return True
+            else:
+                current_val = variables[composite_expression.identifier]
+                if self._are_equal(current_val, reduced_expression):
+                    return True
+                
+        if isinstance(composite_expression, BooleanExpression):
+            if not isinstance(reduced_expression, BooleanExpression):
+                return False
+            return self._are_equal(composite_expression, reduced_expression)
+        
+        if isinstance(composite_expression, CallFunctionExpression):
+            if not isinstance(reduced_expression, CallFunctionExpression):
+                return False
+            if composite_expression.function_name != reduced_expression.function_name:
+                return False
+            if len(composite_expression.arguments) != len(reduced_expression.arguments):
+                return False
+        
+            for i in range(0, len(composite_expression.arguments)):
+                if not self._can_reduce(reduced_expression.arguments[i], 
+                                        composite_expression.arguments[i], 
+                                        variables):
+                    return False
+            return True
+        
+        return False
 
 class Validator():
     
