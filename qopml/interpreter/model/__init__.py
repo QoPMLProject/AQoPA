@@ -212,7 +212,7 @@ class IfInstruction():
         self.false_instructions = false_instructions
         
     def __unicode__(self):
-        return u"if (%s) ..." % unicode(self.conditional)
+        return u"if (%s) ..." % unicode(self.condition)
         
 class WhileInstruction():
     

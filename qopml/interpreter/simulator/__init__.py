@@ -78,7 +78,7 @@ class Simulator():
                             h.finish_failed(RuntimeException(u"Infinite loop occured"))
                             
                 self.context.mark_all_hosts_unchanged()
-                    
+                   
         self._executor.execute_instruction(self.context)
         self.context.goto_next_host()
     

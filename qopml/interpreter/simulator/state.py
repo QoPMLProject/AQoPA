@@ -279,7 +279,7 @@ class Process():
         if channel in self._channels_map[channel.original_name()]:
             return
         self._channels_map[channel.original_name()].append(channel)
-        channel.connect_with_host(self)
+        channel.connect_with_process(self)
     
     def find_channel(self, name):
         """
@@ -657,7 +657,7 @@ class CommunicationInstructionExecutor(InstructionExecutor):
             params = instruction.variables_names
             expressions = []
             for p in params:
-                expressions.append(context.get_current_host().get_variable(p).get_expression().clone())
+                expressions.append(context.get_current_host().get_variable(p).clone())
                 
             channel.send_message(context.get_current_host(), expressions)
             

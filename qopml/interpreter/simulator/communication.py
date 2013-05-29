@@ -16,6 +16,16 @@ class ChannelMessage():
         self.sender = sender
         self.expression = expression
         
+        
+class ChannelMessageRequest():
+    """
+    Representation of hosts' requests for messages.
+    """
+    
+    def __init__(self, receiver, communication_instruction):
+        """ """
+        self.receiver       = receiver
+        self.instruction    = communication_instruction
 
 class Channel():
     """
@@ -51,7 +61,7 @@ class Channel():
                                               message.expression)
                 
             request.receiver.get_current_instructions_context().goto_next_instruction()
-            request.receiver.set_changes()
+            request.receiver.mark_changed()
             
             self._waiting_requests.pop(0)
         
@@ -95,7 +105,7 @@ class Channel():
         """
         if process in self._connected_processes:
             return
-        self._connected_hosts.append(process)
+        self._connected_processes.append(process)
         process.connect_with_channel(self)
         
     def connected_with_process(self, process):
@@ -260,4 +270,7 @@ class Manager():
             if ch.original_name() == channel_name and ch.connected_with_process(process):
                 return ch
         return None
-        
+    
+    def build_message_request(self, receiver, communication_instruction):
+        """ """
+        return ChannelMessageRequest(receiver, communication_instruction)

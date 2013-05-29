@@ -72,7 +72,7 @@ class ParserExtension(LexYaccParserExtension):
                                 | OUT LPARAN IDENTIFIER COLON identifiers_list RPARAN SEMICOLON
         """
         communication_type = COMMUNICATION_TYPE_OUT
-        if t[1] == 'IN':
+        if t[1].lower() == 'in':
             communication_type = COMMUNICATION_TYPE_IN
             
         t[0] = CommunicationInstruction(communication_type, t[3], t[5])

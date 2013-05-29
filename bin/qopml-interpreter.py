@@ -181,9 +181,9 @@ versions
 {
   version 1
   {
-    run host TTP(*){2}[ ch1, ch2.2 ]
+    run host TTP(*)
     {
-      run TTP1(*){5}[ ch1.1.1 ]
+      run TTP1(*)
     }
 
     run host B(*)
@@ -268,8 +268,17 @@ def main():
         interpreter.prepare()
         
         for thread in interpreter.threads: 
-            thread.simulator.get_executor().append_instruction_executor(PrintExecutor(sys.stdout))
+            thread.simulator.get_executor().prepend_instruction_executor(PrintExecutor(sys.stdout))
         
+            """
+            for h in thread.simulator.context.hosts:
+                print 
+                for p in h.instructions_list:
+                    print 
+                    for i in p.instructions_list:
+                        print unicode(i)
+            """
+            
         interpreter.run()
     except EnvironmentDefinitionException, e:
         print "Error on creating environment: %s" % e
