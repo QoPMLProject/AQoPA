@@ -91,6 +91,9 @@ class BooleanExpression():
     def __unicode__(self):
         return u"true" if self.val else u"false"
     
+    def is_true(self):
+        return self.val
+    
     def clone(self):
         return copy.deepcopy(self)
     
@@ -199,6 +202,9 @@ class CommunicationInstruction():
         self.communication_type = communication_type
         self.channel_name = channel_name
         self.variables_names = variables_names
+        
+    def is_out(self):
+        return self.communication_type == COMMUNICATION_TYPE_OUT
         
     def __unicode__(self):
         type_name = 'in' if self.communication_type == COMMUNICATION_TYPE_IN else 'out'

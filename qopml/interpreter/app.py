@@ -566,8 +566,8 @@ class Builder():
                 
                 for metric in block.metrics:
                     m = metrics.Metric(metric.arguments[0], metric.arguments[1:len(params)+1], 
-                                       metric.arguments[len(params)+2:])
-                    metrics_block.metrics.append(m)
+                                       metric.arguments[len(params)+1:])
+                    metrics_block.add_metric(m)
                 blocks.append(metrics_block)
             
             # get or create host metrics with given name
@@ -594,7 +594,8 @@ class Builder():
                     hm_original = None
                     
                     for existing_hm in host_metrics:
-                        if original_name(existing_hm.name) == hm_original_name and existing_hm != hm:
+                        if original_name(existing_hm.name) == hm_original_name \
+                            and existing_hm != hm:
                             hm_original = existing_hm
                             break
                         
@@ -609,12 +610,12 @@ class Builder():
                     if original_name(existing_hm.name) == hm_original_name:
                         # Assign notmal block to all host metrics with the same original name
                         # (including the current one - possibly created)
-                        existing_hm.normal_blocks = hm.normal_blocks 
-        
+                        existing_hm.normal_blocks = blocks
+                        
         # Connect host metrics with hosts
         for metrics_set in store.metrics_sets:
             for h in hosts:
-                if h.original_name == metrics_set.host_name:
+                if h.original_name() == metrics_set.host_name:
                     for host_metric in host_metrics:
                         if host_metric.name == metrics_set.configuration_name:
                             host_metric.connected_hosts.append(h)
@@ -708,7 +709,7 @@ class Interpreter():
         self.store = self.builder.build_store()
         self.threads = []
         
-        self.modules = []
+        self._modules = []
         
     def set_qopml_model(self, model_as_text):
         """
@@ -734,7 +735,7 @@ class Interpreter():
         if len(self.model_as_text) == 0:
             raise EnvironmentDefinitionException("QoPML Model not provided")
     
-        parser = self.builder.build_parser(self.store, self.modules)
+        parser = self.builder.build_parser(self.store, self._modules)
         parser.parse(self.model_as_text)
         
         if len(parser.get_syntax_errors()) > 0:
@@ -746,6 +747,10 @@ class Interpreter():
         
         for version in self.store.versions:
             simulator = self.builder.build_simulator(self.store, version)
+            
+            for m in self._modules:
+                m.install(simulator)
+            
             thr = VersionThread(simulator)
             self.threads.append(thr)
             

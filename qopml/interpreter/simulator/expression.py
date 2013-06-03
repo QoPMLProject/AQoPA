@@ -4,7 +4,8 @@ Created on 07-05-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 import copy
-from qopml.interpreter.model import IdentifierExpression, CallFunctionExpression, TupleExpression
+from qopml.interpreter.model import IdentifierExpression, CallFunctionExpression, TupleExpression,\
+    BooleanExpression, ComparisonExpression
 from qopml.interpreter.simulator.error import RuntimeException
 
 class Checker():
@@ -40,9 +41,57 @@ class Checker():
         
         return expression.clone()
     
+    def _are_equal(self, left, right):
+        """
+        Method checks if both expressions are the same.
+        
+        Expressions cannot contains identifiers. All identifiers should be replaced with its values.
+        Checks whether all function calls and boolean expressions have the same values,
+        function names and parameters' values.
+        """
+        if left.__class__ != right.__class__:
+            return False
+        
+        if isinstance(left, BooleanExpression):
+            return left.val == right.val
+
+        if isinstance(left, CallFunctionExpression):
+            if left.function_name != right.function_name:
+                return False
+            if len(left.arguments) != len(right.arguments):
+                return False
+            for i in range(0, len(left.arguments)):
+                if not self._are_equal(left.arguments[i], right.arguments[i]):
+                    return False
+        return False
     
-    def result(self, condition, variables, functions):
-        raise NotImplementedError()
+    def result(self, condition, variables, functions, reducer):
+        """
+        Method checks the result of condition.
+        Returns True if condition is true or can be reduced to true condition.
+        
+        At the moment only comparision condition is available.  
+        """
+        
+        if isinstance(condition, BooleanExpression):
+            return condition.is_true()
+        
+        if isinstance(condition, ComparisonExpression):
+            left = condition.left
+            right = condition.right
+            
+            left = self.populate_variables(left, variables)
+            right = self.populate_variables(right, variables)
+            
+            left = reducer.reduce(left)
+            right = reducer.reduce(right)
+            
+            result = self._are_equal(left, right)
+            del left
+            del right
+            return result
+        
+        return False
 
 class ReductionPoint():
     """
@@ -174,10 +223,9 @@ class Reducer():
     def reduce(self, expression):
         """
         Reduces expression with usage of equations.
-        Returns True if expression is reduced or False if it is not reducable.
+        Returns reduced expression.
         Raises exception if ambiguity is found.
         """
-        reduced = False
         continue_reducing = True
    
         """     
@@ -246,10 +294,9 @@ class Reducer():
                 # Reduce and commit reduction
                 expression = reduction_point.reduce()
                 
-                reduced = True
                 continue_reducing = True
              
-            return reduced
+            return expression
                 
                 
                 

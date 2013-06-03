@@ -74,7 +74,7 @@ class Builder():
 
 class ParserExtension(LexYaccParserExtension):
     """
-    Extension for parsing functions
+    Extension for parsing metrics
     """
     
     def __init__(self):

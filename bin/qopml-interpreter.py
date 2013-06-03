@@ -6,13 +6,12 @@ Created on 22-04-2013
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-
 from qopml.interpreter.model.parser import ParserException
 from qopml.interpreter.simulator import EnvironmentDefinitionException
 from qopml.interpreter.simulator.state import PrintExecutor
 from qopml.interpreter.app import Interpreter, Builder
 from qopml.interpreter.simulator.error import RuntimeException
-
+from qopml.interpreter.module import timeanalysis
 
 text = """
 metrics
@@ -26,9 +25,9 @@ metrics
 
   data(host1)
   {
-    primhead[function][bitlength][algorithm][mode][Size:ratio];
-    primitive[enc][256][AES][CBC][1:1];
-    primitive[dec][256][AES][CBC][1:1];
+    primhead[function][bitlength][algorithm][mode][Size:ratio][time:exact(ms)];
+    primitive[enc][256][AES][CBC][1:1][1];
+    primitive[dec][256][AES][CBC][1:1][2];
     #
     primhead[function][size:exact(B)];
     primitive[id][8];
@@ -58,8 +57,6 @@ hosts {
     
     process TTP1(ch1,ch2)
     {
-      x = (a(), b());
-      x0 = x[0];
       in(ch1:X);
       K=skey()[256,LinuxPRNG];
       L=lifetime();
@@ -264,6 +261,8 @@ def main():
                 for i in p._channels_map:
                     print ' ---- ' + i + ' ' + str([ ch.name for ch in p._channels_map[i] ])
         """
+        
+        interpreter.register_qopml_module(timeanalysis.Module())
         
         interpreter.prepare()
         

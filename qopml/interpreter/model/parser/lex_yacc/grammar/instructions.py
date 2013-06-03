@@ -105,12 +105,12 @@ class ParserExtension(LexYaccParserExtension):
         instruction_special_command : CONTINUE SEMICOLON
                                 | STOP SEMICOLON
                                 | END SEMICOLON
-        """ 
-        if t[1] == 'CONTINUE':
+        """
+        if t[1].lower() == 'continue':
             t[0] = ContinueInstruction()
-        elif t[1] == 'END':
+        elif t[1].lower() == 'end':
             t[0] = FinishInstruction('end')
-        elif t[1] == 'STOP':
+        elif t[1].lower() == 'stop':
             t[0] = FinishInstruction('stop')
     
     def instruction_call_function(self, t):
