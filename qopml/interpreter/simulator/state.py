@@ -790,10 +790,10 @@ class WhileInstructionExecutor(InstructionExecutor):
         
         contidion_result = context.expression_checker.result(instruction.condition, 
                                         context.get_current_host().get_variables(),
-                                        context.functions)
+                                        context.functions, context.expression_reducer)
         
         if contidion_result:
-            instructions_list = instruction.instructons_list
+            instructions_list = instruction.instructions
             
             if len(instructions_list) > 0:
                 context.get_current_host().get_current_instructions_context().add_instructions_list(
