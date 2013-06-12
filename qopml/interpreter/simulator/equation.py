@@ -20,7 +20,7 @@ class Equation():
         Method returns True, when expressions are equal.
         Equality covers: called function names, logic values, identifiers names.
         """
-        if type(left_expression) != type(right_expression):
+        if left_expression.__class__ != right_expression.__class__:
             return False
         
         if isinstance(left_expression, BooleanExpression):
@@ -122,7 +122,7 @@ class Validator():
         f(x,y,x,x) == f(a,b,a,b) - are not the same, because second b should be a
         """
         
-        if type(left) != type(right):
+        if left.__class__ != right.__class__:
             return False
         
         if isinstance(left, IdentifierExpression):

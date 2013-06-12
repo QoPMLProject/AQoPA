@@ -1,0 +1,10 @@
+#########################################
+#		CHANGELOG
+#########################################
+
+v0.2 (2013-06-12)
+ - Fixed execution of while instruction
+ - Model loaded from file specified in parameter
+
+v0.1
+ - First version of interpreter

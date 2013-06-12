@@ -1,0 +1,169 @@
+functions {
+  fun nonce() (create nonce);
+
+  fun s_enc(data, key); 
+  fun s_dec(data, key); 
+  fun sign(data, s_key); 
+  fun a_enc(data, p_key);
+  fun a_dec(data, s_key);
+  fun pkey(skey);
+  fun skey();
+  fun hash(data);
+  
+  fun id_c() (identification of Client);
+  fun crit() (searching criteria);
+  
+  fun database() (creates non-encrypted database);
+  fun key_request() (creates key request);
+  fun get_db_key(key) (retrieving key for database);
+  fun select_rows(database, criteria);
+} 
+
+equations {
+  eq s_dec(s_enc(data, key), key) = data;
+  eq a_dec(a_enc(data, pkey(skey)), skey) = data;
+  
+  eq get_db_key(key) = key;
+}
+
+channels {
+  channel ch1,ch2,ch3,ch4 (*);
+}
+
+hosts {
+
+ host Client(rr)(*) {
+ 
+   #ID_C = id_c();
+   #CRIT = crit();
+   #PK_S = pkey(skey());
+ 
+   process Client1(ch1, ch2) {
+     
+     subprocess sc1() {
+       M1 = (ID_C, CRIT);
+     }
+     
+     subprocess sc2() {
+       K_SESS = nonce();
+       M1 = a_enc((ID_C, CRIT, K_SESS), PK_S);
+     }
+     
+     subprocess sc3() {
+       K_SESS = nonce();
+       M1 = a_enc((ID_C, CRIT, K_SESS), PK_S);
+     }
+     
+     out(ch1: M1);
+     
+     in(ch2: M2);
+     
+   }
+ 
+ }
+ 
+ host Server(rr)(*) {
+ 
+   #DB_KEY = nonce();
+   #DB = s_enc(database(), DB_KEY);
+   #SK_S = skey();
+ 
+   process Server1(ch1, ch2) {
+   
+     in(ch1: M1);
+     
+     subprocess sc1_before_db() {
+       CRIT = M1[1];
+     }
+     
+     subprocess sc2_before_db() {
+       M1 = a_dec(M1,SK_S);
+       CRIT = M1[1];
+       K_SESS = M1[2];
+     }
+     
+     subprocess sc3_before_db() {
+       M1 = a_dec(M1,SK_S);
+       CRIT = M1[1];
+       K_SESS = M1[2];
+     }
+     
+     R = key_request();
+     out (ch3: R);
+     in (ch4: TMP_DB_KEY);
+     
+     DB_PLAINTEXT = s_dec(DB, TMP_DB_KEY);
+     ROWS = select_rows(DB_PLAINTEXT, CRIT);
+     
+     
+     subprocess sc1_after_db() {
+       M2 = ROWS;
+     }
+     
+     subprocess sc2_after_db() {
+       M2 = s_enc(ROWS,K_SESS);
+     }
+     
+     subprocess sc3_after_db() {
+       SGN = sign(hash(ROWS), SK_S);
+       M2 = s_enc((ROWS,SGN),K_SESS);
+     }
+     
+     out(ch2: M2);
+   }
+ 
+ }
+ 
+ host KeysStore(rr)(*) {
+ 
+   #DB_KEY = nonce();
+ 
+   process Store1(ch3, ch4) {
+   
+     while (true) {
+       in (ch3: Request);
+       KEY = get_db_key(DB_KEY);
+       out(ch4: KEY);
+     }
+   }
+ 
+ }
+
+}
+
+versions {
+  
+  version 1100 {
+    
+    run host KeysStore(*) {
+      run Store1(*)
+    }
+    
+    run host Server(*) {
+      run Server1(sc1_before_db, sc1_after_db)
+    }
+    
+    run host Client(*){100}[ch1, ch2] {
+      run Client1(sc1)
+    }
+    
+  }
+  
+}
+
+metrics {
+  conf(Server) {
+    a=b;
+  }
+  conf(Mobile) {
+    a=b;
+  }
+  
+  data(Server) {
+    primhead[function][bit_length][algorithm][key][time:exact(ms)];
+    primitive[enc][2048][RSA][pk][0.049];
+    primitive[dec][2048][RSA][sk][1.611];
+  }
+  
+  set host Server(Server);
+}

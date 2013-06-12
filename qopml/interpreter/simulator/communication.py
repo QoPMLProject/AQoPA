@@ -133,6 +133,57 @@ class Channel():
         """
         self.name += ".%d" % index
     
+    def get_queue_of_receiving_hosts(self, number):
+        """
+        Returns list of hosts waiting for message on this channel.
+        List is limited by number parameter.
+        If there is less than number hosts waiting, Nones are returned 
+        if channel can store messages in buffer.
+        """
+        hosts = []
+        
+        if self.is_synchronous():
+            accepted_expressions_count = min([len(self._needed_expressions_count()), number])
+            expected_messages_count = 0
+            
+            i = 0
+            while expected_messages_count <= accepted_expressions_count and i < len(self._waiting_requests):
+                request = self._waiting_requests[i]
+                
+                expected_messages_count += len(request.instruction.variables_names)
+                
+                if expected_messages_count <= accepted_expressions_count:
+                    for j in range(0, len(request.instruction.variables_names)):
+                        hosts.append(request.receiver)
+                
+                i += 1
+                
+        else:
+            needed_messages_count = self._needed_expressions_count()
+            accepted_expressions_count = number
+            if not self.has_unlimited_buffer():
+                accepted_expressions_count = min([self._buffer_size-len(self._sent_messages)+needed_messages_count, 
+                                                  number])
+    
+            expected_messages_count = 0
+            i = 0
+            while expected_messages_count <= accepted_expressions_count:
+                
+                if i >= len(self._waiting_requests):
+                    for j in range(expected_messages_count, accepted_expressions_count):
+                        hosts.append(None)
+                    break
+                    
+                request = self._waiting_requests[i]
+                expected_messages_count += len(request.instruction.variables_names)
+                if expected_messages_count <= accepted_expressions_count:
+                    for j in range(0, len(request.instruction.variables_names)):
+                        hosts.append(request.receiver)
+                
+                i += 1
+                
+        return hosts
+    
     def get_queue_of_sending_hosts(self, number):
         """
         Return list of hosts who had sent messages to channel before.

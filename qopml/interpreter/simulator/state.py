@@ -79,7 +79,6 @@ class Context():
         Context is moved to the next host so that next state generation step is performed for next host.
         """
         self._previous_host_index = self._current_host_index
-        
         self._current_host_index = (self._current_host_index + 1) % len(self.hosts)
         
         # Go to next host until current host is not finihed
@@ -91,6 +90,7 @@ class Context():
 HOOK_TYPE_PRE_HOST_LIST_EXECUTION       = 1
 HOOK_TYPE_PRE_INSTRUCTION_EXECUTION     = 2
 HOOK_TYPE_POST_INSTRUCTION_EXECUTION    = 3
+HOOK_TYPE_SIMULATION_FINISHED           = 4
 
 class Hook():
     """
@@ -248,6 +248,10 @@ class Host():
         """
         self._status = HOST_STATUS_FINISHED
         self._finish_error = error
+        
+    def get_finish_error(self):
+        """ """
+        return self._finish_error
     
     
 class Process():
@@ -379,7 +383,7 @@ class InstructionsContext:
             self.stack.pop()
             
             if not self.finished():
-                if self._get_current_list().get_current_instruction().is_loop():
+                if not isinstance(self._get_current_list().get_current_instruction(), WhileInstruction):
                     self._get_current_list().goto_next_instruction()
         
     def finished(self):
@@ -745,7 +749,7 @@ class IfInstructionExecutor(InstructionExecutor):
         
         contidion_result = context.expression_checker.result(instruction.condition, 
                                         context.get_current_host().get_variables(),
-                                        context.functions)
+                                        context.functions, context.expression_reducer)
         
         instructions_list = []
         if contidion_result:
@@ -786,10 +790,10 @@ class WhileInstructionExecutor(InstructionExecutor):
         
         contidion_result = context.expression_checker.result(instruction.condition, 
                                         context.get_current_host().get_variables(),
-                                        context.functions)
+                                        context.functions, context.expression_reducer)
         
         if contidion_result:
-            instructions_list = instruction.instructons_list
+            instructions_list = instruction.instructions
             
             if len(instructions_list) > 0:
                 context.get_current_host().get_current_instructions_context().add_instructions_list(
