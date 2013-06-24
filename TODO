@@ -1,0 +1,11 @@
+#########################################
+#		TODO
+#########################################
+
+1. Zmienić executory tak, żeby zwracały rezultat wykonania instrukcji 
+i do niego przenieść informację o konsumpcji czasu procesora, 
+własnego zarządzania indeksami instrucji. 
+Czasem egzekucja instrukcji może zakończyć dany krok wcześniej np. gdy moduł
+w swoim pre instruction hooku nie chce dopuścić jakiejś instrukcji do wykonania 
+się w jej domyslnym egzekutorze.
+Dzięki temu moduły będą mogły ingerować we flow protokołu. 
