@@ -16,7 +16,8 @@ from qopml.interpreter.simulator.state import Executor,\
     AssignmentInstructionExecutor, IfInstructionExecutor,\
     ProcessInstructionExecutor, SubprocessInstructionExecutor,\
     FinishInstructionExecutor, CommunicationInstructionExecutor,\
-    ContinueInstructionExecutor, WhileInstructionExecutor, Host, Process
+    ContinueInstructionExecutor, WhileInstructionExecutor, Host, Process,\
+    CallFunctionInstructionExecutor
     
 from qopml.interpreter.simulator.error import EnvironmentDefinitionException,\
     RuntimeException
@@ -651,6 +652,7 @@ class Builder():
         """
         e = Executor()
         e.append_instruction_executor(AssignmentInstructionExecutor())
+        e.append_instruction_executor(CallFunctionInstructionExecutor())
         e.append_instruction_executor(ProcessInstructionExecutor())
         e.append_instruction_executor(SubprocessInstructionExecutor())
         e.append_instruction_executor(CommunicationInstructionExecutor())

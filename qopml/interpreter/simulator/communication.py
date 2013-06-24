@@ -34,8 +34,8 @@ class Channel():
     
     def __init__(self, name, buffer_size):
         self.name = name
-        self._buffer_size           = -1    # Size of buffer, negative means that buffer is unlimited,
-                                            # zero means that channel is cynhronous 
+        self._buffer_size           = buffer_size   # Size of buffer, negative means that buffer is unlimited,
+                                                    # zero means that channel is cynhronous 
         
         self._connected_hosts       = []
         self._connected_processes   = []
@@ -143,7 +143,7 @@ class Channel():
         hosts = []
         
         if self.is_synchronous():
-            accepted_expressions_count = min([len(self._needed_expressions_count()), number])
+            accepted_expressions_count = min([self._needed_expressions_count(), number])
             expected_messages_count = 0
             
             i = 0
@@ -264,7 +264,7 @@ class Channel():
                 expected_messages_count -= len(request.instruction.variables_names)
             
             if expected_messages_count < len(expressions):
-                self._dropped_messages_cnt += len(expected_messages_count) - expected_messages_count
+                self._dropped_messages_cnt += len(expressions) - expected_messages_count
                 
             for i in range(0, expected_messages_count):
                 self._sent_messages.append(ChannelMessage(sender_host, expressions[i]))
@@ -305,12 +305,19 @@ class Manager():
         instruction = context.get_current_instruction()
         if not isinstance(instruction, CommunicationInstruction):
             return None
+        return self.find_channel_for_host_instruction(context, context.get_current_host(), 
+                                                      instruction)
         
-        process = context.get_current_host().get_current_instructions_context().get_process_of_current_list()
+    def find_channel_for_host_instruction(self, context, host, instruction):
+        """
+        Finds channel connected with process/host from current instruction 
+        of passed host and with the channel name from instruction. 
+        """
+        process = host.get_current_instructions_context().get_process_of_current_list()
         if process:
             channel = context.channels_manager.find_channel_for_process(instruction.channel_name, process)
         else:
-            channel = context.get_current_host().find_channel(instruction.channel_name)
+            channel = host.find_channel(instruction.channel_name)
         return channel
     
     def find_channel_for_process(self, channel_name, process):

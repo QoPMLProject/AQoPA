@@ -68,7 +68,7 @@ hosts {
    #DB = s_enc(database(), DB_KEY);
    #SK_S = skey();
  
-   process Server1(ch1, ch2) {
+   process Server1(ch1, ch2, ch3, ch4) {
    
      in(ch1: M1);
      
@@ -143,7 +143,7 @@ versions {
       run Server1(sc1_before_db, sc1_after_db)
     }
     
-    run host Client(*){100}[ch1, ch2] {
+    run host Client(*){1}[ch1, ch2] {
       run Client1(sc1)
     }
     

@@ -101,6 +101,8 @@ class Hook():
     def execute(self, context):
         """
         Method changes the context. 
+        
+        May return exectution result if used in executors hook.
         """
         raise NotImplementedError()
         
@@ -416,21 +418,24 @@ class InstructionExecutor():
         """
         Changes the context according to the execution 
         of current instruction.
+        Returns the result of execution containing information 
+        about execution and the next steps: should it omit next executors?,
+        does it consume cpu?, does it implement custom index management? etc.
         """
         raise NotImplementedError()
     
-    def custom_instruction_index_change(self):
-        """
-        Returns True if executor changes the index of instruction manually
-        and it should not be changed by simulator.
-        """
-        raise NotImplementedError()
+class ExecutionResult():
+    """
+    The result of execution of one instruction by one executor.
+    """
     
-    def consumes_cpu_time(self):
-        """
-        Returns True if execution uses cpu time - used for scheduling.
-        """
-        raise NotImplementedError()
+    def __init__(self,  consumes_cpu = False, 
+                        custom_index_management = False, 
+                        finish_instruction_execution = False):
+        """ """
+        self.consumes_cpu               = consumes_cpu 
+        self.custom_index_management    = custom_index_management
+        self.finish_instruction_execution   = finish_instruction_execution
     
 class HookExecutor(InstructionExecutor):
     """
@@ -453,20 +458,26 @@ class HookExecutor(InstructionExecutor):
     
     def execute_instruction(self, context):
         """ Overriden """
+        consumes_cpu = False 
+        custom_index_management = False 
+        finish_instruction_execution = False
+        
         for h in self._hooks:
-            h.execute(context)
+            result = h.execute(context)
+            if result:
+                if result.consumes_cpu:
+                    consumes_cpu = True
+                if result.custom_index_management:
+                    custom_index_management = True
+                if result.finish_instruction_execution:
+                    finish_instruction_execution = True
+                    
+        return ExecutionResult(consumes_cpu, custom_index_management, 
+                               finish_instruction_execution)
         
     def can_execute_instruction(self, instruction):
         """ Overriden """
         return True
-    
-    def custom_instruction_index_change(self):
-        """ Overriden """
-        return False
-    
-    def consumes_cpu_time(self):
-        """ Overriden """
-        return False
     
 class PrintExecutor(InstructionExecutor):
     """
@@ -475,6 +486,8 @@ class PrintExecutor(InstructionExecutor):
     
     def __init__(self, f):
         self.file = f       # File to write instruction to
+        
+        self.result = ExecutionResult()
         
     def execute_instruction(self, context):
         """ Overriden """
@@ -504,17 +517,11 @@ class PrintExecutor(InstructionExecutor):
                 
         self.file.write("\n") 
         
+        return self.result
+        
     def can_execute_instruction(self, instruction):
         """ Overriden """
         return True
-    
-    def custom_instruction_index_change(self):
-        """ Overriden """
-        return False
-    
-    def consumes_cpu_time(self):
-        """ Overriden """
-        return False
         
 class AssignmentInstructionExecutor(InstructionExecutor):
     """
@@ -568,18 +575,29 @@ class AssignmentInstructionExecutor(InstructionExecutor):
         
         context.get_current_host().mark_changed()
         
+        return ExecutionResult(consumes_cpu=True)
+        
     def can_execute_instruction(self, instruction):
         """ Overriden """
         return isinstance(instruction, AssignmentInstruction)
     
-    def custom_instruction_index_change(self):
-        """ Overriden """
-        return False
+class CallFunctionInstructionExecutor(InstructionExecutor):
+    """
+    Executes call function insructions.
+    Dummy executor just to show that call function instruction 
+    consumes cpu and changes host.
+    """
     
-    def consumes_cpu_time(self):
+    def execute_instruction(self, context):
         """ Overriden """
-        return True
-
+        context.get_current_host().mark_changed()
+        
+        return ExecutionResult(consumes_cpu=True)
+        
+    def can_execute_instruction(self, instruction):
+        """ Overriden """
+        return isinstance(instruction, CallFunctionInstruction)
+    
 class ProcessInstructionExecutor(InstructionExecutor):
     """
     Executes process insructions.
@@ -599,19 +617,13 @@ class ProcessInstructionExecutor(InstructionExecutor):
             context.get_current_host().get_current_instructions_context().goto_next_instruction()
             
         context.get_current_host().mark_changed()
+
+        return ExecutionResult(custom_index_management=True)
         
     def can_execute_instruction(self, instruction):
         """ Overriden """
         return isinstance(instruction, Process)
     
-    def custom_instruction_index_change(self):
-        """ Overriden """
-        return True
-    
-    def consumes_cpu_time(self):
-        """ Overriden """
-        return False
-
 class SubprocessInstructionExecutor(InstructionExecutor):
     """
     Executes subprocess insructions.
@@ -629,18 +641,13 @@ class SubprocessInstructionExecutor(InstructionExecutor):
             context.get_current_host().get_current_instructions_context().goto_next_instruction()
             
         context.get_current_host().mark_changed()
-        
+
+        return ExecutionResult(custom_index_management=True)
+                
     def can_execute_instruction(self, instruction):
         """ Overriden """
         return isinstance(instruction, HostSubprocess)
     
-    def custom_instruction_index_change(self):
-        """ Overriden """
-        return True
-    
-    def consumes_cpu_time(self):
-        """ Overriden """
-        return False
 
 class CommunicationInstructionExecutor(InstructionExecutor):
     """
@@ -655,7 +662,8 @@ class CommunicationInstructionExecutor(InstructionExecutor):
         if not channel:
             context.get_current_host().get_current_instructions_context().goto_next_instruction()
             context.get_current_host().mark_changed()
-            return
+            return ExecutionResult(consumes_cpu=True, 
+                               custom_index_management=True)
         
         if instruction.communication_type == COMMUNICATION_TYPE_OUT:
             params = instruction.variables_names
@@ -671,19 +679,14 @@ class CommunicationInstructionExecutor(InstructionExecutor):
         else:
             request = context.channels_manager.build_message_request(context.get_current_host(), instruction)
             channel.wait_for_message(request)
-        
+
+        return ExecutionResult(consumes_cpu=True, 
+                               custom_index_management=True)
+                
     def can_execute_instruction(self, instruction):
         """ Overriden """
         return isinstance(instruction, CommunicationInstruction)
     
-    def custom_instruction_index_change(self):
-        """ Overriden """
-        return True
-    
-    def consumes_cpu_time(self):
-        """ Overriden """
-        return True
-
 class FinishInstructionExecutor(InstructionExecutor):
     """
     Executes finish (end, stop) insructions.
@@ -700,18 +703,12 @@ class FinishInstructionExecutor(InstructionExecutor):
             
         context.get_current_host().mark_changed()
         
+        return ExecutionResult(consumes_cpu=True)
+        
     def can_execute_instruction(self, instruction):
         """ Overriden """
         return isinstance(instruction, FinishInstruction)
     
-    def custom_instruction_index_change(self):
-        """ Overriden """
-        return False
-    
-    def consumes_cpu_time(self):
-        """ Overriden """
-        return True
-
 class ContinueInstructionExecutor(InstructionExecutor):
     """
     Executes continue insructions.
@@ -724,18 +721,13 @@ class ContinueInstructionExecutor(InstructionExecutor):
         instructions_context.goto_next_instruction()
         
         context.get_current_host().mark_changed()
-        
+
+        return ExecutionResult(consumes_cpu=True, 
+                               custom_index_management=True)
+                
     def can_execute_instruction(self, instruction):
         """ Overriden """
         return isinstance(instruction, ContinueInstruction)
-    
-    def custom_instruction_index_change(self):
-        """ Overriden """
-        return True
-    
-    def consumes_cpu_time(self):
-        """ Overriden """
-        return True
     
 class IfInstructionExecutor(InstructionExecutor):
     """
@@ -765,18 +757,14 @@ class IfInstructionExecutor(InstructionExecutor):
             context.get_current_host().get_current_instructions_context().goto_next_instruction()
         
         context.get_current_host().mark_changed()
-        
+
+        return ExecutionResult(consumes_cpu=True, 
+                               custom_index_management=True)
+                
     def can_execute_instruction(self, instruction):
         """ Overriden """
         return isinstance(instruction, IfInstruction)
     
-    def custom_instruction_index_change(self):
-        """ Overriden """
-        return True
-    
-    def consumes_cpu_time(self):
-        """ Overriden """
-        return True
     
 class WhileInstructionExecutor(InstructionExecutor):
     """
@@ -803,18 +791,14 @@ class WhileInstructionExecutor(InstructionExecutor):
             context.get_current_host().get_current_instructions_context().goto_next_instruction()
         
         context.get_current_host().mark_changed()
-        
+
+        return ExecutionResult(consumes_cpu=True, 
+                               custom_index_management=True)
+                
     def can_execute_instruction(self, instruction):
         """ Overriden """
         return isinstance(instruction, WhileInstruction)
     
-    def custom_instruction_index_change(self):
-        """ Overriden """
-        return True
-    
-    def consumes_cpu_time(self):
-        """ Overriden """
-        return True
     
 class Executor():
     """
@@ -841,6 +825,8 @@ class Executor():
         Executes one instruction of context which is equal to going to the next state.
         The executed instruction is get from the current host of the context.
         """
+        
+        execution_result = None
         cpu_time_consumed = False
         # Execute instructions in one instructions context until 
         # instruction that consumes cpu time is executes.
@@ -858,18 +844,32 @@ class Executor():
                     
                     # Execute current instruction by current executor. 
                     # Executor can change index.
-                    e.execute_instruction(context)
-                    if e.consumes_cpu_time():
+                    execution_result = e.execute_instruction(context)
+                    
+                    # If executor does not return result
+                    # create a default one
+                    if not execution_result:
+                        execution_result = ExecutionResult()
+                    
+                    if execution_result.consumes_cpu:
                         cpu_time_consumed = True
                         
                     # Check if executor changes instructions index itself.
-                    if e.custom_instruction_index_change():
+                    if execution_result.custom_index_management:
                         custom_instructions_index_change = True
+                        
+                # Omit other executors if the result says that
+                if execution_result.finish_instruction_execution:
+                    break
 
             # If index is not changed by executor,
             # method has to change it. 
             if not custom_instructions_index_change:
                 context.get_current_host().get_current_instructions_context().goto_next_instruction()
+           
+            # Finish execution of instruction
+            if execution_result and execution_result.finish_instruction_execution:
+                break
            
         # Change the index of instructions in current host.
         # It for example moves index to enxt instructions context.
