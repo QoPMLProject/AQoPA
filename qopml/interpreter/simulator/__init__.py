@@ -5,7 +5,7 @@ Created on 07-05-2013
 '''
 from qopml.interpreter.simulator.state import HOOK_TYPE_PRE_HOST_LIST_EXECUTION,\
     HookExecutor, HOOK_TYPE_PRE_INSTRUCTION_EXECUTION,\
-    HOOK_TYPE_POST_INSTRUCTION_EXECUTION
+    HOOK_TYPE_POST_INSTRUCTION_EXECUTION, HOOK_TYPE_SIMULATION_FINISHED
     
 from qopml.interpreter.simulator.error import RuntimeException,\
     EnvironmentDefinitionException
@@ -78,7 +78,7 @@ class Simulator():
                             h.finish_failed(RuntimeException(u"Infinite loop occured"))
                             
                 self.context.mark_all_hosts_unchanged()
-                    
+                   
         self._executor.execute_instruction(self.context)
         self.context.goto_next_host()
     
@@ -120,6 +120,13 @@ class Simulator():
         if hook in self._hooks[hook_type]:
             raise EnvironmentDefinitionException(u"Hook '%s' is already registered" % unicode(hook))
         self._hooks[hook_type].append(hook)
+
+        if hook_type == HOOK_TYPE_PRE_INSTRUCTION_EXECUTION:
+            self._before_instruction_executor.add_hook(hook)
+            
+        if hook_type == HOOK_TYPE_POST_INSTRUCTION_EXECUTION:
+            self._after_instruction_executor.add_hook(hook)
+        
         return self
     
     def is_ready_to_run(self):
@@ -147,6 +154,8 @@ class Simulator():
         
         while not self.is_simulation_finished():
             self._internal_goto_next_state()
+        
+        self._execute_hook(HOOK_TYPE_SIMULATION_FINISHED)
         
     def goto_next_state(self):
         """

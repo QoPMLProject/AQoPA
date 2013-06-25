@@ -86,10 +86,13 @@ class Equation():
 class BooleanExpression():
     
     def __init__(self, val):
-        self.val = val
+        self.val = bool(val)
         
     def __unicode__(self):
         return u"true" if self.val else u"false"
+    
+    def is_true(self):
+        return self.val
     
     def clone(self):
         return copy.deepcopy(self)
@@ -200,6 +203,9 @@ class CommunicationInstruction():
         self.channel_name = channel_name
         self.variables_names = variables_names
         
+    def is_out(self):
+        return self.communication_type == COMMUNICATION_TYPE_OUT
+        
     def __unicode__(self):
         type_name = 'in' if self.communication_type == COMMUNICATION_TYPE_IN else 'out'
         return u"%s (%s: %s);" % (unicode(type_name), unicode(self.channel_name), unicode(', '.join(self.variables_names)))
@@ -212,7 +218,7 @@ class IfInstruction():
         self.false_instructions = false_instructions
         
     def __unicode__(self):
-        return u"if (%s) ..." % unicode(self.conditional)
+        return u"if (%s) ..." % unicode(self.condition)
         
 class WhileInstruction():
     

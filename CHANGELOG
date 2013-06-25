@@ -1,0 +1,14 @@
+#########################################
+#		CHANGELOG
+#########################################
+
+v0.3 (2013-06-25)
+ - Time Analysis Module: Added communication synchronization (out and in instructions executed according to the time flow, not protocol flow)
+ - Changed executors. Later actions and informations (eg. custom index management) returned in executions result, not obtained as executor methods anymore. 
+
+v0.2 (2013-06-12)
+ - Fixed execution of while instruction
+ - Model loaded from file specified in parameter
+
+v0.1
+ - First version of interpreter

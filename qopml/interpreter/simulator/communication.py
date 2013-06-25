@@ -16,6 +16,16 @@ class ChannelMessage():
         self.sender = sender
         self.expression = expression
         
+        
+class ChannelMessageRequest():
+    """
+    Representation of hosts' requests for messages.
+    """
+    
+    def __init__(self, receiver, communication_instruction):
+        """ """
+        self.receiver       = receiver
+        self.instruction    = communication_instruction
 
 class Channel():
     """
@@ -24,8 +34,8 @@ class Channel():
     
     def __init__(self, name, buffer_size):
         self.name = name
-        self._buffer_size           = -1    # Size of buffer, negative means that buffer is unlimited,
-                                            # zero means that channel is cynhronous 
+        self._buffer_size           = buffer_size   # Size of buffer, negative means that buffer is unlimited,
+                                                    # zero means that channel is cynhronous 
         
         self._connected_hosts       = []
         self._connected_processes   = []
@@ -51,7 +61,7 @@ class Channel():
                                               message.expression)
                 
             request.receiver.get_current_instructions_context().goto_next_instruction()
-            request.receiver.set_changes()
+            request.receiver.mark_changed()
             
             self._waiting_requests.pop(0)
         
@@ -95,7 +105,7 @@ class Channel():
         """
         if process in self._connected_processes:
             return
-        self._connected_hosts.append(process)
+        self._connected_processes.append(process)
         process.connect_with_channel(self)
         
     def connected_with_process(self, process):
@@ -122,6 +132,57 @@ class Channel():
         Before: name = ch, index = 1. After: name = ch.1
         """
         self.name += ".%d" % index
+    
+    def get_queue_of_receiving_hosts(self, number):
+        """
+        Returns list of hosts waiting for message on this channel.
+        List is limited by number parameter.
+        If there is less than number hosts waiting, Nones are returned 
+        if channel can store messages in buffer.
+        """
+        hosts = []
+        
+        if self.is_synchronous():
+            accepted_expressions_count = min([self._needed_expressions_count(), number])
+            expected_messages_count = 0
+            
+            i = 0
+            while expected_messages_count <= accepted_expressions_count and i < len(self._waiting_requests):
+                request = self._waiting_requests[i]
+                
+                expected_messages_count += len(request.instruction.variables_names)
+                
+                if expected_messages_count <= accepted_expressions_count:
+                    for j in range(0, len(request.instruction.variables_names)):
+                        hosts.append(request.receiver)
+                
+                i += 1
+                
+        else:
+            needed_messages_count = self._needed_expressions_count()
+            accepted_expressions_count = number
+            if not self.has_unlimited_buffer():
+                accepted_expressions_count = min([self._buffer_size-len(self._sent_messages)+needed_messages_count, 
+                                                  number])
+    
+            expected_messages_count = 0
+            i = 0
+            while expected_messages_count <= accepted_expressions_count:
+                
+                if i >= len(self._waiting_requests):
+                    for j in range(expected_messages_count, accepted_expressions_count):
+                        hosts.append(None)
+                    break
+                    
+                request = self._waiting_requests[i]
+                expected_messages_count += len(request.instruction.variables_names)
+                if expected_messages_count <= accepted_expressions_count:
+                    for j in range(0, len(request.instruction.variables_names)):
+                        hosts.append(request.receiver)
+                
+                i += 1
+                
+        return hosts
     
     def get_queue_of_sending_hosts(self, number):
         """
@@ -203,7 +264,7 @@ class Channel():
                 expected_messages_count -= len(request.instruction.variables_names)
             
             if expected_messages_count < len(expressions):
-                self._dropped_messages_cnt += len(expected_messages_count) - expected_messages_count
+                self._dropped_messages_cnt += len(expressions) - expected_messages_count
                 
             for i in range(0, expected_messages_count):
                 self._sent_messages.append(ChannelMessage(sender_host, expressions[i]))
@@ -244,12 +305,19 @@ class Manager():
         instruction = context.get_current_instruction()
         if not isinstance(instruction, CommunicationInstruction):
             return None
+        return self.find_channel_for_host_instruction(context, context.get_current_host(), 
+                                                      instruction)
         
-        process = context.get_current_host().get_current_instructions_context().get_process_of_current_list()
+    def find_channel_for_host_instruction(self, context, host, instruction):
+        """
+        Finds channel connected with process/host from current instruction 
+        of passed host and with the channel name from instruction. 
+        """
+        process = host.get_current_instructions_context().get_process_of_current_list()
         if process:
             channel = context.channels_manager.find_channel_for_process(instruction.channel_name, process)
         else:
-            channel = context.get_current_host().find_channel(instruction.channel_name)
+            channel = host.find_channel(instruction.channel_name)
         return channel
     
     def find_channel_for_process(self, channel_name, process):
@@ -260,4 +328,7 @@ class Manager():
             if ch.original_name() == channel_name and ch.connected_with_process(process):
                 return ch
         return None
-        
+    
+    def build_message_request(self, receiver, communication_instruction):
+        """ """
+        return ChannelMessageRequest(receiver, communication_instruction)
