@@ -5,6 +5,7 @@ Created on 22-04-2013
 '''
 import os
 import sys
+import optparse
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from qopml.interpreter.model.parser import ParserException
 from qopml.interpreter.simulator import EnvironmentDefinitionException
@@ -15,7 +16,7 @@ from qopml.interpreter.module import timeanalysis
 
 debug = False
 
-def main(qopml_model):
+def main(qopml_model, print_instructions = False):
 
     ############### DEBUG ###############    
     if debug:
@@ -41,8 +42,9 @@ def main(qopml_model):
         interpreter.register_qopml_module(timeanalysis.Module())
         interpreter.prepare()
         
-        for thread in interpreter.threads: 
-            thread.simulator.get_executor().prepend_instruction_executor(PrintExecutor(sys.stdout))
+        if print_instructions:
+            for thread in interpreter.threads: 
+                thread.simulator.get_executor().prepend_instruction_executor(PrintExecutor(sys.stdout))
             
         interpreter.run()
     except EnvironmentDefinitionException, e:
@@ -66,16 +68,21 @@ def main(qopml_model):
     
 if __name__ == '__main__':
     
-    if len(sys.argv) < 2:
-        print "Usage: python qopml-interpreter.py qopml-model-file"
-        sys.exit(1)
+    parser = optparse.OptionParser()
+    parser.usage = "%prog [options] model_file"
+    parser.add_option("-p", "--print", dest="print_instructions", action="store_true", default=False,
+                      help="print executed instruction to standard output")
     
-    if not os.path.exists(sys.argv[1]):
-        print "File '%s' does not exist" % sys.argv[1]
-        sys.exit(2)
+    (options, args) = parser.parse_args()
     
-    f = open(sys.argv[1], 'r')
+    if len(args) < 1:
+        parser.error("no model_file specified")
+    
+    if not os.path.exists(args[0]):
+        parser.error("model file '%s' does not exist" % args[0])
+    
+    f = open(args[0], 'r')
     qopml_model = f.read()
     f.close()
-    
-    main(qopml_model)
+
+    main(qopml_model, options.print_instructions)
