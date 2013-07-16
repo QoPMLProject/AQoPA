@@ -297,12 +297,12 @@ class Host():
 
 class Version():
     
-    def __init__(self, number):
-        self.number = number
+    def __init__(self, name):
+        self.name = name
         self.run_hosts = []
         
     def __unicode__(self):
-        return u"version %d" % self.number
+        return u"version %d" % self.name
     
 class VersionRunHost():
     
