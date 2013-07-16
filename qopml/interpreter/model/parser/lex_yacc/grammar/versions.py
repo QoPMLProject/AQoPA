@@ -15,7 +15,7 @@ class Builder():
     
     def build_version(self, token):
         """
-        version : VERSION INTEGER BLOCKOPEN version_run_hosts BLOCKCLOSE
+        version : VERSION IDENTIFIER BLOCKOPEN version_run_hosts BLOCKCLOSE
         """
         v = Version(token[2])
         for run_host in token[4]:
@@ -180,7 +180,7 @@ class ParserExtension(LexYaccParserExtension):
     
     def version(self, t):
         """
-        version : VERSION INTEGER BLOCKOPEN version_run_hosts BLOCKCLOSE
+        version : VERSION IDENTIFIER BLOCKOPEN version_run_hosts BLOCKCLOSE
         """
         self.parser.store.versions.append(self.builder.build_version(t))
     
