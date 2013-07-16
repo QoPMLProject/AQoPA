@@ -2,6 +2,9 @@
 #		CHANGELOG
 #########################################
 
+Next release:
+ - Project name changed: AQoPA
+
 v0.3 (2013-06-25)
  - Time Analysis Module: Added communication synchronization (out and in instructions executed according to the time flow, not protocol flow)
  - Changed executors. Later actions and informations (eg. custom index management) returned in executions result, not obtained as executor methods anymore. 

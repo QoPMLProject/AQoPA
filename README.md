@@ -1,6 +1,6 @@
-qop-interpreter
+AQoPA Project
 ===============
 
-Repository for QoPML-Interpreter (codename)
+Automated Quality of Protection Analysis tool of QoP-ML models
 
 Project Home: http://qopml.org
