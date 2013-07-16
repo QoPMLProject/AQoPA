@@ -14,7 +14,10 @@ from qopml.interpreter.simulator.error import RuntimeException
 
 class Context():
     
-    def __init__(self):
+    def __init__(self, version):
+        
+        self.version = version
+        
         self.hosts = []                 # List of all hosts in this context
         self.functions = []             # List of all functions in this context
         
@@ -48,6 +51,19 @@ class Context():
             if not h.finished():
                 return False
         return True
+    
+    def get_progress(self):
+        """
+        Returs a number between 0 and 1 representing the progress of
+        simulation.
+        """
+        all = 0
+        ended = 0
+        for h in self.hosts:
+            if h.finished():
+                ended += 1
+            all += 1
+        return float(ended)/float(all) if all > 0 else 0
     
     def hosts_loop_ended(self):
         """
@@ -478,7 +494,7 @@ class HookExecutor(InstructionExecutor):
     def can_execute_instruction(self, instruction):
         """ Overriden """
         return True
-    
+        
 class PrintExecutor(InstructionExecutor):
     """
     Excecutor writes current instruction to the stream.
@@ -492,9 +508,7 @@ class PrintExecutor(InstructionExecutor):
     def execute_instruction(self, context):
         """ Overriden """
         self.file.write("Host: %s \t" % context.get_current_host().name)
-        
         instruction = context.get_current_instruction()
-        
         simples = [AssignmentInstruction, CommunicationInstruction, FinishInstruction, ContinueInstruction]
         for s in simples:
             if isinstance(instruction, s):
@@ -514,7 +528,6 @@ class PrintExecutor(InstructionExecutor):
             
         if isinstance(instruction, HostSubprocess):
             self.file.write('subprocess %s ...' % unicode(instruction.name))
-                
         self.file.write("\n") 
         
         return self.result
