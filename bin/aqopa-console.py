@@ -6,15 +6,82 @@ Created on 22-04-2013
 import os
 import sys
 import optparse
+from qopml.interpreter.model import AssignmentInstruction,\
+    CommunicationInstruction, FinishInstruction, ContinueInstruction,\
+    CallFunctionInstruction, IfInstruction, WhileInstruction, HostSubprocess
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from qopml.interpreter.model.parser import ParserException
 from qopml.interpreter.simulator import EnvironmentDefinitionException
-from qopml.interpreter.simulator.state import PrintExecutor
+from qopml.interpreter.simulator.state import InstructionExecutor,\
+    ExecutionResult, Process, Hook
 from qopml.interpreter.app import Interpreter, Builder
 from qopml.interpreter.simulator.error import RuntimeException
 from qopml.interpreter.module import timeanalysis
 
 debug = False
+
+class PrintExecutor(InstructionExecutor):
+    """
+    Excecutor writes current instruction to the stream.
+    """
+    
+    def __init__(self, f):
+        self.file = f       # File to write instruction to
+        
+        self.result = ExecutionResult()
+        
+    def execute_instruction(self, context):
+        """ Overriden """
+        self.file.write("Host: %s \t" % context.get_current_host().name)
+        instruction = context.get_current_instruction()
+        simples = [AssignmentInstruction, CommunicationInstruction, FinishInstruction, ContinueInstruction]
+        for s in simples:
+            if isinstance(instruction, s):
+                self.file.write(unicode(instruction))
+                
+        if isinstance(instruction, CallFunctionInstruction):
+            self.file.write(instruction.function_name + '(...)')
+            
+        if isinstance(instruction, IfInstruction):
+            self.file.write('if (%s) ...' % unicode(instruction.condition))
+            
+        if isinstance(instruction, WhileInstruction):
+            self.file.write('while (%s) ...' % unicode(instruction.condition))
+            
+        if isinstance(instruction, Process):
+            self.file.write('process %s ...' % unicode(instruction.name))
+            
+        if isinstance(instruction, HostSubprocess):
+            self.file.write('subprocess %s ...' % unicode(instruction.name))
+        self.file.write("\n") 
+        
+        return self.result
+        
+    def can_execute_instruction(self, instruction):
+        """ Overriden """
+        return True
+
+
+class ProgressBarHook(Hook):
+    
+    def __init__(self, file):
+        self.file = file
+    
+    def execute(self, context):
+        """
+        Hook does not change the context. 
+        It get informations about the state of the process
+        and prints it. 
+        """
+        progress = 0.2
+        
+        
+        
+        percentage = str(round(progress*100)) + '%'
+        percentage = ' ' * (5-len(percentage)) + percentage
+        bar = ('=' * round(progress*20)) + (' ' * (20 - round(progress*20)))
+        self.file.write("\r%s -> %s [%s]", (version, percentage, bar))
+        
 
 def main(qopml_model, print_instructions = False):
 
@@ -45,6 +112,7 @@ def main(qopml_model, print_instructions = False):
         if print_instructions:
             for thread in interpreter.threads: 
                 thread.simulator.get_executor().prepend_instruction_executor(PrintExecutor(sys.stdout))
+                thread.simulator.register_hook()
             
         interpreter.run()
     except EnvironmentDefinitionException, e:
