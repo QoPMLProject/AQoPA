@@ -6,84 +6,59 @@ Created on 22-04-2013
 import os
 import sys
 import optparse
-from qopml.interpreter.model import AssignmentInstruction,\
-    CommunicationInstruction, FinishInstruction, ContinueInstruction,\
-    CallFunctionInstruction, IfInstruction, WhileInstruction, HostSubprocess
+import threading
+import time
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+
+from qopml.interpreter.simulator.state import PrintExecutor
 from qopml.interpreter.model.parser import ParserException
 from qopml.interpreter.simulator import EnvironmentDefinitionException
-from qopml.interpreter.simulator.state import InstructionExecutor,\
-    ExecutionResult, Process, Hook
 from qopml.interpreter.app import Interpreter, Builder
 from qopml.interpreter.simulator.error import RuntimeException
 from qopml.interpreter.module import timeanalysis
 
 debug = False
 
-class PrintExecutor(InstructionExecutor):
-    """
-    Excecutor writes current instruction to the stream.
-    """
-    
-    def __init__(self, f):
-        self.file = f       # File to write instruction to
-        
-        self.result = ExecutionResult()
-        
-    def execute_instruction(self, context):
-        """ Overriden """
-        self.file.write("Host: %s \t" % context.get_current_host().name)
-        instruction = context.get_current_instruction()
-        simples = [AssignmentInstruction, CommunicationInstruction, FinishInstruction, ContinueInstruction]
-        for s in simples:
-            if isinstance(instruction, s):
-                self.file.write(unicode(instruction))
-                
-        if isinstance(instruction, CallFunctionInstruction):
-            self.file.write(instruction.function_name + '(...)')
-            
-        if isinstance(instruction, IfInstruction):
-            self.file.write('if (%s) ...' % unicode(instruction.condition))
-            
-        if isinstance(instruction, WhileInstruction):
-            self.file.write('while (%s) ...' % unicode(instruction.condition))
-            
-        if isinstance(instruction, Process):
-            self.file.write('process %s ...' % unicode(instruction.name))
-            
-        if isinstance(instruction, HostSubprocess):
-            self.file.write('subprocess %s ...' % unicode(instruction.name))
-        self.file.write("\n") 
-        
-        return self.result
-        
-    def can_execute_instruction(self, instruction):
-        """ Overriden """
-        return True
+class ProgressThread(threading.Thread):
 
-
-class ProgressBarHook(Hook):
-    
-    def __init__(self, file):
+    def __init__(self, file, interpreter, *args, **kwargs):
+        super(ProgressThread, self).__init__(*args, **kwargs)
         self.file = file
-    
-    def execute(self, context):
-        """
-        Hook does not change the context. 
-        It get informations about the state of the process
-        and prints it. 
-        """
-        progress = 0.2
+        self.interpreter = interpreter
+        
+    def get_progress(self):
+        all = 0.0
+        sum = 0.0
+        for thr in self.interpreter.threads:
+            all += 1
+            sum += thr.simulator.context.get_progress()
+        progress = 0
+        if all > 0:
+            progress = sum / all
+        return progress
+            
+    def run(self):
+        
+        progress = self.get_progress()
+        while progress < 1:
+            self.print_progressbar(progress)
+            time.sleep(1)
+            progress = self.get_progress()
+        self.print_progressbar(progress)
         
         
-        
-        percentage = str(round(progress*100)) + '%'
-        percentage = ' ' * (5-len(percentage)) + percentage
-        bar = ('=' * round(progress*20)) + (' ' * (20 - round(progress*20)))
-        self.file.write("\r%s -> %s [%s]", (version, percentage, bar))
+    def print_progressbar(self, progress):
+            """
+            Prints the formatted progressbar showing the progress of simulation. 
+            """
+            percentage = str(int(round(progress*100))) + '%'
+            percentage = (' ' * (5-len(percentage))) + percentage
+            bar = ('#' * int(round(progress*20))) + (' ' * (20 - int(round(progress*20))))
+            self.file.write("\r%s [%s]" % (percentage, bar))
+            self.file.flush()
         
 
-def main(qopml_model, print_instructions = False):
+def main(qopml_model, options = {}):
 
     ############### DEBUG ###############    
     if debug:
@@ -109,12 +84,16 @@ def main(qopml_model, print_instructions = False):
         interpreter.register_qopml_module(timeanalysis.Module())
         interpreter.prepare()
         
-        if print_instructions:
+        if options.print_instructions:
             for thread in interpreter.threads: 
                 thread.simulator.get_executor().prepend_instruction_executor(PrintExecutor(sys.stdout))
-                thread.simulator.register_hook()
-            
+        
+        if options.show_progressbar:
+            progressbar_thread = ProgressThread(sys.stdout, interpreter)
+            progressbar_thread.start()
+        
         interpreter.run()
+
     except EnvironmentDefinitionException, e:
         print "Error on creating environment: %s" % e
         if len(e.errors) > 0:
@@ -140,6 +119,8 @@ if __name__ == '__main__':
     parser.usage = "%prog [options] model_file"
     parser.add_option("-p", "--print", dest="print_instructions", action="store_true", default=False,
                       help="print executed instruction to standard output")
+    parser.add_option("-b", '--progressbar', dest="show_progressbar", action="store_true", default=False,
+                      help="show the progressbar of the simulation")
     
     (options, args) = parser.parse_args()
     
@@ -153,4 +134,5 @@ if __name__ == '__main__':
     qopml_model = f.read()
     f.close()
 
-    main(qopml_model, options.print_instructions)
+    main(qopml_model, options)
+    

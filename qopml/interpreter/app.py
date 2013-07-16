@@ -637,7 +637,7 @@ class Builder():
         channels = self._build_channels(store, version, hosts)
         channels_manager = self._build_channels_manager(channels)
 
-        c = state.Context()
+        c = state.Context(version)
         c.functions = functions
         c.hosts = hosts
         c.expression_checker = expression_checker
@@ -759,5 +759,6 @@ class Interpreter():
     def run(self):
         """ Runs all simulations """
         for thr in self.threads:
-            thr.run()
+            thr.start()
+            
         
