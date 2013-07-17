@@ -10,6 +10,7 @@ import threading
 import time
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
+from qopml.interpreter import VERSION
 from qopml.interpreter.simulator.state import PrintExecutor
 from qopml.interpreter.model.parser import ParserException
 from qopml.interpreter.simulator import EnvironmentDefinitionException
@@ -121,8 +122,14 @@ if __name__ == '__main__':
                       help="print executed instruction to standard output")
     parser.add_option("-b", '--progressbar', dest="show_progressbar", action="store_true", default=False,
                       help="show the progressbar of the simulation")
+    parser.add_option("-V", '--version', dest="show_version", action="store_true", default=False,
+                      help="show version of AQoPA")
     
     (options, args) = parser.parse_args()
+    
+    if options.show_version:
+        print "AQoPA (version %s)" % VERSION
+        sys.exit(0)
     
     if len(args) < 1:
         parser.error("no model_file specified")
