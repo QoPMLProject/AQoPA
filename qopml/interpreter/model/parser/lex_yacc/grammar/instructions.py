@@ -8,12 +8,26 @@ from qopml.interpreter.model.parser.lex_yacc import LexYaccParserExtension
 from qopml.interpreter.model import AssignmentInstruction,\
     CommunicationInstruction,\
     WhileInstruction, IfInstruction, ContinueInstruction, FinishInstruction,\
-    CallFunctionInstruction, COMMUNICATION_TYPE_OUT, COMMUNICATION_TYPE_IN
+    CallFunctionInstruction, COMMUNICATION_TYPE_OUT, COMMUNICATION_TYPE_IN,\
+    HostSubprocess
 
 
 class Builder():
 
-    pass
+    def build_subprocess(self, token):
+        """
+        host_subprocess : SUBPROCESS IDENTIFIER host_channels BLOCKOPEN instructions_list BLOCKCLOSE
+                    | SUBPROCESS IDENTIFIER host_channels BLOCKOPEN instructions_list BLOCKCLOSE SEMICOLON
+        """
+        s = HostSubprocess(token[2], token[5])
+        
+        all_channels_active = '*' in token[3]
+        if all_channels_active:
+            s.all_channels_active = True
+        else:
+            s.active_channels = token[3]
+        
+        return s
 
 class ParserExtension(LexYaccParserExtension):
     """
@@ -22,6 +36,8 @@ class ParserExtension(LexYaccParserExtension):
     
     def __init__(self):
         LexYaccParserExtension.__init__(self)
+
+        self.open_blocks_cnt_by_state = {}
         
         self.builder = Builder()
         
@@ -29,9 +45,38 @@ class ParserExtension(LexYaccParserExtension):
     #           RESERVED WORDS
     ##########################################
     
+    def word_subprocess_specification(self, t):
+        t.lexer.push_state('subprocess')
+        return t
+    
     ##########################################
     #                TOKENS
     ##########################################
+    
+    def token_block_open(self, t):
+        r'{'
+        state = t.lexer.current_state()
+        state += str(t.lexer.lexstatestack.count(state))
+        
+        if state not in self.open_blocks_cnt_by_state:
+            self.open_blocks_cnt_by_state[state] = 0 
+        self.open_blocks_cnt_by_state[state] += 1
+        return t
+    
+    def token_block_close(self, t):
+        r'}'
+        state = t.lexer.current_state()
+        state += str(t.lexer.lexstatestack.count(state))
+        
+        self.open_blocks_cnt_by_state[state] -= 1
+        if self.open_blocks_cnt_by_state[state] == 0:
+            t.lexer.pop_state()
+        return t
+    
+    def token_host_rparan(self, t):
+        r'\)'
+        t.lexer.push_state('hostrparan')
+        return t
 
     ##########################################
     #                RULES
@@ -52,6 +97,7 @@ class ParserExtension(LexYaccParserExtension):
     def instruction(self, t):
         """
         instruction : instruction_assignment
+                | instruction_subprocess
                 | instruction_communication
                 | instruction_while
                 | instruction_if
@@ -59,6 +105,13 @@ class ParserExtension(LexYaccParserExtension):
                 | instruction_call_function
         """
         t[0] = t[1]
+    
+    def instruction_subprocess(self, t):
+        """
+        instruction_subprocess : SUBPROCESS IDENTIFIER host_channels BLOCKOPEN instructions_list BLOCKCLOSE
+                    | SUBPROCESS IDENTIFIER host_channels BLOCKOPEN instructions_list BLOCKCLOSE SEMICOLON
+        """
+        t[0] = self.builder.build_subprocess(t)
     
     def instruction_assignment(self, t):
         """
@@ -122,8 +175,16 @@ class ParserExtension(LexYaccParserExtension):
     
     def _extend(self):
         
+        self.parser.add_state('subprocess', 'inclusive')
+        self.parser.add_reserved_word('subprocess', 'SUBPROCESS', func=self.word_subprocess_specification, state='process')
+           
+        self.parser.add_token('BLOCKOPEN', func=self.token_block_open, states=['subprocess'])
+        self.parser.add_token('BLOCKCLOSE', func=self.token_block_close, states=['subprocess'])
+        self.parser.add_token('RPARAN', func=self.token_host_rparan, states=['subprocess'])
+        
         self.parser.add_rule(self.instructions_list)
         self.parser.add_rule(self.instruction)
+        self.parser.add_rule(self.instruction_subprocess)
         self.parser.add_rule(self.instruction_assignment)
         self.parser.add_rule(self.instruction_communication)
         self.parser.add_rule(self.instruction_while)

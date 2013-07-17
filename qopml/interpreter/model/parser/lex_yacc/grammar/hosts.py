@@ -5,8 +5,7 @@ Created on 22-04-2013
 '''
 
 from qopml.interpreter.model.parser.lex_yacc import LexYaccParserExtension
-from qopml.interpreter.model import Host, HostProcess,\
-    HostSubprocess
+from qopml.interpreter.model import Host, HostProcess
 from ply.lex import Lexer
 import re
 
@@ -57,21 +56,6 @@ class Builder():
         
         return p
         
-    def build_subprocess(self, token):
-        """
-        host_subprocess : SUBPROCESS IDENTIFIER host_channels BLOCKOPEN instructions_list BLOCKCLOSE
-                    | SUBPROCESS IDENTIFIER host_channels BLOCKOPEN instructions_list BLOCKCLOSE SEMICOLON
-        """
-        s = HostSubprocess(token[2], token[5])
-        
-        all_channels_active = '*' in token[3]
-        if all_channels_active:
-            s.all_channels_active = True
-        else:
-            s.active_channels = token[3]
-        
-        return s
-        
 class ParserExtension(LexYaccParserExtension):
     """
     Extension for parsing functions
@@ -98,10 +82,6 @@ class ParserExtension(LexYaccParserExtension):
     
     def word_process_specification(self, t):
         t.lexer.push_state('process')
-        return t
-    
-    def word_subprocess_specification(self, t):
-        t.lexer.push_state('subprocess')
         return t
     
     ##########################################
@@ -233,26 +213,11 @@ class ParserExtension(LexYaccParserExtension):
         """
         t[0] = self.builder.build_process(t)
     
-    def instruction_host_subprocess(self, t):
-        """
-        instruction : host_subprocess
-        """
-        t[0] = t[1]
-    
-    def host_subprocess(self, t):
-        """
-        host_subprocess : SUBPROCESS IDENTIFIER host_channels BLOCKOPEN instructions_list BLOCKCLOSE
-                    | SUBPROCESS IDENTIFIER host_channels BLOCKOPEN instructions_list BLOCKCLOSE SEMICOLON
-        """
-        t[0] = self.builder.build_subprocess(t)
-    
-    
     def _extend(self):
         
         self.parser.add_state('hosts', 'inclusive')
         self.parser.add_state('host', 'inclusive')
         self.parser.add_state('process', 'inclusive')
-        self.parser.add_state('subprocess', 'inclusive')
         
         self.parser.add_state('hostrparan', 'exclusive')
         self.parser.add_state('functionqopargs', 'exclusive')
@@ -260,8 +225,7 @@ class ParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('hosts', 'HOSTS_SPECIFICATION', func=self.word_hosts_specification)
         self.parser.add_reserved_word('host', 'HOST', func=self.word_host_specification, state='hosts')
         self.parser.add_reserved_word('process', 'PROCESS', func=self.word_process_specification, state='host')
-        self.parser.add_reserved_word('subprocess', 'SUBPROCESS', func=self.word_subprocess_specification, state='process')
-        
+
         self.parser.add_reserved_word('rr', 'ROUND_ROBIN', state='host')
         self.parser.add_reserved_word('fifo', 'FIFO', state='host')
         
@@ -274,11 +238,11 @@ class ParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('stop', 'STOP', state='host')
         self.parser.add_reserved_word('end', 'END', state='host')
 
-        self.parser.add_token('BLOCKOPEN', func=self.token_block_open, states=['hosts', 'host', 'process', 'subprocess'])
-        self.parser.add_token('BLOCKCLOSE', func=self.token_block_close, states=['hosts', 'host', 'process', 'subprocess'])
+        self.parser.add_token('BLOCKOPEN', func=self.token_block_open, states=['hosts', 'host', 'process'])
+        self.parser.add_token('BLOCKCLOSE', func=self.token_block_close, states=['hosts', 'host', 'process'])
         self.parser.add_token('HASH', r'\#', states=['host'])
         
-        self.parser.add_token('RPARAN', func=self.token_host_rparan, states=['host', 'process', 'subprocess'])
+        self.parser.add_token('RPARAN', func=self.token_host_rparan, states=['host', 'process'])
         self.parser.add_token('SQLPARAN', func=self.token_host_sq_lparan, states=['hostrparan'])
         self.parser.add_token('ANYCHAR', func=self.token_host_any_char, states=['hostrparan'], include_in_tokens=False)
         
@@ -303,8 +267,6 @@ class ParserExtension(LexYaccParserExtension):
         self.parser.add_rule(self.host_predefined_value)
         self.parser.add_rule(self.host_body)
         self.parser.add_rule(self.host_process)
-        self.parser.add_rule(self.instruction_host_subprocess)
-        self.parser.add_rule(self.host_subprocess)
         
 
     
