@@ -8,7 +8,7 @@ import threading
 from qopml.interpreter.model.parser import ParserException
 from qopml.interpreter.model.store import QoPMLModelStore
 from qopml.interpreter.model import HostProcess, name_indexes, original_name,\
-    HostSubprocess
+    HostSubprocess, WhileInstruction, IfInstruction
 from qopml.interpreter.simulator import Simulator,\
     expression, state, equation, metrics, communication, scheduler
     
@@ -88,25 +88,41 @@ class Builder():
         Rebuild hosts - create new instances with updated instructions lists according to version.
         """
         
-        def build_process_instructions_list(process, run_process): 
+        def remove_unused_subprocesses(instructions_list, run_process): 
             """
-            Create process' instruction lists
-            according to "run process" 
+            Create instruction lists according to "run process"
+            Removes subprocesses that are not selected to run. 
             """
             if run_process.all_subprocesses_active:
-                return process.instructions_list
+                return instructions_list
             
-            instructions_list = []
+            new_instructions_list = []
             
-            for instruction in process.instructions_list:
+            for instruction in instructions_list:
                 if isinstance(instruction, HostSubprocess):
                     subprocess = instruction
                     if subprocess.name in run_process.active_subprocesses:
-                        instructions_list.append(subprocess)
+                        new_instructions_list.append(subprocess)
+                        subprocess.instructions_list = \
+                            remove_unused_subprocesses(subprocess.instructions_list, 
+                                                       run_process)
                 else:
-                    instructions_list.append(instruction)
+                    new_instructions_list.append(instruction)
+                    
+                    if isinstance(instruction, WhileInstruction):
+                        instruction.instructions = \
+                            remove_unused_subprocesses(instruction.instructions, 
+                                                       run_process)
+                    
+                    if isinstance(instruction, IfInstruction):
+                        instruction.true_instructions = \
+                            remove_unused_subprocesses(instruction.true_instructions, 
+                                                       run_process)
+                        instruction.false_instructions = \
+                            remove_unused_subprocesses(instruction.false_instructions, 
+                                                       run_process)
             
-            return instructions_list
+            return new_instructions_list
             
         def build_host_instructions_list(parsed_host, run_host, repetition_number):
             """
@@ -148,7 +164,7 @@ class Builder():
                 for i in range(0, run_process.repetitions):
                     
                     # Create instructions list
-                    instructions_list = build_process_instructions_list(parsed_process, run_process)
+                    instructions_list = remove_unused_subprocesses(parsed_process.instructions_list, run_process)
                     
                     # Create new simulation process
                     simulated_process = Process(parsed_process.name, instructions_list)
@@ -164,7 +180,7 @@ class Builder():
                         follower_parsed_process = find_process(parsed_host.instructions_list, run_process.follower.process_name)
                         
                         # Build instructions list for follower
-                        follower_instructions_list = build_process_instructions_list(follower_parsed_process, run_process.follower)
+                        follower_instructions_list = remove_unused_subprocesses(follower_parsed_process.instructions_list, run_process.follower)
 
                         # Create simulated follower
                         simulated_follower = Process(follower_parsed_process.name, follower_instructions_list)

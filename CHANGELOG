@@ -6,6 +6,7 @@ Next release:
  - Project name changed: AQoPA
  - Added progress bar option (-b)
  - Version can have now name with letters like identifier (not only number)
+ - Fixed #3: Now subprocesses can be nested
 
 v0.3 (2013-06-25)
  - Time Analysis Module: Added communication synchronization (out and in instructions executed according to the time flow, not protocol flow)
