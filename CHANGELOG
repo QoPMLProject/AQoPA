@@ -3,6 +3,9 @@
 #########################################
 
 Next release:
+ -
+
+v0.3.1 (2013-07-17)
  - Project name changed: AQoPA
  - Added progress bar option (-b)
  - Version can have now name with letters like identifier (not only number)
