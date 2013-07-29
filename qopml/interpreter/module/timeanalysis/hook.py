@@ -3,6 +3,7 @@ Created on 31-05-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
+import sys
 import random
 from qopml.interpreter.simulator.state import Hook, ExecutionResult
 from qopml.interpreter.model import AssignmentInstruction,\
@@ -10,31 +11,33 @@ from qopml.interpreter.model import AssignmentInstruction,\
     CommunicationInstruction, CallFunctionExpression, TupleExpression
 from qopml.interpreter.module.timeanalysis.error import TimeSynchronizationException
 from qopml.interpreter.simulator.error import RuntimeException
-import sys
 
 class PrintResultsHook(Hook):
 
-    def __init__(self, module):
+    def __init__(self, module, output_file=sys.stdout):
         """ """
         self.module = module
+        self.output_file = output_file
         
     def execute(self, context):
         """ """
         
         if self.module.simulator.infinite_loop_occured():
-            print 'ERROR: Infinite loop on: %s' % unicode(self.module.simulator.context.get_current_instruction())
-            print
-        
+            self.output_file.write('ERROR: Infinite loop on {0} -> {1}\n'.format(
+                                unicode(self.module.simulator.context.get_current_host()),
+                                unicode(self.module.simulator.context.get_current_instruction())))
+            self.output_file.write('\n')
+            
         for h in context.hosts:
-            sys.stdout.write("%s: \t%s" % (h.name, str(self.module.get_current_time(h))))
+            self.output_file.write('{0: <15}: {1: <15} '.format(h.name, str(self.module.get_current_time(h))))
             if h.finished():
-                sys.stdout.write('\tFinished')
+                self.output_file.write('Finished')
                 if h.get_finish_error():
-                    sys.stdout.write('\t!Finished with error: %s' % h.get_finish_error())
+                    self.output_file.write('Finished with error: {0}'.format(h.get_finish_error()))
             else:
-                sys.stdout.write('\tNOT Finished: %s' % unicode(h.get_current_instructions_context()\
-                                                                .get_current_instruction()))
-            sys.stdout.write("\n")
+                self.output_file.write('NOT Finished: {0}'.format(unicode(h.get_current_instructions_context()\
+                                                                .get_current_instruction())))
+            self.output_file.write("\n")
             
         print ""
         print "Dropped messages:"
@@ -230,9 +233,9 @@ class PreInstructionHook(Hook):
                 
         # Delay execution of this instruction 
         # if needed according to previous check      
-#        if delay_communication_execution:
-#            return ExecutionResult(custom_index_management=True, 
-#                                   finish_instruction_execution=True)
+        if delay_communication_execution:
+            return ExecutionResult(custom_index_management=True, 
+                                   finish_instruction_execution=True)
                 
                 
         if instruction.is_out():
