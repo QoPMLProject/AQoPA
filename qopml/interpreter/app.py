@@ -32,11 +32,8 @@ class VersionThread(threading.Thread):
         self.simulator = simulator
         
     def run(self):
-        try:
-            self.simulator.prepare()
-            self.simulator.run()
-        except RuntimeException, e:
-            print "Runtime error: " + str(e)
+        self.simulator.prepare()
+        self.simulator.run()
     
 class Builder():
     """

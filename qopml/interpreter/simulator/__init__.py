@@ -8,7 +8,7 @@ from qopml.interpreter.simulator.state import HOOK_TYPE_PRE_HOST_LIST_EXECUTION,
     HOOK_TYPE_POST_INSTRUCTION_EXECUTION, HOOK_TYPE_SIMULATION_FINISHED
     
 from qopml.interpreter.simulator.error import RuntimeException,\
-    EnvironmentDefinitionException
+    EnvironmentDefinitionException, InfiniteLoopException
 
 class Simulator():
     """
@@ -26,6 +26,7 @@ class Simulator():
         self._after_instruction_executor = HookExecutor()
         
         self._first_loop = True
+        self._infinite_loop_error = False
         
     def _execute_hook(self, hook_type):
         """
@@ -60,6 +61,7 @@ class Simulator():
         whether simulation is finished.
         """
         if self.context.hosts_loop_ended():
+            
             self._execute_hook(HOOK_TYPE_PRE_HOST_LIST_EXECUTION)
             
             if self._first_loop:
@@ -71,11 +73,12 @@ class Simulator():
                     # or if any channel has dropped a message
                     for ch in self.context.channels_manager.channels:
                         if len(ch.get_queue_of_sending_hosts(1)) > 0 or ch.get_number_of_dropped_messages() > 0:
-                            raise RuntimeException(u"Infinite loop occured")
+                            raise InfiniteLoopException()
                         
                     for h in self.context.hosts:
                         if not h.finished():
-                            h.finish_failed(RuntimeException(u"Infinite loop occured"))
+                            h.finish_failed(u'Infinite loop occured on instruction: %s' % 
+                                            unicode(h.get_current_instructions_context().get_current_instruction()))
                             
                 self.context.mark_all_hosts_unchanged()
                    
@@ -91,6 +94,10 @@ class Simulator():
     def set_executor(self, executor):
         """ executor setter """
         self._executor = executor
+        
+    def infinite_loop_occured(self):
+        """ Returns True if infinite loop occured """
+        return self._infinite_loop_error
     
     def register_module(self, module):
         """
@@ -153,16 +160,11 @@ class Simulator():
         self._executor.append_instruction_executor(self._after_instruction_executor)
         
         while not self.is_simulation_finished():
-            self._internal_goto_next_state()
+            try: 
+                self._internal_goto_next_state()
+            except InfiniteLoopException:
+                self._infinite_loop_error = True
+                break
         
         self._execute_hook(HOOK_TYPE_SIMULATION_FINISHED)
         
-    def goto_next_state(self):
-        """
-        Simulation goes to next state.
-        """
-        if not self.is_ready_to_run():
-            raise EnvironmentDefinitionException("Simulation is not yet ready to run")
-        
-        if not self.is_simulation_finished():
-            self._internal_goto_next_state()
