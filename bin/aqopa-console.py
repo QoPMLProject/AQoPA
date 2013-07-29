@@ -15,10 +15,9 @@ from qopml.interpreter.simulator.state import PrintExecutor
 from qopml.interpreter.model.parser import ParserException
 from qopml.interpreter.simulator import EnvironmentDefinitionException
 from qopml.interpreter.app import Interpreter, Builder
-from qopml.interpreter.simulator.error import RuntimeException
+from qopml.interpreter.simulator.error import RuntimeException,\
+    InfiniteLoopException
 from qopml.interpreter.module import timeanalysis
-
-debug = False
 
 class ProgressThread(threading.Thread):
 
@@ -59,7 +58,7 @@ class ProgressThread(threading.Thread):
             self.file.flush()
         
 
-def main(qopml_model, options = {}):
+def main(qopml_model, print_instructions = False, debug = False):
 
     ############### DEBUG ###############    
     if debug:
@@ -101,17 +100,13 @@ def main(qopml_model, options = {}):
             print "Errors:"
             sys.stderr.write('\n'.join(e.errors))
             print
-        return
     except ParserException, e:
         print "Parsing error: %s" % e
         if len(e.syntax_errors):
             print "Syntax errors:"
             sys.stderr.write('\n'.join(e.syntax_errors))
             print
-        return
-    except RuntimeException, e:
-        print "Runtime error: %s" % e
-        return
+        
     #####################################
     
 if __name__ == '__main__':
@@ -124,6 +119,8 @@ if __name__ == '__main__':
                       help="show the progressbar of the simulation")
     parser.add_option("-V", '--version', dest="show_version", action="store_true", default=False,
                       help="show version of AQoPA")
+    parser.add_option("-d", "--debug", dest="debug", action="store_true", default=False,
+                      help="DEBUG mode")
     
     (options, args) = parser.parse_args()
     
@@ -141,5 +138,4 @@ if __name__ == '__main__':
     qopml_model = f.read()
     f.close()
 
-    main(qopml_model, options)
-    
+    main(qopml_model, print_instructions=options.print_instructions, debug=options.debug)

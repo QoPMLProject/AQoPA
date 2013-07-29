@@ -16,3 +16,6 @@ class EnvironmentDefinitionException(Exception):
 
 class RuntimeException(Exception):
     pass
+
+class InfiniteLoopException(RuntimeException):
+    pass
