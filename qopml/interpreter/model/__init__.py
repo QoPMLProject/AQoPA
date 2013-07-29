@@ -227,7 +227,7 @@ class WhileInstruction():
         self.instructions = instructions
         
     def __unicode__(self):
-        return u"while (%s) ..." % unicode(self.conditional)
+        return u"while (%s) ..." % unicode(self.condition)
 
 ################################
 #        Hosts
