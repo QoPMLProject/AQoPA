@@ -20,10 +20,20 @@ class PrintResultsHook(Hook):
         
     def execute(self, context):
         """ """
+        
+        if self.module.simulator.infinite_loop_occured():
+            print 'ERROR: Infinite loop on: %s' % unicode(self.module.simulator.context.get_current_instruction())
+            print
+        
         for h in context.hosts:
             sys.stdout.write("%s: \t%s" % (h.name, str(self.module.get_current_time(h))))
-            if h.get_finish_error():
-                sys.stdout.write('\t! Finished with error: %s' % h.get_finish_error())
+            if h.finished():
+                sys.stdout.write('\tFinished')
+                if h.get_finish_error():
+                    sys.stdout.write('\t!Finished with error: %s' % h.get_finish_error())
+            else:
+                sys.stdout.write('\tNOT Finished: %s' % unicode(h.get_current_instructions_context()\
+                                                                .get_current_instruction()))
             sys.stdout.write("\n")
             
         print ""
@@ -220,9 +230,9 @@ class PreInstructionHook(Hook):
                 
         # Delay execution of this instruction 
         # if needed according to previous check      
-        if delay_communication_execution:
-            return ExecutionResult(custom_index_management=True, 
-                                   finish_instruction_execution=True)
+#        if delay_communication_execution:
+#            return ExecutionResult(custom_index_management=True, 
+#                                   finish_instruction_execution=True)
                 
                 
         if instruction.is_out():
