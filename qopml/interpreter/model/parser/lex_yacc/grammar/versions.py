@@ -5,7 +5,8 @@ Created on 22-04-2013
 '''
 
 from qopml.interpreter.model.parser.lex_yacc import LexYaccParserExtension
-from qopml.interpreter.model import Version, VersionRunProcess, VersionRunHost
+from qopml.interpreter.model import Version, VersionRunProcess, VersionRunHost,\
+    MetricsSet
 
 
 class Builder():
@@ -15,12 +16,21 @@ class Builder():
     
     def build_version(self, token):
         """
-        version : VERSION IDENTIFIER BLOCKOPEN version_run_hosts BLOCKCLOSE
+        version : VERSION IDENTIFIER BLOCKOPEN metrics_sets version_run_hosts BLOCKCLOSE
         """
         v = Version(token[2])
-        for run_host in token[4]:
+        for metrics_set in token[4]:
+            v.metrics_sets.append(metrics_set)
+        for run_host in token[5]:
             v.run_hosts.append(run_host)
         return v
+    
+    def create_metrics_set(self, token):
+        """
+        metrics_set : SET HOST IDENTIFIER LPARAN IDENTIFIER RPARAN SEMICOLON
+                | SET HOST IDENTIFIER LPARAN QUALIFIED_IDENTIFIER RPARAN SEMICOLON
+        """
+        return MetricsSet(token[3], token[5])
     
     def build_run_host(self, token):
         """
@@ -107,7 +117,7 @@ class Builder():
                 run_process.active_subprocesses.append(identifier)
         return run_process
 
-class ParserExtension(LexYaccParserExtension):
+class ConfigParserExtension(LexYaccParserExtension):
     """
     Extension for parsing functions
     """
@@ -180,9 +190,28 @@ class ParserExtension(LexYaccParserExtension):
     
     def version(self, t):
         """
-        version : VERSION IDENTIFIER BLOCKOPEN version_run_hosts BLOCKCLOSE
+        version : VERSION IDENTIFIER BLOCKOPEN metrics_sets version_run_hosts BLOCKCLOSE
         """
         self.parser.store.versions.append(self.builder.build_version(t))
+    
+    def metrics_sets(self, t):
+        """
+        metrics_sets : metrics_set
+                    | metrics_sets metrics_set
+        """
+        if len(t) == 3:
+            t[0] = t[1]
+            t[0].append(t[2])
+        else:
+            t[0] = []
+            t[0].append(t[1])
+    
+    def metrics_set(self, t):
+        """
+        metrics_set : SET HOST IDENTIFIER LPARAN IDENTIFIER RPARAN SEMICOLON
+                | SET HOST IDENTIFIER LPARAN QUALIFIED_IDENTIFIER RPARAN SEMICOLON
+        """
+        t[0] = self.builder.create_metrics_set(t)
     
     def version_run_hosts(self, t):
         """
@@ -307,6 +336,7 @@ class ParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('versions', 'VERSIONS_SPECIFICATION', func=self.word_versions_specification)
         self.parser.add_reserved_word('version', 'VERSION', state='versions')
         self.parser.add_reserved_word('run', 'RUN', state='versions')
+        self.parser.add_reserved_word('set', 'SET', state='versions')
         self.parser.add_reserved_word('host', 'HOST', state='versions')
 
         self.parser.add_token('BLOCKOPEN', func=self.token_block_open, states=['versions'])
@@ -327,6 +357,8 @@ class ParserExtension(LexYaccParserExtension):
         self.parser.add_rule(self.versions_specification)
         self.parser.add_rule(self.versions_list)
         self.parser.add_rule(self.version)
+        self.parser.add_rule(self.metrics_sets)
+        self.parser.add_rule(self.metrics_set)
         self.parser.add_rule(self.version_run_hosts)
         self.parser.add_rule(self.version_run_host)
         self.parser.add_rule(self.version_repetition)

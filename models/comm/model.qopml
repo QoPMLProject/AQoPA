@@ -45,37 +45,3 @@ hosts {
  }
  
 }
-
-versions {
-  
-  version 1 {
-    
-    run host Server(*) {
-      run Server1(*)
-    }
-    
-    run host Client2(*) {
-      run Client2(*)
-    }
-  }
-  
-}
-
-metrics {
-  conf(Server) {
-    a=b;
-  }
-  conf(Mobile) {
-    a=b;
-  }
-  
-  data(Client) {
-    primhead[function][time:exact(ms)];
-    primitive[ms_10][10];
-    primitive[ms_1000][1000];
-  }
-  
-  set host Client1(Client);
-  set host Client2(Client);
-  set host Server(Client);
-}

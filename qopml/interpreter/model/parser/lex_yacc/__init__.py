@@ -18,12 +18,16 @@ class LexYaccParserExtension():
     def __init__(self):
         self.parser = None       # Extended parser
     
-    def extend(self, parser):
-        self.parser = parser
-        self._extend()
-        
+    def _save_parser(self, parser):
+        if not self.parser:
+            self.parser = parser
+    
     def _extend(self):
         raise NotImplementedError()
+    
+    def extend(self, parser):
+        self._save_parser(parser)
+        self._extend()
 
 ##########################################
 #   MODEL PARSER 
@@ -53,7 +57,6 @@ class LexYaccParser(QoPMLModelParser):
         
     def get_syntax_errors(self):
         return self.syntax_errors
-        
     
     def add_extension(self, ext):
         self.extensions.append(ext)

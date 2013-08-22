@@ -7,12 +7,12 @@ Created on 22-04-2013
 class ParserException(Exception):   
     
     def __init__(self, *args, **kwargs):
-        super(ParserException, self).__init__(*args)
-        
+        """ """
         self.syntax_errors = []
         if 'syntax_errors' in kwargs:
             self.syntax_errors = kwargs['syntax_errors']
             del kwargs['syntax_errors']
+        super(ParserException, self).__init__(*args)
 
 
 class QoPMLModelParser():

@@ -29,7 +29,7 @@ class Builder():
         
         return s
 
-class ParserExtension(LexYaccParserExtension):
+class ModelParserExtension(LexYaccParserExtension):
     """
     Extension for parsing functions
     """

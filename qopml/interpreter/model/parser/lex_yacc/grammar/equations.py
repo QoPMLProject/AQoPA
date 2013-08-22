@@ -26,7 +26,7 @@ class Builder():
             return CallFunctionExpression(token[1], token[3])
         return CallFunctionExpression(token[1], [])
 
-class ParserExtension(LexYaccParserExtension):
+class ModelParserExtension(LexYaccParserExtension):
     """
     Extension for parsing functions
     """

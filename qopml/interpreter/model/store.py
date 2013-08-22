@@ -13,7 +13,6 @@ class QoPMLModelStore():
     hosts       = []
     metrics_configurations  = []
     metrics_datas           = []
-    metrics_sets            = []
     init_version_number     = []
     
     

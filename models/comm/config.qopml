@@ -1,0 +1,19 @@
+versions {
+  
+  version v1 {
+    
+	set host Client1(Client);
+	set host Client2(Client);
+	set host Server(Client);
+    
+    run host Server(*) {
+      run Server1(*)
+    }
+    
+    run host Client2(*) {
+      run Client2(*)
+    }
+    
+  }
+  
+}

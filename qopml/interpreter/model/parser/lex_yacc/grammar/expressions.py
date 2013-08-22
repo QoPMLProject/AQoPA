@@ -33,7 +33,7 @@ class Builder():
         return CallFunctionExpression(token[1], arguments, qop_arguments)
         
 
-class ParserExtension(LexYaccParserExtension):
+class ModelParserExtension(LexYaccParserExtension):
     """
     Extension for parsing functions
     """

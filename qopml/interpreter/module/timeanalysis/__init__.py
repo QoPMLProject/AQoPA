@@ -3,9 +3,9 @@ from qopml.interpreter.simulator.state import HOOK_TYPE_PRE_INSTRUCTION_EXECUTIO
     HOOK_TYPE_SIMULATION_FINISHED
 from .hook import PreInstructionHook
 from .model import TimeTrace
-from .parser import ParserExtension
 from qopml.interpreter.module.timeanalysis.model import ChannelMessageTrace
 from qopml.interpreter.module.timeanalysis.hook import PrintResultsHook
+from qopml.interpreter.module.timeanalysis.parser import MetricsParserExtension
 
 class Module(module.Module):
     """
@@ -21,13 +21,11 @@ class Module(module.Module):
         self.channel_message_traces = []
         self.channel_next_message_id = {} 
     
-    def extend_parser(self, parser):
+    def extend_metrics_parser(self, parser):
         """
-        Method is called before parsing the qopml model.
-        Module can extend parser and add tokens, rules, etc.
-        Method returns parser.
+        Overriden
         """
-        parser.add_extension(ParserExtension())
+        parser.add_extension(MetricsParserExtension())
         return parser
     
     def install(self, simulator):
