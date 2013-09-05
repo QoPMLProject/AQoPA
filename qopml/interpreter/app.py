@@ -5,7 +5,8 @@ Created on 07-05-2013
 '''
 
 import threading
-from qopml.interpreter.model.parser import ParserException
+from qopml.interpreter.model.parser import ParserException, ModelParserException,\
+    MetricsParserException, ConfigurationParserException
 from qopml.interpreter.model.store import QoPMLModelStore
 from qopml.interpreter.model import HostProcess, name_indexes, original_name,\
     HostSubprocess, WhileInstruction, IfInstruction
@@ -38,7 +39,7 @@ class VersionThread(threading.Thread):
         """ 
         Tells simulator to save states flow to file.
         """
-        f = open('VERSION_%s_STATES_FLOW' % self.simulator.context.version, 'w')
+        f = open('VERSION_%s_STATES_FLOW' % self.simulator.context.version.name, 'w')
         self.simulator.get_executor().prepend_instruction_executor(PrintExecutor(f))
         
     
@@ -807,17 +808,21 @@ class Interpreter():
         if len(self.model_as_text) == 0:
             raise EnvironmentDefinitionException("QoPML Model not provided")
     
-        parsers = [(self.builder.build_model_parser, self.model_as_text),
-                   (self.builder.build_metrics_parser, self.metrics_as_text),
-                   (self.builder.build_config_parser, self.config_as_text)]
+        parser = self.builder.build_model_parser(self.store, self._modules)
+        parser.parse(self.model_as_text)
+        if len(parser.get_syntax_errors()) > 0:
+            raise ModelParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
     
-        for t in parsers:
-            print t[0]
-            parser = t[0](self.store, self._modules)
-            parser.parse(t[1])
-            if len(parser.get_syntax_errors()) > 0:
-                raise ParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
-        
+        parser = self.builder.build_metrics_parser(self.store, self._modules)
+        parser.parse(self.metrics_as_text)
+        if len(parser.get_syntax_errors()) > 0:
+            raise MetricsParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
+    
+        parser = self.builder.build_config_parser(self.store, self._modules)
+        parser.parse(self.config_as_text)
+        if len(parser.get_syntax_errors()) > 0:
+            raise ConfigurationParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
+    
     def prepare(self):
         """ Prepares for run """
         self._parse()

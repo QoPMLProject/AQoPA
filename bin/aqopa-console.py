@@ -12,7 +12,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 
 from qopml.interpreter import VERSION
 from qopml.interpreter.simulator.state import PrintExecutor
-from qopml.interpreter.model.parser import ParserException
+from qopml.interpreter.model.parser import ParserException, ModelParserException,\
+    MetricsParserException, ConfigurationParserException
 from qopml.interpreter.simulator import EnvironmentDefinitionException
 from qopml.interpreter.app import Interpreter, Builder
 from qopml.interpreter.simulator.error import RuntimeException,\
@@ -106,13 +107,25 @@ def main(qopml_model, qopml_metrics, qopml_configuration,
         interpreter.run()
 
     except EnvironmentDefinitionException, e:
-        sys.stderr.write('Error on creating environment: %s' % e)
+        sys.stderr.write('Error on creating environment: %s\n' % e)
         if len(e.errors) > 0:
             sys.stderr.write('Errors:\n')
             sys.stderr.write('\n'.join(e.errors))
             sys.stderr.write('\n')
-    except ParserException, e:
-        sys.stderr.write('Parsing error: %s' % e)
+    except ModelParserException, e:
+        sys.stderr.write('Model parsing error: %s\n' % e)
+        if len(e.syntax_errors):
+            sys.stderr.write('Syntax errors:\n')
+            sys.stderr.write('\n'.join(e.syntax_errors))
+            sys.stderr.write('\n')
+    except MetricsParserException, e:
+        sys.stderr.write('Metrics parsing error: %s\n' % e)
+        if len(e.syntax_errors):
+            sys.stderr.write('Syntax errors:\n')
+            sys.stderr.write('\n'.join(e.syntax_errors))
+            sys.stderr.write('\n')
+    except ConfigurationParserException, e:
+        sys.stderr.write('Configuration parsing error: %s\n' % e)
         if len(e.syntax_errors):
             sys.stderr.write('Syntax errors:\n')
             sys.stderr.write('\n'.join(e.syntax_errors))

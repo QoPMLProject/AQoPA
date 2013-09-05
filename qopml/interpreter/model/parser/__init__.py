@@ -13,6 +13,15 @@ class ParserException(Exception):
             self.syntax_errors = kwargs['syntax_errors']
             del kwargs['syntax_errors']
         super(ParserException, self).__init__(*args)
+        
+class ModelParserException(ParserException):
+    pass
+        
+class MetricsParserException(ParserException):
+    pass
+        
+class ConfigurationParserException(ParserException):
+    pass
 
 
 class QoPMLModelParser():
