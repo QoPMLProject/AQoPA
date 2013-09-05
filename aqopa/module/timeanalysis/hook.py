@@ -5,12 +5,12 @@ Created on 31-05-2013
 '''
 import sys
 import random
-from aquopa.simulator.state import Hook, ExecutionResult
-from aquopa.model import AssignmentInstruction,\
+from aqopa.simulator.state import Hook, ExecutionResult
+from aqopa.model import AssignmentInstruction,\
     CallFunctionInstruction, IfInstruction, WhileInstruction,\
     CommunicationInstruction, CallFunctionExpression, TupleExpression
-from aquopa.module.timeanalysis.error import TimeSynchronizationException
-from aquopa.simulator.error import RuntimeException
+from aqopa.module.timeanalysis.error import TimeSynchronizationException
+from aqopa.simulator.error import RuntimeException
 
 class PrintResultsHook(Hook):
 

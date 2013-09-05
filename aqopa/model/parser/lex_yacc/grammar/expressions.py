@@ -4,8 +4,8 @@ Created on 22-04-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 
-from aquopa.model.parser.lex_yacc import LexYaccParserExtension
-from aquopa.model import BooleanExpression, TupleExpression,\
+from aqopa.model.parser.lex_yacc import LexYaccParserExtension
+from aqopa.model import BooleanExpression, TupleExpression,\
     TupleElementExpression, IdentifierExpression, ComparisonExpression,\
     CallFunctionExpression
 

@@ -3,11 +3,11 @@ Created on 07-05-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
-from aquopa.simulator.state import HOOK_TYPE_PRE_HOST_LIST_EXECUTION,\
+from aqopa.simulator.state import HOOK_TYPE_PRE_HOST_LIST_EXECUTION,\
     HookExecutor, HOOK_TYPE_PRE_INSTRUCTION_EXECUTION,\
     HOOK_TYPE_POST_INSTRUCTION_EXECUTION, HOOK_TYPE_SIMULATION_FINISHED
     
-from aquopa.simulator.error import RuntimeException,\
+from aqopa.simulator.error import RuntimeException,\
     EnvironmentDefinitionException, InfiniteLoopException
 
 class Simulator():

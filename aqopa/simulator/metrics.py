@@ -3,8 +3,8 @@ Created on 14-05-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
-from aquopa.simulator.error import RuntimeException
-from aquopa.model import TupleExpression, CallFunctionExpression
+from aqopa.simulator.error import RuntimeException
+from aqopa.model import TupleExpression, CallFunctionExpression
 
 class HostMetrics():
     """

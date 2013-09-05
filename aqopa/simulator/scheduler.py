@@ -3,7 +3,7 @@ Created on 15-05-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
-from aquopa.simulator.state import InstructionsContext,\
+from aqopa.simulator.state import InstructionsContext,\
     InstructionsList, Process
 
 class Scheduler():

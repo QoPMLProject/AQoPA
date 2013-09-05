@@ -1,11 +1,11 @@
-from aquopa import module
-from aquopa.simulator.state import HOOK_TYPE_PRE_INSTRUCTION_EXECUTION,\
+from aqopa import module
+from aqopa.simulator.state import HOOK_TYPE_PRE_INSTRUCTION_EXECUTION,\
     HOOK_TYPE_SIMULATION_FINISHED
 from .hook import PreInstructionHook
 from .model import TimeTrace
-from aquopa.module.timeanalysis.model import ChannelMessageTrace
-from aquopa.module.timeanalysis.hook import PrintResultsHook
-from aquopa.module.timeanalysis.parser import MetricsParserExtension
+from aqopa.module.timeanalysis.model import ChannelMessageTrace
+from aqopa.module.timeanalysis.hook import PrintResultsHook
+from aqopa.module.timeanalysis.parser import MetricsParserExtension
 
 class Module(module.Module):
     """

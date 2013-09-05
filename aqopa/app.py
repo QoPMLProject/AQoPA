@@ -5,22 +5,22 @@ Created on 07-05-2013
 '''
 
 import threading
-from aquopa.model.parser import ParserException, ModelParserException,\
+from aqopa.model.parser import ParserException, ModelParserException,\
     MetricsParserException, ConfigurationParserException
-from aquopa.model.store import QoPMLModelStore
-from aquopa.model import HostProcess, name_indexes, original_name,\
+from aqopa.model.store import QoPMLModelStore
+from aqopa.model import HostProcess, name_indexes, original_name,\
     HostSubprocess, WhileInstruction, IfInstruction
-from aquopa.simulator import Simulator,\
+from aqopa.simulator import Simulator,\
     expression, state, equation, metrics, communication, scheduler
     
-from aquopa.simulator.state import Executor,\
+from aqopa.simulator.state import Executor,\
     AssignmentInstructionExecutor, IfInstructionExecutor,\
     ProcessInstructionExecutor, SubprocessInstructionExecutor,\
     FinishInstructionExecutor, CommunicationInstructionExecutor,\
     ContinueInstructionExecutor, WhileInstructionExecutor, Host, Process,\
     CallFunctionInstructionExecutor, PrintExecutor
     
-from aquopa.simulator.error import EnvironmentDefinitionException
+from aqopa.simulator.error import EnvironmentDefinitionException
 
 class VersionThread(threading.Thread):
     """
@@ -696,8 +696,8 @@ class Builder():
         Builder parser that parses model written in QoPML
         and populates the store.
         """
-        from aquopa.model.parser.lex_yacc import LexYaccParser
-        from aquopa.model.parser.lex_yacc.grammar import main,\
+        from aqopa.model.parser.lex_yacc import LexYaccParser
+        from aqopa.model.parser.lex_yacc.grammar import main,\
                 functions, channels, equations, expressions, instructions,\
                 hosts, metrics
         
@@ -721,8 +721,8 @@ class Builder():
         Builder parser that parses metrics written in QoPML
         and populates the store.
         """
-        from aquopa.model.parser.lex_yacc import LexYaccParser
-        from aquopa.model.parser.lex_yacc.grammar import main, metrics
+        from aqopa.model.parser.lex_yacc import LexYaccParser
+        from aqopa.model.parser.lex_yacc.grammar import main, metrics
         
         parser = LexYaccParser()
         parser.set_store(store)\
@@ -739,8 +739,8 @@ class Builder():
         Builder parser that parses config written in QoPML
         and populates the store.
         """
-        from aquopa.model.parser.lex_yacc import LexYaccParser
-        from aquopa.model.parser.lex_yacc.grammar import versions, main
+        from aqopa.model.parser.lex_yacc import LexYaccParser
+        from aqopa.model.parser.lex_yacc.grammar import versions, main
         
         parser = LexYaccParser()
         parser.set_store(store)\

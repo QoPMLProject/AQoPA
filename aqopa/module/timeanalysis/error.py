@@ -3,7 +3,7 @@ Created on 01-06-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
-from aquopa.simulator.error import RuntimeException
+from aqopa.simulator.error import RuntimeException
 
 class TimeSynchronizationException(RuntimeException):
     """

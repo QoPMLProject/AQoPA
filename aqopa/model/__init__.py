@@ -5,7 +5,7 @@ Created on 23-04-2013
 '''
 
 import copy
-#from aquopa.simulator.error import RuntimeException
+#from aqopa.simulator.error import RuntimeException
 
 ################################################
 #             Names functions

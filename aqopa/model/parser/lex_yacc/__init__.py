@@ -3,7 +3,7 @@ Created on 22-04-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
-from aquopa.model.parser import ParserException, QoPMLModelParser
+from aqopa.model.parser import ParserException, QoPMLModelParser
 
     
 ##########################################

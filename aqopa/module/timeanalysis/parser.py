@@ -4,8 +4,8 @@ Created on 01-06-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 
-from aquopa.model import MetricsServiceParam
-from aquopa.model.parser.lex_yacc import LexYaccParserExtension
+from aqopa.model import MetricsServiceParam
+from aqopa.model.parser.lex_yacc import LexYaccParserExtension
 
 
 class Builder():

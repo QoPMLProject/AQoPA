@@ -3,14 +3,14 @@ Created on 07-05-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
-from aquopa.model import BooleanExpression, IdentifierExpression,\
+from aqopa.model import BooleanExpression, IdentifierExpression,\
     CallFunctionExpression, TupleExpression, TupleElementExpression,\
     AssignmentInstruction, CommunicationInstruction, FinishInstruction,\
     ContinueInstruction, CallFunctionInstruction, IfInstruction,\
     WhileInstruction, HostSubprocess, COMMUNICATION_TYPE_OUT,\
     original_name, name_indexes
     
-from aquopa.simulator.error import RuntimeException
+from aqopa.simulator.error import RuntimeException
 
 class Context():
     

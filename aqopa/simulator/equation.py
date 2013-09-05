@@ -3,9 +3,9 @@ Created on 14-05-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
-from aquopa.model import CallFunctionExpression, IdentifierExpression,\
+from aqopa.model import CallFunctionExpression, IdentifierExpression,\
     BooleanExpression
-from aquopa.simulator.error import EnvironmentDefinitionException
+from aqopa.simulator.error import EnvironmentDefinitionException
 
 class Equation():
     """

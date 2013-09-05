@@ -4,9 +4,9 @@ Created on 07-05-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 import copy
-from aquopa.model import IdentifierExpression, CallFunctionExpression, TupleExpression,\
+from aqopa.model import IdentifierExpression, CallFunctionExpression, TupleExpression,\
     BooleanExpression, ComparisonExpression
-from aquopa.simulator.error import RuntimeException
+from aqopa.simulator.error import RuntimeException
 
 class Checker():
     """
