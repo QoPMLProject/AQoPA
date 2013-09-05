@@ -10,15 +10,15 @@ import threading
 import time
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
-from qopml.interpreter import VERSION
-from qopml.interpreter.simulator.state import PrintExecutor
-from qopml.interpreter.model.parser import ParserException, ModelParserException,\
+from aqopa import VERSION
+from aqopa.simulator.state import PrintExecutor
+from aqopa.model.parser import ParserException, ModelParserException,\
     MetricsParserException, ConfigurationParserException
-from qopml.interpreter.simulator import EnvironmentDefinitionException
-from qopml.interpreter.app import Interpreter, Builder
-from qopml.interpreter.simulator.error import RuntimeException,\
+from aqopa.simulator import EnvironmentDefinitionException
+from aqopa.app import Interpreter, Builder
+from aqopa.simulator.error import RuntimeException,\
     InfiniteLoopException
-from qopml.interpreter.module import timeanalysis
+from aqopa.module import timeanalysis
 
 class ProgressThread(threading.Thread):
 
