@@ -5,7 +5,8 @@ Created on 07-05-2013
 '''
 
 import threading
-from qopml.interpreter.model.parser import ParserException
+from qopml.interpreter.model.parser import ParserException, ModelParserException,\
+    MetricsParserException, ConfigurationParserException
 from qopml.interpreter.model.store import QoPMLModelStore
 from qopml.interpreter.model import HostProcess, name_indexes, original_name,\
     HostSubprocess, WhileInstruction, IfInstruction
@@ -17,10 +18,9 @@ from qopml.interpreter.simulator.state import Executor,\
     ProcessInstructionExecutor, SubprocessInstructionExecutor,\
     FinishInstructionExecutor, CommunicationInstructionExecutor,\
     ContinueInstructionExecutor, WhileInstructionExecutor, Host, Process,\
-    CallFunctionInstructionExecutor
+    CallFunctionInstructionExecutor, PrintExecutor
     
-from qopml.interpreter.simulator.error import EnvironmentDefinitionException,\
-    RuntimeException
+from qopml.interpreter.simulator.error import EnvironmentDefinitionException
 
 class VersionThread(threading.Thread):
     """
@@ -34,6 +34,14 @@ class VersionThread(threading.Thread):
     def run(self):
         self.simulator.prepare()
         self.simulator.run()
+        
+    def save_states_to_file(self):
+        """ 
+        Tells simulator to save states flow to file.
+        """
+        f = open('VERSION_%s_STATES_FLOW' % self.simulator.context.version.name, 'w')
+        self.simulator.get_executor().prepend_instruction_executor(PrintExecutor(f))
+        
     
 class Builder():
     """
@@ -562,7 +570,7 @@ class Builder():
         """
         return communication.Manager(channels)
         
-    def _build_metrics_manager(self, store, hosts):
+    def _build_metrics_manager(self, store, hosts, version):
         """
         Build and return metrics manager.
         """
@@ -627,7 +635,7 @@ class Builder():
                         existing_hm.normal_blocks = blocks
                         
         # Connect host metrics with hosts
-        for metrics_set in store.metrics_sets:
+        for metrics_set in version.metrics_sets:
             for h in hosts:
                 if h.original_name() == metrics_set.host_name:
                     for host_metric in host_metrics:
@@ -646,7 +654,7 @@ class Builder():
         expression_reducer = self._build_expression_reducer(equations)
         expression_checker = self._build_expression_checker()
         hosts = self._build_hosts(store, version, functions, expression_checker)
-        metrics_manager = self._build_metrics_manager(store, hosts);
+        metrics_manager = self._build_metrics_manager(store, hosts, version);
         channels = self._build_channels(store, version, hosts)
         channels_manager = self._build_channels_manager(channels)
 
@@ -683,30 +691,64 @@ class Builder():
         sim.set_executor(self.build_executor())
         return sim
     
-    def build_parser(self, store, modules):
+    def build_model_parser(self, store, modules):
         """
         Builder parser that parses model written in QoPML
         and populates the store.
         """
         from qopml.interpreter.model.parser.lex_yacc import LexYaccParser
         from qopml.interpreter.model.parser.lex_yacc.grammar import main,\
-                functions, channels, equations, expressions, instructions, versions,\
+                functions, channels, equations, expressions, instructions,\
                 hosts, metrics
         
         parser = LexYaccParser()
         parser.set_store(store) \
-                .add_extension(main.ParserExtension()) \
-                .add_extension(functions.ParserExtension()) \
-                .add_extension(channels.ParserExtension()) \
-                .add_extension(equations.ParserExtension()) \
-                .add_extension(expressions.ParserExtension()) \
-                .add_extension(instructions.ParserExtension()) \
-                .add_extension(versions.ParserExtension()) \
-                .add_extension(hosts.ParserExtension()) \
-                .add_extension(metrics.ParserExtension())
+                .add_extension(main.ModelParserExtension()) \
+                .add_extension(functions.ModelParserExtension()) \
+                .add_extension(channels.ModelParserExtension()) \
+                .add_extension(equations.ModelParserExtension()) \
+                .add_extension(expressions.ModelParserExtension()) \
+                .add_extension(instructions.ModelParserExtension()) \
+                .add_extension(hosts.ModelParserExtension()) 
                 
         for m in modules:
-            parser = m.extend_parser(parser)
+            parser = m.extend_model_parser(parser)
+                
+        return parser.build()
+    
+    def build_metrics_parser(self, store, modules):
+        """
+        Builder parser that parses metrics written in QoPML
+        and populates the store.
+        """
+        from qopml.interpreter.model.parser.lex_yacc import LexYaccParser
+        from qopml.interpreter.model.parser.lex_yacc.grammar import main, metrics
+        
+        parser = LexYaccParser()
+        parser.set_store(store)\
+                .add_extension(main.MetricsParserExtension())\
+                .add_extension(metrics.MetricsParserExtension())
+                
+        for m in modules:
+            parser = m.extend_metrics_parser(parser)
+                
+        return parser.build()
+    
+    def build_config_parser(self, store, modules):
+        """
+        Builder parser that parses config written in QoPML
+        and populates the store.
+        """
+        from qopml.interpreter.model.parser.lex_yacc import LexYaccParser
+        from qopml.interpreter.model.parser.lex_yacc.grammar import versions, main
+        
+        parser = LexYaccParser()
+        parser.set_store(store)\
+                .add_extension(main.ConfigParserExtension())\
+                .add_extension(versions.ConfigParserExtension())
+                
+        for m in modules:
+            parser = m.extend_config_parser(parser)
                 
         return parser.build()
     
@@ -717,9 +759,12 @@ class Interpreter():
     manipulating selected models.
     """
     
-    def __init__(self, builder=None, model_as_text=""):
+    def __init__(self, builder=None, model_as_text="", 
+                 metrics_as_text="", config_as_text=""):
         self.builder = builder if builder is not None else Builder()
         self.model_as_text = model_as_text
+        self.metrics_as_text = metrics_as_text 
+        self.config_as_text = config_as_text
         
         self.store = self.builder.build_store()
         self.threads = []
@@ -731,6 +776,20 @@ class Interpreter():
         Set qopml model that will be interpreted.
         """
         self.model_as_text = model_as_text
+        return self
+    
+    def set_qopml_metrics(self, metrics_as_text):
+        """
+        Set qopml metrics that will be interpreted.
+        """
+        self.metrics_as_text = metrics_as_text
+        return self
+    
+    def set_qopml_config(self, config_as_text):
+        """
+        Set qopml configuration that will be interpreted.
+        """
+        self.config_as_text = config_as_text
         return self
     
     def register_qopml_module(self, qopml_module):
@@ -746,16 +805,24 @@ class Interpreter():
         """
         Parses the model from model_as_text field and populates the store.
         """
-        
         if len(self.model_as_text) == 0:
             raise EnvironmentDefinitionException("QoPML Model not provided")
     
-        parser = self.builder.build_parser(self.store, self._modules)
+        parser = self.builder.build_model_parser(self.store, self._modules)
         parser.parse(self.model_as_text)
-        
         if len(parser.get_syntax_errors()) > 0:
-            raise ParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
-        
+            raise ModelParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
+    
+        parser = self.builder.build_metrics_parser(self.store, self._modules)
+        parser.parse(self.metrics_as_text)
+        if len(parser.get_syntax_errors()) > 0:
+            raise MetricsParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
+    
+        parser = self.builder.build_config_parser(self.store, self._modules)
+        parser.parse(self.config_as_text)
+        if len(parser.get_syntax_errors()) > 0:
+            raise ConfigurationParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
+    
     def prepare(self):
         """ Prepares for run """
         self._parse()

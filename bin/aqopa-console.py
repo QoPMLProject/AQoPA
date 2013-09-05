@@ -12,7 +12,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 
 from qopml.interpreter import VERSION
 from qopml.interpreter.simulator.state import PrintExecutor
-from qopml.interpreter.model.parser import ParserException
+from qopml.interpreter.model.parser import ParserException, ModelParserException,\
+    MetricsParserException, ConfigurationParserException
 from qopml.interpreter.simulator import EnvironmentDefinitionException
 from qopml.interpreter.app import Interpreter, Builder
 from qopml.interpreter.simulator.error import RuntimeException,\
@@ -25,6 +26,8 @@ class ProgressThread(threading.Thread):
         super(ProgressThread, self).__init__(*args, **kwargs)
         self.file = file
         self.interpreter = interpreter
+        self.signs = '|/-\\'
+        self.sign_no = 0
         
     def get_progress(self):
         all = 0.0
@@ -42,7 +45,7 @@ class ProgressThread(threading.Thread):
         progress = self.get_progress()
         while progress < 1:
             self.print_progressbar(progress)
-            time.sleep(1)
+            time.sleep(0.1)
             progress = self.get_progress()
         self.print_progressbar(progress)
         
@@ -51,14 +54,20 @@ class ProgressThread(threading.Thread):
             """
             Prints the formatted progressbar showing the progress of simulation. 
             """
+            self.sign_no += 1
+            sign = self.signs[self.sign_no % len(self.signs)]
+            
             percentage = str(int(round(progress*100))) + '%'
             percentage = (' ' * (5-len(percentage))) + percentage
+            
             bar = ('#' * int(round(progress*20))) + (' ' * (20 - int(round(progress*20))))
-            self.file.write("\r%s [%s]" % (percentage, bar))
+            
+            self.file.write("\r%c[%s] %s" % (sign, bar, percentage))
             self.file.flush()
         
 
-def main(qopml_model, print_instructions = False, debug = False):
+def main(qopml_model, qopml_metrics, qopml_configuration, 
+         save_states = False, debug = False, show_progressbar = False):
 
     ############### DEBUG ###############    
     if debug:
@@ -81,41 +90,62 @@ def main(qopml_model, print_instructions = False, debug = False):
     interpreter = Interpreter(builder=Builder())
     try:
         interpreter.set_qopml_model(qopml_model)
+        interpreter.set_qopml_metrics(qopml_metrics)
+        interpreter.set_qopml_config(qopml_config)
+        
         interpreter.register_qopml_module(timeanalysis.Module())
         interpreter.prepare()
         
-        if options.print_instructions:
+        if save_states:
             for thread in interpreter.threads: 
-                thread.simulator.get_executor().prepend_instruction_executor(PrintExecutor(sys.stdout))
+                thread.save_states_to_file()
         
-        if options.show_progressbar:
+        if show_progressbar:
             progressbar_thread = ProgressThread(sys.stdout, interpreter)
             progressbar_thread.start()
         
         interpreter.run()
 
     except EnvironmentDefinitionException, e:
-        print "Error on creating environment: %s" % e
+        sys.stderr.write('Error on creating environment: %s\n' % e)
         if len(e.errors) > 0:
-            print "Errors:"
+            sys.stderr.write('Errors:\n')
             sys.stderr.write('\n'.join(e.errors))
-            print
-    except ParserException, e:
-        print "Parsing error: %s" % e
+            sys.stderr.write('\n')
+    except ModelParserException, e:
+        sys.stderr.write('Model parsing error: %s\n' % e)
         if len(e.syntax_errors):
-            print "Syntax errors:"
+            sys.stderr.write('Syntax errors:\n')
             sys.stderr.write('\n'.join(e.syntax_errors))
-            print
+            sys.stderr.write('\n')
+    except MetricsParserException, e:
+        sys.stderr.write('Metrics parsing error: %s\n' % e)
+        if len(e.syntax_errors):
+            sys.stderr.write('Syntax errors:\n')
+            sys.stderr.write('\n'.join(e.syntax_errors))
+            sys.stderr.write('\n')
+    except ConfigurationParserException, e:
+        sys.stderr.write('Configuration parsing error: %s\n' % e)
+        if len(e.syntax_errors):
+            sys.stderr.write('Syntax errors:\n')
+            sys.stderr.write('\n'.join(e.syntax_errors))
+            sys.stderr.write('\n')
         
     #####################################
     
 if __name__ == '__main__':
     
     parser = optparse.OptionParser()
-    parser.usage = "%prog [options] model_file"
-    parser.add_option("-p", "--print", dest="print_instructions", action="store_true", default=False,
-                      help="print executed instruction to standard output")
-    parser.add_option("-b", '--progressbar', dest="show_progressbar", action="store_true", default=False,
+    parser.usage = "%prog [options]"
+    parser.add_option("-f", "--model-file", dest="model_file",  metavar="FILE",
+                      help="specifies model file")
+    parser.add_option("-m", "--metrics-file", dest="metrics_file",  metavar="FILE",
+                      help="specifies file with metrics")
+    parser.add_option("-c", "--config-file", dest="config_file",  metavar="FILE",
+                      help="specifies file with modules configuration")
+    parser.add_option("-s", "--states", dest="save_states", action="store_true", default=False,
+                      help="save states flow in a file")
+    parser.add_option("-p", '--progressbar', dest="show_progressbar", action="store_true", default=False,
                       help="show the progressbar of the simulation")
     parser.add_option("-V", '--version', dest="show_version", action="store_true", default=False,
                       help="show version of AQoPA")
@@ -128,14 +158,32 @@ if __name__ == '__main__':
         print "AQoPA (version %s)" % VERSION
         sys.exit(0)
     
-    if len(args) < 1:
-        parser.error("no model_file specified")
+    if not options.model_file:
+        parser.error("no qopml model file specified")
+    if not os.path.exists(options.model_file):
+        parser.error("qopml model file '%s' does not exist" % options.model_file)
+        
+    if not options.metrics_file:
+        parser.error("no metrics file specified")
+    if not os.path.exists(options.metrics_file):
+        parser.error("metrics file '%s' does not exist" % options.metrics_file)
+        
+    if not options.config_file:
+        parser.error("no configuration file specified")
+    if not os.path.exists(options.config_file):
+        parser.error("configuration file '%s' does not exist" % options.config_file)
     
-    if not os.path.exists(args[0]):
-        parser.error("model file '%s' does not exist" % args[0])
     
-    f = open(args[0], 'r')
+    f = open(options.model_file, 'r')
     qopml_model = f.read()
     f.close()
+    f = open(options.metrics_file, 'r')
+    qopml_metrics = f.read()
+    f.close()
+    f = open(options.config_file, 'r')
+    qopml_config = f.read()
+    f.close()
 
-    main(qopml_model, print_instructions=options.print_instructions, debug=options.debug)
+    main(qopml_model, qopml_metrics, qopml_config, 
+         save_states=options.save_states, debug=options.debug,
+         show_progressbar=options.show_progressbar)

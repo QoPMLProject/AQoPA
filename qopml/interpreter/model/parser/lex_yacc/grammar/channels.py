@@ -26,7 +26,7 @@ class Builder():
         return channels
 
 
-class ParserExtension(LexYaccParserExtension):
+class ModelParserExtension(LexYaccParserExtension):
     """
     Extension for parsing functions
     """

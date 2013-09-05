@@ -56,7 +56,7 @@ class Builder():
         
         return p
         
-class ParserExtension(LexYaccParserExtension):
+class ModelParserExtension(LexYaccParserExtension):
     """
     Extension for parsing functions
     """

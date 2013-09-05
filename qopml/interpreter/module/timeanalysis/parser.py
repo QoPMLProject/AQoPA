@@ -17,7 +17,7 @@ class Builder():
         return MetricsServiceParam(token[2], token[4], token[6])
 
 
-class ParserExtension(LexYaccParserExtension):
+class MetricsParserExtension(LexYaccParserExtension):
     """
     Extension for parsing timeanalysis module's metrics
     """

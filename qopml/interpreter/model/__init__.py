@@ -300,6 +300,7 @@ class Version():
     def __init__(self, name):
         self.name = name
         self.run_hosts = []
+        self.metrics_sets = []
         
     def __unicode__(self):
         return u"version %d" % self.name

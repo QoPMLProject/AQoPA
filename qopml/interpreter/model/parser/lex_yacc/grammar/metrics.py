@@ -6,7 +6,7 @@ Created on 22-04-2013
 
 from qopml.interpreter.model.parser.lex_yacc import LexYaccParserExtension
 from qopml.interpreter.model import MetricsConfiguration, MetricsData,\
-    MetricsPrimitiveBlock, MetricsPrimitiveHeader, MetricsPrimitive, MetricsSet,\
+    MetricsPrimitiveBlock, MetricsPrimitiveHeader, MetricsPrimitive, \
     MetricsServiceParam
 
 
@@ -56,13 +56,6 @@ class Builder():
         """
         return MetricsPrimitive(token[2])
     
-    def create_metrics_set(self, token):
-        """
-        metrics_set : METRICS_SET METRICS_HOST IDENTIFIER LPARAN IDENTIFIER RPARAN SEMICOLON
-                | METRICS_SET METRICS_HOST IDENTIFIER LPARAN QUALIFIED_IDENTIFIER RPARAN SEMICOLON
-        """
-        return MetricsSet(token[3], token[5])
-    
     def create_metrics_services_param_size(self, token):
         """
         metrics_services_param : SQLPARAN SIZE COLON metrics_services_size_type_unit LPARAN metrics_services_size_unit RPARAN SQRPARAN
@@ -72,7 +65,7 @@ class Builder():
         return MetricsServiceParam(token[2], token[4], unit)
         
 
-class ParserExtension(LexYaccParserExtension):
+class MetricsParserExtension(LexYaccParserExtension):
     """
     Extension for parsing metrics
     """
@@ -176,7 +169,7 @@ class ParserExtension(LexYaccParserExtension):
     
     def metrics_specification(self, t):
         """
-        specification : METRICS_SPECIFICATION BLOCKOPEN metrics_configurations metrics_datas metrics_sets BLOCKCLOSE
+        specification : METRICS_SPECIFICATION BLOCKOPEN metrics_configurations metrics_datas BLOCKCLOSE
         """
         pass
     
@@ -315,20 +308,6 @@ class ParserExtension(LexYaccParserExtension):
         metrics_primitive_argument : SQLPARAN ARGUMENTVALUE SQRPARAN
         """
         t[0] = t[2]
-    
-    def metrics_sets(self, t):
-        """
-        metrics_sets : metrics_set
-                    | metrics_sets metrics_set
-        """
-        pass
-    
-    def metrics_set(self, t):
-        """
-        metrics_set : METRICS_SET METRICS_HOST IDENTIFIER LPARAN IDENTIFIER RPARAN SEMICOLON
-                | METRICS_SET METRICS_HOST IDENTIFIER LPARAN QUALIFIED_IDENTIFIER RPARAN SEMICOLON
-        """
-        self.parser.store.metrics_sets.append(self.builder.create_metrics_set(t))
 
     #######################
     #    Metrics Size
@@ -360,7 +339,6 @@ class ParserExtension(LexYaccParserExtension):
         t[0] = t[1].lower()
     
     
-    
     def _extend(self):
         
         self.parser.add_state('metrics', 'inclusive')
@@ -376,8 +354,6 @@ class ParserExtension(LexYaccParserExtension):
 
         self.parser.add_reserved_word('metrics', 'METRICS_SPECIFICATION', func=self.word_metrics_specification,)
         self.parser.add_reserved_word('conf', 'METRICS_CONFIGURATION', func=self.word_metrics_configuration, state='metrics')
-        self.parser.add_reserved_word('set', 'METRICS_SET', state='metrics')
-        self.parser.add_reserved_word('host', 'METRICS_HOST', state='metrics')
         self.parser.add_reserved_word('data', 'METRICS_DATA', func=self.word_metrics_data, state='metrics')
         self.parser.add_reserved_word('primhead', 'METRICS_PRIMITIVES_HEAD', func=self.word_metricsdata_primhead, state='metricsdata')
         self.parser.add_reserved_word('primitive', 'METRICS_PRIMITIVE', func=self.word_metricsdata_primitive, state='metricsdata')
@@ -447,6 +423,4 @@ class ParserExtension(LexYaccParserExtension):
         self.parser.add_rule(self.metrics_services_size_type_unit)
         self.parser.add_rule(self.metrics_services_size_type_non_unit)
         self.parser.add_rule(self.metrics_services_size_unit)
-        self.parser.add_rule(self.metrics_sets)
-        self.parser.add_rule(self.metrics_set)
     
