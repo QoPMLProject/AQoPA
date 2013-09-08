@@ -15,7 +15,7 @@ from aqopa.simulator.state import PrintExecutor
 from aqopa.model.parser import ParserException, ModelParserException,\
     MetricsParserException, ConfigurationParserException
 from aqopa.simulator import EnvironmentDefinitionException
-from aqopa.app import Interpreter, Builder
+from aqopa.app import Interpreter, Builder, ConsoleInterpreter
 from aqopa.simulator.error import RuntimeException,\
     InfiniteLoopException
 from aqopa.module import timeanalysis
@@ -73,7 +73,7 @@ def main(qopml_model, qopml_metrics, qopml_configuration,
     if debug:
         builder = Builder()
         store = builder.build_store()
-        parser = builder.build_parser(store, [])
+        parser = builder.build_model_parser(store, [])
         parser.lexer.input(qopml_model)
         while True:
             print  parser.lexer.current_state()
@@ -87,13 +87,15 @@ def main(qopml_model, qopml_metrics, qopml_configuration,
         print ""
     
     #####################################
-    interpreter = Interpreter(builder=Builder())
+    interpreter = ConsoleInterpreter()
     try:
         interpreter.set_qopml_model(qopml_model)
         interpreter.set_qopml_metrics(qopml_metrics)
         interpreter.set_qopml_config(qopml_config)
         
         interpreter.register_qopml_module(timeanalysis.Module())
+        
+        interpreter.parse()
         interpreter.prepare()
         
         if save_states:

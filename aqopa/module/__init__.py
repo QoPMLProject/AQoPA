@@ -5,6 +5,12 @@ class Module():
     Abstract class of module
     """
     
+    def get_gui(self):
+        """
+        Method returns class that is used by GUI version of AQoPA.
+        """
+        return None
+    
     def extend_model_parser(self, parser):
         """
         Method is called before parsing the qopml model file.

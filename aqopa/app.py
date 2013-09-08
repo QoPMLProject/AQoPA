@@ -4,6 +4,8 @@ Created on 07-05-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 
+import wx
+import wx.lib.newevent
 import threading
 from aqopa.model.parser import ParserException, ModelParserException,\
     MetricsParserException, ConfigurationParserException
@@ -27,13 +29,15 @@ class VersionThread(threading.Thread):
     One thread for one version
     """
     
-    def __init__(self, simulator, *args, **kwargs):
+    def __init__(self, simulator, on_finished, *args, **kwargs):
         super(VersionThread, self).__init__(*args, **kwargs)
         self.simulator = simulator
+        self.on_finished = on_finished
         
     def run(self):
         self.simulator.prepare()
         self.simulator.run()
+        self.on_finished(self)
         
     def save_states_to_file(self):
         """ 
@@ -766,7 +770,7 @@ class Interpreter():
         self.metrics_as_text = metrics_as_text 
         self.config_as_text = config_as_text
         
-        self.store = self.builder.build_store()
+        self.store = None
         self.threads = []
         
         self._modules = []
@@ -801,44 +805,77 @@ class Interpreter():
         self._modules.append(qopml_module)
         return self
         
-    def _parse(self):
+    def parse(self):
         """
         Parses the model from model_as_text field and populates the store.
         """
         if len(self.model_as_text) == 0:
             raise EnvironmentDefinitionException("QoPML Model not provided")
     
+        self.store = self.builder.build_store()
+    
         parser = self.builder.build_model_parser(self.store, self._modules)
+        parser.restart()
         parser.parse(self.model_as_text)
         if len(parser.get_syntax_errors()) > 0:
             raise ModelParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
     
         parser = self.builder.build_metrics_parser(self.store, self._modules)
+        parser.restart()
         parser.parse(self.metrics_as_text)
         if len(parser.get_syntax_errors()) > 0:
             raise MetricsParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
     
         parser = self.builder.build_config_parser(self.store, self._modules)
+        parser.restart()
         parser.parse(self.config_as_text)
         if len(parser.get_syntax_errors()) > 0:
             raise ConfigurationParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
     
-    def prepare(self):
-        """ Prepares for run """
-        self._parse()
-        
-        for version in self.store.versions:
-            simulator = self.builder.build_simulator(self.store, version)
-            
-            for m in self._modules:
-                m.install(simulator)
-            
-            thr = VersionThread(simulator)
-            self.threads.append(thr)
-            
     def run(self):
         """ Runs all simulations """
         for thr in self.threads:
             thr.start()
             
-        
+class ConsoleInterpreter(Interpreter):
+
+    def prepare(self):
+        """ Prepares for run """
+        for version in self.store.versions:
+            simulator = self.builder.build_simulator(self.store, version)
+            
+            for m in self._modules:
+                m.install_console(simulator)
+            
+            thr = VersionThread(simulator, self.on_finished)
+            self.threads.append(thr)
+            
+    def on_finished(self, thread):
+        pass
+
+
+ThreadFinishedEvent, EVT_THREAD_FINISHED = wx.lib.newevent.NewEvent()
+
+class GuiInterpreter(Interpreter):
+    
+    def __init__(self, builder=None, model_as_text="", 
+                 metrics_as_text="", config_as_text=""):
+        Interpreter.__init__(self, builder=builder, 
+                             model_as_text=model_as_text, 
+                             metrics_as_text=metrics_as_text, 
+                             config_as_text=config_as_text)
+
+    def prepare(self):
+        """ Prepares for run """
+        for version in self.store.versions:
+            simulator = self.builder.build_simulator(self.store, version)
+            
+            for m in self._modules:
+                m.install_gui(simulator)
+            
+            thr = VersionThread(simulator, self.on_finished)
+            self.threads.append(thr)
+            
+    def on_finished(self, thread):
+        evt = ThreadFinishedEvent(thread=thread)
+        wx.PostEvent(wx.GetApp().main_frame, evt)

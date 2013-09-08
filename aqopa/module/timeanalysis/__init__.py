@@ -1,11 +1,11 @@
 from aqopa import module
 from aqopa.simulator.state import HOOK_TYPE_PRE_INSTRUCTION_EXECUTION,\
     HOOK_TYPE_SIMULATION_FINISHED
+from .parser import MetricsParserExtension
 from .hook import PreInstructionHook
-from .model import TimeTrace
-from aqopa.module.timeanalysis.model import ChannelMessageTrace
-from aqopa.module.timeanalysis.hook import PrintResultsHook
-from aqopa.module.timeanalysis.parser import MetricsParserExtension
+from .model import TimeTrace, ChannelMessageTrace
+from .gui import ModuleGui
+from .console import PrintResultsHook
 
 class Module(module.Module):
     """
@@ -18,8 +18,13 @@ class Module(module.Module):
         self.timetraces     = []        # Generated timetraces list
         self.current_times  = {}        # Current times of hosts, key - host instance
         
+        self.gui            = ModuleGui(self) # Gui class for module 
+        
         self.channel_message_traces = []
         self.channel_next_message_id = {} 
+    
+    def get_gui(self):
+        return self.gui
     
     def extend_metrics_parser(self, parser):
         """
@@ -28,7 +33,7 @@ class Module(module.Module):
         parser.add_extension(MetricsParserExtension())
         return parser
     
-    def install(self, simulator):
+    def _install(self, simulator):
         """
         """
         self.simulator = simulator
@@ -37,10 +42,21 @@ class Module(module.Module):
         self.hooks.append(hook)
         simulator.register_hook(HOOK_TYPE_PRE_INSTRUCTION_EXECUTION, hook)
         
+        return simulator
+    
+    def install_console(self, simulator):
+        """ Install module for console simulation """
+        self._install(simulator)
+        
         hook = PrintResultsHook(self)
         self.hooks.append(hook)
         simulator.register_hook(HOOK_TYPE_SIMULATION_FINISHED, hook)
         
+        return simulator
+        
+    def install_gui(self, simulator):
+        """ Install module for gui simulation """
+        self._install(simulator)
         return simulator
     
     def get_context(self):
