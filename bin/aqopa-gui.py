@@ -6,9 +6,10 @@ Created on 05-09-2013
 
 import sys
 import time
+import threading
 import wx
 import wx.lib.newevent
-import threading
+import wx.lib.delayedresult
 
 import aqopa
 import aqopa.app
@@ -117,6 +118,22 @@ hosts {
         self.configurationTab.dataTextArea.SetValue(""" versions {
   
   version v1 {
+    
+    set host Client1(Client);
+    set host Client2(Client);
+    set host Server(Client);
+    
+    run host Server(*) {
+      run Server1(*)
+    }
+    
+    run host Client2(*) {
+      run Client2(*)
+    }
+    
+  }
+  
+  version v12 {
     
     set host Client1(Client);
     set host Client2(Client);
@@ -296,66 +313,20 @@ class ModelPanel(wx.Panel):
 
         self.SetSizer(sizer)
         
-class ProgressThread(threading.Thread):
-
-    def __init__(self, interpreter, runPanel, *args, **kwargs):
-        super(ProgressThread, self).__init__(*args, **kwargs)
-        self.interpreter    = interpreter
-        self.runPanel       = runPanel
-        
-    def GetProgress(self):
-        all = 0.0
-        sum = 0.0
-        for thr in self.interpreter.threads:
-            all += 1
-            sum += thr.simulator.context.get_progress()
-        progress = 0
-        if all > 0:
-            progress = sum / all
-        return progress
-            
-    def run(self):
-        
-        progress = self.GetProgress()
-        while progress < 1:
-            self.PrintProgressbar(progress)
-            time.sleep(1)
-            progress = self.GetProgress()
-        self.PrintProgressbar(progress)
-        
-        
-    def PrintProgressbar(self, progress):
-            """
-            Prints the formatted progressbar showing the progress of simulation. 
-            """
-            percentage = str(int(round(progress*100))) + '%'
-            self.runPanel.percentLabel.SetLabel(percentage)
-            self.runPanel.sizer.Layout()
-            
-            if progress == 1:
-                self.runPanel.statusLabel.SetLabel('Finished')
-                self.runPanel.sizer.Layout()
-                self.runPanel.dotsLabel.SetLabel('')
-                self.runPanel.sizer.Layout()
-            else:
-                dots = self.runPanel.dotsLabel.GetLabel()
-                if len(dots) > 0:
-                    dots = "."
-                else:
-                    dots += ".."
-                self.runPanel.dotsLabel.SetLabel(dots)
-                self.runPanel.sizer.Layout()
-        
 class MainFrame(wx.Frame):
     """ """
     def __init__(self, *args, **kwargs):
         wx.Frame.__init__(self, *args, **kwargs)
 
         ###############
-        # INTERPRETER
+        # SIMULATION
         ###############    
 
-        self.interpreter    = None
+        self.interpreter        = None
+        self.finishedSimulators = []
+        
+        self.progressTimer      = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.OnProgressTimerTick, self.progressTimer)
 
         ###########
         # MENUBAR 
@@ -418,8 +389,6 @@ class MainFrame(wx.Frame):
         
         self.parsePanel = ParsePanel(self)
         self.runPanel = RunPanel(self)
-        
-        self.Bind(aqopa.app.EVT_THREAD_FINISHED, self.OnThreadFinished)
         
         self.modulesChoosePanel = ModulesChoosePanel(self, modules=self.availableModules)
         self.modulesChoosePanel.Bind(EVT_MODULES_CHANGED, self.OnModulesChanged)
@@ -554,19 +523,26 @@ class MainFrame(wx.Frame):
     def OnRunClicked(self, event):
         """ """
         try:
+            self.runlItem.Enable(False)
+            self.finishedSimulators = []
+            
             self.interpreter.prepare()
             
-            self.progressbarThread = ProgressThread(self.interpreter, self.runPanel)
-            self.progressbarThread.start()
+            self.progressTimer.Start(1000)
             
-            self.interpreter.run()
+            for simulator in self.interpreter.simulators:
+                wx.lib.delayedresult.startWorker(self.OnSimulationFinished, self.interpreter.run_simulation, wargs=(simulator,))
+            
         except EnvironmentDefinitionException, e:
+            self.runlItem.Enable(True)
             errorMessage = "Error on creating environment: %s\n" % e
             if len(e.errors) > 0:
                 errorMessage += "Errors:\n"
                 errorMessage += "\n".join(e.errors)
                 
             self.runPanel.runResult.SetValue(errorMessage)
+            
+            self.progressTimer.Stop()
         
         self.ShowPanel(self.runPanel)
         
@@ -574,14 +550,76 @@ class MainFrame(wx.Frame):
         """ """
         self.runlItem.Enable(True)
         
-    def OnThreadFinished(self, event):
+    def OnSimulationFinished(self, result):
         """ """
-        thread = event.thread
+        simulator = result.get()
+        self.finishedSimulators.append(simulator)
+
+        self.PrintProgressbar(self.GetProgress())
+        
         for m in self.selectedModules:
             gui = m.get_gui()
             
-            frame = gui.get_finished_thread_frame(thread)
-            frame.Show(True)
+            frame = gui.get_finished_simulation_frame(simulator)
+            if frame:
+                frame.Show(True)
+                
+        if len(self.finishedSimulators) == len(self.interpreter.simulators):
+            self.OnAllSimulationsFinished()
+                
+    def OnAllSimulationsFinished(self):
+        """ """
+        for m in self.selectedModules:
+            gui = m.get_gui()
+            
+            frame = gui.get_finished_all_simulations_frame(self.interpreter.simulators)
+            if frame:
+                frame.Show(True)
+            
+    ################
+    # PROGRESS BAR 
+    ################
+        
+    def OnProgressTimerTick(self, event):
+        """ """
+        progress = self.GetProgress()
+        if progress == 1:
+            self.progressTimer.Stop()
+        self.PrintProgressbar(progress)
+        
+    def GetProgress(self):
+        all = 0.0
+        sum = 0.0
+        for simulator in self.interpreter.simulators:
+            all += 1
+            sum += simulator.context.get_progress()
+        progress = 0
+        if all > 0:
+            progress = sum / all
+        return progress
+        
+    def PrintProgressbar(self, progress):
+        """
+        Prints the formatted progressbar showing the progress of simulation. 
+        """
+        percentage = str(int(round(progress*100))) + '%'
+        self.runPanel.percentLabel.SetLabel(percentage)
+        self.runPanel.sizer.Layout()
+        
+        if progress == 1:
+            self.runPanel.statusLabel.SetLabel('Finished')
+            self.runPanel.sizer.Layout()
+            self.runPanel.dotsLabel.SetLabel('')
+            self.runPanel.sizer.Layout()
+        else:
+            dots = self.runPanel.dotsLabel.GetLabel()
+            if len(dots) > 0:
+                dots = "."
+            else:
+                dots += ".."
+            self.runPanel.dotsLabel.SetLabel(dots)
+            self.runPanel.sizer.Layout()
+        
         
 class AqopaApp(wx.App):
     

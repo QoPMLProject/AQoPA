@@ -24,29 +24,6 @@ from aqopa.simulator.state import Executor,\
     
 from aqopa.simulator.error import EnvironmentDefinitionException
 
-class VersionThread(threading.Thread):
-    """
-    One thread for one version
-    """
-    
-    def __init__(self, simulator, on_finished, *args, **kwargs):
-        super(VersionThread, self).__init__(*args, **kwargs)
-        self.simulator = simulator
-        self.on_finished = on_finished
-        
-    def run(self):
-        self.simulator.prepare()
-        self.simulator.run()
-        self.on_finished(self)
-        
-    def save_states_to_file(self):
-        """ 
-        Tells simulator to save states flow to file.
-        """
-        f = open('VERSION_%s_STATES_FLOW' % self.simulator.context.version.name, 'w')
-        self.simulator.get_executor().prepend_instruction_executor(PrintExecutor(f))
-        
-    
 class Builder():
     """
     Builder that builds environment elements
@@ -771,7 +748,6 @@ class Interpreter():
         self.config_as_text = config_as_text
         
         self.store = None
-        self.threads = []
         
         self._modules = []
         
@@ -815,29 +791,53 @@ class Interpreter():
         self.store = self.builder.build_store()
     
         parser = self.builder.build_model_parser(self.store, self._modules)
-        parser.restart()
         parser.parse(self.model_as_text)
         if len(parser.get_syntax_errors()) > 0:
             raise ModelParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
     
         parser = self.builder.build_metrics_parser(self.store, self._modules)
-        parser.restart()
         parser.parse(self.metrics_as_text)
         if len(parser.get_syntax_errors()) > 0:
             raise MetricsParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
     
         parser = self.builder.build_config_parser(self.store, self._modules)
-        parser.restart()
         parser.parse(self.config_as_text)
         if len(parser.get_syntax_errors()) > 0:
             raise ConfigurationParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
     
     def run(self):
         """ Runs all simulations """
-        for thr in self.threads:
-            thr.start()
+        raise NotImplementedError()
+            
+class ConsoleVersionThread(threading.Thread):
+    """
+    One thread for one version
+    """
+    
+    def __init__(self, simulator, on_finished, *args, **kwargs):
+        super(ConsoleVersionThread, self).__init__(*args, **kwargs)
+        self.simulator = simulator
+        self.on_finished = on_finished
+        
+    def run(self):
+        self.simulator.prepare()
+        self.simulator.run()
+        self.on_finished(self)
+        
+    def save_states_to_file(self):
+        """ 
+        Tells simulator to save states flow to file.
+        """
+        f = open('VERSION_%s_STATES_FLOW' % self.simulator.context.version.name, 'w')
+        self.simulator.get_executor().prepend_instruction_executor(PrintExecutor(f))            
             
 class ConsoleInterpreter(Interpreter):
+    
+    def __init__(self, builder=None, model_as_text="", 
+                 metrics_as_text="", config_as_text=""):
+        Interpreter.__init__(self, builder, model_as_text, metrics_as_text, config_as_text)
+        
+        self.threads = []
 
     def prepare(self):
         """ Prepares for run """
@@ -847,14 +847,17 @@ class ConsoleInterpreter(Interpreter):
             for m in self._modules:
                 m.install_console(simulator)
             
-            thr = VersionThread(simulator, self.on_finished)
+            thr = ConsoleVersionThread(simulator, self.on_finished)
             self.threads.append(thr)
+    
+    def run(self):
+        """ Runs all simulations """
+        for thr in self.threads:
+            thr.start()
             
     def on_finished(self, thread):
         pass
 
-
-ThreadFinishedEvent, EVT_THREAD_FINISHED = wx.lib.newevent.NewEvent()
 
 class GuiInterpreter(Interpreter):
     
@@ -864,6 +867,7 @@ class GuiInterpreter(Interpreter):
                              model_as_text=model_as_text, 
                              metrics_as_text=metrics_as_text, 
                              config_as_text=config_as_text)
+        self.simulators = []
 
     def prepare(self):
         """ Prepares for run """
@@ -873,9 +877,11 @@ class GuiInterpreter(Interpreter):
             for m in self._modules:
                 m.install_gui(simulator)
             
-            thr = VersionThread(simulator, self.on_finished)
-            self.threads.append(thr)
+            self.simulators.append(simulator)
             
-    def on_finished(self, thread):
-        evt = ThreadFinishedEvent(thread=thread)
-        wx.PostEvent(wx.GetApp().main_frame, evt)
+            
+    def run_simulation(self, simulator):
+        """ """
+        simulator.prepare()
+        simulator.run()
+        return simulator

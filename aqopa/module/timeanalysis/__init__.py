@@ -13,18 +13,18 @@ class Module(module.Module):
     
     def __init__(self):
         """ """
-        self.simulator      = None      # Simulator instance
-        self.hooks          = []        # Module's hooks list
-        self.timetraces     = []        # Generated timetraces list
-        self.current_times  = {}        # Current times of hosts, key - host instance
+        self.timetraces     = {}        # Generated timetraces list for each simulator
+        self.current_times  = {}        # Current times of hosts, key - host instance divided by simulators 
         
-        self.gui            = ModuleGui(self) # Gui class for module 
+        self.guis           = {}        # Divided by simulators - the reason for dict
         
-        self.channel_message_traces = []
-        self.channel_next_message_id = {} 
-    
+        self.channel_message_traces = {}  # Divided by simulators - the reason for dict
+        self.channel_next_message_id = {} # Divided by simulators - the reason for dict
+
     def get_gui(self):
-        return self.gui
+        if not getattr(self, '__gui', None):
+            setattr(self, '__gui', ModuleGui(self))
+        return getattr(self, '__gui', None)
     
     def extend_metrics_parser(self, parser):
         """
@@ -36,10 +36,7 @@ class Module(module.Module):
     def _install(self, simulator):
         """
         """
-        self.simulator = simulator
-        
-        hook = PreInstructionHook(self)
-        self.hooks.append(hook)
+        hook = PreInstructionHook(self, simulator)
         simulator.register_hook(HOOK_TYPE_PRE_INSTRUCTION_EXECUTION, hook)
         
         return simulator
@@ -48,8 +45,7 @@ class Module(module.Module):
         """ Install module for console simulation """
         self._install(simulator)
         
-        hook = PrintResultsHook(self)
-        self.hooks.append(hook)
+        hook = PrintResultsHook(self, simulator)
         simulator.register_hook(HOOK_TYPE_SIMULATION_FINISHED, hook)
         
         return simulator
@@ -59,41 +55,51 @@ class Module(module.Module):
         self._install(simulator)
         return simulator
     
-    def get_context(self):
+    def add_timetrace(self, simulator, host, instruction, started_at, length):
         """ """
-        return self.simulator.context
-    
-    def add_timetrace(self, host, instruction, started_at, length):
-        """ """
-        self.timetraces.append(TimeTrace(host, instruction, started_at, length))
+        if simulator not in self.timetraces:
+            self.timetraces[simulator] = []
+        tt = self.timetraces[simulator]
+        tt.append(TimeTrace(host, instruction, started_at, length))
         
-    def add_channel_message_trace(self, channel, message_index, sender, sent_at, 
+    def add_channel_message_trace(self, simulator, channel, message_index, sender, sent_at, 
                                   receiver=None, received_at=None):
-        self.channel_message_traces.append(ChannelMessageTrace(channel, message_index, 
+        if simulator not in self.channel_message_traces:
+            self.channel_message_traces[simulator] = []
+        cmt = self.channel_message_traces[simulator]
+        cmt.append(ChannelMessageTrace(channel, message_index, 
                                                                sender, sent_at, 
                                                                receiver, received_at))
         
-    def set_current_time(self, host, time):
+    def set_current_time(self, simulator, host, time):
         """ """
-        self.current_times[host] = time
+        if simulator not in self.current_times:
+            self.current_times[simulator] = {}
+        self.current_times[simulator][host] = time
         
-    def get_current_time(self, host):
+    def get_current_time(self, simulator, host):
         """ """
-        if host not in self.current_times:
-            self.current_times[host] = 0
-        return self.current_times[host]
+        if simulator not in self.current_times:
+            self.current_times[simulator] = {}
+        if host not in self.current_times[simulator]:
+            self.current_times[simulator][host] = 0
+        return self.current_times[simulator][host]
     
-    def get_channel_message_traces(self, channel):
+    def get_channel_message_traces(self, simulator, channel):
         """ """
-        if channel not in self.channel_message_traces:
+        if simulator not in self.channel_message_traces:
             return []
-        return self.channel_message_traces[channel]
+        if channel not in self.channel_message_traces[simulator]:
+            return []
+        return self.channel_message_traces[simulator][channel]
     
-    def get_channel_next_message_id(self, channel):
+    def get_channel_next_message_id(self, simulator, channel):
         """ """
-        if channel not in self.channel_next_message_id:
-            self.channel_next_message_id[channel] = 0
-        result = self.channel_next_message_id[channel]
-        self.channel_next_message_id[channel] += 1
+        if simulator not in self.channel_next_message_id:
+            self.channel_next_message_id[simulator] = {}
+        if channel not in self.channel_next_message_id[simulator]:
+            self.channel_next_message_id[simulator][channel] = 0
+        result = self.channel_next_message_id[simulator][channel]
+        self.channel_next_message_id[simulator][channel] += 1
         return result
         
