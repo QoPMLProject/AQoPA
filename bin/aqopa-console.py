@@ -10,15 +10,15 @@ import threading
 import time
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
-from qopml.interpreter import VERSION
-from qopml.interpreter.simulator.state import PrintExecutor
-from qopml.interpreter.model.parser import ParserException, ModelParserException,\
+from aqopa import VERSION
+from aqopa.simulator.state import PrintExecutor
+from aqopa.model.parser import ParserException, ModelParserException,\
     MetricsParserException, ConfigurationParserException
-from qopml.interpreter.simulator import EnvironmentDefinitionException
-from qopml.interpreter.app import Interpreter, Builder
-from qopml.interpreter.simulator.error import RuntimeException,\
+from aqopa.simulator import EnvironmentDefinitionException
+from aqopa.app import Interpreter, Builder, ConsoleInterpreter
+from aqopa.simulator.error import RuntimeException,\
     InfiniteLoopException
-from qopml.interpreter.module import timeanalysis
+from aqopa.module import timeanalysis
 
 class ProgressThread(threading.Thread):
 
@@ -73,7 +73,7 @@ def main(qopml_model, qopml_metrics, qopml_configuration,
     if debug:
         builder = Builder()
         store = builder.build_store()
-        parser = builder.build_parser(store, [])
+        parser = builder.build_model_parser(store, [])
         parser.lexer.input(qopml_model)
         while True:
             print  parser.lexer.current_state()
@@ -87,13 +87,15 @@ def main(qopml_model, qopml_metrics, qopml_configuration,
         print ""
     
     #####################################
-    interpreter = Interpreter(builder=Builder())
+    interpreter = ConsoleInterpreter()
     try:
         interpreter.set_qopml_model(qopml_model)
         interpreter.set_qopml_metrics(qopml_metrics)
         interpreter.set_qopml_config(qopml_config)
         
         interpreter.register_qopml_module(timeanalysis.Module())
+        
+        interpreter.parse()
         interpreter.prepare()
         
         if save_states:
