@@ -35,9 +35,17 @@ class Module():
         """
         return parser
     
-    def install(self, simulator):
+    def install_console(self, simulator):
         """
-        Method is called before running simulation.
+        Method is called before running simulation in console mode.
+        Module installs itself in simulator. 
+        It can register hooks, executors, etc.
+        """
+        return simulator
+    
+    def install_gui(self, simulator):
+        """
+        Method is called before running simulation in GUI mode.
         Module installs itself in simulator. 
         It can register hooks, executors, etc.
         """
