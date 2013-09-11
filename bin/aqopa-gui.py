@@ -491,112 +491,17 @@ class MainNotebook(wx.Notebook):
 
         self.modelTab = ModelPartDataPanel(self)
         self.modelTab.Layout()
-        self.modelTab.dataTextArea.SetValue(""" functions {
-  fun ms_10();
-  fun ms_1000();
-} 
-
-equations {
-  eq ms_10() = true;
-}
-
-channels {
-  channel ch1,ch2,ch3,ch4 (0);
-}
-
-hosts {
-
- host Client1(rr)(*) {
-   process Client1(ch1, ch2) {
-     M1 = ms_10();
-     out(ch1: M1);
-   }
- }
- 
- host Client2(rr)(*) {
-   process Client2(ch1, ch2) {
-     M1 = ms_10();
-     M1 = ms_10();
-     out(ch1: M1);
-     ms_1000();
-     ms_1000();
-     ms_1000();
-     ms_1000();
-     out(ch1: M1);
-   }
- }
- 
- host Server(rr)(*) {
-   process Server1(ch1, ch2) {
-     ms_1000();
-     ms_1000();
-     ms_1000();
-     ms_1000();
-     in(ch1: M1);
-   }
- 
- }
- 
-} """)
         self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.modelTab.dataTextArea)
         self.AddPage(self.modelTab, "Model")
         
         self.metricsTab = ModelPartDataPanel(self)
         self.metricsTab.Layout()
-        self.metricsTab.dataTextArea.SetValue(""" metrics {
-  conf(Server) {
-    a=b;
-  }
-  conf(Mobile) {
-    a=b;
-  }
-  
-  data(Client) {
-    primhead[function][time:exact(ms)];
-    primitive[ms_10][10];
-    primitive[ms_1000][1000];
-  }
-} """)
         self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.metricsTab.dataTextArea)
         self.AddPage(self.metricsTab, "Metrics")
         
         self.configurationTab = ModelPartDataPanel(self)
         self.configurationTab.Layout()
-        self.configurationTab.dataTextArea.SetValue(""" versions {
-  
-  version v1 {
-    
-    set host Client1(Client);
-    set host Client2(Client);
-    set host Server(Client);
-    
-    run host Server(*) {
-      run Server1(*)
-    }
-    
-    run host Client2(*) {
-      run Client2(*)
-    }
-    
-  }
-  
-  version v12 {
-    
-    set host Client1(Client);
-    set host Client2(Client);
-    set host Server(Client);
-    
-    run host Server(*) {
-      run Server1(*)
-    }
-    
-    run host Client2(*){5} {
-      run Client2(*)
-    }
-    
-  }
-  
-} """)
+        
         self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.configurationTab.dataTextArea)
         self.configurationTab.Layout()
         self.AddPage(self.configurationTab, "Versions")
@@ -719,11 +624,113 @@ class MainFrame(wx.Frame):
 class AqopaApp(wx.App):
     
     def OnInit(self):
-        self.main_frame = MainFrame(None, title="AQoPA")
-        self.main_frame.Show(True)
-        self.main_frame.Maximize(True)
-        self.SetTopWindow(self.main_frame)
+        self.mainFrame = MainFrame(None, title="AQoPA")
+        self.mainFrame.Show(True)
+        self.mainFrame.Maximize(True)
+        self.SetTopWindow(self.mainFrame)
+        
+        self.mainFrame.Bind(wx.EVT_KEY_UP, self.OnKeyDown)
+        
         return True
+    
+    def OnKeyDown(self, event):
+        if event.KeyCode == 76:
+            self.mainFrame.mainNotebook.configurationTab.dataTextArea.SetValue(""" versions {
+  
+  version v1 {
+    
+    set host Client1(Client);
+    set host Client2(Client);
+    set host Server(Client);
+    
+    run host Server(*) {
+      run Server1(*)
+    }
+    
+    run host Client2(*) {
+      run Client2(*)
+    }
+    
+  }
+  
+  version v12 {
+    
+    set host Client1(Client);
+    set host Client2(Client);
+    set host Server(Client);
+    
+    run host Server(*) {
+      run Server1(*)
+    }
+    
+    run host Client2(*){5} {
+      run Client2(*)
+    }
+    
+  }
+  
+} """)
+            self.mainFrame.mainNotebook.modelTab.dataTextArea.SetValue(""" functions {
+  fun ms_10();
+  fun ms_1000();
+} 
+
+equations {
+  eq ms_10() = true;
+}
+
+channels {
+  channel ch1,ch2,ch3,ch4 (0);
+}
+
+hosts {
+
+ host Client1(rr)(*) {
+   process Client1(ch1, ch2) {
+     M1 = ms_10();
+     out(ch1: M1);
+   }
+ }
+ 
+ host Client2(rr)(*) {
+   process Client2(ch1, ch2) {
+     M1 = ms_10();
+     M1 = ms_10();
+     out(ch1: M1);
+     ms_1000();
+     ms_1000();
+     ms_1000();
+     ms_1000();
+     out(ch1: M1);
+   }
+ }
+ 
+ host Server(rr)(*) {
+   process Server1(ch1, ch2) {
+     ms_1000();
+     ms_1000();
+     ms_1000();
+     ms_1000();
+     in(ch1: M1);
+   }
+ 
+ }
+ 
+} """)
+            self.mainFrame.mainNotebook.metricsTab.dataTextArea.SetValue(""" metrics {
+  conf(Server) {
+    a=b;
+  }
+  conf(Mobile) {
+    a=b;
+  }
+  
+  data(Client) {
+    primhead[function][time:exact(ms)];
+    primitive[ms_10][10];
+    primitive[ms_1000][1000];
+  }
+} """)
 
 
 def main():
