@@ -30,17 +30,20 @@ class ModelPartDataPanel(wx.Panel):
     model, metrics, configuration.
     """
     
-    def __init__(self, parent):
+    def __init__(self, *args, **kwargs):
         """ """
-        wx.Panel.__init__(self, parent=parent)
+        wx.Panel.__init__(self, *args, **kwargs)
     
+        self.loadButton = wx.Button(self)
         self.dataTextArea = wx.TextCtrl(self, style=wx.TE_MULTILINE)
-    
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.dataTextArea, 1, wx.EXPAND)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(self.loadButton, 0, wx.ALL, 5)
+        sizer.Add(self.dataTextArea, 1, wx.ALL | wx.EXPAND, 5)
         
         self.SetSizer(sizer)
         
+        self.Layout()
         
 class ModulesPanel(wx.Panel):
     """ 
@@ -286,6 +289,8 @@ class RunPanel(wx.Panel):
         if resultMessage != "":
             self.parseResult.SetValue(resultMessage)
             
+        self.ShowPanel(self.parsingPanel)
+            
     def OnModelParsed(self, event):
         """ """
         self.runButton.Enable(True)
@@ -469,6 +474,12 @@ class ResultsPanel(wx.Panel):
         
         self._BuildModulesLayout()
         
+    def ClearResults(self):
+        """ """
+        for m in self.selectedModules:
+            gui = m.get_gui()
+            gui.on_parsed_model()
+                    
     def OnModuleButtonClicked(self, event):
         """ """
         btn = event.EventObject
@@ -490,18 +501,20 @@ class MainNotebook(wx.Notebook):
         ###########
 
         self.modelTab = ModelPartDataPanel(self)
+        self.modelTab.loadButton.SetLabel("Load Model")
         self.modelTab.Layout()
         self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.modelTab.dataTextArea)
         self.AddPage(self.modelTab, "Model")
         
         self.metricsTab = ModelPartDataPanel(self)
+        self.metricsTab.loadButton.SetLabel("Load Metrics")
         self.metricsTab.Layout()
         self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.metricsTab.dataTextArea)
         self.AddPage(self.metricsTab, "Metrics")
         
         self.configurationTab = ModelPartDataPanel(self)
+        self.configurationTab.loadButton.SetLabel("Load Versions")
         self.configurationTab.Layout()
-        
         self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.configurationTab.dataTextArea)
         self.configurationTab.Layout()
         self.AddPage(self.configurationTab, "Versions")
@@ -513,6 +526,7 @@ class MainNotebook(wx.Notebook):
         
         self.runTab = RunPanel(self)
         self.runTab.Layout()
+        self.runTab.Bind(EVT_MODEL_PARSED, self.OnModelParsed)
         self.AddPage(self.runTab, "Run")
         
         self.resultsTab = ResultsPanel(self)
@@ -547,6 +561,10 @@ class MainNotebook(wx.Notebook):
         self.runTab.SetSelectedModules(event.modules)
         self.resultsTab.SetSelectedModules(event.modules)
         
+    def OnModelParsed(self, event):
+        self.resultsTab.ClearResults()
+        event.Skip()
+        
 class MainFrame(wx.Frame):
     """ """
     def __init__(self, *args, **kwargs):
@@ -567,7 +585,7 @@ class MainFrame(wx.Frame):
         item = fileMenu.Append(-1, text="Load M&etrics")
         self.Bind(wx.EVT_MENU, self.OnLoadMetrics, item)
         item = fileMenu.Append(-1, text="Load &Versions")
-        self.Bind(wx.EVT_MENU, self.OnLoadVersions, item)
+        self.Bind(wx.EVT_MENU, self.OnLoadConfiguration, item)
         fileMenu.AppendSeparator()
         item = fileMenu.Append(wx.ID_EXIT, text="&Quit")
         self.Bind(wx.EVT_MENU, self.OnQuit, item)
@@ -580,6 +598,10 @@ class MainFrame(wx.Frame):
         ###################
         
         self.mainNotebook = MainNotebook(self)
+        
+        self.Bind(wx.EVT_BUTTON, self.OnLoadModel, self.mainNotebook.modelTab.loadButton)
+        self.Bind(wx.EVT_BUTTON, self.OnLoadMetrics, self.mainNotebook.metricsTab.loadButton)
+        self.Bind(wx.EVT_BUTTON, self.OnLoadConfiguration, self.mainNotebook.configurationTab.loadButton)
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.mainNotebook, 1, wx.ALL|wx.EXPAND, 5)
@@ -616,7 +638,7 @@ class MainFrame(wx.Frame):
         """ Load model file """
         self._LoadFile(self.mainNotebook.LoadMetricsFile, 1)
         
-    def OnLoadVersions(self, event):
+    def OnLoadConfiguration(self, event):
         """ Load model file """
         self._LoadFile(self.mainNotebook.LoadConfigurationFile, 2)
         
