@@ -6,14 +6,16 @@ Created on 22-04-2013
 
 class QoPMLModelStore():
     
-    functions   = []
-    channels    = []
-    equations   = []
-    versions    = []
-    hosts       = []
-    metrics_configurations  = []
-    metrics_datas           = []
-    init_version_number     = []
+    def __init__(self):
+        """ """
+        self.functions   = []
+        self.channels    = []
+        self.equations   = []
+        self.versions    = []
+        self.hosts       = []
+        self.metrics_configurations  = []
+        self.metrics_datas           = []
+        self.init_version_number     = []
     
     
     def find_host(self, name):

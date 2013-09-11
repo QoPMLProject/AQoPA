@@ -80,11 +80,8 @@ class LexYaccParser(QoPMLModelParser):
             self.yaccer = yacc.yacc(module=self, start=self.start_symbol, **kwargs)
         return self
     
-    def restart(self):
-        self.yaccer.restart()
-    
     def parse(self, s):
-        self.yaccer.parse(s, lexer = self.lexer)
+        self.yaccer.parse(input = s, lexer = self.lexer)
         return self.store
         
     # LEX
