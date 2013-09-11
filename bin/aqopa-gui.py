@@ -3,13 +3,15 @@ Created on 05-09-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
-
+import os
 import sys
 import time
 import threading
 import wx
 import wx.lib.newevent
 import wx.lib.delayedresult
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 import aqopa
 import aqopa.app
@@ -686,7 +688,8 @@ class MainFrame(wx.Frame):
         
     def OnAbout(self, event=None):
         """ Show about info """
-        dlg = wx.MessageDialog(self, "Automated Quality of Protection Analysis tool of QoP-ML models\n\nProject Home: http://qopml.org", 
+        dlg = wx.MessageDialog(self, "Automated Quality of Protection Analysis tool of QoP-ML models.\n" +\
+                                     "Version: %s\n\nProject Home: http://qopml.org" % aqopa.VERSION, 
                                "About AQoPA", wx.OK)
         dlg.ShowModal()
         dlg.Destroy()
