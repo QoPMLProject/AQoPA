@@ -4,11 +4,12 @@ Created on 06-09-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 
+import os
 import re
 import wx
 import wx.animate
+
 from aqopa.model import name_indexes
-import os
 
 class OneVersionPanel(wx.Panel):
     """ 
@@ -391,6 +392,9 @@ class OneVersionPanel(wx.Panel):
         self.timeResultsPanel.SetSizer(sizer)
         self.Layout()
         
+TIME_TYPE_MAX = 1
+TIME_TYPE_AVG = 2
+        
 class CompareVersionsPanel(wx.Panel):
     
     def __init__(self, module, *args, **kwargs):
@@ -411,7 +415,8 @@ class CompareVersionsPanel(wx.Panel):
         self.maxTimeOnMetricsBtn = wx.Button(self, label="T_MAX / M")
         self.avgTimeOnMetricsBtn = wx.Button(self, label="T_AVG / M")
         
-        self.maxTimeOnRepetitionBtn.Bind(wx.EVT_BUTTON, self.OnMaxTimeOnRepetitionBtnClicked)
+        self.maxTimeOnRepetitionBtn.Bind(wx.EVT_BUTTON, self.OnTimeMaxOnRepetitionBtnClicked)
+        self.avgTimeOnRepetitionBtn.Bind(wx.EVT_BUTTON, self.OnTimeAvgOnRepetitionBtnClicked)
         
         self.chartTypeBoxSizer.Add(self.maxTimeOnRepetitionBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
         self.chartTypeBoxSizer.Add(self.avgTimeOnRepetitionBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
@@ -453,7 +458,53 @@ class CompareVersionsPanel(wx.Panel):
     # REACTIONS
     #################
     
-    def OnMaxTimeOnRepetitionBtnClicked(self, event):
+    def OnTimeMaxOnRepetitionBtnClicked(self, event):
+        self.chartConfigBox.SetLabel("TMax/L Chart Configuration")
+        self.BuildTimesChartPanel(TIME_TYPE_MAX)
+    
+    def OnTimeAvgOnRepetitionBtnClicked(self, event):
+        self.chartConfigBox.SetLabel("TAvg/L Chart Configuration")
+        self.BuildTimesChartPanel(TIME_TYPE_AVG)
+        
+    def OnShowChartTMaxVarRepButtonClicked(self, event):
+        """ """
+        if len(self.curves) == 0:
+            wx.MessageBox("No curves defined. You must add at least one curve.", 
+                          'Error', wx.OK | wx.ICON_ERROR)
+        self.CalculateAndShowChartFrame(TIME_TYPE_MAX)
+    
+    def OnShowChartTAvgVarRepButtonClicked(self, event):
+        """ """
+        if len(self.curves) == 0:
+            wx.MessageBox("No curves defined. You must add at least one curve.", 
+                          'Error', wx.OK | wx.ICON_ERROR)
+        self.CalculateAndShowChartFrame(TIME_TYPE_AVG)
+        
+    def OnAddCurveButtonClicked(self, event):
+        """ """
+        lblParts = []
+        curveSimulators = []
+        for ch in self.checkboxSimulator:
+            if ch.IsChecked():
+                curveSimulators.append(self.checkboxSimulator[ch])
+                lblParts.append(self.checkboxSimulator[ch].context.version.name)
+        
+        if len(curveSimulators) == 0:
+            return
+        
+        self.curves.append(curveSimulators)
+        
+        curveLabel = "%d. Versions: %s" % (len(self.curves), ', '.join(lblParts))
+        text = wx.StaticText(self.curvesListPanel, label=curveLabel)
+        self.curvesListPanelSizer.Add(text)
+        
+        self.Layout()
+    
+    #################
+    # LAYOUT
+    #################
+    
+    def BuildTimesChartPanel(self, timeType):
         """ """
         if self.chartPanel:
             self.chartPanel.Destroy()
@@ -506,7 +557,10 @@ class CompareVersionsPanel(wx.Panel):
         curvesBoxSizer.Add(self.curvesListPanel, 1, wx.ALL | wx.EXPAND, 5)
         
         showChartBtn = wx.Button(self.chartPanel, label="Show Chart")
-        showChartBtn.Bind(wx.EVT_BUTTON, self.OnShowChartVarRepButtonClicked)
+        if timeType == TIME_TYPE_MAX:
+            showChartBtn.Bind(wx.EVT_BUTTON, self.OnShowChartTMaxVarRepButtonClicked)
+        elif timeType == TIME_TYPE_AVG:
+            showChartBtn.Bind(wx.EVT_BUTTON, self.OnShowChartTAvgVarRepButtonClicked)
         curvesBoxSizer.Add(showChartBtn, 0, wx.ALIGN_CENTER)
         
         self.chartConfigBoxSizer.Add(self.chartPanel, 1, wx.ALL | wx.EXPAND, 5)
@@ -514,27 +568,7 @@ class CompareVersionsPanel(wx.Panel):
         
         self.curves = []
         
-    def OnAddCurveButtonClicked(self, event):
-        """ """
-        lblParts = []
-        curveSimulators = []
-        for ch in self.checkboxSimulator:
-            if ch.IsChecked():
-                curveSimulators.append(self.checkboxSimulator[ch])
-                lblParts.append(self.checkboxSimulator[ch].context.version.name)
-        
-        if len(curveSimulators) == 0:
-            return
-        
-        self.curves.append(curveSimulators)
-        
-        curveLabel = "%d. Versions: %s" % (len(self.curves), ', '.join(lblParts))
-        text = wx.StaticText(self.curvesListPanel, label=curveLabel)
-        self.curvesListPanelSizer.Add(text)
-        
-        self.Layout()
-        
-    def OnShowChartVarRepButtonClicked(self, event):
+    def CalculateAndShowChartFrame(self, timeType):
         """ """
         
         def TMax(module, simulator, hosts):
@@ -544,6 +578,15 @@ class CompareVersionsPanel(wx.Panel):
                 if t > val:
                     val = t
             return val
+        
+        def TAvg(module, simulator, hosts):
+            s = 0.0 
+            for h in hosts:
+                s += module.get_current_time(simulator, h)
+            l = len(hosts)
+            if l == 0:
+                return  0
+            return s / float(l)
         
         hostName = None
         for radio in self.hostRadios:
@@ -555,6 +598,22 @@ class CompareVersionsPanel(wx.Panel):
         
         curvesData = []
         
+        chartFun = lambda x : x
+        chartTitle  = ""
+        xLabel      = ""
+        yLabel      = ""
+        
+        if timeType == TIME_TYPE_MAX:
+            chartFun    = TMax
+            chartTitle  = "Chart: TimeMax / Repetitions"
+            xLabel      = "Repetitions"
+            yLabel      = "TMax"
+        else:
+            chartFun    = TAvg
+            chartTitle  = "Chart: TimeAvg / Repetitions"
+            xLabel      = "Repetitions"
+            yLabel      = "TAvg"
+        
         i = 0
         for curveSimulators in self.curves:
             
@@ -564,12 +623,13 @@ class CompareVersionsPanel(wx.Panel):
             values = []
             hostsBySimulator = self._GetHosts(curveSimulators, hostName)
             for s in hostsBySimulator:
-                values.append((len(hostsBySimulator[s]), TMax(self.module, s, hostsBySimulator[s])))
-                
+                values.append((len(hostsBySimulator[s]), chartFun(self.module, s, hostsBySimulator[s])))
+
+            values.sort(key=lambda t: t[0])                
             curveData = (label, values)
             curvesData.append(curveData)
             
-        self.ShowChartFrame('gp_aqopa',"Chart: TimeMax / Repetitions", "Repetitions", "TMax", curvesData)
+        self.ShowChartFrame(chartTitle, yLabel, xLabel, curvesData)
         
     def AddFinishedSimulation(self, simulator):
         """ """
@@ -579,8 +639,30 @@ class CompareVersionsPanel(wx.Panel):
         """ """
         self.simulators = []
         
-    def ShowChartFrame(self, filename, chartTitle, xTitle, yTitle, curvesData):
+    def ShowChartFrame(self, chartTitle, xTitle, yTitle, curvesData):
         """ Shows frame with gnuplot chart """
+        
+        from wx.lib.plot import PlotCanvas, PolyMarker, PolyLine, PlotGraphics
+        import random 
+        
+        def drawPlot(chartTitle, xTitle, yTitle, curvesData):
+            """ """
+            plots = []
+            
+            for curveData in curvesData:
+                cr = random.randint(0, 255)
+                cg = random.randint(0, 255)
+                cb = random.randint(0, 255)
+                markers = PolyMarker(curveData[1], legend=curveData[0], 
+                                     colour=wx.Color(cr,cg,cb), size=1,
+                                     marker='cross')
+                line = PolyLine(curveData[1], legend=curveData[0], 
+                                colour=wx.Color(cr,cg,cb), width=1)
+                plots.append(markers)
+                plots.append(line)
+            
+            return PlotGraphics(plots, chartTitle, 
+                                xTitle, yTitle)
         
         frame = wx.Frame(None, title=chartTitle)
         panel = wx.Panel(frame)
@@ -591,34 +673,13 @@ class CompareVersionsPanel(wx.Panel):
         frameSizer.Add(panel, 1, wx.ALL | wx.EXPAND, 5)
         frame.SetSizer(frameSizer)
         
-        import Gnuplot
-        import tempfile
-        tempDir = tempfile.gettempdir()
-        tempFilename = os.path.join(tempDir, filename+'.gif')
-         
-        g = Gnuplot.Gnuplot(debug=1)
-        g('set terminal gif')
-        g('set output "'+tempFilename+'"')
-        g.title(chartTitle)
-        g.xlabel(xTitle)
-        g.ylabel(yTitle)
+        canvas = PlotCanvas(panel)
+        canvas.Draw(drawPlot(chartTitle, xTitle, yTitle, curvesData))
         
-        plots = []
-        for curveData in curvesData:
-            plots.append(Gnuplot.PlotItems.Data(curveData[1], title=curveData[0]))
+        panelSizer.Add(canvas, 1, wx.EXPAND)
         
-        g.plot(*plots)
-        
-        f = open(tempFilename,'rb')
-        print f.read()
-        f.close()
-        
-        gif = wx.animate.GIFAnimationCtrl(panel, -1, tempFilename)
-        gif.GetPlayer().UseBackgroundColour(True)
-        gif.Play()
-        
-        frame.Layout()
-        frame.Show(True)
+        frame.Maximize(True)
+        frame.Show()
         
 class MainResultsNotebook(wx.Notebook):
     """ """
