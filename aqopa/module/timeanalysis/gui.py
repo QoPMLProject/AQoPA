@@ -654,8 +654,7 @@ class CompareVersionsPanel(wx.Panel):
                 cg = random.randint(0, 255)
                 cb = random.randint(0, 255)
                 markers = PolyMarker(curveData[1], legend=curveData[0], 
-                                     colour=wx.Color(cr,cg,cb), size=1,
-                                     marker='cross')
+                                     colour=wx.Color(cr,cg,cb), size=2)
                 line = PolyLine(curveData[1], legend=curveData[0], 
                                 colour=wx.Color(cr,cg,cb), width=1)
                 plots.append(markers)
