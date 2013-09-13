@@ -211,21 +211,38 @@ class RunPanel(wx.Panel):
     
     def _BuildRunPanel(self, parent):
         """ """
-        panel = wx.Panel(parent, style=wx.ALIGN_CENTER)
+        
+        panel = wx.Panel(parent)
         sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        statusStaticBox = wx.StaticBox(panel, label="Status")
+        statusStaticBoxSizer = wx.StaticBoxSizer(statusStaticBox, wx.VERTICAL)
 
         self.statusLabel = wx.StaticText(panel, label="Running")
         self.percentLabel = wx.StaticText(panel, label="0%")
         self.dotsLabel = wx.StaticText(panel, label=".")
+        
+        statusStaticBoxSizer.Add(self.statusLabel, 0, wx.ALL|wx.ALIGN_CENTER, 5)
+        statusStaticBoxSizer.Add(self.percentLabel, 0, wx.ALL|wx.ALIGN_CENTER, 5)
+        statusStaticBoxSizer.Add(self.dotsLabel, 0, wx.ALL|wx.ALIGN_CENTER, 5)
+        
+        
+        timeStaticBox = wx.StaticBox(panel, label="Analysis Time")
+        timeStaticBoxSizer = wx.StaticBoxSizer(timeStaticBox, wx.VERTICAL)
+        
+        self.analysisTime = wx.StaticText(panel, label='---')
+        
+        timeStaticBoxSizer.Add(self.analysisTime, 0, wx.ALL | wx.ALIGN_CENTER, 5)
+        
         text = wx.StaticText(panel, label="Run Info")
         self.runResult = wx.TextCtrl(panel, 
                                      style=wx.TE_MULTILINE | wx.TE_READONLY)
-        
-        sizer.Add(self.statusLabel, 0, wx.ALL|wx.ALIGN_CENTER, 5)
-        sizer.Add(self.percentLabel, 0, wx.ALL|wx.ALIGN_CENTER, 5)
-        sizer.Add(self.dotsLabel, 0, wx.ALL|wx.ALIGN_CENTER, 5)
+    
+        sizer.Add(statusStaticBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(timeStaticBoxSizer, 0, wx.ALL | wx.EXPAND, 5)    
         sizer.Add(text, 0, wx.ALL|wx.EXPAND, 5)
         sizer.Add(self.runResult, 1, wx.ALL|wx.EXPAND, 5)
+    
     
         panel.SetSizer(sizer)
         return panel
@@ -303,6 +320,8 @@ class RunPanel(wx.Panel):
             
             self.finishedSimulators = []
             
+            self.startAnalysisTime = time.time()
+            
             self.interpreter.prepare()
             self.progressTimer.Start(1000)
             for simulator in self.interpreter.simulators:
@@ -340,6 +359,14 @@ class RunPanel(wx.Panel):
                 
     def OnAllSimulationsFinished(self):
         """ """
+        
+        self.endAnalysisTime = time.time()
+        timeDelta = self.endAnalysisTime - self.startAnalysisTime
+        analysisTimeLabel = "%.4f s" % timeDelta 
+        
+        self.analysisTime.SetLabel(analysisTimeLabel)
+        self.Layout()
+        
         for m in self.selectedModules:
             gui = m.get_gui()
             gui.on_finished_all_simulations(self.interpreter.simulators)
