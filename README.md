@@ -26,17 +26,33 @@ cd AQoPA
 
 # Setup
 
-AQoPA can be used in two modes: console and GUI mode. Console mode does not need additional setup.
+AQoPA is written in Python and needs Python in version 2.7 or newer.
 We also recommend using **virtualenv**. You can find more informations **[here][virtualenv]** 
+
+## Requirements
+
+AQoPA needs Python Lex-Yacc package for parsing (PLY >= 3.4) that can be installed using **pip**.
+```
+pip install <package-name>
+```
+
+# Modes Setup
+
+AQoPA can be used in two modes: console and GUI mode. Console mode does not need additional setup.
 
 ## Setup GUI Mode
 
-AQoPA GUI is built with usage of **[wxPython][wxPython]**. 
+AQoPA GUI is built with **[wxPython][wxPython]**. 
 You need to install wxPython GUI toolkit to use GUI mode of AQoPA. Installations instructions are available **[here][wxPythonInstall]**.
 
 Ubuntu users just need to install 3 packages: **python-wxgtk2.8 python-wxtools wx2.8-i18n**.
 ```
 sudo apt-get install python-wxgtk2.8 python-wxtools wx2.8-i18n
+```
+
+AQoPA also uses **numpy** (>= 1.7) packages for graphs.
+```
+pip install numpy
 ```
 
 # Run
