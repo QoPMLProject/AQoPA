@@ -25,7 +25,7 @@ class Builder():
         if len(token) == 6:
             if isinstance(token[4], list):
                 f.qop_params = token[4]
-            elif isinstance(token[4], str):
+            elif isinstance(token[4], str) or isinstance(token[4], unicode):
                 f.comment = token[4]
                 
         if len(token) == 7:

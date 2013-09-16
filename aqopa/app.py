@@ -137,6 +137,12 @@ class Builder():
                     raise EnvironmentDefinitionException("Process '%s' does not exist in host '%s'" % 
                                                          (run_process.process_name, parsed_host.name))
                 
+                # Clone the parsed process, because builder 
+                # may change its the instructions list
+                # and remove some subprocesses that would be 
+                # needed by other version 
+                parsed_process = parsed_process.clone()
+                
                 # Define initial process number (if needed)
                 if run_process.process_name not in processes_numbers:
                     processes_numbers[run_process.process_name] = 0

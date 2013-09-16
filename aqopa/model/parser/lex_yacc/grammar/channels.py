@@ -20,7 +20,8 @@ class Builder():
         channels = []
         for name in token[2]:
             buffer_size = token[4]
-            if isinstance(buffer_size, str) and buffer_size == "*":
+            if (isinstance(buffer_size, str) or isinstance(buffer_size, unicode)) \
+                and buffer_size == "*":
                 buffer_size = -1
             channels.append(Channel(name, buffer_size))
         return channels

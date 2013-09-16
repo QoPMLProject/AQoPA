@@ -4,9 +4,12 @@ Created on 06-09-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 
-import wx
-from aqopa.model import name_indexes
+import os
 import re
+import wx
+import wx.animate
+
+from aqopa.model import name_indexes
 
 class OneVersionPanel(wx.Panel):
     """ 
@@ -117,7 +120,12 @@ class OneVersionPanel(wx.Panel):
             self.ShowMinimalHostsTime(simulator, hosts)
         elif self.maxTimeRB.GetValue():
             self.ShowMaximalHostsTime(simulator, hosts)
-        
+            
+    def RemoveAllSimulations(self):
+        """ """
+        self.versionsList.Clear()
+        self.SetVersionsResultsVisibility(False)
+
     #################
     # LAYOUT
     #################
@@ -384,6 +392,474 @@ class OneVersionPanel(wx.Panel):
         self.timeResultsPanel.SetSizer(sizer)
         self.Layout()
         
+TIME_TYPE_MAX = 1
+TIME_TYPE_AVG = 2
+        
+class CompareVersionsPanel(wx.Panel):
+    
+    def __init__(self, module, *args, **kwargs):
+        wx.Panel.__init__(self, *args, **kwargs)
+
+        self.module = module
+
+        self.simulators = []
+        self.chartPanel = None
+        
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        self.chartTypeBox = wx.StaticBox(self, label="Chart Type")
+        self.chartTypeBoxSizer = wx.StaticBoxSizer(self.chartTypeBox, wx.HORIZONTAL)
+        
+        self.maxTimeOnRepetitionBtn = wx.Button(self, label="T_MAX / L")
+        self.avgTimeOnRepetitionBtn = wx.Button(self, label="T_AVG / L")
+        self.maxTimeOnMetricsBtn = wx.Button(self, label="T_MAX / M")
+        self.avgTimeOnMetricsBtn = wx.Button(self, label="T_AVG / M")
+        
+        self.maxTimeOnRepetitionBtn.Bind(wx.EVT_BUTTON, self.OnTimeMaxOnRepetitionBtnClicked)
+        self.avgTimeOnRepetitionBtn.Bind(wx.EVT_BUTTON, self.OnTimeAvgOnRepetitionBtnClicked)
+        self.maxTimeOnMetricsBtn.Bind(wx.EVT_BUTTON, self.OnTimeMaxOnMetricsBtnClicked)
+        self.avgTimeOnMetricsBtn.Bind(wx.EVT_BUTTON, self.OnTimeAvgOnMetricsBtnClicked)
+        
+        self.chartTypeBoxSizer.Add(self.maxTimeOnRepetitionBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
+        self.chartTypeBoxSizer.Add(self.avgTimeOnRepetitionBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
+        self.chartTypeBoxSizer.Add(self.maxTimeOnMetricsBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
+        self.chartTypeBoxSizer.Add(self.avgTimeOnMetricsBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
+        
+        sizer.Add(self.chartTypeBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
+        
+        
+        self.chartConfigBox = wx.StaticBox(self, label="Chart Configuration")
+        self.chartConfigBoxSizer = wx.StaticBoxSizer(self.chartConfigBox, wx.VERTICAL)
+        
+        sizer.Add(self.chartConfigBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
+        
+        self.SetSizer(sizer)
+        
+    def _GetHostsRepetitions(self):
+        hostsRepetitions = {}
+        
+        for s in self.simulators:
+            for rh in s.context.version.run_hosts:
+                if rh.host_name not in hostsRepetitions:
+                    hostsRepetitions[rh.host_name] = 1
+                if rh.repetitions > hostsRepetitions[rh.host_name]:
+                    hostsRepetitions[rh.host_name] = rh.repetitions
+        
+        return hostsRepetitions
+    
+    def _GetHosts(self, simulators, hostName):
+        simulatorsHosts = {}
+        for s in simulators:
+            simulatorsHosts[s] = []
+            for h in s.context.hosts:
+                if h.original_name() == hostName:
+                    simulatorsHosts[s].append(h)
+        return simulatorsHosts
+    
+    def _MetricExistsIn(self, metric, metrics):
+        """ """
+        for m in metrics:
+            if self._AreMetricsEqual(m, metric):
+                return True
+        return False
+    
+    def _AreMetricsEqual(self, leftMetric, rightMetric):
+        """ """
+        if len(leftMetric) != len(rightMetric):
+            return False
+        
+        for leftMetricsSet in leftMetric:
+            found = False
+            for rightMetricsSet in rightMetric:
+                if leftMetricsSet.host_name == rightMetricsSet.host_name:
+                    found= True
+                    if leftMetricsSet.configuration_name != rightMetricsSet.configuration_name:
+                        return False
+            if not found:
+                return False
+        return True
+    
+    def _GetMetric(self, simulator):
+        """ """
+        return simulator.context.version.metrics_sets
+    
+    def _GetMetrics(self):
+        """ """
+        metrics = []
+        for s in self.simulators:
+            metric = self._GetMetric(s)
+            if not self._MetricExistsIn(metric, metrics):
+                metrics.append(metric)
+        return metrics
+        
+    #################
+    # REACTIONS
+    #################
+    
+    def OnTimeMaxOnRepetitionBtnClicked(self, event):
+        self.chartConfigBox.SetLabel("TMax/L Chart Configuration")
+        self.BuildTimesByRepetitionsChartPanel(TIME_TYPE_MAX)
+    
+    def OnTimeAvgOnRepetitionBtnClicked(self, event):
+        self.chartConfigBox.SetLabel("TAvg/L Chart Configuration")
+        self.BuildTimesByRepetitionsChartPanel(TIME_TYPE_AVG)
+    
+    def OnTimeMaxOnMetricsBtnClicked(self, event):
+        self.chartConfigBox.SetLabel("TMax/M Chart Configuration")
+        self.BuildTimesByMetricsChartPanel(TIME_TYPE_MAX)
+    
+    def OnTimeAvgOnMetricsBtnClicked(self, event):
+        self.chartConfigBox.SetLabel("TAvg/M Chart Configuration")
+        self.BuildTimesByMetricsChartPanel(TIME_TYPE_AVG)
+        
+    def OnShowChartTMaxVarRepButtonClicked(self, event):
+        """ """
+        if len(self.curves) == 0:
+            wx.MessageBox("No curves defined. You must add at least one curve.", 
+                          'Error', wx.OK | wx.ICON_ERROR)
+        self.CalculateAndShowChartByRepFrame(TIME_TYPE_MAX)
+    
+    def OnShowChartTAvgVarRepButtonClicked(self, event):
+        """ """
+        if len(self.curves) == 0:
+            wx.MessageBox("No curves defined. You must add at least one curve.", 
+                          'Error', wx.OK | wx.ICON_ERROR)
+        self.CalculateAndShowChartByRepFrame(TIME_TYPE_AVG)
+        
+    def OnShowChartTMaxVarMetricsButtonClicked(self, event):
+        """ """
+        if len(self.curves) == 0:
+            wx.MessageBox("No curves defined. You must add at least one curve.", 
+                          'Error', wx.OK | wx.ICON_ERROR)
+        self.CalculateAndShowChartByMetricsFrame(TIME_TYPE_MAX)
+    
+    def OnShowChartTAvgVarMetricsButtonClicked(self, event):
+        """ """
+        if len(self.curves) == 0:
+            wx.MessageBox("No curves defined. You must add at least one curve.", 
+                          'Error', wx.OK | wx.ICON_ERROR)
+        self.CalculateAndShowChartByMetricsFrame(TIME_TYPE_AVG)
+        
+    def OnAddCurveButtonClicked(self, event):
+        """ """
+        lblParts = []
+        curveSimulators = []
+        for ch in self.checkboxSimulator:
+            if ch.IsChecked():
+                curveSimulators.append(self.checkboxSimulator[ch])
+                lblParts.append(self.checkboxSimulator[ch].context.version.name)
+        
+        if len(curveSimulators) == 0:
+            return
+        
+        self.curves.append(curveSimulators)
+        
+        curveLabel = "%d. Versions: %s" % (len(self.curves), ', '.join(lblParts))
+        text = wx.StaticText(self.curvesListPanel, label=curveLabel)
+        self.curvesListPanelSizer.Add(text)
+        
+        self.Layout()
+    
+    #################
+    # LAYOUT
+    #################
+    
+    def BuildCurvesPanel(self, parent, parentSizer, onShowChartClicked):
+        """ """
+        rightBox = wx.StaticBox(parent, label="Define curves")
+        rightBoxSizer = wx.StaticBoxSizer(rightBox, wx.HORIZONTAL)
+        parentSizer.Add(rightBoxSizer, 4, wx.ALL, 5)
+        
+        addCurveBox = wx.StaticBox(parent, label="Add curve")
+        addCurveBoxSizer = wx.StaticBoxSizer(addCurveBox, wx.VERTICAL)
+        rightBoxSizer.Add(addCurveBoxSizer, 0, wx.ALL, 5)
+        
+        self.checkboxSimulator = {} 
+        
+        for s in self.simulators:
+            version = s.context.version
+            ch = wx.CheckBox(parent, label=version.name)
+            addCurveBoxSizer.Add(ch)
+            self.checkboxSimulator[ch] = s
+            
+        addCurveButton = wx.Button(parent, label="Add curve")
+        addCurveBoxSizer.Add(addCurveButton, 0, wx.ALIGN_CENTER)
+        addCurveButton.Bind(wx.EVT_BUTTON, self.OnAddCurveButtonClicked)
+        
+        curvesBox = wx.StaticBox(parent, label="Curves")
+        curvesBoxSizer = wx.StaticBoxSizer(curvesBox, wx.VERTICAL)
+        rightBoxSizer.Add(curvesBoxSizer, 1, wx.ALL, 5)
+        
+        self.curvesListPanel = wx.Panel(parent)
+        self.curvesListPanelSizer = wx.BoxSizer(wx.VERTICAL)
+        self.curvesListPanel.SetSizer(self.curvesListPanelSizer)
+        curvesBoxSizer.Add(self.curvesListPanel, 1, wx.ALL | wx.EXPAND, 5)
+        
+        showChartBtn = wx.Button(parent, label="Show Chart")
+        showChartBtn.Bind(wx.EVT_BUTTON, onShowChartClicked)
+        curvesBoxSizer.Add(showChartBtn, 0, wx.ALIGN_CENTER)
+    
+    def BuildTimesByRepetitionsChartPanel(self, timeType):
+        """ """
+        if self.chartPanel:
+            self.chartPanel.Destroy()
+            self.chartPanel = None
+            
+        self.chartPanel = wx.Panel(self)
+        chartPanelSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.chartPanel.SetSizer(chartPanelSizer)
+        
+        leftBox = wx.StaticBox(self.chartPanel, label="Choose host")
+        leftBoxSizer = wx.StaticBoxSizer(leftBox, wx.VERTICAL)
+        chartPanelSizer.Add(leftBoxSizer, 1, wx.ALL, 5)
+        
+        self.hostRadios = []
+        
+        hostsRepetitions = self._GetHostsRepetitions()
+        for hostName in hostsRepetitions:
+            if hostsRepetitions[hostName] > 1:
+                radioBtn = wx.RadioButton(self.chartPanel, label=hostName)
+                leftBoxSizer.Add(radioBtn)
+                self.hostRadios.append(radioBtn)
+        
+        onShowChartBtnClicked = None
+        if timeType == TIME_TYPE_MAX:
+            onShowChartBtnClicked = self.OnShowChartTMaxVarRepButtonClicked
+        elif timeType == TIME_TYPE_AVG:
+            onShowChartBtnClicked = self.OnShowChartTAvgVarRepButtonClicked
+        
+        self.BuildCurvesPanel(self.chartPanel, chartPanelSizer, onShowChartBtnClicked)
+        
+        self.chartConfigBoxSizer.Add(self.chartPanel, 1, wx.ALL | wx.EXPAND, 5)
+        self.Layout()
+        
+        self.curves = []
+    
+    def BuildTimesByMetricsChartPanel(self, timeType):
+        """ """
+        if self.chartPanel:
+            self.chartPanel.Destroy()
+            self.chartPanel = None
+            
+        self.chartPanel = wx.Panel(self)
+        chartPanelSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.chartPanel.SetSizer(chartPanelSizer)
+        
+        leftBox = wx.StaticBox(self.chartPanel, label="Metrics")
+        leftBoxSizer = wx.StaticBoxSizer(leftBox, wx.VERTICAL)
+        chartPanelSizer.Add(leftBoxSizer, 1, wx.ALL, 5)
+        
+        self.metrics = self._GetMetrics()
+        
+        i = 0
+        for metric in self.metrics:
+            i += 1
+            metricPanel = wx.Panel(self.chartPanel)
+            metricPanelSizer = wx.BoxSizer(wx.HORIZONTAL)
+            metricPanel.SetSizer(metricPanelSizer)
+            
+            leftBoxSizer.Add(metricPanel)
+            
+            metricNumber = "%d ." % i
+            lbl = wx.StaticText(metricPanel, label=metricNumber)
+            metricPanelSizer.Add(lbl)
+            
+            metricsConfigPanel = wx.Panel(metricPanel)
+            metricsConfigPanelSizer = wx.BoxSizer(wx.VERTICAL)
+            metricsConfigPanel.SetSizer(metricsConfigPanelSizer)
+            
+            metricPanelSizer.Add(metricsConfigPanel)
+            
+            for mSet in metric:
+                lbl = wx.StaticText(metricsConfigPanel, label="Host: %s -> Config: %s" % (mSet.host_name, mSet.configuration_name))
+                metricsConfigPanelSizer.Add(lbl)
+        
+        onShowChartBtnClicked = None
+        if timeType == TIME_TYPE_MAX:
+            onShowChartBtnClicked = self.OnShowChartTMaxVarMetricsButtonClicked
+        elif timeType == TIME_TYPE_AVG:
+            onShowChartBtnClicked = self.OnShowChartTAvgVarMetricsButtonClicked
+        
+        self.BuildCurvesPanel(self.chartPanel, chartPanelSizer, onShowChartBtnClicked)
+        
+        self.chartConfigBoxSizer.Add(self.chartPanel, 1, wx.ALL | wx.EXPAND, 5)
+        self.Layout()
+        
+        self.curves = []
+        
+    def CalculateAndShowChartByRepFrame(self, timeType):
+        """ """
+        
+        def TMax(module, simulator, hosts):
+            val = 0.0 
+            for h in hosts:
+                t = module.get_current_time(simulator, h)
+                if t > val:
+                    val = t
+            return val
+        
+        def TAvg(module, simulator, hosts):
+            s = 0.0 
+            for h in hosts:
+                s += module.get_current_time(simulator, h)
+            l = len(hosts)
+            if l == 0:
+                return  0
+            return s / float(l)
+        
+        hostName = None
+        for radio in self.hostRadios:
+            if radio.GetValue():
+                hostName = radio.GetLabel()
+                break
+        if not hostName:
+            return
+        
+        curvesData = []
+        
+        chartFun = lambda x : x
+        chartTitle  = ""
+        xLabel      = ""
+        yLabel      = ""
+        
+        if timeType == TIME_TYPE_MAX:
+            chartFun    = TMax
+            chartTitle  = "Chart: TimeMax / Repetitions"
+            xLabel      = "Repetitions"
+            yLabel      = "TMax"
+        else:
+            chartFun    = TAvg
+            chartTitle  = "Chart: TimeAvg / Repetitions"
+            xLabel      = "Repetitions"
+            yLabel      = "TAvg"
+        
+        i = 0
+        for curveSimulators in self.curves:
+            
+            i += 1
+            label = "%d." % i
+            
+            values = []
+            hostsBySimulator = self._GetHosts(curveSimulators, hostName)
+            for s in hostsBySimulator:
+                values.append((len(hostsBySimulator[s]), chartFun(self.module, s, hostsBySimulator[s])))
+
+            values.sort(key=lambda t: t[0])                
+            curveData = (label, values)
+            curvesData.append(curveData)
+            
+        self.ShowChartFrame(chartTitle, yLabel, xLabel, curvesData)
+        
+    def CalculateAndShowChartByMetricsFrame(self, timeType):
+        """ """
+        
+        def TMax(module, simulator, hosts):
+            val = 0.0 
+            for h in hosts:
+                t = module.get_current_time(simulator, h)
+                if t > val:
+                    val = t
+            return val
+        
+        def TAvg(module, simulator, hosts):
+            s = 0.0 
+            for h in hosts:
+                s += module.get_current_time(simulator, h)
+            l = len(hosts)
+            if l == 0:
+                return  0
+            return s / float(l)
+        
+        curvesData = []
+        
+        chartFun = lambda x : x
+        chartTitle  = ""
+        xLabel      = ""
+        yLabel      = ""
+        
+        if timeType == TIME_TYPE_MAX:
+            chartFun    = TMax
+            chartTitle  = "Chart: TimeMax / Metric"
+            xLabel      = "Metric"
+            yLabel      = "TMax"
+        else:
+            chartFun    = TAvg
+            chartTitle  = "Chart: TimeAvg / Metric"
+            xLabel      = "Metric"
+            yLabel      = "TAvg"
+        
+        c = 0
+        for curveSimulators in self.curves:
+            c += 1
+
+            values = []
+            i = 0
+            for m in self.metrics:
+                i += 1
+                hosts = []
+                
+                for s in curveSimulators:
+                    currentMetric = self._GetMetric(s)
+                    if self._AreMetricsEqual(m, currentMetric):
+                        hosts.extend(s.context.hosts)
+                
+                values.append((i, chartFun(self.module, s, hosts)))
+            
+            values.sort(key=lambda t: t[0])                
+            curveData = ("%d." % c, values)
+            curvesData.append(curveData)
+            
+        self.ShowChartFrame(chartTitle, yLabel, xLabel, curvesData)
+        
+    def AddFinishedSimulation(self, simulator):
+        """ """
+        self.simulators.append(simulator)
+        
+    def RemoveAllSimulations(self):
+        """ """
+        self.simulators = []
+        
+    def ShowChartFrame(self, chartTitle, xTitle, yTitle, curvesData):
+        """ Shows frame with gnuplot chart """
+        
+        from wx.lib.plot import PlotCanvas, PolyMarker, PolyLine, PlotGraphics
+        import random 
+        
+        def drawPlot(chartTitle, xTitle, yTitle, curvesData):
+            """ """
+            plots = []
+            
+            for curveData in curvesData:
+                cr = random.randint(0, 255)
+                cg = random.randint(0, 255)
+                cb = random.randint(0, 255)
+                markers = PolyMarker(curveData[1], legend=curveData[0], 
+                                     colour=wx.Color(cr,cg,cb), size=2)
+                line = PolyLine(curveData[1], legend=curveData[0], 
+                                colour=wx.Color(cr,cg,cb), width=1)
+                plots.append(markers)
+                plots.append(line)
+            
+            return PlotGraphics(plots, chartTitle, 
+                                xTitle, yTitle)
+        
+        frame = wx.Frame(None, title=chartTitle)
+        panel = wx.Panel(frame)
+        panelSizer = wx.BoxSizer(wx.VERTICAL)
+        panel.SetSizer(panelSizer)
+        
+        frameSizer = wx.BoxSizer(wx.VERTICAL)
+        frameSizer.Add(panel, 1, wx.ALL | wx.EXPAND, 5)
+        frame.SetSizer(frameSizer)
+        
+        canvas = PlotCanvas(panel)
+        canvas.Draw(drawPlot(chartTitle, xTitle, yTitle, curvesData))
+        
+        panelSizer.Add(canvas, 1, wx.EXPAND)
+        
+        frame.Maximize(True)
+        frame.Show()
+        
 class MainResultsNotebook(wx.Notebook):
     """ """
     def __init__(self, module, *args, **kwargs):
@@ -395,13 +871,19 @@ class MainResultsNotebook(wx.Notebook):
         self.oneVersionTab.Layout()
         self.AddPage(self.oneVersionTab, "Version Results")
         
-        self.compareTab = wx.Panel(self)
+        self.compareTab = CompareVersionsPanel(self.module, self)
         self.compareTab.Layout()
         self.AddPage(self.compareTab, "Compare Versions")
+        
+    def OnParsedModel(self):
+        """ """
+        self.oneVersionTab.RemoveAllSimulations()
+        self.compareTab.RemoveAllSimulations()
         
     def OnSimulationFinished(self, simulator):
         """ """
         self.oneVersionTab.AddFinishedSimulation(simulator)
+        self.compareTab.AddFinishedSimulation(simulator)
         
     def OnAllSimulationsFinished(self, simulators):
         """ """
@@ -451,6 +933,11 @@ class ModuleGui(object):
         Called once for all simulations after all of them are finished.
         """
         self.mainResultNotebook.OnAllSimulationsFinished(simulators)
+        
+    def on_parsed_model(self):
+        """ """
+        self.mainResultNotebook.OnParsedModel()
+        
         
 
         

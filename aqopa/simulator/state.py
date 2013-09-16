@@ -584,6 +584,12 @@ class AssignmentInstructionExecutor(InstructionExecutor):
         """ Overriden """
         instruction = context.get_current_instruction()
         expression = self._compute_current_expression(instruction.expression, context)
+        
+#        h = context.get_current_host()
+#        v = instruction.variable_name
+#        e = unicode(expression)
+#        print "%s: %s = %s" % (h.name, v, e)
+        
         context.get_current_host().set_variable(instruction.variable_name, expression)
         
         context.get_current_host().mark_changed()

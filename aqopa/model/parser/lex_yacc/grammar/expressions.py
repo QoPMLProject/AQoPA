@@ -124,7 +124,7 @@ class ModelParserExtension(LexYaccParserExtension):
         """
         if isinstance(t[1], bool):
             t[0] = BooleanExpression(t[1])
-        elif isinstance(t[1], str):
+        elif isinstance(t[1], str) or isinstance(t[1], unicode):
             t[0] = IdentifierExpression(t[1])
         else:
             t[0] = t[1]

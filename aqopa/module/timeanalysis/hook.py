@@ -207,7 +207,7 @@ class PreInstructionHook(Hook):
             receivers_list = channel.get_queue_of_receiving_hosts(expressions_cnt)
             for i in range(0, len(receivers_list)):
                 if not receivers_list[i]: # No receiver for message
-                    self.module.add_channel_message_trace(channel, 
+                    self.module.add_channel_message_trace(self.simulator, channel, 
                                                           self.module.get_channel_next_message_id(self.simulator, channel),
                                                           sender,
                                                           self.module.get_current_time(self.simulator, sender))
