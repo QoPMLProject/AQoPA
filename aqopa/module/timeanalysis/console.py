@@ -9,22 +9,23 @@ from aqopa.simulator.state import Hook
 
 class PrintResultsHook(Hook):
 
-    def __init__(self, module, output_file=sys.stdout):
+    def __init__(self, module, simulator, output_file=sys.stdout):
         """ """
         self.module = module
+        self.simulator = simulator
         self.output_file = output_file
         
     def execute(self, context):
         """ """
         
-        if self.module.simulator.infinite_loop_occured():
+        if self.simulator.infinite_loop_occured():
             self.output_file.write('ERROR: Infinite loop on {0} -> {1}\n'.format(
-                                unicode(self.module.simulator.context.get_current_host()),
-                                unicode(self.module.simulator.context.get_current_instruction())))
+                                unicode(self.simulator.context.get_current_host()),
+                                unicode(self.simulator.context.get_current_instruction())))
             self.output_file.write('\n')
             
         for h in context.hosts:
-            self.output_file.write('{0: <15}: {1: <15} '.format(h.name, str(self.module.get_current_time(h))))
+            self.output_file.write('{0: <15}: {1: <15} '.format(h.name, str(self.module.get_current_time(self.simulator, h))))
             if h.finished():
                 self.output_file.write('Finished')
                 if h.get_finish_error():
