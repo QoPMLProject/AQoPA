@@ -748,7 +748,7 @@ class CompareVersionsPanel(wx.Panel):
             curveData = (label, values)
             curvesData.append(curveData)
             
-        self.ShowChartFrame(chartTitle, yLabel, xLabel, curvesData)
+        self.ShowChartFrame(chartTitle, xLabel, yLabel, curvesData)
         
     def CalculateAndShowChartByMetricsFrame(self, timeType):
         """ """
@@ -809,7 +809,7 @@ class CompareVersionsPanel(wx.Panel):
             curveData = ("%d." % c, values)
             curvesData.append(curveData)
             
-        self.ShowChartFrame(chartTitle, yLabel, xLabel, curvesData)
+        self.ShowChartFrame(chartTitle, xLabel, yLabel, curvesData)
         
     def AddFinishedSimulation(self, simulator):
         """ """
