@@ -4,6 +4,9 @@
 
 Next release:
 
+v0.4.1
+ - Fixed GUI mode binary file
+
 v0.4:
  - Package name changed: aqopa
  - Added debug option
