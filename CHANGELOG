@@ -3,7 +3,13 @@
 #########################################
 
 Next release:
- -
+
+v0.4:
+ - Package name changed: aqopa
+ - Added debug option
+ - Added GUI mode
+ - Added GUI for time analysis module
+ - Added README file
 
 v0.3.1 (2013-07-17)
  - Project name changed: AQoPA
