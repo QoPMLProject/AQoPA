@@ -41,6 +41,9 @@ class Function():
         self.qop_params = qop_params
         self.comment = comment
         
+    def clone(self):
+        return Function(copy.copy(self.name), copy.deepcopy(self.qop_params), copy.copy(self.comment))
+        
     def __unicode__(self):
         
         comment = ""
@@ -69,6 +72,8 @@ class Channel():
         buffor_size = str(self.buffor_size) if self.buffor_size >= 0 else "*"
         return u"channel %s [%s]" % (self.name, buffor_size)
     
+    def clone(self):
+        return Channel(copy.copy(self.name), copy.copy(self.buffor_size))
 
 class Equation():
     
@@ -79,6 +84,9 @@ class Equation():
     def __unicode__(self):
         return u"eq %s = %s" % ( unicode(self.composite), unicode(self.simple) )
     
+    def clone(self):
+        return Equation(self.simple.clone(), self.composite.clone())
+    
 ################################
 #        Expressions
 ################################
@@ -88,14 +96,14 @@ class BooleanExpression():
     def __init__(self, val):
         self.val = bool(val)
         
+    def clone(self):
+        return BooleanExpression(copy.copy(self.val))
+        
     def __unicode__(self):
         return u"true" if self.val else u"false"
     
     def is_true(self):
         return self.val
-    
-    def clone(self):
-        return copy.deepcopy(self)
     
 class IdentifierExpression():
     
@@ -106,7 +114,7 @@ class IdentifierExpression():
         return unicode(self.identifier)
     
     def clone(self):
-        return copy.deepcopy(self)
+        return IdentifierExpression(copy.copy(self.identifier))
     
 class CallFunctionExpression():
     
@@ -157,7 +165,8 @@ class TupleElementExpression():
         return u"%s[%d]" % (unicode(self.variable_name), self.index)
     
     def clone(self):
-        return copy.deepcopy(self)
+        return TupleElementExpression(copy.copy(self.variable_name),
+                                      copy.copy(self.index))
       
 ################################
 #        Instructions
@@ -174,15 +183,26 @@ class CallFunctionInstruction():
         return u"%s(%s)[%s];" % ( unicode(self.function_name), unicode(', '.join([ unicode(a) for a in self.arguments])),
                                   unicode(', '.join([ unicode(a) for a in self.qop_arguments])) )
     
+    def clone(self):
+        return CallFunctionInstruction(copy.copy(self.function_name), 
+                                      [ a.clone() for a in self.arguments ],
+                                      [ copy.copy(a) for a in self.qop_arguments ])
+        
 class FinishInstruction():
     
     def __init__(self, command):
         self.command = command
         
+    def clone(self):
+        return FinishInstruction(copy.copy(self.command))
+        
     def __unicode__(self):
         return "%s;" % unicode(self.command)
     
 class ContinueInstruction():
+    
+    def clone(self):
+        return ContinueInstruction()
     
     def __unicode__(self):
         return u"continue;"
@@ -193,6 +213,10 @@ class AssignmentInstruction():
         self.variable_name = variable_name
         self.expression = expression
         
+    def clone(self):
+        return AssignmentInstruction(copy.copy(self.variable_name), 
+                                     self.expression.clone())
+        
     def __unicode__(self):
         return u"%s = %s;" % (unicode(self.variable_name), unicode(self.expression))
     
@@ -202,6 +226,11 @@ class CommunicationInstruction():
         self.communication_type = communication_type
         self.channel_name = channel_name
         self.variables_names = variables_names
+        
+    def clone(self):
+        return CommunicationInstruction(copy.copy(self.communication_type),
+                                        copy.copy(self.channel_name), 
+                                        copy.deepcopy(self.variables_names))
         
     def is_out(self):
         return self.communication_type == COMMUNICATION_TYPE_OUT
@@ -217,6 +246,15 @@ class IfInstruction():
         self.true_instructions = true_instructions
         self.false_instructions = false_instructions
         
+    def clone(self):
+        t_instructions = []
+        for i in self.true_instructions:
+            t_instructions.append(i.clone())
+        f_instructions = []
+        for i in self.false_instructions:
+            f_instructions.append(i.clone())
+        return IfInstruction(self.condition.clone(), t_instructions, f_instructions)
+        
     def __unicode__(self):
         return u"if (%s) ..." % unicode(self.condition)
         
@@ -229,6 +267,12 @@ class WhileInstruction():
     def __unicode__(self):
         return u"while (%s) ..." % unicode(self.condition)
 
+    def clone(self):
+        instructions = []
+        for i in self.instructions:
+            instructions.append(i.clone())
+        return WhileInstruction(self.condition.clone(), instructions)
+        
 ################################
 #        Hosts
 ################################
@@ -240,6 +284,17 @@ class HostSubprocess():
         self.instructions_list = instructions_list
         self.all_channels_active = False
         self.active_channels = []
+        
+    def clone(self):
+        
+        instructions_list = []
+        for i in self.instructions_list:
+            instructions_list.append(i.clone())
+        
+        p = HostSubprocess(copy.copy(self.name), instructions_list)
+        p.all_channels_active = copy.copy(self.all_channels_active)
+        p.active_channels = copy.deepcopy(self.active_channels)
+        return p
         
     def __unicode__(self):
         return u"subprocess %s" % unicode(self.name)
@@ -255,9 +310,14 @@ class HostProcess():
         self.follower = None
         
     def clone(self):
-        p = HostProcess(self.name, self.instructions_list)
-        p.all_channels_active = self.all_channels_active
-        p.active_channels = self.active_channels
+        
+        instructions_list = []
+        for i in self.instructions_list:
+            instructions_list.append(i.clone())
+        
+        p = HostProcess(copy.copy(self.name), instructions_list)
+        p.all_channels_active = copy.copy(self.all_channels_active)
+        p.active_channels = copy.deepcopy(self.active_channels)
         return p
         
     def __unicode__(self):
@@ -286,7 +346,11 @@ class Host():
             else:
                 instructions_list.append(i)
         
-        h = Host(self.name, self.schedule_algorithm, instructions_list, self.predefined_values)
+        predefined_values = []
+        for i in self.predefined_values:
+            predefined_values.append(i.clone())
+        
+        h = Host(copy.copy(self.name), copy.copy(self.schedule_algorithm), instructions_list, predefined_values)
         h.all_channels_active = self.all_channels_active
         h.active_channels = self.active_channels
         return h
@@ -305,6 +369,18 @@ class Version():
     def __unicode__(self):
         return u"version %d" % self.name
     
+    def clone(self):
+        r_hosts = []
+        for rh in self.run_hosts:
+            r_hosts.append(rh.clone())
+        m_sets = []
+        for ms in self.metrics_sets:
+            m_sets.append(ms.clone())
+        v = Version(copy.copy(self.name))
+        v.run_hosts = r_hosts
+        v.metrics_sets = m_sets
+        return v
+    
 class VersionRunHost():
     
     def __init__(self, host_name):
@@ -317,6 +393,18 @@ class VersionRunHost():
         
     def __unicode__(self):
         return u"run host %s (...)" % self.host_name
+    
+    def clone(self):
+        r_processes = []
+        for rp in self.run_processes:
+            r_processes.append(rp.clone())
+        rh = VersionRunHost(copy.copy(self.host_name))
+        rh.all_channels_active = self.all_channels_active
+        rh.active_channels = copy.deepcopy(self.active_channels)
+        rh.repetitions = self.repetitions
+        rh.repeated_channels = copy.deepcopy(self.repeated_channels)
+        rh.run_processes = r_processes
+        return rh
     
 class VersionRunProcess():
     
@@ -334,6 +422,15 @@ class VersionRunProcess():
             s += " -> %s" % unicode(self.follower)
         return s
     
+    def clone(self):
+        rp = VersionRunProcess(copy.copy(self.process_name))
+        rp.all_subprocesses_active = self.all_subprocesses_active
+        rp.active_subprocesses = copy.deepcopy(self.active_subprocesses)
+        rp.repetitions = self.repetitions
+        rp.repeated_channels = copy.deepcopy(self.repeated_channels)
+        if self.follower:
+            rp.follower = self.follower.clone()
+        return rp
 
 ################################
 #        Metrics
@@ -347,6 +444,9 @@ class MetricsConfiguration():
         
     def __unicode__(self):
         return u"conf %s { ... }" % self.name
+    
+    def clone(self):
+        return MetricsConfiguration(copy.copy(self.name), copy.deepcopy(self.specifications))
 
 class MetricsSet():
     
@@ -357,6 +457,9 @@ class MetricsSet():
     def __unicode__(self):
         return u"set host %s (%s) { ... }" % (self.host_name, self.configuration_name)
     
+    def clone(self):
+        return MetricsSet(copy.copy(self.host_name), copy.copy(self.configuration_name))
+        
 class MetricsData():
     
     def __init__(self, name, blocks, plus = False, star = False):
@@ -368,11 +471,23 @@ class MetricsData():
     def __unicode__(self):
         return u"data %s { ... }" % self.name
         
+    def clone(self):
+        blocks = []
+        for b in self.blocks:
+            blocks.append(b.clone())
+        return MetricsData(copy.copy(self.name), blocks, copy.copy(self.plus), copy.copy(self.star))
+        
 class MetricsPrimitiveBlock():
     
     def __init__(self, header, metrics):
         self.header = header
         self.metrics = metrics
+        
+    def clone(self):
+        metrics = []
+        for m in self.metrics:
+            metrics.append(m.clone())
+        return MetricsPrimitiveBlock(self.header.clone(), metrics)
         
 class MetricsPrimitiveHeader():
     
@@ -380,6 +495,15 @@ class MetricsPrimitiveHeader():
         self.params = params
         self.services_params = services_params
         
+    def clone(self):
+        params = []
+        for p in self.params:
+            params.append(p.clone())
+        s_params = []
+        for p in self.services_params:
+            s_params.append(p.clone())
+        return MetricsPrimitiveHeader(params, s_params)
+    
 class MetricsServiceParam():
     
     def __init__(self, service_name, param_name, unit=None):
@@ -387,8 +511,16 @@ class MetricsServiceParam():
         self.param_name = param_name
         self.unit = unit
         
+    def clone(self):
+        return MetricsServiceParam(copy.copy(self.service_name),
+                                   copy.copy(self.param_name),
+                                   copy.copy(self.unit))
+        
 class MetricsPrimitive():
     
     def __init__(self, arguments):
         self.arguments = arguments
+        
+    def clone(self):
+        return MetricsPrimitive(copy.deepcopy(self.arguments))
     

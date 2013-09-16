@@ -170,5 +170,5 @@ class LexYaccParser(QoPMLModelParser):
             if last_cr < 0:
                 last_cr = 0
             column = (t.lexpos - last_cr) + 1
-        self.syntax_errors.append(("Line [%s:%s, pos: %s]: Syntax error near '%s' \n" % (t.lexer.lineno, column, t.lexer.lexpos, t.value)))
+            self.syntax_errors.append(("Line [%s:%s, pos: %s]: Syntax error near '%s' \n" % (t.lexer.lineno, column, t.lexer.lexpos, t.value)))
     

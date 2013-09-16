@@ -90,7 +90,7 @@ class ModelParserExtension(LexYaccParserExtension):
         equation_simple_expression : IDENTIFIER 
                                     | BOOL
         """
-        if isinstance(t[1], str):
+        if isinstance(t[1], str) or isinstance(t[1], unicode):
             t[0] = IdentifierExpression(t[1])
         else:
             t[0] = BooleanExpression(t[1])

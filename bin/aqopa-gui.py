@@ -7,9 +7,11 @@ import os
 import sys
 import time
 import threading
+import traceback
 import wx
 import wx.lib.newevent
 import wx.lib.delayedresult
+from aqopa.simulator.state import Process
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
@@ -295,7 +297,7 @@ class RunPanel(wx.Panel):
                 resultMessage += "\n".join(e.syntax_errors)
         except ConfigurationParserException, e:
             error = True
-            resultMessage = "CONFIGURATION SYNTAX ERROR\n"
+            resultMessage = "VERSIONS SYNTAX ERROR\n"
             if len(e.syntax_errors):
                 resultMessage += "\n".join(e.syntax_errors)
         
@@ -314,51 +316,89 @@ class RunPanel(wx.Panel):
             
     def OnRunClicked(self, event):
         """ """
+        
         try:
             self.runButton.Enable(False)
             self.ShowPanel(self.runPanel)
             
             self.finishedSimulators = []
+            self.jobs = {}
             
             self.startAnalysisTime = time.time()
             
             self.interpreter.prepare()
             self.progressTimer.Start(1000)
+            i = 0
             for simulator in self.interpreter.simulators:
                 wx.lib.delayedresult.startWorker(self.OnSimulationFinished, 
                                                  self.interpreter.run_simulation, 
-                                                 wargs=(simulator,))
+                                                 wargs=(simulator,),
+                                                 jobID = i)
+                self.jobs[i] = simulator
+                i += 1
+                
             
         except EnvironmentDefinitionException, e:
+            self.statusLabel.SetLabel("Error")
             self.runButton.Enable(True)
-            
             errorMessage = "Error on creating environment: %s\n" % e
             if len(e.errors) > 0:
                 errorMessage += "Errors:\n"
                 errorMessage += "\n".join(e.errors)
-                
             self.runResult.SetValue(errorMessage)
+            self.progressTimer.Stop()
             
+        except Exception, e:
+            self.statusLabel.SetLabel("Error")
+            self.runButton.Enable(True)
+            sys.stderr.write(traceback.format_exc())
+            errorMessage = "Unknown error\n"
+            self.runResult.SetValue(errorMessage)
             self.progressTimer.Stop()
         
         self.ShowPanel(self.runPanel)
         
     def OnSimulationFinished(self, result):
         """ """
-        simulator = result.get()
+        jobID = result.getJobID()
+        simulator = self.jobs[jobID]
         self.finishedSimulators.append(simulator)
-
-        self.PrintProgressbar(self.GetProgress())
-        
-        for m in self.selectedModules:
-            gui = m.get_gui()
-            gui.on_finished_simulation(simulator)
+        resultMessage = None
+        try :
+            simulator = result.get()
+    
+            self.PrintProgressbar(self.GetProgress())
+            
+            for m in self.selectedModules:
+                gui = m.get_gui()
+                gui.on_finished_simulation(simulator)
                 
+            runResultValue = self.runResult.GetValue()
+            resultMessage = runResultValue + \
+                "Version %s finished successfully.\n" \
+                % simulator.context.version.name
+                    
+        except RuntimeError, e:
+            pass
+        except Exception, e:
+            sys.stderr.write(traceback.format_exc())
+            
+            runResultValue = self.runResult.GetValue()
+            resultMessage = runResultValue + \
+                "Version %s finished with unknown error.\n" \
+                % simulator.context.version.name
+        
+        if resultMessage:    
+            self.runResult.SetValue(resultMessage)
+        
         if len(self.finishedSimulators) == len(self.interpreter.simulators):
             self.OnAllSimulationsFinished()
+            
                 
     def OnAllSimulationsFinished(self):
         """ """
+        self.progressTimer.Stop()
+        self.PrintProgressbar(1)
         
         self.endAnalysisTime = time.time()
         timeDelta = self.endAnalysisTime - self.startAnalysisTime
@@ -686,100 +726,335 @@ class AqopaApp(wx.App):
         if event.KeyCode == 76:
             self.mainFrame.mainNotebook.configurationTab.dataTextArea.SetValue(""" versions {
   
-  version v1 {
-    
-    set host Client1(Client);
-    set host Client2(Client);
-    set host Server(Client);
-    
+  version scenario1_sim100 {
+
+
+    set host Server(Server);
+
+    run host KeysStore(*) {
+      run Store1(*)
+    }
     run host Server(*) {
-      run Server1(*)
+      run Server1(get_db_key,decrypt_aes_256_sim_100,select_rows_100,get_rows)
     }
-    
-    run host Client2(*) {
-      run Client2(*)
+    run host Client(*){100}[ch1, ch2] {
+      run Client1(*)
     }
-    
   }
   
-  version v12 {
-    
-    set host Client1(Client);
-    set host Client2(Client);
-    set host Server(Client);
-    
+  version scenario1_sim200 {
+
+
+    set host Server(Server);
+
+    run host KeysStore(*) {
+      run Store1(*)
+    }
     run host Server(*) {
-      run Server1(*)
+      run Server1(get_db_key,decrypt_aes_256_sim_200,select_rows_200,get_rows)
     }
-    
-    run host Client2(*){5} {
-      run Client2(*)
+    run host Client(*){200}[ch1, ch2] {
+      run Client1(*)
     }
-    
   }
   
+  
+  
+  version scenario2_sim100 {
+
+
+    set host Server(Server);
+
+    run host KeysStore(*) {
+      run Store1(*)
+    }
+    run host Server(*) {
+      run Server1(get_db_key,decrypt_aes_128_sim_100,select_rows_100,get_rows)
+    }
+    run host Client(*){100}[ch1, ch2] {
+      run Client1(*)
+    }
+  }
+  
+  version scenario2_sim200 {
+
+
+    set host Server(Server);
+
+    run host KeysStore(*) {
+      run Store1(*)
+    }
+    run host Server(*) {
+      run Server1(get_db_key,decrypt_aes_128_sim_200,select_rows_200,get_rows)
+    }
+    run host Client(*){200}[ch1, ch2] {
+      run Client1(*)
+    }
+  }
+  
+  
+  
+  version scenario3_sim100 {
+
+
+    set host Server(Server);
+
+    run host KeysStore(*) {
+      run Store1(*)
+    }
+    run host Server(*) {
+      run Server1(get_db_key,get_db,select_rows_100,get_rows)
+    }
+    run host Client(*){100}[ch1, ch2] {
+      run Client1(*)
+    }
+  }
+  
+  version scenario3_sim200 {
+
+
+    set host Server(Server);
+
+    run host KeysStore(*) {
+      run Store1(*)
+    }
+    run host Server(*) {
+      run Server1(get_db_key,get_db,select_rows_200,get_rows)
+    }
+    run host Client(*){200}[ch1, ch2] {
+      run Client1(*)
+    }
+  }
+  
+  
+  
+  
+  version scenario4_sim100 {
+
+
+    set host Server(Server);
+
+    run host KeysStore(*) {
+      run Store1(*)
+    }
+    run host Server(*) {
+      run Server1(get_db_key,get_db,select_rows_100,get_rows_with_hash_and_signature_100)
+    }
+    run host Client(*){100}[ch1, ch2] {
+      run Client1(*)
+    }
+  }
+  
+  version scenario4_sim200 {
+
+
+    set host Server(Server);
+
+    run host KeysStore(*) {
+      run Store1(*)
+    }
+    run host Server(*) {
+      run Server1(get_db_key,get_db,select_rows_200,get_rows_with_hash_and_signature_200)
+    }
+    run host Client(*){200}[ch1, ch2] {
+      run Client1(*)
+    }
+  }
+  
+  
+  
+  version scenario5_sim100 {
+
+
+    set host Server(Server);
+
+    run host KeysStore(*) {
+      run Store1(*)
+    }
+    run host Server(*) {
+      run Server1(get_db_key,decrypt_aes_256_sim_100,select_rows_100,get_rows_with_hash_and_signature_100)
+    }
+    run host Client(*){100}[ch1, ch2] {
+      run Client1(*)
+    }
+  }
+  
+  version scenario5_sim200 {
+
+    set host Server(Server);
+
+    run host KeysStore(*) {
+      run Store1(*)
+    }
+    run host Server(*) {
+      run Server1(get_db_key,decrypt_aes_256_sim_200,select_rows_200,get_rows_with_hash_and_signature_200)
+    }
+    run host Client(*){200}[ch1, ch2] {
+      run Client1(*)
+    }
+  }
 } """)
             self.mainFrame.mainNotebook.modelTab.dataTextArea.SetValue(""" functions {
-  fun ms_10();
-  fun ms_1000();
+  fun nonce() (create nonce);
+
+  fun s_enc(data, key); 
+  fun s_dec(data, key); 
+  fun sign(data, s_key); 
+  fun a_enc(data, p_key);
+  fun a_dec(data, s_key);
+  fun pkey(skey);
+  fun skey();
+  fun hash(data);
+  
+  fun id_c() (identification of Client);
+  fun crit() (searching criteria);
+  
+  fun database() (creates non-encrypted database);
+  fun key_request() (creates key request);
+  fun get_db_key(key) (retrieving key for database);
+  fun select_rows(database, criteria);
 } 
 
 equations {
-  eq ms_10() = true;
+  eq s_dec(s_enc(data, key), key) = data;
+  eq a_dec(a_enc(data, pkey(skey)), skey) = data;
+  
+  eq get_db_key(key) = key;
 }
 
 channels {
-  channel ch1,ch2,ch3,ch4 (0);
+  channel ch1,ch2,ch3,ch4 (*);
 }
 
 hosts {
 
- host Client1(rr)(*) {
+ host Client(rr)(ch1, ch2) {
+ 
+   #ID_C = id_c();
+   #CRIT = crit();
+ 
    process Client1(ch1, ch2) {
-     M1 = ms_10();
+     M1 = (ID_C, CRIT);
      out(ch1: M1);
-   }
- }
- 
- host Client2(rr)(*) {
-   process Client2(ch1, ch2) {
-     M1 = ms_10();
-     M1 = ms_10();
-     out(ch1: M1);
-     ms_1000();
-     ms_1000();
-     ms_1000();
-     ms_1000();
-     out(ch1: M1);
-   }
- }
- 
- host Server(rr)(*) {
-   process Server1(ch1, ch2) {
-     ms_1000();
-     ms_1000();
-     ms_1000();
-     ms_1000();
-     in(ch1: M1);
+     in(ch2: M2);
    }
  
  }
  
+ host Server(rr)(ch1, ch2, ch3, ch4) {
+ 
+   #DB_KEY = nonce();
+   #DB = s_enc(database(), DB_KEY);
+   #SK_S = skey();
+ 
+   process Server1(ch1, ch2, ch3, ch4) {
+   
+     while(true) {
+    in(ch1: M1);
+    
+    CRIT = M1[1];
+      
+    subprocess get_db_key(ch3, ch4) {
+      R = key_request();
+      out (ch3: R);
+      in (ch4: TMP_DB_KEY);
+    }
+      
+    subprocess decrypt_aes_128_sim_100() {
+      DB_PLAINTEXT = s_dec(DB, TMP_DB_KEY)[AES,128,CBC,300MB,100];
+    }
+    
+    subprocess decrypt_aes_128_sim_200() {
+      DB_PLAINTEXT = s_dec(DB, TMP_DB_KEY)[AES,128,CBC,300MB,200];
+    }
+      
+    subprocess decrypt_aes_256_sim_100() {
+      DB_PLAINTEXT = s_dec(DB, TMP_DB_KEY)[AES,256,CBC,300MB,100];
+    }
+    
+    subprocess decrypt_aes_256_sim_200() {
+      DB_PLAINTEXT = s_dec(DB, TMP_DB_KEY)[AES,256,CBC,300MB,200];
+    }
+    
+    subprocess get_db() {
+      DB_PLAINTEXT = s_dec(DB, TMP_DB_KEY);
+    }
+    
+    subprocess select_rows_100() {
+      ROWS = select_rows(DB_PLAINTEXT, CRIT)[100];
+    }
+    
+    subprocess select_rows_200() {
+      ROWS = select_rows(DB_PLAINTEXT, CRIT)[200];
+    }
+    
+    subprocess get_rows() {
+      M2 = ROWS;
+    }
+    
+    subprocess get_rows_with_hash_and_signature_100() {
+      H = hash(ROWS)[SHA1,1MB,100];
+      SGN = sign(H, SK_S)[20B,RSA,2048,100];
+      M2 = (ROWS,SGN);
+    }
+    
+    subprocess get_rows_with_hash_and_signature_200() {
+      H = hash(ROWS)[SHA1,1MB,200];
+      SGN = sign(H, SK_S)[20B,RSA,2048,200];
+      M2 = (ROWS,SGN);
+    }
+    
+    out(ch2: M2);
+     }
+   }
+ 
+ }
+ 
+ host KeysStore(rr)(ch3, ch4) {
+ 
+   #DB_KEY = nonce();
+ 
+   process Store1(ch3, ch4) {
+   
+     while (true) {
+       in (ch3: Request);
+       KEY = get_db_key(DB_KEY);
+       out(ch4: KEY);
+     }
+   }
+ 
+ }
+
 } """)
             self.mainFrame.mainNotebook.metricsTab.dataTextArea.SetValue(""" metrics {
   conf(Server) {
-    a=b;
+    CPU = 12 x Intel Core i7-3930K 3.20GHz;
+    CryptoLibrary = openssl 1.0.1c;
+    OS = Debian 7.1 64-bit;
   }
-  conf(Mobile) {
-    a=b;
+
+  data(Server) {
+    primhead[function][input_size][algorithm][key_bitlength][simultaneous_operations][time:exact(ms)];
+    primitive[sign][20B][RSA][2048][100][0.2839];
+    primitive[sign][20B][RSA][2048][200][0.1577];
+    #
+    primhead[function][simultaneous_operations][time:exact(ms)];
+    primitive[select_rows][100][2235.5903];
+    primitive[select_rows][200][6487.1342];
+    #
+    primhead[function][algorithm][key_bitlength][mode][input_size][simultaneous_operations][time:exact(ms)];
+    primitive[s_dec][AES][128][CBC][300MB][100][12132.5026];
+    primitive[s_dec][AES][128][CBC][300MB][200][14126.168];
+    primitive[s_dec][AES][256][CBC][300MB][100][12239.8706];
+    primitive[s_dec][AES][256][CBC][300MB][200][14092.4126];
+    #
+    primhead[function][algorithm][input_size][simultaneous_operations][time:exact(ms)];
+    primitive[hash][SHA1][1MB][100][0.1797];    
+    primitive[hash][SHA1][1MB][200][0.0861];    
+    
   }
-  
-  data(Client) {
-    primhead[function][time:exact(ms)];
-    primitive[ms_10][10];
-    primitive[ms_1000][1000];
-  }
-} """)
+}
+ """)
 
 
 def main():
