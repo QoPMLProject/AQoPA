@@ -1,0 +1,14 @@
+metrics {
+  conf(Server) {
+    a=b;
+  }
+  conf(Mobile) {
+    a=b;
+  }
+  
+  data(Client) {
+    primhead[function][time:exact(ms)];
+    primitive[ms_10][10];
+    primitive[ms_1000][1000];
+  }
+}

@@ -1,0 +1,14 @@
+metrics {
+  conf(Server) {
+    CPU = 12 x Intel Core i7-3930K 3.20GHz;
+    CryptoLibrary = openssl 1.0.1c;
+    OS = Debian 7.1 64-bit;
+  }
+
+  data(Server) {
+    primhead[function][algorithm][input_size][simultaneous_operations][time:exact(ms)];
+    primitive[hash][SHA1][1MB][100][0.1711];    
+    primitive[hash][SHA1][1MB][100][---];    
+  }
+  
+}
