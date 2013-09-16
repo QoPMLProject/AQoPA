@@ -11,7 +11,6 @@ import traceback
 import wx
 import wx.lib.newevent
 import wx.lib.delayedresult
-from aqopa.simulator.state import Process
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
