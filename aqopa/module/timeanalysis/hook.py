@@ -195,9 +195,9 @@ class PreInstructionHook(Hook):
                 
         # Delay execution of this instruction 
         # if needed according to previous check      
-        if delay_communication_execution:
-            return ExecutionResult(custom_index_management=True, 
-                                   finish_instruction_execution=True)
+#        if delay_communication_execution:
+#            return ExecutionResult(custom_index_management=True, 
+#                                   finish_instruction_execution=True)
                 
                 
         if instruction.is_out():

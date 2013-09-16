@@ -35,11 +35,20 @@ class ModelPartDataPanel(wx.Panel):
         """ """
         wx.Panel.__init__(self, *args, **kwargs)
     
-        self.loadButton = wx.Button(self)
         self.dataTextArea = wx.TextCtrl(self, style=wx.TE_MULTILINE)
 
+        bPanel = wx.Panel(self)
+        bSizer = wx.BoxSizer(wx.VERTICAL)
+        bPanel.SetSizer(bSizer)
+
+        self.loadButton = wx.Button(bPanel)
+        self.saveButton = wx.Button(bPanel)
+        
+        bSizer.Add(self.saveButton, 0, wx.ALL, 5)
+        bSizer.Add(self.loadButton, 0, wx.ALL, 5)
+
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.loadButton, 0, wx.ALL, 5)
+        sizer.Add(bPanel, 0, wx.ALL, 5)
         sizer.Add(self.dataTextArea, 1, wx.ALL | wx.EXPAND, 5)
         
         self.SetSizer(sizer)
@@ -568,18 +577,21 @@ class MainNotebook(wx.Notebook):
 
         self.modelTab = ModelPartDataPanel(self)
         self.modelTab.loadButton.SetLabel("Load Model")
+        self.modelTab.saveButton.SetLabel("Save Model")
         self.modelTab.Layout()
         self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.modelTab.dataTextArea)
         self.AddPage(self.modelTab, "Model")
         
         self.metricsTab = ModelPartDataPanel(self)
         self.metricsTab.loadButton.SetLabel("Load Metrics")
+        self.metricsTab.saveButton.SetLabel("Save Metrics")
         self.metricsTab.Layout()
         self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.metricsTab.dataTextArea)
         self.AddPage(self.metricsTab, "Metrics")
         
         self.configurationTab = ModelPartDataPanel(self)
         self.configurationTab.loadButton.SetLabel("Load Versions")
+        self.configurationTab.saveButton.SetLabel("Save Versions")
         self.configurationTab.Layout()
         self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.configurationTab.dataTextArea)
         self.configurationTab.Layout()
@@ -669,6 +681,10 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnLoadMetrics, self.mainNotebook.metricsTab.loadButton)
         self.Bind(wx.EVT_BUTTON, self.OnLoadConfiguration, self.mainNotebook.configurationTab.loadButton)
         
+        self.Bind(wx.EVT_BUTTON, self.OnSaveModel, self.mainNotebook.modelTab.saveButton)
+        self.Bind(wx.EVT_BUTTON, self.OnSaveMetrics, self.mainNotebook.metricsTab.saveButton)
+        self.Bind(wx.EVT_BUTTON, self.OnSaveConfiguration, self.mainNotebook.configurationTab.saveButton)
+        
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.mainNotebook, 1, wx.ALL|wx.EXPAND, 5)
         self.SetSizer(sizer)
@@ -692,7 +708,20 @@ class MainFrame(wx.Frame):
         ofdlg = wx.FileDialog(self, "Load file", "", "", "QoP-ML Files (*.qopml)|*.qopml", 
                               wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         ofdlg.ShowModal()
-        loadFileDataFunction(ofdlg.GetPath())
+        if ofdlg.GetPath():
+            loadFileDataFunction(ofdlg.GetPath())
+        ofdlg.Destroy()
+        self.mainNotebook.SetSelection(pageNumber)
+        
+    def _SaveFile(self, getDataFunction, pageNumber):
+        """ Load file to text area """
+        ofdlg = wx.FileDialog(self, "Save file", "", "", "QoP-ML Files (*.qopml)|*.qopml", 
+                              wx.FD_SAVE)
+        ofdlg.ShowModal()
+        if ofdlg.GetPath():
+            f = open(ofdlg.GetPath(), "w")
+            f.write(getDataFunction())
+            f.close()
         ofdlg.Destroy()
         self.mainNotebook.SetSelection(pageNumber)
         
@@ -707,6 +736,18 @@ class MainFrame(wx.Frame):
     def OnLoadConfiguration(self, event):
         """ Load model file """
         self._LoadFile(self.mainNotebook.LoadConfigurationFile, 2)
+        
+    def OnSaveModel(self, event):
+        """ Load model file """
+        self._SaveFile(self.mainNotebook.GetModelData, 0)
+        
+    def OnSaveMetrics(self, event):
+        """ Load model file """
+        self._SaveFile(self.mainNotebook.GetMetricsData, 1)
+        
+    def OnSaveConfiguration(self, event):
+        """ Load model file """
+        self._SaveFile(self.mainNotebook.GetConfigurationData, 2)
         
         
 class AqopaApp(wx.App):
