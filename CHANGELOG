@@ -4,6 +4,11 @@
 
 Next release:
 
+v0.4.2
+ - Fixed labels in GUI graphs
+ - Turned off delay_communication_execution
+ - Added Save Model buttons
+
 v0.4.1
  - Fixed GUI mode binary file
 
