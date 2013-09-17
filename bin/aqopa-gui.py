@@ -44,8 +44,8 @@ class ModelPartDataPanel(wx.Panel):
         self.loadButton = wx.Button(bPanel)
         self.saveButton = wx.Button(bPanel)
         
-        bSizer.Add(self.saveButton, 0, wx.ALL, 5)
         bSizer.Add(self.loadButton, 0, wx.ALL, 5)
+        bSizer.Add(self.saveButton, 0, wx.ALL, 5)
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(bPanel, 0, wx.ALL, 5)
@@ -324,8 +324,12 @@ class RunPanel(wx.Panel):
             
     def OnRunClicked(self, event):
         """ """
-        
         try:
+            self.statusLabel.SetLabel("Running")
+            self.analysisTime.SetLabel("---")
+            self.percentLabel.SetLabel("0%")
+            self.runResult.SetValue("")
+            
             self.runButton.Enable(False)
             self.ShowPanel(self.runPanel)
             
@@ -373,6 +377,7 @@ class RunPanel(wx.Panel):
         self.finishedSimulators.append(simulator)
         resultMessage = None
         try :
+            
             simulator = result.get()
     
             self.PrintProgressbar(self.GetProgress())
@@ -456,7 +461,7 @@ class RunPanel(wx.Panel):
             self.runPanel.Layout()
         else:
             dots = self.dotsLabel.GetLabel()
-            if len(dots) > 0:
+            if len(dots) > 10:
                 dots = "."
             else:
                 dots += ".."
@@ -777,7 +782,7 @@ class AqopaApp(wx.App):
     run host Server(*) {
       run Server1(get_db_key,decrypt_aes_256_sim_100,select_rows_100,get_rows)
     }
-    run host Client(*){100}[ch1, ch2] {
+    run host Client(*){10}[ch1, ch2] {
       run Client1(*)
     }
   }
@@ -785,7 +790,7 @@ class AqopaApp(wx.App):
   version scenario1_sim200 {
 
 
-    set host Server(Server);
+    set host Server(Server1);
 
     run host KeysStore(*) {
       run Store1(*)
@@ -793,7 +798,7 @@ class AqopaApp(wx.App):
     run host Server(*) {
       run Server1(get_db_key,decrypt_aes_256_sim_200,select_rows_200,get_rows)
     }
-    run host Client(*){200}[ch1, ch2] {
+    run host Client(*){20}[ch1, ch2] {
       run Client1(*)
     }
   }
@@ -811,7 +816,7 @@ class AqopaApp(wx.App):
     run host Server(*) {
       run Server1(get_db_key,decrypt_aes_128_sim_100,select_rows_100,get_rows)
     }
-    run host Client(*){100}[ch1, ch2] {
+    run host Client(*){10}[ch1, ch2] {
       run Client1(*)
     }
   }
@@ -819,7 +824,7 @@ class AqopaApp(wx.App):
   version scenario2_sim200 {
 
 
-    set host Server(Server);
+    set host Server(Server1);
 
     run host KeysStore(*) {
       run Store1(*)
@@ -827,109 +832,7 @@ class AqopaApp(wx.App):
     run host Server(*) {
       run Server1(get_db_key,decrypt_aes_128_sim_200,select_rows_200,get_rows)
     }
-    run host Client(*){200}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  
-  
-  version scenario3_sim100 {
-
-
-    set host Server(Server);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,get_db,select_rows_100,get_rows)
-    }
-    run host Client(*){100}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  version scenario3_sim200 {
-
-
-    set host Server(Server);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,get_db,select_rows_200,get_rows)
-    }
-    run host Client(*){200}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  
-  
-  
-  version scenario4_sim100 {
-
-
-    set host Server(Server);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,get_db,select_rows_100,get_rows_with_hash_and_signature_100)
-    }
-    run host Client(*){100}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  version scenario4_sim200 {
-
-
-    set host Server(Server);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,get_db,select_rows_200,get_rows_with_hash_and_signature_200)
-    }
-    run host Client(*){200}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  
-  
-  version scenario5_sim100 {
-
-
-    set host Server(Server);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,decrypt_aes_256_sim_100,select_rows_100,get_rows_with_hash_and_signature_100)
-    }
-    run host Client(*){100}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  version scenario5_sim200 {
-
-    set host Server(Server);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,decrypt_aes_256_sim_200,select_rows_200,get_rows_with_hash_and_signature_200)
-    }
-    run host Client(*){200}[ch1, ch2] {
+    run host Client(*){20}[ch1, ch2] {
       run Client1(*)
     }
   }
@@ -1072,6 +975,12 @@ hosts {
     CryptoLibrary = openssl 1.0.1c;
     OS = Debian 7.1 64-bit;
   }
+  
+  conf(Server1) {
+    CPU = 12 x Intel Core i7-3930K 3.20GHz;
+    CryptoLibrary = openssl 1.0.1c;
+    OS = Debian 7.1 64-bit;
+  }
 
   data(Server) {
     primhead[function][input_size][algorithm][key_bitlength][simultaneous_operations][time:exact(ms)];
@@ -1090,6 +999,27 @@ hosts {
     #
     primhead[function][algorithm][input_size][simultaneous_operations][time:exact(ms)];
     primitive[hash][SHA1][1MB][100][0.1797];    
+    primitive[hash][SHA1][1MB][200][0.0861];    
+    
+  }
+
+  data(Server1) {
+    primhead[function][input_size][algorithm][key_bitlength][simultaneous_operations][time:exact(ms)];
+    primitive[sign][20B][RSA][2048][100][0.4839];
+    primitive[sign][20B][RSA][2048][200][0.3577];
+    #
+    primhead[function][simultaneous_operations][time:exact(ms)];
+    primitive[select_rows][100][2435.5903];
+    primitive[select_rows][200][7487.1342];
+    #
+    primhead[function][algorithm][key_bitlength][mode][input_size][simultaneous_operations][time:exact(ms)];
+    primitive[s_dec][AES][128][CBC][300MB][100][14132.5026];
+    primitive[s_dec][AES][128][CBC][300MB][200][16126.168];
+    primitive[s_dec][AES][256][CBC][300MB][100][14239.8706];
+    primitive[s_dec][AES][256][CBC][300MB][200][16092.4126];
+    #
+    primhead[function][algorithm][input_size][simultaneous_operations][time:exact(ms)];
+    primitive[hash][SHA1][1MB][100][0.2797];    
     primitive[hash][SHA1][1MB][200][0.0861];    
     
   }
