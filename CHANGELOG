@@ -4,6 +4,10 @@
 
 Next release:
 
+v0.4.3
+ - Reset run panel, when new analysis is started
+ - Added legends for charts
+
 v0.4.2
  - Fixed labels in GUI graphs
  - Turned off delay_communication_execution
