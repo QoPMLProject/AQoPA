@@ -44,8 +44,8 @@ class ModelPartDataPanel(wx.Panel):
         self.loadButton = wx.Button(bPanel)
         self.saveButton = wx.Button(bPanel)
         
-        bSizer.Add(self.saveButton, 0, wx.ALL, 5)
         bSizer.Add(self.loadButton, 0, wx.ALL, 5)
+        bSizer.Add(self.saveButton, 0, wx.ALL, 5)
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(bPanel, 0, wx.ALL, 5)
@@ -324,8 +324,12 @@ class RunPanel(wx.Panel):
             
     def OnRunClicked(self, event):
         """ """
-        
         try:
+            self.statusLabel.SetLabel("Running")
+            self.analysisTime.SetLabel("---")
+            self.percentLabel.SetLabel("0%")
+            self.runResult.SetValue("")
+            
             self.runButton.Enable(False)
             self.ShowPanel(self.runPanel)
             
@@ -373,6 +377,7 @@ class RunPanel(wx.Panel):
         self.finishedSimulators.append(simulator)
         resultMessage = None
         try :
+            
             simulator = result.get()
     
             self.PrintProgressbar(self.GetProgress())
@@ -456,7 +461,7 @@ class RunPanel(wx.Panel):
             self.runPanel.Layout()
         else:
             dots = self.dotsLabel.GetLabel()
-            if len(dots) > 0:
+            if len(dots) > 10:
                 dots = "."
             else:
                 dots += ".."
