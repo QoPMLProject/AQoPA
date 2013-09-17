@@ -8,10 +8,11 @@ import os
 import re
 import wx
 import wx.animate
+import wx.lib.scrolledpanel as scrolled
 
 from aqopa.model import name_indexes
 
-class OneVersionPanel(wx.Panel):
+class SingleVersionPanel(wx.Panel):
     """ 
     Frame presenting results for one simulation.  
     Simulator may be retrived from module, 
@@ -79,7 +80,7 @@ class OneVersionPanel(wx.Panel):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(versionBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
         sizer.Add(totalTimeBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
-        sizer.Add(timesBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(timesBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
         self.SetSizer(sizer)
         
         self.SetVersionsResultsVisibility(False)
@@ -281,7 +282,7 @@ class OneVersionPanel(wx.Panel):
             self.timeResultsPanel.Destroy()
             self.timeResultsPanel = None
             
-        self.timeResultsPanel = wx.Panel(self)
+        self.timeResultsPanel = scrolled.ScrolledPanel(self)
         self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
         
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -301,6 +302,7 @@ class OneVersionPanel(wx.Panel):
                 sizer.Add(lbl)
         
         self.timeResultsPanel.SetSizer(sizer)
+        self.timeResultsPanel.SetupScrolling(scroll_x=False)
         self.Layout()
     
     def ShowAverageHostsTime(self, simulator, hosts):
@@ -315,7 +317,7 @@ class OneVersionPanel(wx.Panel):
         if self.timeResultsPanel:
             self.timeResultsPanel.Destroy()
             
-        self.timeResultsPanel = wx.Panel(self)
+        self.timeResultsPanel = scrolled.ScrolledPanel(self)
         self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
         lblText = ""
@@ -345,7 +347,7 @@ class OneVersionPanel(wx.Panel):
         if self.timeResultsPanel:
             self.timeResultsPanel.Destroy()
             
-        self.timeResultsPanel = wx.Panel(self)
+        self.timeResultsPanel = scrolled.ScrolledPanel(self)
         self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
         lblText = ""
@@ -375,7 +377,7 @@ class OneVersionPanel(wx.Panel):
         if self.timeResultsPanel:
             self.timeResultsPanel.Destroy()
             
-        self.timeResultsPanel = wx.Panel(self)
+        self.timeResultsPanel = scrolled.ScrolledPanel(self)
         self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
         lblText = ""
@@ -392,10 +394,11 @@ class OneVersionPanel(wx.Panel):
         self.timeResultsPanel.SetSizer(sizer)
         self.Layout()
         
-TIME_TYPE_MAX = 1
-TIME_TYPE_AVG = 2
+TIME_TYPE_MAX   = 1
+TIME_TYPE_AVG   = 2
+TIME_TYPE_TOTAL = 3
         
-class CompareVersionsPanel(wx.Panel):
+class VersionsChartsPanel(wx.Panel):
     
     def __init__(self, module, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
@@ -412,16 +415,19 @@ class CompareVersionsPanel(wx.Panel):
         
         self.maxTimeOnRepetitionBtn = wx.Button(self, label="T_MAX / L")
         self.avgTimeOnRepetitionBtn = wx.Button(self, label="T_AVG / L")
+        self.totalTimeOnVersionsBtn = wx.Button(self, label="T_Total / Version")
         self.maxTimeOnMetricsBtn = wx.Button(self, label="T_MAX / M")
         self.avgTimeOnMetricsBtn = wx.Button(self, label="T_AVG / M")
         
         self.maxTimeOnRepetitionBtn.Bind(wx.EVT_BUTTON, self.OnTimeMaxOnRepetitionBtnClicked)
         self.avgTimeOnRepetitionBtn.Bind(wx.EVT_BUTTON, self.OnTimeAvgOnRepetitionBtnClicked)
+        self.totalTimeOnVersionsBtn.Bind(wx.EVT_BUTTON, self.OnTimeTotalOnVersionsBtnClicked)
         self.maxTimeOnMetricsBtn.Bind(wx.EVT_BUTTON, self.OnTimeMaxOnMetricsBtnClicked)
         self.avgTimeOnMetricsBtn.Bind(wx.EVT_BUTTON, self.OnTimeAvgOnMetricsBtnClicked)
         
         self.chartTypeBoxSizer.Add(self.maxTimeOnRepetitionBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
         self.chartTypeBoxSizer.Add(self.avgTimeOnRepetitionBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
+        self.chartTypeBoxSizer.Add(self.totalTimeOnVersionsBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
         self.chartTypeBoxSizer.Add(self.maxTimeOnMetricsBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
         self.chartTypeBoxSizer.Add(self.avgTimeOnMetricsBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
         
@@ -504,6 +510,10 @@ class CompareVersionsPanel(wx.Panel):
         self.chartConfigBox.SetLabel("TAvg/L Chart Configuration")
         self.BuildTimesByRepetitionsChartPanel(TIME_TYPE_AVG)
     
+    def OnTimeTotalOnVersionsBtnClicked(self, event):
+        self.chartConfigBox.SetLabel("TTotal/Version Chart Configuration")
+        self.BuildTimesByVersionsChartPanel(TIME_TYPE_TOTAL)
+    
     def OnTimeMaxOnMetricsBtnClicked(self, event):
         self.chartConfigBox.SetLabel("TMax/M Chart Configuration")
         self.BuildTimesByMetricsChartPanel(TIME_TYPE_MAX)
@@ -517,28 +527,40 @@ class CompareVersionsPanel(wx.Panel):
         if len(self.curves) == 0:
             wx.MessageBox("No curves defined. You must add at least one curve.", 
                           'Error', wx.OK | wx.ICON_ERROR)
-        self.CalculateAndShowChartByRepFrame(TIME_TYPE_MAX)
+        else:
+            self.CalculateAndShowChartByRepFrame(TIME_TYPE_MAX)
     
     def OnShowChartTAvgVarRepButtonClicked(self, event):
         """ """
         if len(self.curves) == 0:
             wx.MessageBox("No curves defined. You must add at least one curve.", 
                           'Error', wx.OK | wx.ICON_ERROR)
-        self.CalculateAndShowChartByRepFrame(TIME_TYPE_AVG)
+        else:
+            self.CalculateAndShowChartByRepFrame(TIME_TYPE_AVG)
         
     def OnShowChartTMaxVarMetricsButtonClicked(self, event):
         """ """
         if len(self.curves) == 0:
             wx.MessageBox("No curves defined. You must add at least one curve.", 
                           'Error', wx.OK | wx.ICON_ERROR)
-        self.CalculateAndShowChartByMetricsFrame(TIME_TYPE_MAX)
+        else:
+            self.CalculateAndShowChartByMetricsFrame(TIME_TYPE_MAX)
     
     def OnShowChartTAvgVarMetricsButtonClicked(self, event):
         """ """
         if len(self.curves) == 0:
             wx.MessageBox("No curves defined. You must add at least one curve.", 
                           'Error', wx.OK | wx.ICON_ERROR)
-        self.CalculateAndShowChartByMetricsFrame(TIME_TYPE_AVG)
+        else:
+            self.CalculateAndShowChartByMetricsFrame(TIME_TYPE_AVG)
+        
+    def OnShowChartTTotalVarVersionButtonClicked(self, event):
+        """ """
+        if len(self.simulators) == 0:
+            wx.MessageBox("There are no finished simulations yet. Please wait and try again.", 
+                          'Error', wx.OK | wx.ICON_ERROR)
+        else:
+            self.CalculateAndShowChartByVersions()
         
     def OnAddCurveButtonClicked(self, event):
         """ """
@@ -629,6 +651,44 @@ class CompareVersionsPanel(wx.Panel):
             onShowChartBtnClicked = self.OnShowChartTAvgVarRepButtonClicked
         
         self.BuildCurvesPanel(self.chartPanel, chartPanelSizer, onShowChartBtnClicked)
+        
+        self.chartConfigBoxSizer.Add(self.chartPanel, 1, wx.ALL | wx.EXPAND, 5)
+        self.Layout()
+        
+        self.curves = []
+    
+    def BuildTimesByVersionsChartPanel(self, timeType):
+        """ """
+        if self.chartPanel:
+            self.chartPanel.Destroy()
+            self.chartPanel = None
+            
+        self.chartPanel = wx.Panel(self)
+        chartPanelSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.chartPanel.SetSizer(chartPanelSizer)
+        
+        leftBox = wx.StaticBox(self.chartPanel, label="Versions")
+        leftBoxSizer = wx.StaticBoxSizer(leftBox, wx.VERTICAL)
+        chartPanelSizer.Add(leftBoxSizer, 0, wx.ALL, 5)
+        
+        self.simulatorByNumber = {}
+        i = 0
+        for s in self.simulators:
+            i += 1
+            version = s.context.version
+            text = wx.StaticText(self.chartPanel, label = "%d. %s" % (i, version.name)) 
+            leftBoxSizer.Add(text)
+            self.simulatorByNumber[i] = s
+        
+        showPanel = wx.Panel(self.chartPanel)
+        showSizer = wx.BoxSizer(wx.VERTICAL)
+        showPanel.SetSizer(showSizer)
+        
+        showBtn = wx.Button(showPanel, label="Show Chart")
+        showBtn.Bind(wx.EVT_BUTTON, self.OnShowChartTTotalVarVersionButtonClicked)
+        showSizer.Add(showBtn, 0, wx.ALIGN_CENTER)
+        
+        chartPanelSizer.Add(showPanel, 1, wx.ALL, 5)
         
         self.chartConfigBoxSizer.Add(self.chartPanel, 1, wx.ALL | wx.EXPAND, 5)
         self.Layout()
@@ -811,6 +871,78 @@ class CompareVersionsPanel(wx.Panel):
             
         self.ShowChartFrame(chartTitle, xLabel, yLabel, curvesData)
         
+    def CalculateAndShowChartByVersions(self):
+        """ """
+        def chartFun(module, simulator, hosts):
+            val = 0.0 
+            for h in hosts:
+                t = module.get_current_time(simulator, h)
+                if t > val:
+                    val = t
+            return val
+        
+        chartTitle  = "TTotal / Version"
+        xLabel      = "Version"
+        yLabel      = "TTotal"
+
+        values = []
+                
+        for i in range(1, len(self.simulators)+1):
+            s = self.simulatorByNumber[i]
+            values.append((i, chartFun(self.module, s, s.context.hosts)))
+        
+        values.sort(key=lambda t: t[0])                
+        
+        from wx.lib.plot import PlotCanvas, PolyMarker, PolyLine, PlotGraphics
+        import random 
+        
+        def drawPlot(chartTitle, xTitle, yTitle, curvesData):
+            """ """
+            plots = []
+            
+            for curveData in curvesData:
+                cr = random.randint(0, 255)
+                cg = random.randint(0, 255)
+                cb = random.randint(0, 255)
+                markers = PolyMarker(curveData[1], legend=curveData[0], 
+                                     colour=wx.Color(cr,cg,cb), size=2)
+                line = PolyLine(curveData[1], legend=curveData[0], 
+                                colour=wx.Color(cr,cg,cb), width=1)
+                plots.append(markers)
+                plots.append(line)
+            
+            return PlotGraphics(plots, chartTitle, 
+                                xTitle, yTitle)
+        
+        frame = wx.Frame(None, title=chartTitle)
+        panel = wx.Panel(frame)
+        panelSizer = wx.BoxSizer(wx.HORIZONTAL)
+        panel.SetSizer(panelSizer)
+        
+        frameSizer = wx.BoxSizer(wx.VERTICAL)
+        frameSizer.Add(panel, 1, wx.ALL | wx.EXPAND, 5)
+        frame.SetSizer(frameSizer)
+        
+        legendBox = wx.StaticBox(panel, label="Versions")
+        legendBoxSizer = wx.StaticBoxSizer(legendBox, wx.VERTICAL)
+        
+        for i in range(1, len(self.simulators)+1):
+            s = self.simulatorByNumber[i]
+            version = s.context.version
+            text = wx.StaticText(panel, label = "%d. %s" % (i, version.name)) 
+            legendBoxSizer.Add(text)
+        
+        canvas = PlotCanvas(panel)
+        canvas.Draw(drawPlot(chartTitle, xLabel, yLabel, [("Versions",values)]))
+        
+        panelSizer.Add(legendBoxSizer, 0, wx.ALL, 5)
+        panelSizer.Add(canvas, 1, wx.EXPAND)
+        
+        frameSizer.Layout()
+        
+        frame.Maximize(True)
+        frame.Show()
+        
     def AddFinishedSimulation(self, simulator):
         """ """
         self.simulators.append(simulator)
@@ -867,13 +999,13 @@ class MainResultsNotebook(wx.Notebook):
         
         self.module = module
         
-        self.oneVersionTab = OneVersionPanel(self.module, self)
+        self.oneVersionTab = SingleVersionPanel(self.module, self)
         self.oneVersionTab.Layout()
-        self.AddPage(self.oneVersionTab, "Version Results")
+        self.AddPage(self.oneVersionTab, "Single Version")
         
-        self.compareTab = CompareVersionsPanel(self.module, self)
+        self.compareTab = VersionsChartsPanel(self.module, self)
         self.compareTab.Layout()
-        self.AddPage(self.compareTab, "Compare Versions")
+        self.AddPage(self.compareTab, "Versions' Charts")
         
     def OnParsedModel(self):
         """ """

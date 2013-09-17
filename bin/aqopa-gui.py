@@ -782,7 +782,7 @@ class AqopaApp(wx.App):
     run host Server(*) {
       run Server1(get_db_key,decrypt_aes_256_sim_100,select_rows_100,get_rows)
     }
-    run host Client(*){100}[ch1, ch2] {
+    run host Client(*){10}[ch1, ch2] {
       run Client1(*)
     }
   }
@@ -798,7 +798,7 @@ class AqopaApp(wx.App):
     run host Server(*) {
       run Server1(get_db_key,decrypt_aes_256_sim_200,select_rows_200,get_rows)
     }
-    run host Client(*){200}[ch1, ch2] {
+    run host Client(*){20}[ch1, ch2] {
       run Client1(*)
     }
   }
@@ -816,7 +816,7 @@ class AqopaApp(wx.App):
     run host Server(*) {
       run Server1(get_db_key,decrypt_aes_128_sim_100,select_rows_100,get_rows)
     }
-    run host Client(*){100}[ch1, ch2] {
+    run host Client(*){10}[ch1, ch2] {
       run Client1(*)
     }
   }
@@ -832,109 +832,7 @@ class AqopaApp(wx.App):
     run host Server(*) {
       run Server1(get_db_key,decrypt_aes_128_sim_200,select_rows_200,get_rows)
     }
-    run host Client(*){200}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  
-  
-  version scenario3_sim100 {
-
-
-    set host Server(Server);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,get_db,select_rows_100,get_rows)
-    }
-    run host Client(*){100}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  version scenario3_sim200 {
-
-
-    set host Server(Server);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,get_db,select_rows_200,get_rows)
-    }
-    run host Client(*){200}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  
-  
-  
-  version scenario4_sim100 {
-
-
-    set host Server(Server);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,get_db,select_rows_100,get_rows_with_hash_and_signature_100)
-    }
-    run host Client(*){100}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  version scenario4_sim200 {
-
-
-    set host Server(Server);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,get_db,select_rows_200,get_rows_with_hash_and_signature_200)
-    }
-    run host Client(*){200}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  
-  
-  version scenario5_sim100 {
-
-
-    set host Server(Server);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,decrypt_aes_256_sim_100,select_rows_100,get_rows_with_hash_and_signature_100)
-    }
-    run host Client(*){100}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  version scenario5_sim200 {
-
-    set host Server(Server);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,decrypt_aes_256_sim_200,select_rows_200,get_rows_with_hash_and_signature_200)
-    }
-    run host Client(*){200}[ch1, ch2] {
+    run host Client(*){20}[ch1, ch2] {
       run Client1(*)
     }
   }
