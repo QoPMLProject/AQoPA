@@ -790,7 +790,7 @@ class AqopaApp(wx.App):
   version scenario1_sim200 {
 
 
-    set host Server(Server);
+    set host Server(Server1);
 
     run host KeysStore(*) {
       run Store1(*)
@@ -824,7 +824,7 @@ class AqopaApp(wx.App):
   version scenario2_sim200 {
 
 
-    set host Server(Server);
+    set host Server(Server1);
 
     run host KeysStore(*) {
       run Store1(*)
@@ -975,6 +975,12 @@ hosts {
     CryptoLibrary = openssl 1.0.1c;
     OS = Debian 7.1 64-bit;
   }
+  
+  conf(Server1) {
+    CPU = 12 x Intel Core i7-3930K 3.20GHz;
+    CryptoLibrary = openssl 1.0.1c;
+    OS = Debian 7.1 64-bit;
+  }
 
   data(Server) {
     primhead[function][input_size][algorithm][key_bitlength][simultaneous_operations][time:exact(ms)];
@@ -993,6 +999,27 @@ hosts {
     #
     primhead[function][algorithm][input_size][simultaneous_operations][time:exact(ms)];
     primitive[hash][SHA1][1MB][100][0.1797];    
+    primitive[hash][SHA1][1MB][200][0.0861];    
+    
+  }
+
+  data(Server1) {
+    primhead[function][input_size][algorithm][key_bitlength][simultaneous_operations][time:exact(ms)];
+    primitive[sign][20B][RSA][2048][100][0.4839];
+    primitive[sign][20B][RSA][2048][200][0.3577];
+    #
+    primhead[function][simultaneous_operations][time:exact(ms)];
+    primitive[select_rows][100][2435.5903];
+    primitive[select_rows][200][7487.1342];
+    #
+    primhead[function][algorithm][key_bitlength][mode][input_size][simultaneous_operations][time:exact(ms)];
+    primitive[s_dec][AES][128][CBC][300MB][100][14132.5026];
+    primitive[s_dec][AES][128][CBC][300MB][200][16126.168];
+    primitive[s_dec][AES][256][CBC][300MB][100][14239.8706];
+    primitive[s_dec][AES][256][CBC][300MB][200][16092.4126];
+    #
+    primhead[function][algorithm][input_size][simultaneous_operations][time:exact(ms)];
+    primitive[hash][SHA1][1MB][100][0.2797];    
     primitive[hash][SHA1][1MB][200][0.0861];    
     
   }

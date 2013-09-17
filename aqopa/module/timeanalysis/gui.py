@@ -830,6 +830,37 @@ class VersionsChartsPanel(wx.Panel):
                 return  0
             return s / float(l)
         
+        def buildLegend(parent):
+            
+            mainPanel = wx.Panel(parent)
+            mainPanelSizer = wx.BoxSizer(wx.VERTICAL)
+            mainPanel.SetSizer(mainPanelSizer)
+            
+            i = 0
+            for metric in self.metrics:
+                i += 1
+                metricPanel = wx.Panel(mainPanel)
+                metricPanelSizer = wx.BoxSizer(wx.HORIZONTAL)
+                metricPanel.SetSizer(metricPanelSizer)
+                
+                mainPanelSizer.Add(metricPanel)
+                
+                metricNumber = "%d ." % i
+                lbl = wx.StaticText(metricPanel, label=metricNumber)
+                metricPanelSizer.Add(lbl)
+                
+                metricsConfigPanel = wx.Panel(metricPanel)
+                metricsConfigPanelSizer = wx.BoxSizer(wx.VERTICAL)
+                metricsConfigPanel.SetSizer(metricsConfigPanelSizer)
+                
+                metricPanelSizer.Add(metricsConfigPanel)
+
+                for mSet in metric:
+                    lbl = wx.StaticText(metricsConfigPanel, label="Host: %s -> Config: %s" % (mSet.host_name, mSet.configuration_name))
+                    metricsConfigPanelSizer.Add(lbl)
+        
+            return mainPanelSizer
+        
         curvesData = []
         
         chartFun = lambda x : x
@@ -869,7 +900,7 @@ class VersionsChartsPanel(wx.Panel):
             curveData = ("%d." % c, values)
             curvesData.append(curveData)
             
-        self.ShowChartFrame(chartTitle, xLabel, yLabel, curvesData)
+        self.ShowChartFrame(chartTitle, xLabel, yLabel, curvesData, buildLegendPanelFun=buildLegend)
         
     def CalculateAndShowChartByVersions(self):
         """ """
@@ -881,17 +912,40 @@ class VersionsChartsPanel(wx.Panel):
                     val = t
             return val
         
+        def buildLegendPanel(parent):
+            legendBox = wx.StaticBox(parent, label="Versions")
+            legendBoxSizer = wx.StaticBoxSizer(legendBox, wx.VERTICAL)
+            
+            for i in range(1, len(self.simulators)+1):
+                s = self.simulatorByNumber[i]
+                version = s.context.version
+                text = wx.StaticText(parent, label = "%d. %s" % (i, version.name)) 
+                legendBoxSizer.Add(text)
+                
+            return legendBoxSizer
+        
         chartTitle  = "TTotal / Version"
         xLabel      = "Version"
         yLabel      = "TTotal"
 
         values = []
-                
         for i in range(1, len(self.simulators)+1):
             s = self.simulatorByNumber[i]
             values.append((i, chartFun(self.module, s, s.context.hosts)))
-        
         values.sort(key=lambda t: t[0])                
+        self.ShowChartFrame(chartTitle, xLabel, yLabel, [("Versions", values)], 
+                            buildLegendPanelFun=buildLegendPanel)
+        
+    def AddFinishedSimulation(self, simulator):
+        """ """
+        self.simulators.append(simulator)
+        
+    def RemoveAllSimulations(self):
+        """ """
+        self.simulators = []
+        
+    def ShowChartFrame(self, chartTitle, xTitle, yTitle, curvesData, buildLegendPanelFun = None):
+        """ Shows frame with gnuplot chart """
         
         from wx.lib.plot import PlotCanvas, PolyMarker, PolyLine, PlotGraphics
         import random 
@@ -923,71 +977,15 @@ class VersionsChartsPanel(wx.Panel):
         frameSizer.Add(panel, 1, wx.ALL | wx.EXPAND, 5)
         frame.SetSizer(frameSizer)
         
-        legendBox = wx.StaticBox(panel, label="Versions")
-        legendBoxSizer = wx.StaticBoxSizer(legendBox, wx.VERTICAL)
-        
-        for i in range(1, len(self.simulators)+1):
-            s = self.simulatorByNumber[i]
-            version = s.context.version
-            text = wx.StaticText(panel, label = "%d. %s" % (i, version.name)) 
-            legendBoxSizer.Add(text)
-        
-        canvas = PlotCanvas(panel)
-        canvas.Draw(drawPlot(chartTitle, xLabel, yLabel, [("Versions",values)]))
-        
-        panelSizer.Add(legendBoxSizer, 0, wx.ALL, 5)
-        panelSizer.Add(canvas, 1, wx.EXPAND)
-        
-        frameSizer.Layout()
-        
-        frame.Maximize(True)
-        frame.Show()
-        
-    def AddFinishedSimulation(self, simulator):
-        """ """
-        self.simulators.append(simulator)
-        
-    def RemoveAllSimulations(self):
-        """ """
-        self.simulators = []
-        
-    def ShowChartFrame(self, chartTitle, xTitle, yTitle, curvesData):
-        """ Shows frame with gnuplot chart """
-        
-        from wx.lib.plot import PlotCanvas, PolyMarker, PolyLine, PlotGraphics
-        import random 
-        
-        def drawPlot(chartTitle, xTitle, yTitle, curvesData):
-            """ """
-            plots = []
-            
-            for curveData in curvesData:
-                cr = random.randint(0, 255)
-                cg = random.randint(0, 255)
-                cb = random.randint(0, 255)
-                markers = PolyMarker(curveData[1], legend=curveData[0], 
-                                     colour=wx.Color(cr,cg,cb), size=2)
-                line = PolyLine(curveData[1], legend=curveData[0], 
-                                colour=wx.Color(cr,cg,cb), width=1)
-                plots.append(markers)
-                plots.append(line)
-            
-            return PlotGraphics(plots, chartTitle, 
-                                xTitle, yTitle)
-        
-        frame = wx.Frame(None, title=chartTitle)
-        panel = wx.Panel(frame)
-        panelSizer = wx.BoxSizer(wx.VERTICAL)
-        panel.SetSizer(panelSizer)
-        
-        frameSizer = wx.BoxSizer(wx.VERTICAL)
-        frameSizer.Add(panel, 1, wx.ALL | wx.EXPAND, 5)
-        frame.SetSizer(frameSizer)
-        
         canvas = PlotCanvas(panel)
         canvas.Draw(drawPlot(chartTitle, xTitle, yTitle, curvesData))
         
+        if buildLegendPanelFun:
+            legendPanel = buildLegendPanelFun(panel)
+            panelSizer.Add(legendPanel, 0, wx.ALL, 5)
         panelSizer.Add(canvas, 1, wx.EXPAND)
+        
+        panelSizer.Layout()
         
         frame.Maximize(True)
         frame.Show()
