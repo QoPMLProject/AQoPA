@@ -813,19 +813,18 @@ class VersionsChartsPanel(wx.Panel):
     def CalculateAndShowChartByMetricsFrame(self, timeType):
         """ """
         
-        def TMax(module, simulator, hosts):
+        def TMax(values):
             val = 0.0 
-            for h in hosts:
-                t = module.get_current_time(simulator, h)
+            for t in values:
                 if t > val:
                     val = t
             return val
         
-        def TAvg(module, simulator, hosts):
+        def TAvg(values):
             s = 0.0 
-            for h in hosts:
-                s += module.get_current_time(simulator, h)
-            l = len(hosts)
+            for v in values:
+                s += v
+            l = len(values)
             if l == 0:
                 return  0
             return s / float(l)
@@ -887,14 +886,15 @@ class VersionsChartsPanel(wx.Panel):
             i = 0
             for m in self.metrics:
                 i += 1
-                hosts = []
+                time_values = []
                 
                 for s in curveSimulators:
                     currentMetric = self._GetMetric(s)
                     if self._AreMetricsEqual(m, currentMetric):
-                        hosts.extend(s.context.hosts)
+                        time_values.extend([ self.module.get_current_time(s, h) 
+                                            for h in s.context.hosts])
                 
-                values.append((i, chartFun(self.module, s, hosts)))
+                values.append((i, chartFun(time_values)))
             
             values.sort(key=lambda t: t[0])                
             curveData = ("%d." % c, values)
