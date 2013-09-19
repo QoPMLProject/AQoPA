@@ -810,18 +810,17 @@ class VersionsChartsPanel(wx.Panel):
         
         def buildLegend(parent):
             
-            mainPanel = wx.Panel(parent)
-            mainPanelSizer = wx.BoxSizer(wx.VERTICAL)
-            mainPanel.SetSizer(mainPanelSizer)
+            mainBox = wx.StaticBox(parent, label="Metrics")
+            mainBoxSizer = wx.StaticBoxSizer(mainBox,wx.VERTICAL)
             
             i = 0
             for metric in self.metrics:
                 i += 1
-                metricPanel = wx.Panel(mainPanel)
+                metricPanel = wx.Panel(parent)
                 metricPanelSizer = wx.BoxSizer(wx.HORIZONTAL)
                 metricPanel.SetSizer(metricPanelSizer)
                 
-                mainPanelSizer.Add(metricPanel)
+                mainBoxSizer.Add(metricPanel)
                 
                 metricNumber = "%d ." % i
                 lbl = wx.StaticText(metricPanel, label=metricNumber)
@@ -837,7 +836,7 @@ class VersionsChartsPanel(wx.Panel):
                     lbl = wx.StaticText(metricsConfigPanel, label="Host: %s -> Config: %s" % (mSet.host_name, mSet.configuration_name))
                     metricsConfigPanelSizer.Add(lbl)
         
-            return mainPanelSizer
+            return mainBoxSizer
         
         curvesData = []
         
@@ -879,7 +878,8 @@ class VersionsChartsPanel(wx.Panel):
             curveData = ("%d." % c, values)
             curvesData.append(curveData)
             
-        self.ShowChartFrame(chartTitle, xLabel, yLabel, curvesData, buildLegendPanelFun=buildLegend)
+        self.ShowChartFrame(chartTitle, xLabel, yLabel, curvesData, 
+                            buildLegendPanelFun=buildLegend)
         
     def CalculateAndShowChartByVersions(self):
         """ """
@@ -921,7 +921,8 @@ class VersionsChartsPanel(wx.Panel):
         """ """
         self.simulators = []
         
-    def ShowChartFrame(self, chartTitle, xTitle, yTitle, curvesData, buildLegendPanelFun = None):
+    def ShowChartFrame(self, chartTitle, xTitle, yTitle, curvesData, 
+                       buildLegendPanelFun = None):
         """ Shows frame with gnuplot chart """
         
         from wx.lib.plot import PlotCanvas, PolyMarker, PolyLine, PlotGraphics
