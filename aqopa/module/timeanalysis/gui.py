@@ -667,28 +667,7 @@ class VersionsChartsPanel(wx.Panel):
         chartPanelSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.chartPanel.SetSizer(chartPanelSizer)
         
-        leftBox = wx.StaticBox(self.chartPanel, label="Versions")
-        leftBoxSizer = wx.StaticBoxSizer(leftBox, wx.VERTICAL)
-        chartPanelSizer.Add(leftBoxSizer, 0, wx.ALL, 5)
-        
-        self.simulatorByNumber = {}
-        i = 0
-        for s in self.simulators:
-            i += 1
-            version = s.context.version
-            text = wx.StaticText(self.chartPanel, label = "%d. %s" % (i, version.name)) 
-            leftBoxSizer.Add(text)
-            self.simulatorByNumber[i] = s
-        
-        showPanel = wx.Panel(self.chartPanel)
-        showSizer = wx.BoxSizer(wx.VERTICAL)
-        showPanel.SetSizer(showSizer)
-        
-        showBtn = wx.Button(showPanel, label="Show Chart")
-        showBtn.Bind(wx.EVT_BUTTON, self.OnShowChartTTotalVarVersionButtonClicked)
-        showSizer.Add(showBtn, 0, wx.ALIGN_CENTER)
-        
-        chartPanelSizer.Add(showPanel, 1, wx.ALL, 5)
+        self.BuildCurvesPanel(self.chartPanel, chartPanelSizer, self.OnShowChartTTotalVarVersionButtonClicked)
         
         self.chartConfigBoxSizer.Add(self.chartPanel, 1, wx.ALL | wx.EXPAND, 5)
         self.Layout()
@@ -831,18 +810,17 @@ class VersionsChartsPanel(wx.Panel):
         
         def buildLegend(parent):
             
-            mainPanel = wx.Panel(parent)
-            mainPanelSizer = wx.BoxSizer(wx.VERTICAL)
-            mainPanel.SetSizer(mainPanelSizer)
+            mainBox = wx.StaticBox(parent, label="Metrics")
+            mainBoxSizer = wx.StaticBoxSizer(mainBox,wx.VERTICAL)
             
             i = 0
             for metric in self.metrics:
                 i += 1
-                metricPanel = wx.Panel(mainPanel)
+                metricPanel = wx.Panel(parent)
                 metricPanelSizer = wx.BoxSizer(wx.HORIZONTAL)
                 metricPanel.SetSizer(metricPanelSizer)
                 
-                mainPanelSizer.Add(metricPanel)
+                mainBoxSizer.Add(metricPanel)
                 
                 metricNumber = "%d ." % i
                 lbl = wx.StaticText(metricPanel, label=metricNumber)
@@ -858,7 +836,7 @@ class VersionsChartsPanel(wx.Panel):
                     lbl = wx.StaticText(metricsConfigPanel, label="Host: %s -> Config: %s" % (mSet.host_name, mSet.configuration_name))
                     metricsConfigPanelSizer.Add(lbl)
         
-            return mainPanelSizer
+            return mainBoxSizer
         
         curvesData = []
         
@@ -900,7 +878,8 @@ class VersionsChartsPanel(wx.Panel):
             curveData = ("%d." % c, values)
             curvesData.append(curveData)
             
-        self.ShowChartFrame(chartTitle, xLabel, yLabel, curvesData, buildLegendPanelFun=buildLegend)
+        self.ShowChartFrame(chartTitle, xLabel, yLabel, curvesData, 
+                            buildLegendPanelFun=buildLegend)
         
     def CalculateAndShowChartByVersions(self):
         """ """
@@ -912,29 +891,27 @@ class VersionsChartsPanel(wx.Panel):
                     val = t
             return val
         
-        def buildLegendPanel(parent):
-            legendBox = wx.StaticBox(parent, label="Versions")
-            legendBoxSizer = wx.StaticBoxSizer(legendBox, wx.VERTICAL)
-            
-            for i in range(1, len(self.simulators)+1):
-                s = self.simulatorByNumber[i]
-                version = s.context.version
-                text = wx.StaticText(parent, label = "%d. %s" % (i, version.name)) 
-                legendBoxSizer.Add(text)
-                
-            return legendBoxSizer
-        
         chartTitle  = "TTotal / Version"
         xLabel      = "Version"
         yLabel      = "TTotal"
+        curvesData  = []
 
-        values = []
-        for i in range(1, len(self.simulators)+1):
-            s = self.simulatorByNumber[i]
-            values.append((i, chartFun(self.module, s, s.context.hosts)))
-        values.sort(key=lambda t: t[0])                
-        self.ShowChartFrame(chartTitle, xLabel, yLabel, [("Versions", values)], 
-                            buildLegendPanelFun=buildLegendPanel)
+        c = 0
+        for curveSimulators in self.curves:
+            c += 1
+
+            values = []
+            i = 0
+            for s in curveSimulators:
+                i += 1
+                values.append((i, chartFun(self.module, s, s.context.hosts)))
+                
+            values.sort(key=lambda t: t[0]) 
+
+            curveData = ("%d." % c, values)
+            curvesData.append(curveData)
+            
+        self.ShowChartFrame(chartTitle, xLabel, yLabel, curvesData)
         
     def AddFinishedSimulation(self, simulator):
         """ """
@@ -944,7 +921,8 @@ class VersionsChartsPanel(wx.Panel):
         """ """
         self.simulators = []
         
-    def ShowChartFrame(self, chartTitle, xTitle, yTitle, curvesData, buildLegendPanelFun = None):
+    def ShowChartFrame(self, chartTitle, xTitle, yTitle, curvesData, 
+                       buildLegendPanelFun = None):
         """ Shows frame with gnuplot chart """
         
         from wx.lib.plot import PlotCanvas, PolyMarker, PolyLine, PlotGraphics
