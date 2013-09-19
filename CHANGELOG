@@ -4,6 +4,9 @@
 
 Next release:
 
+v0.4.4
+ - Fixed error in metrics charts that crashed the application.
+
 v0.4.3
  - Reset run panel, when new analysis is started
  - Added legends for charts
