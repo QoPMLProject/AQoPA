@@ -4,6 +4,11 @@
 
 Next release:
 
+v0.4.5
+ - Changes GUI labels.
+ - Added information about cursor position while editing model.
+ - Added richtext for editing model.
+
 v0.4.4
  - Fixed error in metrics charts that crashed the application.
 
