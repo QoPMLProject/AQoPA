@@ -4,6 +4,9 @@
 
 Next release:
 
+v0.4.6
+ - Fixed saving and loading model
+ 
 v0.4.5
  - Changes GUI labels.
  - Added information about cursor position while editing model.
