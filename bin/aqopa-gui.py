@@ -9,6 +9,7 @@ import time
 import threading
 import traceback
 import wx
+import wx.richtext
 import wx.lib.newevent
 import wx.lib.delayedresult
 
@@ -19,7 +20,8 @@ import aqopa.app
 from aqopa.model.parser import MetricsParserException,\
     ConfigurationParserException, ModelParserException
 from aqopa.module import timeanalysis
-from aqopa.simulator.error import EnvironmentDefinitionException
+from aqopa.simulator.error import EnvironmentDefinitionException,\
+    RuntimeException
 
 ModelParsedEvent, EVT_MODEL_PARSED = wx.lib.newevent.NewEvent()
 ModelParseErrorEvent, EVT_MODEL_PARSE_ERROR = wx.lib.newevent.NewEvent()
@@ -34,8 +36,6 @@ class ModelPartDataPanel(wx.Panel):
     def __init__(self, *args, **kwargs):
         """ """
         wx.Panel.__init__(self, *args, **kwargs)
-    
-        self.dataTextArea = wx.TextCtrl(self, style=wx.TE_MULTILINE)
 
         bPanel = wx.Panel(self)
         bSizer = wx.BoxSizer(wx.VERTICAL)
@@ -47,13 +47,35 @@ class ModelPartDataPanel(wx.Panel):
         bSizer.Add(self.loadButton, 0, wx.ALL, 5)
         bSizer.Add(self.saveButton, 0, wx.ALL, 5)
 
+        rightPanel = wx.Panel(self)
+        rightPanelSizer = wx.BoxSizer(wx.VERTICAL)
+        rightPanel.SetSizer(rightPanelSizer)
+
+        self.dataTextArea = wx.richtext.RichTextCtrl(rightPanel, style=wx.TE_MULTILINE | wx.TE_NO_VSCROLL)
+        self.dataTextArea.Bind(wx.EVT_KEY_UP, self.printCursorInfo)
+        self.dataTextArea.Bind(wx.EVT_LEFT_UP, self.printCursorInfo)
+        
+        self.cursorInfoLabel = wx.StaticText(rightPanel, label="")
+        
+        rightPanelSizer.Add(self.dataTextArea, 1, wx.EXPAND)
+        rightPanelSizer.Add(self.cursorInfoLabel, 0, wx.ALIGN_RIGHT)
+
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(bPanel, 0, wx.ALL, 5)
-        sizer.Add(self.dataTextArea, 1, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(rightPanel, 1, wx.ALL | wx.EXPAND, 5)
         
         self.SetSizer(sizer)
         
         self.Layout()
+        
+    def printCursorInfo(self, event):
+        """ """
+        pos = self.dataTextArea.GetInsertionPoint()
+        xy = self.dataTextArea.PositionToXY(pos)
+        self.cursorInfoLabel.SetLabel("Line: %d, %d" 
+                                      % (xy[1]+1, xy[0]+1))
+        self.Layout()
+        event.Skip()
         
 class ModulesPanel(wx.Panel):
     """ 
@@ -391,8 +413,11 @@ class RunPanel(wx.Panel):
                 "Version %s finished successfully.\n" \
                 % simulator.context.version.name
                     
-        except RuntimeError, e:
-            pass
+        except RuntimeException, e:
+            runResultValue = self.runResult.GetValue()
+            resultMessage = runResultValue + \
+                "Version %s finished with error: %s.\n" \
+                % (simulator.context.version.name, e.args[0])
         except Exception, e:
             sys.stderr.write(traceback.format_exc())
             
@@ -639,6 +664,7 @@ class MainNotebook(wx.Notebook):
         self.runTab.SetModel(self.GetModelData(), 
                              self.GetMetricsData(),
                              self.GetConfigurationData())
+        event.Skip()
         
     def OnModulesChange(self, event):
         self.runTab.SetSelectedModules(event.modules)
@@ -1025,6 +1051,7 @@ hosts {
   }
 }
  """)
+        event.Skip()
 
 
 def main():
