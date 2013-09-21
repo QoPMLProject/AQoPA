@@ -44,6 +44,8 @@ class ModelPartDataPanel(wx.Panel):
         self.loadButton = wx.Button(bPanel)
         self.saveButton = wx.Button(bPanel)
         
+        self.attachButtons(self.loadButton, self.saveButton)
+        
         bSizer.Add(self.loadButton, 0, wx.ALL, 5)
         bSizer.Add(self.saveButton, 0, wx.ALL, 5)
 
@@ -67,6 +69,33 @@ class ModelPartDataPanel(wx.Panel):
         self.SetSizer(sizer)
         
         self.Layout()
+        
+    def attachButtons(self, loadButton, saveButton):
+        """ """
+        loadButton.Bind(wx.EVT_BUTTON, self.onLoad)
+        saveButton.Bind(wx.EVT_BUTTON, self.onSave)
+        
+    def onLoad(self, event):
+        """ Load file to text area """
+        ofdlg = wx.FileDialog(self, "Load file", "", "", "QoP-ML Files (*.qopml)|*.qopml", 
+                              wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+        ofdlg.ShowModal()
+        if ofdlg.GetPath():
+            wildcard, types = wx.richtext.RichTextBuffer.GetExtWildcard(save=False)
+            fileType = types[ofdlg.GetFilterIndex()]
+            self.dataTextArea.LoadFile(ofdlg.GetPath(), fileType)  # self.rtc is the RichTExtCtrl object
+        ofdlg.Destroy()
+        
+    def onSave(self, event):
+        """ Save text area value to file """
+        ofdlg = wx.FileDialog(self, "Save file", "", "", "QoP-ML Files (*.qopml)|*.qopml", 
+                              wx.FD_SAVE)
+        ofdlg.ShowModal()
+        if ofdlg.GetPath():
+            f = open(ofdlg.GetPath(), "w")
+            f.write(self.dataTextArea.GetValue())
+            f.close()
+        ofdlg.Destroy()
         
     def printCursorInfo(self, event):
         """ """
@@ -689,13 +718,6 @@ class MainFrame(wx.Frame):
         item = fileMenu.Append(wx.ID_ABOUT, text="About AQoPA")
         self.Bind(wx.EVT_MENU, self.OnAbout, item)
         fileMenu.AppendSeparator()
-        item = fileMenu.Append(-1, text="Load &Model")
-        self.Bind(wx.EVT_MENU, self.OnLoadModel, item)
-        item = fileMenu.Append(-1, text="Load M&etrics")
-        self.Bind(wx.EVT_MENU, self.OnLoadMetrics, item)
-        item = fileMenu.Append(-1, text="Load &Versions")
-        self.Bind(wx.EVT_MENU, self.OnLoadConfiguration, item)
-        fileMenu.AppendSeparator()
         item = fileMenu.Append(wx.ID_EXIT, text="&Quit")
         self.Bind(wx.EVT_MENU, self.OnQuit, item)
         menuBar.Append(fileMenu, "&File")
@@ -707,14 +729,6 @@ class MainFrame(wx.Frame):
         ###################
         
         self.mainNotebook = MainNotebook(self)
-        
-        self.Bind(wx.EVT_BUTTON, self.OnLoadModel, self.mainNotebook.modelTab.loadButton)
-        self.Bind(wx.EVT_BUTTON, self.OnLoadMetrics, self.mainNotebook.metricsTab.loadButton)
-        self.Bind(wx.EVT_BUTTON, self.OnLoadConfiguration, self.mainNotebook.configurationTab.loadButton)
-        
-        self.Bind(wx.EVT_BUTTON, self.OnSaveModel, self.mainNotebook.modelTab.saveButton)
-        self.Bind(wx.EVT_BUTTON, self.OnSaveMetrics, self.mainNotebook.metricsTab.saveButton)
-        self.Bind(wx.EVT_BUTTON, self.OnSaveConfiguration, self.mainNotebook.configurationTab.saveButton)
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.mainNotebook, 1, wx.ALL|wx.EXPAND, 5)
@@ -733,52 +747,6 @@ class MainFrame(wx.Frame):
                                "About AQoPA", wx.OK)
         dlg.ShowModal()
         dlg.Destroy()
-        
-    def _LoadFile(self, loadFileDataFunction, pageNumber):
-        """ Load file to text area """
-        ofdlg = wx.FileDialog(self, "Load file", "", "", "QoP-ML Files (*.qopml)|*.qopml", 
-                              wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-        ofdlg.ShowModal()
-        if ofdlg.GetPath():
-            loadFileDataFunction(ofdlg.GetPath())
-        ofdlg.Destroy()
-        self.mainNotebook.SetSelection(pageNumber)
-        
-    def _SaveFile(self, getDataFunction, pageNumber):
-        """ Load file to text area """
-        ofdlg = wx.FileDialog(self, "Save file", "", "", "QoP-ML Files (*.qopml)|*.qopml", 
-                              wx.FD_SAVE)
-        ofdlg.ShowModal()
-        if ofdlg.GetPath():
-            f = open(ofdlg.GetPath(), "w")
-            f.write(getDataFunction())
-            f.close()
-        ofdlg.Destroy()
-        self.mainNotebook.SetSelection(pageNumber)
-        
-    def OnLoadModel(self, event):
-        """ Load model file """
-        self._LoadFile(self.mainNotebook.LoadModelFile, 0)
-        
-    def OnLoadMetrics(self, event):
-        """ Load model file """
-        self._LoadFile(self.mainNotebook.LoadMetricsFile, 1)
-        
-    def OnLoadConfiguration(self, event):
-        """ Load model file """
-        self._LoadFile(self.mainNotebook.LoadConfigurationFile, 2)
-        
-    def OnSaveModel(self, event):
-        """ Load model file """
-        self._SaveFile(self.mainNotebook.GetModelData, 0)
-        
-    def OnSaveMetrics(self, event):
-        """ Load model file """
-        self._SaveFile(self.mainNotebook.GetMetricsData, 1)
-        
-    def OnSaveConfiguration(self, event):
-        """ Load model file """
-        self._SaveFile(self.mainNotebook.GetConfigurationData, 2)
         
         
 class AqopaApp(wx.App):
