@@ -135,7 +135,7 @@ class SingleVersionPanel(wx.Panel):
         """ """
         self.operationBox = wx.StaticBox(self, label="Operation")
         
-        self.oneTimeRB = wx.RadioButton(self, label="One host's time")
+        self.oneTimeRB = wx.RadioButton(self, label="Total host's time")
         self.avgTimeRB = wx.RadioButton(self, label="Average hosts' time")
         self.minTimeRB = wx.RadioButton(self, label="Minimal hosts' time")
         self.maxTimeRB = wx.RadioButton(self, label="Maximal hosts' time")
@@ -413,22 +413,22 @@ class VersionsChartsPanel(wx.Panel):
         self.chartTypeBox = wx.StaticBox(self, label="Chart Type")
         self.chartTypeBoxSizer = wx.StaticBoxSizer(self.chartTypeBox, wx.HORIZONTAL)
         
-        self.maxTimeOnRepetitionBtn = wx.Button(self, label="T_MAX / L")
-        self.avgTimeOnRepetitionBtn = wx.Button(self, label="T_AVG / L")
+        self.totalTimeOnRepetitionBtn = wx.Button(self, label="T_Total / N")
+        self.avgTimeOnRepetitionBtn = wx.Button(self, label="T_AVG / N")
         self.totalTimeOnVersionsBtn = wx.Button(self, label="T_Total / Version")
-        self.maxTimeOnMetricsBtn = wx.Button(self, label="T_MAX / M")
+        self.totalTimeOnMetricsBtn = wx.Button(self, label="T_Total / M")
         self.avgTimeOnMetricsBtn = wx.Button(self, label="T_AVG / M")
         
-        self.maxTimeOnRepetitionBtn.Bind(wx.EVT_BUTTON, self.OnTimeMaxOnRepetitionBtnClicked)
+        self.totalTimeOnRepetitionBtn.Bind(wx.EVT_BUTTON, self.OnTimeTotalOnRepetitionBtnClicked)
         self.avgTimeOnRepetitionBtn.Bind(wx.EVT_BUTTON, self.OnTimeAvgOnRepetitionBtnClicked)
         self.totalTimeOnVersionsBtn.Bind(wx.EVT_BUTTON, self.OnTimeTotalOnVersionsBtnClicked)
-        self.maxTimeOnMetricsBtn.Bind(wx.EVT_BUTTON, self.OnTimeMaxOnMetricsBtnClicked)
+        self.totalTimeOnMetricsBtn.Bind(wx.EVT_BUTTON, self.OnTimeTotalOnMetricsBtnClicked)
         self.avgTimeOnMetricsBtn.Bind(wx.EVT_BUTTON, self.OnTimeAvgOnMetricsBtnClicked)
         
-        self.chartTypeBoxSizer.Add(self.maxTimeOnRepetitionBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
+        self.chartTypeBoxSizer.Add(self.totalTimeOnRepetitionBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
         self.chartTypeBoxSizer.Add(self.avgTimeOnRepetitionBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
         self.chartTypeBoxSizer.Add(self.totalTimeOnVersionsBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
-        self.chartTypeBoxSizer.Add(self.maxTimeOnMetricsBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
+        self.chartTypeBoxSizer.Add(self.totalTimeOnMetricsBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
         self.chartTypeBoxSizer.Add(self.avgTimeOnMetricsBtn, 1, wx.ALL | wx.ALIGN_CENTER, 5)
         
         sizer.Add(self.chartTypeBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
@@ -502,27 +502,27 @@ class VersionsChartsPanel(wx.Panel):
     # REACTIONS
     #################
     
-    def OnTimeMaxOnRepetitionBtnClicked(self, event):
-        self.chartConfigBox.SetLabel("TMax/L Chart Configuration")
+    def OnTimeTotalOnRepetitionBtnClicked(self, event):
+        self.chartConfigBox.SetLabel("T_Total/N Chart Configuration")
         self.BuildTimesByRepetitionsChartPanel(TIME_TYPE_MAX)
     
     def OnTimeAvgOnRepetitionBtnClicked(self, event):
-        self.chartConfigBox.SetLabel("TAvg/L Chart Configuration")
+        self.chartConfigBox.SetLabel("TAvg/N Chart Configuration")
         self.BuildTimesByRepetitionsChartPanel(TIME_TYPE_AVG)
     
     def OnTimeTotalOnVersionsBtnClicked(self, event):
         self.chartConfigBox.SetLabel("TTotal/Version Chart Configuration")
         self.BuildTimesByVersionsChartPanel(TIME_TYPE_TOTAL)
     
-    def OnTimeMaxOnMetricsBtnClicked(self, event):
-        self.chartConfigBox.SetLabel("TMax/M Chart Configuration")
+    def OnTimeTotalOnMetricsBtnClicked(self, event):
+        self.chartConfigBox.SetLabel("T_Total/M Chart Configuration")
         self.BuildTimesByMetricsChartPanel(TIME_TYPE_MAX)
     
     def OnTimeAvgOnMetricsBtnClicked(self, event):
         self.chartConfigBox.SetLabel("TAvg/M Chart Configuration")
         self.BuildTimesByMetricsChartPanel(TIME_TYPE_AVG)
         
-    def OnShowChartTMaxVarRepButtonClicked(self, event):
+    def OnShowChartTTotalVarRepButtonClicked(self, event):
         """ """
         if len(self.curves) == 0:
             wx.MessageBox("No curves defined. You must add at least one curve.", 
@@ -538,7 +538,7 @@ class VersionsChartsPanel(wx.Panel):
         else:
             self.CalculateAndShowChartByRepFrame(TIME_TYPE_AVG)
         
-    def OnShowChartTMaxVarMetricsButtonClicked(self, event):
+    def OnShowChartTTotalVarMetricsButtonClicked(self, event):
         """ """
         if len(self.curves) == 0:
             wx.MessageBox("No curves defined. You must add at least one curve.", 
@@ -646,7 +646,7 @@ class VersionsChartsPanel(wx.Panel):
         
         onShowChartBtnClicked = None
         if timeType == TIME_TYPE_MAX:
-            onShowChartBtnClicked = self.OnShowChartTMaxVarRepButtonClicked
+            onShowChartBtnClicked = self.OnShowChartTTotalVarRepButtonClicked
         elif timeType == TIME_TYPE_AVG:
             onShowChartBtnClicked = self.OnShowChartTAvgVarRepButtonClicked
         
@@ -686,7 +686,7 @@ class VersionsChartsPanel(wx.Panel):
         
         leftBox = wx.StaticBox(self.chartPanel, label="Metrics")
         leftBoxSizer = wx.StaticBoxSizer(leftBox, wx.VERTICAL)
-        chartPanelSizer.Add(leftBoxSizer, 1, wx.ALL, 5)
+        chartPanelSizer.Add(leftBoxSizer, 0, wx.ALL, 5)
         
         self.metrics = self._GetMetrics()
         
@@ -715,7 +715,7 @@ class VersionsChartsPanel(wx.Panel):
         
         onShowChartBtnClicked = None
         if timeType == TIME_TYPE_MAX:
-            onShowChartBtnClicked = self.OnShowChartTMaxVarMetricsButtonClicked
+            onShowChartBtnClicked = self.OnShowChartTTotalVarMetricsButtonClicked
         elif timeType == TIME_TYPE_AVG:
             onShowChartBtnClicked = self.OnShowChartTAvgVarMetricsButtonClicked
         
@@ -729,7 +729,7 @@ class VersionsChartsPanel(wx.Panel):
     def CalculateAndShowChartByRepFrame(self, timeType):
         """ """
         
-        def TMax(module, simulator, hosts):
+        def TTotal(module, simulator, hosts):
             val = 0.0 
             for h in hosts:
                 t = module.get_current_time(simulator, h)
@@ -762,10 +762,10 @@ class VersionsChartsPanel(wx.Panel):
         yLabel      = ""
         
         if timeType == TIME_TYPE_MAX:
-            chartFun    = TMax
-            chartTitle  = "Chart: TimeMax / Repetitions"
+            chartFun    = TTotal
+            chartTitle  = "Chart: Total Time / Repetitions"
             xLabel      = "Repetitions"
-            yLabel      = "TMax"
+            yLabel      = "T_Total"
         else:
             chartFun    = TAvg
             chartTitle  = "Chart: TimeAvg / Repetitions"
@@ -792,7 +792,7 @@ class VersionsChartsPanel(wx.Panel):
     def CalculateAndShowChartByMetricsFrame(self, timeType):
         """ """
         
-        def TMax(values):
+        def TTotal(values):
             val = 0.0 
             for t in values:
                 if t > val:
@@ -846,10 +846,10 @@ class VersionsChartsPanel(wx.Panel):
         yLabel      = ""
         
         if timeType == TIME_TYPE_MAX:
-            chartFun    = TMax
-            chartTitle  = "Chart: TimeMax / Metric"
+            chartFun    = TTotal
+            chartTitle  = "Chart: Total Time / Metric"
             xLabel      = "Metric"
-            yLabel      = "TMax"
+            yLabel      = "T_Total"
         else:
             chartFun    = TAvg
             chartTitle  = "Chart: TimeAvg / Metric"
