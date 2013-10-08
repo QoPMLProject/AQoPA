@@ -815,6 +815,8 @@ class Interpreter():
         """ Runs all simulations """
         raise NotImplementedError()
             
+ConsoleVersionThreadLock = threading.Lock()
+            
 class ConsoleVersionThread(threading.Thread):
     """
     One thread for one version

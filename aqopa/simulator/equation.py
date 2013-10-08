@@ -15,6 +15,10 @@ class Equation():
         self.composite = composite
         self.simple = simple
         
+    def __unicode__(self):
+        """ """
+        return u"eq %s = %s" % ( unicode(self.composite), unicode(self.simple) )
+        
     def _are_equal(self, left_expression, right_expression):
         """
         Method returns True, when expressions are equal.
