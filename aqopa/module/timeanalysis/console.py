@@ -6,6 +6,7 @@ Created on 07-09-2013
 import sys
 
 from aqopa.simulator.state import Hook
+from aqopa.app import ConsoleVersionThreadLock
 
 class PrintResultsHook(Hook):
 
@@ -17,6 +18,11 @@ class PrintResultsHook(Hook):
         
     def execute(self, context):
         """ """
+        
+        ConsoleVersionThreadLock.acquire()
+        self.output_file.write('-'*20)
+        self.output_file.write('\n')
+        self.output_file.write('Version: %s\n' % self.simulator.context.version.name)
         
         if self.simulator.infinite_loop_occured():
             self.output_file.write('ERROR: Infinite loop on {0} -> {1}\n'.format(
@@ -42,6 +48,8 @@ class PrintResultsHook(Hook):
             if c.get_number_of_dropped_messages() > 0:
                 i += 1
                 print '%s \t %d' % (c.name, c.get_number_of_dropped_messages()) 
-                
         if i == 0:
             print "None"
+        self.output_file.write('-'*20)
+        self.output_file.write('\n')
+        ConsoleVersionThreadLock.release()
