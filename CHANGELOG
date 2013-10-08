@@ -4,6 +4,10 @@
 
 Next release:
 
+v0.4.7
+ - Added lock for printing results from all threads.
+ - Fixed problems with reductions (tuple element expressions not extracted).
+
 v0.4.6
  - Fixed saving and loading model
  
