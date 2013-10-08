@@ -567,8 +567,8 @@ class AssignmentInstructionExecutor(InstructionExecutor):
                 tuple_expression = context.expression_reducer.reduce(tuple_expression)
                 
             if not isinstance(tuple_expression, TupleExpression):
-                raise RuntimeException("Variable '%s' not tuple and cannot get its element %d" 
-                                        % (expression.variable_name, expression.index))
+                raise RuntimeException("Variable '%s' not tuple and cannot get its element [%d]. Value: %s" 
+                                        % (expression.variable_name, expression.index, unicode(tuple_expression)))
                 
             if expression.index >= len(tuple_expression.elements):
                 raise RuntimeException("Tuple '%s' not tuple and cannot get its element %d" 

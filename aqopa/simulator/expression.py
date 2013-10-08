@@ -111,6 +111,14 @@ class ReductionPoint():
                                                             # If None, whole expression should be replaced
         self.modified_element_info  = modified_element_info # Information which element 
                                                             # of modified part should be replaced
+    
+    def equals_to(self, reduction_point):
+        """
+        Returns True if self and reduction_points try to reduct the expression in the same place.
+        """
+        return self.expression == reduction_point.expression \
+            and self.modified_part == reduction_point.modified_part \
+            and self.modified_element_info == reduction_point.modified_element_info
         
     def _get_replaced_part(self):
         """
@@ -279,9 +287,10 @@ class Reducer():
                                 found = True
                                 break
                         if not found:
-                            raise RuntimeException("Equations '%s' and '%s are ambiguous" % 
+                            raise RuntimeException("Equations '%s' and '%s are ambiguous for expression: %s" % 
                                                    (unicode(old_reduction_point.equation),
-                                                    unicode(new_reduction_point.equation)))
+                                                    unicode(new_reduction_point.equation),
+                                                    unicode(expression)))
                             
                     # Cancel reduction
                     expression = reduction_point.rollback()
