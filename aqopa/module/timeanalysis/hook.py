@@ -121,9 +121,10 @@ class PreInstructionHook(Hook):
                         call_params_indexes = mparts[1].split(',')
                         for index in call_params_indexes:
                             
-                            populated_expression = context.expression_checker.populate_variables(
+                            populated_expression = context.expression_populator.populate(
                                                         expression.arguments[index],
-                                                        context.get_current_host().get_variables())
+                                                        context.get_current_host().get_variables(),
+                                                        context.expression_reducer)
                             
                             size += context.metrics_manager.get_expression_size(
                                                                 populated_expression,

@@ -125,7 +125,7 @@ class Manager():
                                         call_function_expression.qop_arguments))
                 
         if len(normal_metrics) + len(plus_metrics) + len(star_metrics) > 1:
-            raise RuntimeException("Found many metrics for function '%s' with qop arguments: %s" \
+            raise RuntimeException("Found many metrics for function '%s' with qop arguments: %s." \
                                    % (call_function_expression.function_name,
                                       ', '.join(call_function_expression.qop_arguments)))
         
@@ -157,7 +157,7 @@ class Manager():
             metric = self.find_primitive(host, expression)
             
             if not metric:
-                raise RuntimeException("Cannot get expression size: No metric found for expression '%s'" 
+                raise RuntimeException("Cannot get expression size: No metric found for expression '%s'." 
                                        % unicode(expression))
         
             block = metric.block
@@ -183,10 +183,10 @@ class Manager():
                     if metric_unit == 'B':
                         size = int(metric_value)
                     else:
-                        raise RuntimeException('Cannot get expression size: Unsupported size value for exact type')
+                        raise RuntimeException('Cannot get expression size: Unsupported size value for exact type.')
                     
                 else:
-                    raise RuntimeException('Cannot get expression size: Unsupported size type')
+                    raise RuntimeException('Cannot get expression size: Unsupported size type.')
             
-        raise RuntimeException('Cannot get expression size: Unsupported expresstion type')
+        raise RuntimeException('Cannot get expression size: Unsupported expresstion type.')
         
