@@ -3,8 +3,12 @@
 #########################################
 
 Next release:
- - Stopped using simultaneous threads for simulators in console and gui modes.
+ 
 
+v0.5 (2013-10-28)
+ - Stopped using simultaneous threads for simulators in console and gui modes.
+ - Added setup.py file.
+ 
 v0.4.7
  - Added lock for printing results from all threads.
  - Fixed problems with reductions (tuple element expressions not extracted).
