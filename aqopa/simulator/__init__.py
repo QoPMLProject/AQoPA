@@ -39,7 +39,7 @@ class Simulator():
             return
         
         if hook_type in [HOOK_TYPE_PRE_INSTRUCTION_EXECUTION, HOOK_TYPE_POST_INSTRUCTION_EXECUTION]:
-            raise RuntimeException("Cannot execute pre instruction and post instruction hooks manually")
+            raise RuntimeException("Cannot execute pre instruction and post instruction hooks manually.")
         
         for h in self._hooks[hook_type]:
             h.execute(self.context)
@@ -49,7 +49,7 @@ class Simulator():
         Method installs registered modules.
         """
         if self._ready:
-            raise EnvironmentDefinitionException('Cannot install modules in prepared simulation, they were already installed')
+            raise EnvironmentDefinitionException('Cannot install modules in prepared simulation, they were already installed.')
         
         for m in self._modules:
             m.install(self)
@@ -125,7 +125,7 @@ class Simulator():
             self._hooks[hook_type] = []
             
         if hook in self._hooks[hook_type]:
-            raise EnvironmentDefinitionException(u"Hook '%s' is already registered" % unicode(hook))
+            raise EnvironmentDefinitionException(u"Hook '%s' is already registered." % unicode(hook))
         self._hooks[hook_type].append(hook)
 
         if hook_type == HOOK_TYPE_PRE_INSTRUCTION_EXECUTION:
@@ -154,7 +154,7 @@ class Simulator():
         Runs whole simulation process.
         """
         if not self.is_ready_to_run():
-            raise EnvironmentDefinitionException("Simulation is not yet ready to run")
+            raise EnvironmentDefinitionException("Simulation is not yet ready to run.")
         
         self._executor.prepend_instruction_executor(self._before_instruction_executor)
         self._executor.append_instruction_executor(self._after_instruction_executor)

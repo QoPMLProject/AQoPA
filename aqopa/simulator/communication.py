@@ -221,7 +221,7 @@ class Channel():
         Host can wait for many expressions.
         """
         if not self.connected_with_host(request.receiver):
-            raise RuntimeException("Channel '%s' is not connected with host '%s'" % (self.name, request.receiver.name))
+            raise RuntimeException("Channel '%s' is not connected with host '%s'." % (self.name, request.receiver.name))
         
         if not self.waiting_for_message(request):
             self._waiting_requests.append(request)
@@ -243,7 +243,7 @@ class Channel():
         Accept message with expressions.
         """
         if not self.connected_with_host(sender_host):
-            raise RuntimeException("Channel '%s' is not connected with host '%s'" % (self.name, sender_host.name))
+            raise RuntimeException("Channel '%s' is not connected with host '%s'." % (self.name, sender_host.name))
         
         if self.is_synchronous():
             
