@@ -385,7 +385,6 @@ class RunPanel(wx.Panel):
             self.ShowPanel(self.runPanel)
             
             self.finishedSimulators = []
-            self.jobs = {}
             
             self.startAnalysisTime = time.time()
             
@@ -393,13 +392,8 @@ class RunPanel(wx.Panel):
             self.progressTimer.Start(1000)
             i = 0
             for simulator in self.interpreter.simulators:
-                wx.lib.delayedresult.startWorker(self.OnSimulationFinished, 
-                                                 self.interpreter.run_simulation, 
-                                                 wargs=(simulator,),
-                                                 jobID = i)
-                self.jobs[i] = simulator
+                self.runSimulation(simulator)
                 i += 1
-                
             
         except EnvironmentDefinitionException, e:
             self.statusLabel.SetLabel("Error")
@@ -421,17 +415,12 @@ class RunPanel(wx.Panel):
         
         self.ShowPanel(self.runPanel)
         
-    def OnSimulationFinished(self, result):
+    def runSimulation(self, simulator):
         """ """
-        jobID = result.getJobID()
-        simulator = self.jobs[jobID]
-        self.finishedSimulators.append(simulator)
         resultMessage = None
         try :
             
-            simulator = result.get()
-    
-            self.PrintProgressbar(self.GetProgress())
+            self.interpreter.run_simulation(simulator)
             
             for m in self.selectedModules:
                 gui = m.get_gui()
@@ -454,9 +443,12 @@ class RunPanel(wx.Panel):
             resultMessage = runResultValue + \
                 "Version %s finished with unknown error.\n" \
                 % simulator.context.version.name
-        
+                
         if resultMessage:    
             self.runResult.SetValue(resultMessage)
+        
+        self.finishedSimulators.append(simulator)
+        self.PrintProgressbar(self.GetProgress())
         
         if len(self.finishedSimulators) == len(self.interpreter.simulators):
             self.OnAllSimulationsFinished()

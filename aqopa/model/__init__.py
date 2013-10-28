@@ -124,8 +124,10 @@ class CallFunctionExpression():
         self.qop_arguments = qop_arguments
         
     def __unicode__(self):
-        return u"%s(%s)[%s]" % ( unicode(self.function_name), unicode(', '.join([ unicode(a) for a in self.arguments])),
-                                  unicode(', '.join([ unicode(a) for a in self.qop_arguments])) )
+        u = u"%s(%s)" % ( unicode(self.function_name), unicode(', '.join([ unicode(a) for a in self.arguments])) )
+        if len(self.qop_arguments) > 0:
+            u += "[%s]" % unicode(', '.join([ unicode(a) for a in self.qop_arguments]))
+        return u 
         
     def clone(self):
         return CallFunctionExpression(copy.copy(self.function_name), 

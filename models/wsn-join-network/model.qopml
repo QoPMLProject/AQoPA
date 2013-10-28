@@ -1,0 +1,221 @@
+functions {
+	fun id_s() (ID of Sink);
+	fun id_nn() (ID of New node);
+	fun id_n() (ID of neighbour node);
+
+	fun gen_join_req(ID) (generates join request for node ID);
+	fun req_response() (generates the response for request);
+	fun gen_sym_key() (generates symmetric key);
+	fun check_node(nodeID) (checks if node nodeID can join network);
+
+	fun sk(id) (secret key of id);
+	fun pk(sk) (public key for sk secret key);
+
+	fun a_enc(data, PK) (assymetric encryption);
+	fun a_dec(data, SK) (assymetric decryption);
+	fun s_enc(data, K) (symmetric encryption);
+	fun s_dec(data, K) (symmetric decryption);
+
+	fun dh_key(PK_ID1, SK_ID2) (generates Diffie-Hellman key between to nodes ID1 and ID2 using their public and secret keys);
+
+	fun send() (function simulates communication time);
+}
+
+equations {
+	eq a_enc(a_dec(data, SK), pk(SK)) = data;
+	eq a_dec(a_enc(data, pk(SK)), SK) = data;
+	eq s_enc(s_dec(data, K), K) = data;
+	eq s_dec(s_enc(data, K), K) = data;
+
+	eq s_dec(s_enc(data, dh_key(pk(sk(ID1)), sk(ID2))), dh_key(pk(sk(ID2)), sk(ID1))) = data;
+	eq s_enc(s_dec(data, dh_key(pk(sk(ID1)), sk(ID2))), dh_key(pk(sk(ID2)), sk(ID1))) = data;
+}
+
+channels {
+	channel ch_out_NN, ch_in_NN, ch_out_N, ch_in_N (*);
+	channel ch_out_F1, ch_in_F1, ch_out_F2, ch_in_F2, ch_out_F3, ch_in_F3, ch_out_F4, ch_in_F4, ch_out_F5, ch_in_F5 (*);
+	channel ch_out_F6, ch_in_F6, ch_out_F7, ch_in_F7 (*);
+}
+
+hosts {
+
+host NewNode(rr)(*) {
+#PK_S 		= pk(sk(id_s()));
+#SK_NewNode	= sk(id_nn());
+#PK_NewNode 	= pk(SK_NewNode);
+
+process Main(*) {
+		D_NN_S = dh_key(PK_S, SK_NewNode); 
+		REQ = gen_join_req(id_nn());
+		ENC_REQ = s_enc(REQ, D_NN_S)[16B]; 
+		send()[16B];
+		out(ch_out_NN: ENC_REQ);
+
+		in(ch_in_NN: E_RESP);
+		RESP = a_dec(E_RESP, SK_NewNode)[join_response]; 
+		SymKey_NN_N = RESP[1];
+		Join_RESP = RESP[0];
+}
+}
+
+host Neighbour(rr)(*) {
+#PK_S 		= pk(sk(id_s()));
+#SK_Neighbour 	= sk(id_n());
+#PK_Neighbour 	= pk(SK_Neighbour);
+
+#DH_Neighbour_S = dh_key(PK_S, SK_Neighbour);
+
+process Main(*) {
+	in(ch_out_NN:M);
+	send()[16B];
+	out(ch_out_N:M);
+
+	in(ch_in_N:E_S_RESP);
+
+	S_RESP = s_dec(E_S_RESP, DH_Neighbour_S)[40B]; 
+	SymKey_N_NN = gen_sym_key(); 
+	PK_NewNode = S_RESP[1];
+	N_RESP = (S_RESP[0], SymKey_N_NN);
+	E_N_RESP = a_enc(N_RESP, PK_NewNode)[join_response]; 
+	send()[80B];
+
+	out(ch_in_NN:E_N_RESP);
+}
+}
+
+
+host Sink(rr)(*) {
+#SK_S 		= sk(id_s());
+#PK_NewNode 	= pk(sk(id_nn()));
+#PK_Neighbour 	= pk(sk(id_n()));
+#DH_S_Neighbour = dh_key(PK_Neighbour, SK_S);
+
+process Main(*) {
+
+	subprocess InOnlyNewNode(*) {in(ch_out_NN:ER);}
+	subprocess InWithNeighbourOnly(*) {in(ch_out_N:ER);}
+	subprocess InHops_2(*) {in(ch_out_F1:ER);}
+	subprocess InHops_3(*) {in(ch_out_F2:ER);}
+	subprocess InHops_4(*) {in(ch_out_F3:ER);}
+	subprocess InHops_5(*) {in(ch_out_F4:ER);}
+	subprocess InHops_6(*) {in(ch_out_F5:ER);}
+	subprocess InHops_7(*) {in(ch_out_F6:ER);}
+	subprocess InHops_8(*) {in(ch_out_F7:ER);}
+
+	
+	subprocess CheckNode(*) {
+		DH_S_NewNode = dh_key(PK_NewNode, SK_S); 
+		R = s_dec(ER, dh_key(PK_NewNode, SK_S))[16B]; 
+		check_node(R[0]);
+	}
+
+	subprocess MakeResponseToNeighbour(*) {
+		RESP = (req_response(), PK_NewNode);
+		E_RESP = s_enc(RESP, DH_S_Neighbour)[40B]; 
+		send()[40B];
+		
+		RESP_MSG = E_RESP;	
+	}
+
+	subprocess MakeResponseToNewNodeDirectly(*) {
+		
+		SymKey_N_NN = gen_sym_key();
+		NN_RESP = (req_response(), SymKey_N_NN);
+		E_NN_RESP = a_enc(NN_RESP, PK_NewNode)[join_response]; 
+		send()[80B];
+
+		RESP_MSG = E_NN_RESP;
+	}
+
+	subprocess OutOnlyNewNode(*) {out(ch_in_NN:RESP_MSG);}
+	subprocess OutWithNeighbourOnly(*) {out(ch_in_N:RESP_MSG);}
+	subprocess OutHops_2(*) { out(ch_in_F1:RESP_MSG);}
+	subprocess OutHops_3(*) { out(ch_in_F2:RESP_MSG);}
+	subprocess OutHops_4(*) { out(ch_in_F3:RESP_MSG);}
+	subprocess OutHops_5(*) { out(ch_in_F4:RESP_MSG);}
+	subprocess OutHops_6(*) { out(ch_in_F5:RESP_MSG);}
+	subprocess OutHops_7(*) { out(ch_in_F6:RESP_MSG);}
+	subprocess OutHops_8(*) { out(ch_in_F7:RESP_MSG);}
+
+	
+}
+}
+
+host F1(rr)(*) {
+process Main(*) {
+	in(ch_out_N:M);
+	send()[16B];
+	out(ch_out_F1:M);
+	in(ch_in_F1:M);
+	send()[40B];
+	out(ch_in_N:M);
+}
+}
+
+host F2(rr)(*) {
+process Main(*) {
+	in(ch_out_F1:M);
+	send()[16B];
+	out(ch_out_F2:M);
+	in(ch_in_F2:M);
+	send()[40B];
+	out(ch_in_F1:M);
+}
+}
+
+host F3(rr)(*) {
+process Main(*) {
+	in(ch_out_F2:M);
+	send()[16B];
+	out(ch_out_F3:M);
+	in(ch_in_F3:M);
+	send()[40B];
+	out(ch_in_F2:M);
+}
+}
+
+host F4(rr)(*) {
+process Main(*) {
+	in(ch_out_F3:M);
+	send()[16B];
+	out(ch_out_F4:M);
+	in(ch_in_F4:M);
+	send()[40B];
+	out(ch_in_F3:M);
+}
+}
+
+host F5(rr)(*) {
+process Main(*) {
+	in(ch_out_F4:M);
+	send()[16B];
+	out(ch_out_F5:M);
+	in(ch_in_F5:M);
+	send()[40B];
+	out(ch_in_F4:M);
+}
+}
+
+host F6(rr)(*) {
+process Main(*) {
+	in(ch_out_F5:M);
+	send()[16B];
+	out(ch_out_F6:M);
+	in(ch_in_F6:M);
+	send()[40B];
+	out(ch_in_F5:M);
+}
+}
+
+host F7(rr)(*) {
+process Main(*) {
+	in(ch_out_F6:M);
+	send()[16B];
+	out(ch_out_F7:M);
+	in(ch_in_F7:M);
+	send()[40B];
+	out(ch_in_F6:M);
+}
+}
+
+}
