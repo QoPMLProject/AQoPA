@@ -3,6 +3,7 @@
 #########################################
 
 Next release:
+ - Stopped using simultaneous threads for simulators in console and gui modes.
 
 v0.4.7
  - Added lock for printing results from all threads.
