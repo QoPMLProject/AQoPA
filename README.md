@@ -4,36 +4,60 @@
 
 **[Project Homepage][home]** 
 
-# Download
+# Quick Installation in 3 steps
 
-## Download ZIP file
-
-AQoPA as ZIP file can be downloaded using **[this][aqopa]** link.
+Assuming that you use **apt-get** and you do not use **virtualenv**.
+```
+sudo apt-get install python-wxgtk2.8 python-wxtools wx2.8-i18n
+```
 ```
 wget https://github.com/QoPMLProject/AQoPA/archive/master.zip
-unzip master.zip
-rm master.zip
-cd AQoPA-master
+```
+```
+pip install AQoPA-master.zip
+```
+
+## Run
+
+```
+aqopa-gui
+```
+
+---
+
+# Download
+
+AQoPA can be downloaded as ZIP file using **[this][aqopa]** link.
+
+```
+wget https://github.com/QoPMLProject/AQoPA/archive/master.zip
 ``` 
 
-## Download using GIT
-
-You have to clone AQoPA GIT repository.
-```
-git clone https://github.com/QoPMLProject/AQoPA.git
-cd AQoPA
-```
-
-# Setup
+# Installation
 
 AQoPA is written in Python and needs Python in version 2.7 or newer.
 We also recommend using **virtualenv**. You can find more informations **[here][virtualenv]** 
 
 ## Requirements
 
-AQoPA needs Python Lex-Yacc package for parsing (PLY >= 3.4) that can be installed using **pip**.
+AQoPA needs following packages:
+
 ```
-pip install <package-name>
+PLY
+```
+
+```
+numpy
+```
+
+They will be installed during AQoPA installation automatically or can be installed manually using **pip** command. 
+
+## Installation
+
+AQoPA can be installed from ZIP file with **pip** command:
+
+```
+pip install AQoPA-master.zip
 ```
 
 # Modes Setup
@@ -46,33 +70,42 @@ AQoPA GUI is built with **[wxPython][wxPython]**.
 You need to install wxPython GUI toolkit to use GUI mode of AQoPA. Installations instructions are available **[here][wxPythonInstall]**.
 
 Ubuntu users just need to install 3 packages: **python-wxgtk2.8 python-wxtools wx2.8-i18n**.
+
 ```
 sudo apt-get install python-wxgtk2.8 python-wxtools wx2.8-i18n
 ```
 
-AQoPA also uses **numpy** (>= 1.7) packages for graphs.
+## wxPython and virtualenv
+
+When using **virtualenv** the **wxPython** package may not be installed in the virtual environment. It is installed into the global python environment.
+
+In order to make **wxPython** visible in virtual environment you need to create **wx** files in your virtual environment. 
+
+We assume that using **apt-get** the **wxPython** package has been installed in "/usr/lib/python2.7/dist-packages/" directory and the content of **wx.pth** file is "wx-2.8-gtk2-unicode". Otherwise, you have to find out where is **wx.pth** file and check its content. 
+
 ```
-pip install numpy
+echo "/usr/lib/python2.7/dist-packages/wx-2.8-gtk2-unicode" > <virtual_env_path>/lib/python2.7/site-packages/wx.pth
+```
+```
+ln -s /usr/lib/python2.7/dist-packages/wxversion.py <virtual_env_path>/lib/python2.7/site-packages/wxversion.py
 ```
 
 # Run
 
-AQoPA binaries are located in **bin/** folder.
-
 ## Run Console Mode
 
-Run **aqopa-console.py** file with **-h** option to view all available options.
+Run **aqopa-console** file with **-h** option to view all available options.
+
 ```
-cd bin
-python aqopa-console.py -h 
+aqopa-console -h 
 ```
 
 ## Run GUI Mode
 
-Run **aqopa-gui.py** file.
+Run **aqopa-gui** file.
+
 ```
-cd bin
-python aqopa-gui.py 
+aqopa-gui 
 ```
 
 [home]: http://qopml.org
