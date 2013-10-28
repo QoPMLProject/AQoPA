@@ -99,8 +99,8 @@ def main(qopml_model, qopml_metrics, qopml_configuration,
         interpreter.prepare()
         
         if save_states:
-            for thread in interpreter.threads: 
-                thread.save_states_to_file()
+            for simulator in interpreter.simulators: 
+                interpreter.save_states_to_file(simulator)
         
         if show_progressbar:
             progressbar_thread = ProgressThread(sys.stdout, interpreter)

@@ -53,7 +53,7 @@ class Builder():
                 functions.append(f)
                 
         if len(errors) > 0:
-            raise EnvironmentDefinitionException('Functions redeclaration', errors=errors)
+            raise EnvironmentDefinitionException('Functions redeclaration.', errors=errors)
         
         return functions
     
@@ -69,7 +69,7 @@ class Builder():
             equations.append(equation.Equation(parsed_equation.composite, parsed_equation.simple))
         return equations
     
-    def _build_hosts(self, store, version, functions, expression_checker):
+    def _build_hosts(self, store, version, functions, populator, reducer):
         """
         Rebuild hosts - create new instances with updated instructions lists according to version.
         """
@@ -134,7 +134,7 @@ class Builder():
                 parsed_process = find_process(parsed_host.instructions_list, run_process.process_name)
                 
                 if parsed_process is None:
-                    raise EnvironmentDefinitionException("Process '%s' does not exist in host '%s'" % 
+                    raise EnvironmentDefinitionException("Process '%s' does not exist in host '%s'." % 
                                                          (run_process.process_name, parsed_host.name))
                 
                 # Clone the parsed process, because builder 
@@ -187,14 +187,16 @@ class Builder():
             
             return host_instructions_list
             
-        def set_predefined_variables(host, predefined_values, expression_checker):
+        def set_predefined_variables(host, predefined_values, populator, reducer):
             """
             Populate predefined values with expressions 
             and save them as variables in host
             """
             for predefined_value in predefined_values:
                 host.set_variable(predefined_value.variable_name, 
-                                  expression_checker.populate_variables(predefined_value.expression, host.get_variables()))
+                                  populator.populate(predefined_value.expression, 
+                                                     host.get_variables(), 
+                                                     reducer))
         
         def set_scheduler(host, algorithm):
             """
@@ -233,22 +235,32 @@ class Builder():
                 set_scheduler(simulation_host, parsed_host.schedule_algorithm)
                 
                 # Save predefined values as variables
-                set_predefined_variables(simulation_host, parsed_host.predefined_values, expression_checker)
+                set_predefined_variables(simulation_host, 
+                                         parsed_host.predefined_values, 
+                                         populator, 
+                                         reducer)
                 built_hosts.append(simulation_host)
                 
             hosts_numbers[run_host.host_name] += run_host.repetitions 
             
         return built_hosts
     
+    def _build_expression_populator(self):
+        """
+        Build and return object that populates expressions
+        with variables' values.
+        """
+        return expression.Populator()
+    
     def _build_expression_checker(self):
         """
-        Build and return expression checker.
+        Build and return object that checks the logic value of expressions.
         """
         return expression.Checker()
     
     def _build_expression_reducer(self, equations):
         """
-        Build and return expression reducer.
+        Build and return object that reduces expressions.
         """
         return expression.Reducer(equations)
     
@@ -421,7 +433,7 @@ class Builder():
                         
                     # If no process found raise exception
                     if instruction_index >= len(built_host.instructions_list):
-                        raise EnvironmentDefinitionException("Process '%s' not found in host '%s'" % (run_process.process_name, built_host.name))
+                        raise EnvironmentDefinitionException("Process '%s' not found in host '%s'." % (run_process.process_name, built_host.name))
         
                     if run_process.process_name not in processes_numbers:
                         processes_numbers[run_process.process_name] = 0
@@ -499,7 +511,7 @@ class Builder():
                                     
                             else:
                                 raise EnvironmentDefinitionException(
-                                        'Invalid repeated channel definition %s in process %s (host %s)'\
+                                        'Invalid repeated channel definition %s in process %s (host %s).'\
                                         % (process_channel_repeated_name, run_process.process_name, built_host.name))
                             
                             # Connect repeated channel with all repeated processes
@@ -639,19 +651,20 @@ class Builder():
         functions = self._build_functions(store)
         equations = self._build_equations(store, functions)
         expression_reducer = self._build_expression_reducer(equations)
+        expression_populator = self._build_expression_populator()
         expression_checker = self._build_expression_checker()
-        hosts = self._build_hosts(store, version, functions, expression_checker)
-        metrics_manager = self._build_metrics_manager(store, hosts, version);
+        hosts = self._build_hosts(store, version, functions, 
+                                  expression_populator, expression_reducer)
         channels = self._build_channels(store, version, hosts)
-        channels_manager = self._build_channels_manager(channels)
 
         c = state.Context(version)
         c.functions = functions
         c.hosts = hosts
-        c.expression_checker = expression_checker
         c.expression_reducer = expression_reducer
-        c.metrics_manager = metrics_manager
-        c.channels_manager = channels_manager
+        c.expression_checker = expression_checker
+        c.expression_populator = expression_populator
+        c.metrics_manager = self._build_metrics_manager(store, hosts, version);
+        c.channels_manager = self._build_channels_manager(channels)
         return c
     
     def build_executor(self):
@@ -783,7 +796,7 @@ class Interpreter():
         Registers new module
         """
         if qopml_module in self._modules:
-            raise EnvironmentDefinitionException(u"QoPML Module '%s' is already registered" % unicode(qopml_module))
+            raise EnvironmentDefinitionException(u"QoPML Module '%s' is already registered." % unicode(qopml_module))
         self._modules.append(qopml_module)
         return self
         
@@ -792,52 +805,28 @@ class Interpreter():
         Parses the model from model_as_text field and populates the store.
         """
         if len(self.model_as_text) == 0:
-            raise EnvironmentDefinitionException("QoPML Model not provided")
+            raise EnvironmentDefinitionException("QoPML Model not provided.")
     
         self.store = self.builder.build_store()
     
         parser = self.builder.build_model_parser(self.store, self._modules)
         parser.parse(self.model_as_text)
         if len(parser.get_syntax_errors()) > 0:
-            raise ModelParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
+            raise ModelParserException('Invalid syntax.', syntax_errors=parser.get_syntax_errors())
     
         parser = self.builder.build_metrics_parser(self.store, self._modules)
         parser.parse(self.metrics_as_text)
         if len(parser.get_syntax_errors()) > 0:
-            raise MetricsParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
+            raise MetricsParserException('Invalid syntax.', syntax_errors=parser.get_syntax_errors())
     
         parser = self.builder.build_config_parser(self.store, self._modules)
         parser.parse(self.config_as_text)
         if len(parser.get_syntax_errors()) > 0:
-            raise ConfigurationParserException('Invalid syntax', syntax_errors=parser.get_syntax_errors())
+            raise ConfigurationParserException('Invalid syntax.', syntax_errors=parser.get_syntax_errors())
     
     def run(self):
         """ Runs all simulations """
         raise NotImplementedError()
-            
-ConsoleVersionThreadLock = threading.Lock()
-            
-class ConsoleVersionThread(threading.Thread):
-    """
-    One thread for one version
-    """
-    
-    def __init__(self, simulator, on_finished, *args, **kwargs):
-        super(ConsoleVersionThread, self).__init__(*args, **kwargs)
-        self.simulator = simulator
-        self.on_finished = on_finished
-        
-    def run(self):
-        self.simulator.prepare()
-        self.simulator.run()
-        self.on_finished(self)
-        
-    def save_states_to_file(self):
-        """ 
-        Tells simulator to save states flow to file.
-        """
-        f = open('VERSION_%s_STATES_FLOW' % self.simulator.context.version.name, 'w')
-        self.simulator.get_executor().prepend_instruction_executor(PrintExecutor(f))            
             
 class ConsoleInterpreter(Interpreter):
     
@@ -845,25 +834,33 @@ class ConsoleInterpreter(Interpreter):
                  metrics_as_text="", config_as_text=""):
         Interpreter.__init__(self, builder, model_as_text, metrics_as_text, config_as_text)
         
-        self.threads = []
+        self.simulators = []
+
+    def save_states_to_file(self, simulator):
+        """ 
+        Tells simulator to save states flow to file.
+        """
+        f = open('VERSION_%s_STATES_FLOW' % simulator.context.version.name, 'w')
+        simulator.get_executor().prepend_instruction_executor(PrintExecutor(f))      
 
     def prepare(self):
         """ Prepares for run """
+        
         for version in self.store.versions:
             simulator = self.builder.build_simulator(self.store, version)
-            
+            self.simulators.append(simulator)
             for m in self._modules:
                 m.install_console(simulator)
-            
-            thr = ConsoleVersionThread(simulator, self.on_finished)
-            self.threads.append(thr)
-    
+        
     def run(self):
         """ Runs all simulations """
-        for thr in self.threads:
-            thr.start()
+
+        for s in self.simulators:
+            s.prepare()
+            s.run()
+            self.on_finished(s)
             
-    def on_finished(self, thread):
+    def on_finished(self, simulator):
         pass
 
 

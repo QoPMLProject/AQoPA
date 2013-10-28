@@ -1,0 +1,27 @@
+metrics {
+
+conf (TelosB) {
+	CPU = 16-bit 8MHz TI MSP430;
+}
+
+data(TelosB) {
+	primhead[function][time:exact(ms)];
+	primitive[dh_key][3270.8];
+	#
+	primhead[function][message_size][time:exact(ms)];
+	primitive[s_enc][16B][205.6];
+	primitive[s_dec][16B][205.6];
+	primitive[s_enc][40B][612.2];
+	primitive[s_dec][40B][612.2];
+	#
+	primhead[function][message_type][time:exact(ms)];
+	primitive[a_enc][join_response][6348.4];
+	primitive[a_dec][join_response][4369.8];
+	#
+	primhead[function][message_size][time:exact(ms)];
+	primitive[send][16B][23.95];
+	primitive[send][40B][25.75];
+	primitive[send][80B][30.89];
+}
+
+}

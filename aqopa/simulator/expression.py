@@ -5,29 +5,28 @@ Created on 07-05-2013
 '''
 import copy
 from aqopa.model import IdentifierExpression, CallFunctionExpression, TupleExpression,\
-    BooleanExpression, ComparisonExpression
+    BooleanExpression, ComparisonExpression, TupleElementExpression
 from aqopa.simulator.error import RuntimeException
 
-class Checker():
-    """
-    Expression checker.
-    Class used to check the result of expressions.
-    """
+
+class Populator():
     
-    def populate_variables(self, expression, variables):
+    def populate(self, expression, variables, reducer):
         """
         Returns new expression with replaced variables names 
         with copies of values of variables from variables list.
+        Reducer is used for special types of variables, 
+        eg. tuple element expressions.
         """
         if isinstance(expression, IdentifierExpression):
             if expression.identifier not in variables:
-                raise RuntimeException("Variable '%s' does not exist" % expression.identifier)
+                raise RuntimeException("Variable '%s' does not exist." % expression.identifier)
             return variables[expression.identifier].clone()
             
         if isinstance(expression, CallFunctionExpression):
             arguments = []
             for arg in expression.arguments:
-                arguments.append(self.populate_variables(arg, variables))
+                arguments.append(self.populate(arg, variables, reducer))
             qop_arguments = []
             for qop_arg in expression.qop_arguments:
                 qop_arguments.append(qop_arg)
@@ -36,10 +35,30 @@ class Checker():
         if isinstance(expression, TupleExpression):
             elements = []
             for e in expression.elements:
-                elements.append(self.populate_variables(e, variables))
+                elements.append(self.populate(e, variables, reducer))
             return TupleExpression(elements)
         
+        if isinstance(expression, TupleElementExpression):
+            if expression.variable_name not in variables:
+                raise RuntimeException("Variable '%s' does not exist." % expression.variable_name)
+            expr = variables[expression.variable_name]
+            if not isinstance(expr, TupleExpression):
+                expr = reducer.reduce(expr)
+            if not isinstance(expr, TupleExpression):
+                raise RuntimeException("Cannot compute expression %s. Variable '%s' is not a tuple. It is: %s." % (unicode(expression), expression.variable_name, unicode(expr)))
+            if len(expr.elements) <= expression.index:
+                raise RuntimeException("Cannot compute expression %s. Variable '%s' does not have index %s. It has %d elements." % 
+                                        (expression.variable_name, expression.index, len(expr.elements)))
+            return self.populate(expr.elements[expression.index], variables, reducer)
+        
         return expression.clone()
+
+
+class Checker():
+    """
+    Expression checker.
+    Class used to check the result of expressions.
+    """
     
     def _are_equal(self, left, right):
         """
@@ -65,7 +84,7 @@ class Checker():
                     return False
         return False
     
-    def result(self, condition, variables, functions, reducer):
+    def result(self, condition, variables, functions, populator, reducer):
         """
         Method checks the result of condition.
         Returns True if condition is true or can be reduced to true condition.
@@ -80,8 +99,8 @@ class Checker():
             left = condition.left
             right = condition.right
             
-            left = self.populate_variables(left, variables)
-            right = self.populate_variables(right, variables)
+            left = populator.populate(left, variables, reducer)
+            right = populator.populate(right, variables, reducer)
             
             left = reducer.reduce(left)
             right = reducer.reduce(right)
@@ -287,7 +306,7 @@ class Reducer():
                                 found = True
                                 break
                         if not found:
-                            raise RuntimeException("Equations '%s' and '%s are ambiguous for expression: %s" % 
+                            raise RuntimeException("Equations '%s' and '%s are ambiguous for expression: %s." % 
                                                    (unicode(old_reduction_point.equation),
                                                     unicode(new_reduction_point.equation),
                                                     unicode(expression)))

@@ -104,9 +104,9 @@ class Validator():
         if isinstance(expression, CallFunctionExpression):
             function = self._find_function(functions, expression.function_name)
             if not function:
-                raise EnvironmentDefinitionException('Function %s does not exist' % expression.function_name)
+                raise EnvironmentDefinitionException('Function %s does not exist.' % expression.function_name)
             if len(function.params) != len(expression.arguments):
-                raise EnvironmentDefinitionException('Function %s called with wrong number of arguments - expected: %d, got: %d' 
+                raise EnvironmentDefinitionException('Function %s called with wrong number of arguments - expected: %d, got: %d.' 
                                                      % expression.function_name, len(function.params), len(expression.arguments))
             for arg in expression.arguments:
                 if isinstance(arg, CallFunctionExpression):
@@ -192,7 +192,7 @@ class Validator():
                     errors.append("Equation '%s' does not have identifier from simple expression '%s' in composite expression."
                                   % (unicode(eq), eq.simple.identifier))
         if len(errors) > 0:
-            raise EnvironmentDefinitionException('Invalid syntax', errors=errors)
+            raise EnvironmentDefinitionException('Invalid syntax.', errors=errors)
     
     def validate(self, parsed_equations, functions):
         """

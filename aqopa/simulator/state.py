@@ -21,6 +21,7 @@ class Context():
         self.hosts = []                 # List of all hosts in this context
         self.functions = []             # List of all functions in this context
         
+        self.expression_populator = None
         self.expression_checker = None
         self.expression_reducer = None
 
@@ -168,7 +169,7 @@ class Host():
     def get_variable(self, name):
         """ Get host's variable """
         if name not in self._variables:
-            raise RuntimeException("Variable '%s' undefined in host '%s'" % (name, self.name))
+            raise RuntimeException("Variable '%s' undefined in host '%s'." % (name, self.name))
         return self._variables[name]
     
     def get_variables(self):
@@ -549,34 +550,28 @@ class AssignmentInstructionExecutor(InstructionExecutor):
             return expression.clone()
         
         if isinstance(expression, IdentifierExpression):
-            return context.expression_checker.populate_variables(expression, context.get_current_host().get_variables())
+            return context.expression_populator.populate(
+                                                expression, 
+                                                context.get_current_host().get_variables(),
+                                                context.expression_reducer)
         
         if isinstance(expression, CallFunctionExpression):
-            return context.expression_checker.populate_variables(expression, context.get_current_host().get_variables())
+            return context.expression_populator.populate(
+                                                expression, 
+                                                context.get_current_host().get_variables(),
+                                                context.expression_reducer)
             
         if isinstance(expression, TupleExpression):
-            return context.expression_checker.populate_variables(expression, context.get_current_host().get_variables())
+            return context.expression_populator.populate(
+                                                expression, 
+                                                context.get_current_host().get_variables(),
+                                                context.expression_reducer)
             
         if isinstance(expression, TupleElementExpression):
-            
-            # Clone variable expression
-            tuple_expression = context.get_current_host().get_variable(expression.variable_name).clone()
-            
-            # If not tuple expression, try to reduce. Maybe the result will be a tuple.
-            if not isinstance(tuple_expression, TupleExpression):
-                tuple_expression = context.expression_reducer.reduce(tuple_expression)
-                
-            if not isinstance(tuple_expression, TupleExpression):
-                raise RuntimeException("Variable '%s' not tuple and cannot get its element [%d]. Value: %s" 
-                                        % (expression.variable_name, expression.index, unicode(tuple_expression)))
-                
-            if expression.index >= len(tuple_expression.elements):
-                raise RuntimeException("Tuple '%s' not tuple and cannot get its element %d" 
-                                        % (expression.variable_name, expression.index))
-            
-            return context.expression_checker.populate_variables(
-                            tuple_expression.elements[expression.index],
-                            context.get_current_host().get_variables())
+            return context.expression_populator.populate(
+                                                expression, 
+                                                context.get_current_host().get_variables(),
+                                                context.expression_reducer)
             
         raise RuntimeException("Expression '%s' cannot be a value of variable.")
 
@@ -589,9 +584,12 @@ class AssignmentInstructionExecutor(InstructionExecutor):
 #        v = instruction.variable_name
 #        e = unicode(expression)
 #        print "%s: %s = %s" % (h.name, v, e)
+
+#        print "%s - %s: %s <- %s" % (id(context.get_current_host()), 
+#                                     context.get_current_host().name, 
+#                                     instruction.variable_name, unicode(expression))
         
         context.get_current_host().set_variable(instruction.variable_name, expression)
-        
         context.get_current_host().mark_changed()
         
         return ExecutionResult(consumes_cpu=True)
@@ -698,7 +696,7 @@ class CommunicationInstructionExecutor(InstructionExecutor):
         else:
             request = context.channels_manager.build_message_request(context.get_current_host(), instruction)
             channel.wait_for_message(request)
-
+            
         return ExecutionResult(consumes_cpu=True, 
                                custom_index_management=True)
                 
@@ -760,7 +758,9 @@ class IfInstructionExecutor(InstructionExecutor):
         
         contidion_result = context.expression_checker.result(instruction.condition, 
                                         context.get_current_host().get_variables(),
-                                        context.functions, context.expression_reducer)
+                                        context.functions,
+                                        context.expression_populator, 
+                                        context.expression_reducer)
         
         instructions_list = []
         if contidion_result:
@@ -797,7 +797,9 @@ class WhileInstructionExecutor(InstructionExecutor):
         
         contidion_result = context.expression_checker.result(instruction.condition, 
                                         context.get_current_host().get_variables(),
-                                        context.functions, context.expression_reducer)
+                                        context.functions, 
+                                        context.expression_populator,
+                                        context.expression_reducer)
         
         if contidion_result:
             instructions_list = instruction.instructions
