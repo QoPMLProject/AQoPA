@@ -585,12 +585,11 @@ class AssignmentInstructionExecutor(InstructionExecutor):
 #        e = unicode(expression)
 #        print "%s: %s = %s" % (h.name, v, e)
 
-        print "%s - %s: %s <- %s" % (id(context.get_current_host()), 
-                                     context.get_current_host().name, 
-                                     instruction.variable_name, unicode(expression))
+#        print "%s - %s: %s <- %s" % (id(context.get_current_host()), 
+#                                     context.get_current_host().name, 
+#                                     instruction.variable_name, unicode(expression))
         
         context.get_current_host().set_variable(instruction.variable_name, expression)
-        
         context.get_current_host().mark_changed()
         
         return ExecutionResult(consumes_cpu=True)
