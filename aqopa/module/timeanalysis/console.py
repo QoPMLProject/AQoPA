@@ -6,7 +6,6 @@ Created on 07-09-2013
 import sys
 
 from aqopa.simulator.state import Hook
-from aqopa.app import ConsoleVersionThreadLock
 
 class PrintResultsHook(Hook):
 
@@ -19,7 +18,6 @@ class PrintResultsHook(Hook):
     def execute(self, context):
         """ """
         
-        ConsoleVersionThreadLock.acquire()
         self.output_file.write('-'*20)
         self.output_file.write('\n')
         self.output_file.write('Version: %s\n' % self.simulator.context.version.name)
@@ -52,4 +50,3 @@ class PrintResultsHook(Hook):
             print "None"
         self.output_file.write('-'*20)
         self.output_file.write('\n')
-        ConsoleVersionThreadLock.release()
