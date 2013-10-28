@@ -385,15 +385,19 @@ class RunPanel(wx.Panel):
             self.ShowPanel(self.runPanel)
             
             self.finishedSimulators = []
+            self.simulatorIndex = 0
             
             self.startAnalysisTime = time.time()
             
             self.interpreter.prepare()
             self.progressTimer.Start(1000)
-            i = 0
-            for simulator in self.interpreter.simulators:
-                self.runSimulation(simulator)
-                i += 1
+
+            simulator = self.interpreter.simulators[self.simulatorIndex]
+            wx.lib.delayedresult.startWorker(self.OnSimulationFinished, 
+                                             self.interpreter.run_simulation, 
+                                             wargs=(simulator,),
+                                             jobID = self.simulatorIndex)
+                
             
         except EnvironmentDefinitionException, e:
             self.statusLabel.SetLabel("Error")
@@ -415,12 +419,17 @@ class RunPanel(wx.Panel):
         
         self.ShowPanel(self.runPanel)
         
-    def runSimulation(self, simulator):
+    def OnSimulationFinished(self, result):
         """ """
+        simulator = self.interpreter.simulators[self.simulatorIndex]
+        self.simulatorIndex += 1
+        self.finishedSimulators.append(simulator)
+        
         resultMessage = None
         try :
-            
-            self.interpreter.run_simulation(simulator)
+            simulator = result.get()
+    
+            self.PrintProgressbar(self.GetProgress())
             
             for m in self.selectedModules:
                 gui = m.get_gui()
@@ -438,21 +447,22 @@ class RunPanel(wx.Panel):
                 % (simulator.context.version.name, e.args[0])
         except Exception, e:
             sys.stderr.write(traceback.format_exc())
-            
             runResultValue = self.runResult.GetValue()
             resultMessage = runResultValue + \
                 "Version %s finished with unknown error.\n" \
                 % simulator.context.version.name
-                
+        
         if resultMessage:    
             self.runResult.SetValue(resultMessage)
         
-        self.finishedSimulators.append(simulator)
-        self.PrintProgressbar(self.GetProgress())
-        
         if len(self.finishedSimulators) == len(self.interpreter.simulators):
             self.OnAllSimulationsFinished()
-            
+        else:
+            simulator = self.interpreter.simulators[self.simulatorIndex]
+            wx.lib.delayedresult.startWorker(self.OnSimulationFinished, 
+                                             self.interpreter.run_simulation, 
+                                             wargs=(simulator,),
+                                             jobID = self.simulatorIndex)
                 
     def OnAllSimulationsFinished(self):
         """ """
