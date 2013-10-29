@@ -733,7 +733,16 @@ class MainFrame(wx.Frame):
         
         self.mainNotebook = MainNotebook(self)
         
+        logo_filepath = os.path.join(os.path.dirname(__file__), 
+                                     os.pardir, 
+                                     'assets', 
+                                     'logo.png')
+        logoPanel = wx.Panel(self)
+        pic = wx.StaticBitmap(logoPanel)
+        pic.SetBitmap(wx.Bitmap(logo_filepath))
+        
         sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(logoPanel, 0, wx.CENTER, 5)
         sizer.Add(self.mainNotebook, 1, wx.ALL|wx.EXPAND, 5)
         self.SetSizer(sizer)
         
@@ -745,286 +754,51 @@ class MainFrame(wx.Frame):
         
     def OnAbout(self, event=None):
         """ Show about info """
-        dlg = wx.MessageDialog(self, "Automated Quality of Protection Analysis tool of QoP-ML models.\n" +\
-                                     "Version: %s\n\nProject Home: http://qopml.org" % aqopa.VERSION, 
-                               "About AQoPA", wx.OK)
-        dlg.ShowModal()
-        dlg.Destroy()
+        
+        description = """AQoPA stands for Automated Quality of Protection Analysis Tool 
+        for QoPML models."""
+
+        licence = """AQoPA is free software; you can redistribute 
+it and/or modify it under the terms of the GNU General Public License as 
+published by the Free Software Foundation; either version 2 of the License, 
+or (at your option) any later version.
+
+AQoPA is distributed in the hope that it will be useful, 
+but WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
+        
+        logo_filepath = os.path.join(os.path.dirname(__file__), 
+                                     os.pardir, 
+                                     'assets', 
+                                     'logo.png')
+        
+        info = wx.AboutDialogInfo()
+        info.SetIcon(wx.Icon(logo_filepath, wx.BITMAP_TYPE_PNG))
+        info.SetName('AQoPA')
+        info.SetVersion(aqopa.VERSION)
+        info.SetDescription(description)
+        info.SetCopyright('(C) 2013 QoPML Project')
+        info.SetWebSite('http://www.qopml.org')
+        info.SetLicence(licence)
+        info.AddDeveloper('Damian Rusinek')
+        info.AddDocWriter('Damian Rusinek')
+        info.AddArtist('QoPML Project')
+        info.AddTranslator('Damian Rusinek')
+        
+        wx.AboutBox(info)
         
         
 class AqopaApp(wx.App):
     
     def OnInit(self):
-        self.mainFrame = MainFrame(None, title="AQoPA")
+        self.mainFrame = MainFrame(None, 
+                                   title="Automated Quality of Protection Analysis Tool")
         self.mainFrame.Show(True)
         self.mainFrame.Maximize(True)
         self.SetTopWindow(self.mainFrame)
         
-        self.mainFrame.Bind(wx.EVT_KEY_UP, self.OnKeyDown)
-        
         return True
     
-    def OnKeyDown(self, event):
-        if event.KeyCode == 76:
-            self.mainFrame.mainNotebook.configurationTab.dataTextArea.SetValue(""" versions {
-  
-  version scenario1_sim100 {
-
-
-    set host Server(Server);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,decrypt_aes_256_sim_100,select_rows_100,get_rows)
-    }
-    run host Client(*){10}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  version scenario1_sim200 {
-
-
-    set host Server(Server1);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,decrypt_aes_256_sim_200,select_rows_200,get_rows)
-    }
-    run host Client(*){20}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  
-  
-  version scenario2_sim100 {
-
-
-    set host Server(Server);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,decrypt_aes_128_sim_100,select_rows_100,get_rows)
-    }
-    run host Client(*){10}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-  
-  version scenario2_sim200 {
-
-
-    set host Server(Server1);
-
-    run host KeysStore(*) {
-      run Store1(*)
-    }
-    run host Server(*) {
-      run Server1(get_db_key,decrypt_aes_128_sim_200,select_rows_200,get_rows)
-    }
-    run host Client(*){20}[ch1, ch2] {
-      run Client1(*)
-    }
-  }
-} """)
-            self.mainFrame.mainNotebook.modelTab.dataTextArea.SetValue(""" functions {
-  fun nonce() (create nonce);
-
-  fun s_enc(data, key); 
-  fun s_dec(data, key); 
-  fun sign(data, s_key); 
-  fun a_enc(data, p_key);
-  fun a_dec(data, s_key);
-  fun pkey(skey);
-  fun skey();
-  fun hash(data);
-  
-  fun id_c() (identification of Client);
-  fun crit() (searching criteria);
-  
-  fun database() (creates non-encrypted database);
-  fun key_request() (creates key request);
-  fun get_db_key(key) (retrieving key for database);
-  fun select_rows(database, criteria);
-} 
-
-equations {
-  eq s_dec(s_enc(data, key), key) = data;
-  eq a_dec(a_enc(data, pkey(skey)), skey) = data;
-  
-  eq get_db_key(key) = key;
-}
-
-channels {
-  channel ch1,ch2,ch3,ch4 (*);
-}
-
-hosts {
-
- host Client(rr)(ch1, ch2) {
- 
-   #ID_C = id_c();
-   #CRIT = crit();
- 
-   process Client1(ch1, ch2) {
-     M1 = (ID_C, CRIT);
-     out(ch1: M1);
-     in(ch2: M2);
-   }
- 
- }
- 
- host Server(rr)(ch1, ch2, ch3, ch4) {
- 
-   #DB_KEY = nonce();
-   #DB = s_enc(database(), DB_KEY);
-   #SK_S = skey();
- 
-   process Server1(ch1, ch2, ch3, ch4) {
-   
-     while(true) {
-    in(ch1: M1);
-    
-    CRIT = M1[1];
-      
-    subprocess get_db_key(ch3, ch4) {
-      R = key_request();
-      out (ch3: R);
-      in (ch4: TMP_DB_KEY);
-    }
-      
-    subprocess decrypt_aes_128_sim_100() {
-      DB_PLAINTEXT = s_dec(DB, TMP_DB_KEY)[AES,128,CBC,300MB,100];
-    }
-    
-    subprocess decrypt_aes_128_sim_200() {
-      DB_PLAINTEXT = s_dec(DB, TMP_DB_KEY)[AES,128,CBC,300MB,200];
-    }
-      
-    subprocess decrypt_aes_256_sim_100() {
-      DB_PLAINTEXT = s_dec(DB, TMP_DB_KEY)[AES,256,CBC,300MB,100];
-    }
-    
-    subprocess decrypt_aes_256_sim_200() {
-      DB_PLAINTEXT = s_dec(DB, TMP_DB_KEY)[AES,256,CBC,300MB,200];
-    }
-    
-    subprocess get_db() {
-      DB_PLAINTEXT = s_dec(DB, TMP_DB_KEY);
-    }
-    
-    subprocess select_rows_100() {
-      ROWS = select_rows(DB_PLAINTEXT, CRIT)[100];
-    }
-    
-    subprocess select_rows_200() {
-      ROWS = select_rows(DB_PLAINTEXT, CRIT)[200];
-    }
-    
-    subprocess get_rows() {
-      M2 = ROWS;
-    }
-    
-    subprocess get_rows_with_hash_and_signature_100() {
-      H = hash(ROWS)[SHA1,1MB,100];
-      SGN = sign(H, SK_S)[20B,RSA,2048,100];
-      M2 = (ROWS,SGN);
-    }
-    
-    subprocess get_rows_with_hash_and_signature_200() {
-      H = hash(ROWS)[SHA1,1MB,200];
-      SGN = sign(H, SK_S)[20B,RSA,2048,200];
-      M2 = (ROWS,SGN);
-    }
-    
-    out(ch2: M2);
-     }
-   }
- 
- }
- 
- host KeysStore(rr)(ch3, ch4) {
- 
-   #DB_KEY = nonce();
- 
-   process Store1(ch3, ch4) {
-   
-     while (true) {
-       in (ch3: Request);
-       KEY = get_db_key(DB_KEY);
-       out(ch4: KEY);
-     }
-   }
- 
- }
-
-} """)
-            self.mainFrame.mainNotebook.metricsTab.dataTextArea.SetValue(""" metrics {
-  conf(Server) {
-    CPU = 12 x Intel Core i7-3930K 3.20GHz;
-    CryptoLibrary = openssl 1.0.1c;
-    OS = Debian 7.1 64-bit;
-  }
-  
-  conf(Server1) {
-    CPU = 12 x Intel Core i7-3930K 3.20GHz;
-    CryptoLibrary = openssl 1.0.1c;
-    OS = Debian 7.1 64-bit;
-  }
-
-  data(Server) {
-    primhead[function][input_size][algorithm][key_bitlength][simultaneous_operations][time:exact(ms)];
-    primitive[sign][20B][RSA][2048][100][0.2839];
-    primitive[sign][20B][RSA][2048][200][0.1577];
-    #
-    primhead[function][simultaneous_operations][time:exact(ms)];
-    primitive[select_rows][100][2235.5903];
-    primitive[select_rows][200][6487.1342];
-    #
-    primhead[function][algorithm][key_bitlength][mode][input_size][simultaneous_operations][time:exact(ms)];
-    primitive[s_dec][AES][128][CBC][300MB][100][12132.5026];
-    primitive[s_dec][AES][128][CBC][300MB][200][14126.168];
-    primitive[s_dec][AES][256][CBC][300MB][100][12239.8706];
-    primitive[s_dec][AES][256][CBC][300MB][200][14092.4126];
-    #
-    primhead[function][algorithm][input_size][simultaneous_operations][time:exact(ms)];
-    primitive[hash][SHA1][1MB][100][0.1797];    
-    primitive[hash][SHA1][1MB][200][0.0861];    
-    
-  }
-
-  data(Server1) {
-    primhead[function][input_size][algorithm][key_bitlength][simultaneous_operations][time:exact(ms)];
-    primitive[sign][20B][RSA][2048][100][0.4839];
-    primitive[sign][20B][RSA][2048][200][0.3577];
-    #
-    primhead[function][simultaneous_operations][time:exact(ms)];
-    primitive[select_rows][100][2435.5903];
-    primitive[select_rows][200][7487.1342];
-    #
-    primhead[function][algorithm][key_bitlength][mode][input_size][simultaneous_operations][time:exact(ms)];
-    primitive[s_dec][AES][128][CBC][300MB][100][14132.5026];
-    primitive[s_dec][AES][128][CBC][300MB][200][16126.168];
-    primitive[s_dec][AES][256][CBC][300MB][100][14239.8706];
-    primitive[s_dec][AES][256][CBC][300MB][200][16092.4126];
-    #
-    primhead[function][algorithm][input_size][simultaneous_operations][time:exact(ms)];
-    primitive[hash][SHA1][1MB][100][0.2797];    
-    primitive[hash][SHA1][1MB][200][0.0861];    
-    
-  }
-}
- """)
-        event.Skip()
-
-
 def main():
     app = AqopaApp(False)
     app.MainLoop()
