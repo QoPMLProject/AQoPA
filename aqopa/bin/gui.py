@@ -14,10 +14,8 @@ import wx.richtext
 import wx.lib.newevent
 import wx.lib.delayedresult
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-
 import aqopa
-import aqopa.app
+from aqopa import app
 from aqopa.model.parser import MetricsParserException,\
     ConfigurationParserException, ModelParserException
 from aqopa.module import timeanalysis
@@ -327,7 +325,7 @@ class RunPanel(wx.Panel):
         
     def OnParseClicked(self, event):
         """ """
-        self.interpreter = aqopa.app.GuiInterpreter(
+        self.interpreter = app.GuiInterpreter(
                                      model_as_text=self.qopml_model, 
                                      metrics_as_text=self.qopml_metrics,
                                      config_as_text=self.qopml_configuration)
@@ -734,7 +732,6 @@ class MainFrame(wx.Frame):
         self.mainNotebook = MainNotebook(self)
         
         logo_filepath = os.path.join(os.path.dirname(__file__), 
-                                     os.pardir, 
                                      'assets', 
                                      'logo.png')
         logoPanel = wx.Panel(self)
@@ -768,7 +765,6 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         
         logo_filepath = os.path.join(os.path.dirname(__file__), 
-                                     os.pardir, 
                                      'assets', 
                                      'logo.png')
         
@@ -799,10 +795,3 @@ class AqopaApp(wx.App):
         
         return True
     
-def main():
-    app = AqopaApp(False)
-    app.MainLoop()
-
-
-if __name__ == "__main__":
-    main()
