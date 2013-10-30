@@ -6,39 +6,33 @@ Created on 22-04-2013
 '''
 import os
 import sys
-import optparse
 import threading
 import time
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
-from aqopa import VERSION
-from aqopa.simulator.state import PrintExecutor
-from aqopa.model.parser import ParserException, ModelParserException,\
+from aqopa.model.parser import ModelParserException,\
     MetricsParserException, ConfigurationParserException
+from aqopa.app import Builder, ConsoleInterpreter
 from aqopa.simulator import EnvironmentDefinitionException
-from aqopa.app import Interpreter, Builder, ConsoleInterpreter
-from aqopa.simulator.error import RuntimeException,\
-    InfiniteLoopException
 from aqopa.module import timeanalysis
 
 class ProgressThread(threading.Thread):
 
-    def __init__(self, file, interpreter, *args, **kwargs):
+    def __init__(self, f, interpreter, *args, **kwargs):
         super(ProgressThread, self).__init__(*args, **kwargs)
-        self.file = file
+        self.file = f
         self.interpreter = interpreter
         self.signs = '|/-\\'
         self.sign_no = 0
         
     def get_progress(self):
-        all = 0.0
-        sum = 0.0
+        all_progress = 0.0
+        sum_progress = 0.0
         for thr in self.interpreter.threads:
-            all += 1
-            sum += thr.simulator.context.get_progress()
+            all_progress += 1
+            sum_progress += thr.simulator.context.get_progress()
         progress = 0
-        if all > 0:
-            progress = sum / all
+        if all_progress > 0:
+            progress = sum_progress / all_progress
         return progress
             
     def run(self):
@@ -67,7 +61,7 @@ class ProgressThread(threading.Thread):
             self.file.flush()
         
 
-def main(qopml_model, qopml_metrics, qopml_configuration, 
+def run(qopml_model, qopml_metrics, qopml_configuration, 
          save_states = False, debug = False, show_progressbar = False):
 
     ############### DEBUG ###############    
@@ -92,7 +86,7 @@ def main(qopml_model, qopml_metrics, qopml_configuration,
     try:
         interpreter.set_qopml_model(qopml_model)
         interpreter.set_qopml_metrics(qopml_metrics)
-        interpreter.set_qopml_config(qopml_config)
+        interpreter.set_qopml_config(qopml_configuration)
         
         interpreter.register_qopml_module(timeanalysis.Module())
         
@@ -134,59 +128,3 @@ def main(qopml_model, qopml_metrics, qopml_configuration,
             sys.stderr.write('\n'.join(e.syntax_errors))
             sys.stderr.write('\n')
         
-    #####################################
-    
-if __name__ == '__main__':
-    
-    parser = optparse.OptionParser()
-    parser.usage = "%prog [options]"
-    parser.add_option("-f", "--model-file", dest="model_file",  metavar="FILE",
-                      help="specifies model file")
-    parser.add_option("-m", "--metrics-file", dest="metrics_file",  metavar="FILE",
-                      help="specifies file with metrics")
-    parser.add_option("-c", "--config-file", dest="config_file",  metavar="FILE",
-                      help="specifies file with modules configuration")
-    parser.add_option("-s", "--states", dest="save_states", action="store_true", default=False,
-                      help="save states flow in a file")
-    parser.add_option("-p", '--progressbar', dest="show_progressbar", action="store_true", default=False,
-                      help="show the progressbar of the simulation")
-    parser.add_option("-V", '--version', dest="show_version", action="store_true", default=False,
-                      help="show version of AQoPA")
-    parser.add_option("-d", "--debug", dest="debug", action="store_true", default=False,
-                      help="DEBUG mode")
-    
-    (options, args) = parser.parse_args()
-    
-    if options.show_version:
-        print "AQoPA (version %s)" % VERSION
-        sys.exit(0)
-    
-    if not options.model_file:
-        parser.error("no qopml model file specified")
-    if not os.path.exists(options.model_file):
-        parser.error("qopml model file '%s' does not exist" % options.model_file)
-        
-    if not options.metrics_file:
-        parser.error("no metrics file specified")
-    if not os.path.exists(options.metrics_file):
-        parser.error("metrics file '%s' does not exist" % options.metrics_file)
-        
-    if not options.config_file:
-        parser.error("no configuration file specified")
-    if not os.path.exists(options.config_file):
-        parser.error("configuration file '%s' does not exist" % options.config_file)
-    
-    
-    f = open(options.model_file, 'r')
-    qopml_model = f.read()
-    f.close()
-    f = open(options.metrics_file, 'r')
-    qopml_metrics = f.read()
-    f.close()
-    f = open(options.config_file, 'r')
-    qopml_config = f.read()
-    f.close()
-
-    main(qopml_model, qopml_metrics, qopml_config, 
-         save_states=options.save_states, debug=options.debug,
-         show_progressbar=options.show_progressbar)

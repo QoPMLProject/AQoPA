@@ -12,19 +12,31 @@ def read(filename):
     with open(filename) as f:
         return f.read()
 
+
 setup(name='AQoPA',
+      
       version=aqopa.VERSION,
       description='Automated Quality of Protection Analysis Tool for QoP-ML models.',
       long_description=read('README.md'),
       author='Damian Rusinek',
       author_email='damian.rusinek@gmail.com',
       url='http://qopml.org/aqopa/',
+      
       license='Freeware',
       platforms=["any"],
-      packages=find_packages(),
-      scripts=['bin/aqopa-console', 'bin/aqopa-gui'],
+      
       install_requires=[read('requirements').split("\n")],
-      zip_safe=False,
+      
+      packages=find_packages(),
+      package_data={'aqopa': ['bin/assets/logo.png']},
+      
+      entry_points = {
+        'console_scripts': [
+            'aqopa-gui = aqopa.cmd:gui_command',
+            'aqopa-console = aqopa.cmd:console_command',
+        ]
+      },
+      
       classifiers = [
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Information Technology',
