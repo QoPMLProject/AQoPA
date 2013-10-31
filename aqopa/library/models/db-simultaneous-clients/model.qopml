@@ -1,0 +1,114 @@
+functions {
+  fun nonce() (create nonce);
+  fun s_enc(data, key) (symmetric encryption of data with key);
+  fun s_dec(data, key) (symmetric decryption of data with key);
+  fun sign(data, s_key) (sign data with secret key s_key);
+  fun a_enc(data, p_key) (asymmetric encryption of data with public key p_key);
+  fun a_dec(data, s_key) (asymmetric decryption of data with secret key s_key);
+  fun pkey(skey) (get public key for secret key skey);
+  fun skey() (generate secret key);
+  fun hash(data) (calculate hash of data);
+  
+  fun id_c() (generate identification of Client);
+  fun crit() (generate searching criteria);
+  
+  fun database() (create non-encrypted database);
+  fun key_request() (create key request);
+  fun get_db_key(key) (retrieve key for database);
+  fun select_rows(database, criteria) (get rows from database selected by criteria);
+}
+
+
+equations {
+  eq s_dec(s_enc(data, key), key) = data;
+  eq a_dec(a_enc(data, pkey(skey)), skey) = data;
+  
+  eq get_db_key(key) = key;
+}
+
+channels {
+  channel ch1,ch2,ch3,ch4 (*);
+}
+
+hosts {
+
+ host Client(rr)(ch1, ch2) {
+ 
+   #ID_C = id_c();
+   #CRIT = crit();
+ 
+   process Client1(ch1, ch2) {
+     M1 = (ID_C, CRIT);
+     out(ch1: M1);
+     in(ch2: M2);
+   }
+ 
+ }
+ 
+ host Server(rr)(ch1, ch2, ch3, ch4) {
+ 
+   #DB_KEY = nonce();
+   #DB = s_enc(database(), DB_KEY);
+   #SK_S = skey();
+ 
+   process Server1(ch1, ch2, ch3, ch4) {
+   
+     while(true) {
+	in(ch1: M1);
+	
+	CRIT = M1[1];
+	  
+	subprocess get_db_key(ch3, ch4) {
+	  R = key_request();
+	  out (ch3: R);
+	  in (ch4: TMP_DB_KEY);
+	}
+	  
+	subprocess decrypt_aes_128_sim_100() {
+	  DB_PLAINTEXT = s_dec(DB, TMP_DB_KEY)[AES,128,CBC,300MB,100];
+	}
+	  
+	subprocess decrypt_aes_256_sim_100() {
+	  DB_PLAINTEXT = s_dec(DB, TMP_DB_KEY)[AES,256,CBC,300MB,100];
+	}
+	
+	subprocess get_db() {
+	  DB_PLAINTEXT = s_dec(DB, TMP_DB_KEY);
+	}
+	
+	subprocess select_rows_100() {
+	  ROWS = select_rows(DB_PLAINTEXT, CRIT)[100];
+	}
+	
+	subprocess get_rows() {
+	  M2 = ROWS;
+	}
+	
+	subprocess get_rows_with_hash_and_signature_100() {
+	  H = hash(ROWS)[SHA1,1MB,100];
+	  SGN = sign(H, SK_S)[20B,RSA,2048,100];
+	  M2 = (ROWS,SGN);
+	}
+	
+	out(ch2: M2);
+     }
+   }
+ 
+ }
+ 
+ host KeysStore(rr)(ch3, ch4) {
+ 
+   #DB_KEY = nonce();
+ 
+   process Store1(ch3, ch4) {
+   
+     while (true) {
+       in (ch3: Request);
+       KEY = get_db_key(DB_KEY);
+       out(ch4: KEY);
+     }
+   }
+ 
+ }
+
+}
