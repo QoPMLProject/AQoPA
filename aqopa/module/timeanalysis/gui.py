@@ -967,6 +967,97 @@ class VersionsChartsPanel(wx.Panel):
         
         frame.Maximize(True)
         frame.Show()
+    
+class SimultaneousCliensPredictionPanel(wx.Panel):
+    
+    def __init__(self, module, *args, **kwargs):
+        wx.Panel.__init__(self, *args, **kwargs)
+
+        self.module = module
+        self.checkBoxes = []
+        self.checkBoxToSimulator = {}
+        
+        descText = wx.StaticText(self, label="Simultaneous clients prediction can" + \
+        "automatically answer the question what is the difference in performance" + \
+        "between created scenarios. The difference is represented by number of" + \
+        "simultaneous clients that are used in the protocol. Prediction algorithm" + \
+        "tries to find the numbers of simultaneous clients for each version" + \
+        "such that the execution time of protocols will be the same (with tolerance)."
+        , style=wx.TE_MULTILINE | wx.TE_READONLY)
+        
+        hostSizer = wx.BoxSizer(wx.HORIZONTAL)
+        hostText = wx.StaticText(self, label="Host:")
+        self.hostCombo = wx.ComboBox(self, style=wx.TE_READONLY)
+        hostSizer.Add(hostText, 1)
+        hostSizer.Add(self.hostCombo, 1)
+        
+        versionsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        versionsText = wx.StaticText(self, label="Versions:")
+        self.versionsSelectSizer = wx.BoxSizer(wx.VERTICAL)  
+        versionsSizer.Add(versionsText, 1)  
+        versionsSizer.Add(self.versionsSelectSizer, 1)
+        
+        typeSizer = wx.BoxSizer(wx.HORIZONTAL)
+        timeTypeText = wx.StaticText(self, label="Time type:")
+        timeTypeSelectSizer = wx.BoxSizer(wx.VERTICAL)
+        self.avgRadioBtn = wx.RadioButton(self, label="Average")
+        self.avgRadioBtn.SetValue(True)
+        self.totalRadioBtn = wx.RadioButton(self, label="Total")
+        timeTypeSelectSizer.Add(self.avgRadioBtn)
+        timeTypeSelectSizer.Add(self.totalRadioBtn)
+        typeSizer.Add(timeTypeText, 1)
+        typeSizer.Add(timeTypeSelectSizer, 1)
+        
+        s = wx.BoxSizer(wx.VERTICAL)
+        s.Add(hostSizer, 0, wx.EXPAND)
+        s.Add(versionsSizer, 0, wx.EXPAND)
+        s.Add(typeSizer, 0, wx.ALIGN_CENTER)
+        
+        self.startButton = wx.Button(self, label="Start prediction")
+        self.startButton.Bind(wx.EVT_BUTTON, self.OnStartClick)
+        
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(descText, 0, wx.EXPAND | wx.ALL, 10)
+        sizer.Add(s, 0, wx.ALIGN_CENTER)
+        sizer.Add(self.startButton, 0, wx.ALIGN_CENTER)
+        
+        self.SetSizer(sizer)
+        self.Layout()
+        
+    def RemoveAllSimulations(self):
+        """ """
+        self.startButton.Enable(False)
+        self.versionsSelectSizer.Clear(True)
+        self.checkBoxes = []
+        self.checkBoxToSimulator = {}
+        
+    def AddFinishedSimulation(self, simulator):
+        """ """
+        version = simulator.context.version
+        ch = wx.CheckBox(self, label=version.name)
+        self.checkBoxes.append(ch)
+        self.checkBoxToSimulator[ch] = simulator
+        self.versionsSelectSizer.Add(ch)
+        self.Layout()
+    
+    def OnAllSimulationsFinished(self, simulators):
+        """ """
+        items = []
+        for s in simulators:
+            version = s.context.version
+            for rh in version.run_hosts:
+                if rh.host_name not in items:
+                    items.append(rh.host_name)
+
+        self.hostCombo.Clear()
+        self.hostCombo.AppendItems(items)
+        self.hostCombo.Select(0)
+        
+        self.startButton.Enable(True)
+    
+    def OnStartClick(self, event=None):
+        """ """
+        pass
         
 class MainResultsNotebook(wx.Notebook):
     """ """
@@ -983,19 +1074,25 @@ class MainResultsNotebook(wx.Notebook):
         self.compareTab.Layout()
         self.AddPage(self.compareTab, "Versions' Charts")
         
+        self.predictionTab = SimultaneousCliensPredictionPanel(self.module, self)
+        self.predictionTab.Layout()
+        self.AddPage(self.predictionTab, "Simultaneous Cliens Prediction")
+        
     def OnParsedModel(self):
         """ """
         self.oneVersionTab.RemoveAllSimulations()
         self.compareTab.RemoveAllSimulations()
+        self.predictionTab.RemoveAllSimulations()
         
     def OnSimulationFinished(self, simulator):
         """ """
         self.oneVersionTab.AddFinishedSimulation(simulator)
         self.compareTab.AddFinishedSimulation(simulator)
+        self.predictionTab.AddFinishedSimulation(simulator)
         
     def OnAllSimulationsFinished(self, simulators):
         """ """
-        pass
+        self.predictionTab.OnAllSimulationsFinished(simulators)
         
 class ModuleGui(object):
     """
