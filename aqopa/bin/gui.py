@@ -18,13 +18,17 @@ import aqopa
 from aqopa import app
 from aqopa.model.parser import MetricsParserException,\
     ConfigurationParserException, ModelParserException
-from aqopa.module import timeanalysis
 from aqopa.simulator.error import EnvironmentDefinitionException,\
     RuntimeException
 
 ModelParsedEvent, EVT_MODEL_PARSED = wx.lib.newevent.NewEvent()
 ModelParseErrorEvent, EVT_MODEL_PARSE_ERROR = wx.lib.newevent.NewEvent()
 ModulesChangedEvent, EVT_MODULES_CHANGED = wx.lib.newevent.NewEvent()
+
+# Modules communication events
+ModuleSimulationStartedEvent, EVT_MODULE_SIMULATION_STARTED = wx.lib.newevent.NewEvent()
+ModuleSimulationFinishedEvent, EVT_MODULE_SIMULATION_FINISHED = wx.lib.newevent.NewEvent()
+
 
 class ModelPartDataPanel(wx.Panel):
     """ 
@@ -629,7 +633,13 @@ class MainNotebook(wx.Notebook):
         # MODULES 
         ###########
         
-        self.availableModules = [ timeanalysis.Module() ]
+        self.availableModules = []
+        
+        from aqopa.module import timeanalysis
+        m = timeanalysis.Module()
+        m.get_gui().Bind(EVT_MODULE_SIMULATION_STARTED, self.OnModuleSimulationStarted)
+        #EVT_MODULE_SIMULATION_FINISHED(m.get_gui(), self.OnModuleSimulationFinished)
+        self.availableModules.append(m)
 
         ###########
         # TABS
@@ -712,6 +722,16 @@ class MainNotebook(wx.Notebook):
     def OnModelParsed(self, event):
         self.resultsTab.ClearResults()
         event.Skip()
+        
+    def OnModuleSimulationStarted(self, event=None):
+        """ """
+        self.runTab.runButton.Enable(False)
+        self.runTab.parseButton.Enable(False)
+        
+    def OnModuleSimulationFinished(self, event=None):
+        """ """
+        self.runTab.runButton.Enable(True)
+        self.runTab.parseButton.Enable(True)
         
 ######################################
 #            LIBRARY
