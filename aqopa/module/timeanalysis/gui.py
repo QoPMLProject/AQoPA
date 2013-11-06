@@ -9,6 +9,7 @@ import re
 import wx
 import wx.animate
 import wx.lib.scrolledpanel as scrolled
+import wx.lib.delayedresult
 
 from aqopa.model import name_indexes
 from aqopa.bin import gui as aqopa_gui
@@ -1026,14 +1027,31 @@ class DistributedSystemOptimizationPanel(wx.Panel):
         configurationBoxSizer.Add(self.startButton, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         
         # OPTIMIZATION PROCESS
+        self.module.get_gui().Bind(aqopa_gui.EVT_MODULE_SIMULATION_ALLOWED, self.OnSimulationAllowed)
+        
+        self.interpreter = None # Interpreter used to run simulators
+        
+        self.maxTime = 0 # Maximum execution time (avg or total)
+        self.timeType = None # The type of time calculation (avg or total)
+        self.hostName = None # Name of host used to calculate avg time
+        self.maxSimulator = None # The simulator with maximum execution time
+        self.maxRepetition = 0 # The number of simulatenous clients in scenario with maximum execution time 
+        
+        self.previousRepetition = 0
+        self.previousTime = 0
+        self.currentRepetition = 0
+        self.currentTime = 0
+        self.tolerance = 0.05
         
         self.progressTimer      = wx.Timer(self)
+        self.dots = 0
         self.Bind(wx.EVT_TIMER, self.OnProgressTimerTick, self.progressTimer)
         
         processBox = wx.StaticBox(self, label="Optimization process")
         processBoxSizer = wx.StaticBoxSizer(processBox, wx.VERTICAL)
         
-        self.statusText = wx.StaticText(self, label="Not started")
+        self.statusTextLabel = "Not started"
+        self.statusText = wx.StaticText(self, label=self.statusTextLabel)
         
         maximumBox = wx.StaticBox(self, label="Maximum time version")
         maximumBoxSizer = wx.StaticBoxSizer(maximumBox, wx.VERTICAL)
@@ -1070,6 +1088,86 @@ class DistributedSystemOptimizationPanel(wx.Panel):
         
         self.SetSizer(sizer)
         self.Layout()
+        
+    def _OptimizationStep(self):
+        """
+        Implements one step of optimization.
+        """
+        
+        nextRepetition = self._GenerateNewRepetitionNumber(self.maxTime, self.previousTime, 
+                                    self.currentTime, self.previousRepetition, self.currentRepetition)
+        if nextRepetition is None:
+            self.currentTime = None
+            self.currentRepetition = None
+            self._FinishSimulatorOptimization()
+        
+        self.previousRepetition = self.currentRepetition
+        self.currentRepetition = nextRepetition
+        
+        #simulator = ...
+        #wx.lib.delayedresult.startWorker(self._FinishStep, 
+        #                                 self.interpreter.run_simulation, 
+        #                                 wargs=(simulator,))
+        
+    def _FinishStep(self, result):
+        """
+        Handles the result of one optimization step (simulation of new repetition number). 
+        """
+        self.previousTime = self.currentTime
+        self.currentTime = self._GetTime(simulator, self.timeType, self.hostName)
+        
+        if (self.currentTime <= self.previousTime) and (self.currentRepetition >= self.previousRepetition):
+            self.currentTime = None
+            self.currentRepetition = None
+            self._FinishSimulatorOptimization()
+             
+        relError = abs(self.maxTime - self.currentTime)/self.maxTime
+        if relError <= self.tolerance:
+            self._FinishSimulatorOptimization()
+                
+    def _FinishSimulatorOptimization(self):
+        """
+        Actions taken when optimization of one simulator is finished.
+        """
+        timeText = "Failed"
+        repetitionText = ""
+        if self.currentTime is not None:
+            timeText = "%.2f ms" % self.currentTime
+            repetitionText = "%d" % self.currentRepetition
+            
+        simulator = self.optimizedSimulators[self.optimizedSimulatorIndex]
+        hS = wx.BoxSizer(wx.HORIZONTAL)
+        hS.Add(wx.StaticText(self, label=simulator.context.version.name), 4)
+        hS.Add(wx.Size(10, -1), 0)
+        hS.Add(wx.StaticText(self, label=timeText), 1)
+        hS.Add(wx.Size(10, -1), 0)
+        hS.Add(wx.StaticText(self, label=repetitionText), 1)
+        self.resultsBoxSizer.Add(hS)
+        
+        self.optimizedSimulatorIndex += 1
+        self._OptimizeNextSimulator()
+        
+    def _OptimizeNextSimulator(self):
+        """ 
+        Function find the number of simultaneous clients 
+        for the next simulator from class field ```optimizedSimulators```.
+        The next simulator is at index ```optimizedSimulatorIndex``` field.
+        When no more simulators are left the optimization process is finished.
+        """
+        
+        if self.optimizedSimulatorIndex >= len(self.optimizedSimulators):
+            self.progressTimer.Stop()
+            self.statusTextLabel = "Finished"
+            self.statusText.SetLabel(self.statusTextLabel)
+            self.progressTimer.Stop() 
+            self.startButton.Enable(True)
+            wx.PostEvent(self.module.get_gui(), aqopa_gui.ModuleSimulationFinishedEvent())
+            
+        simulator = self.optimizedSimulators[self.optimizedSimulatorIndex]
+        self.statusTextLabel = "Working on %s" % simulator.context.version.name
+        self.statusText.SetLabel(self.statusTextLabel)
+        self._OptimizationStep()
+        
         
     def _GetTime(self, simulator, timeType, hostName):
         """ 
@@ -1116,6 +1214,25 @@ class DistributedSystemOptimizationPanel(wx.Panel):
                 simulator = s
                 time = t
         return (simulator, time)
+    
+    def _GenerateNewRepetitionNumber(self, maxTime, previousTime, currentTime, 
+                                     previousRepetition, currentRepetition):
+        """
+        Return the next number of simultaneous hosts closer to the final result.
+        """
+        if previousTime == currentTime:
+            if currentRepetition == 0:
+                return None
+            a = currentTime / currentRepetition
+            if a == 0:
+                return None
+            return int(maxTime / a)
+        else:
+            if currentRepetition == previousRepetition:
+                return None
+            a = (currentTime - previousTime) / (currentRepetition - previousRepetition)
+            b = currentTime - currentRepetition * a
+            return (maxTime - b) / a
         
     def RemoveAllSimulations(self):
         """ """
@@ -1161,18 +1278,25 @@ class DistributedSystemOptimizationPanel(wx.Panel):
                           wx.OK | wx.ICON_ERROR)
             return
         
-        timeType = TIME_TYPE_TOTAL
+        self.timeType = TIME_TYPE_TOTAL
         if self.avgRadioBtn.GetValue():
-            timeType = TIME_TYPE_AVG
-        hostName = self.hostCombo.GetValue() 
-        maxSimulator, maxTime = self._GetMaximumTimeSimulator(simulators, timeType, hostName)
-        maxRepetition = self._GetHostRepetition(maxSimulator, hostName)
+            self.timeType = TIME_TYPE_AVG
+        self.hostName = self.hostCombo.GetValue() 
+        self.maxSimulator, self.maxTime = self._GetMaximumTimeSimulator(simulators, self.timeType, self.hostName)
+        self.maxRepetition = self._GetHostRepetition(self.maxSimulator, self.hostName)
         
-        self.maximumVersionText.SetLabel("%s" % maxSimulator.context.version.name)
-        self.maximumTimeText.SetLabel("%.5f ms" % maxTime)
-        self.maximumRepetitionText.SetLabel("%d" % maxRepetition)
+        self.maximumVersionText.SetLabel("%s" % self.maxSimulator.context.version.name)
+        self.maximumTimeText.SetLabel("%.5f ms" % self.maxTime)
+        self.maximumRepetitionText.SetLabel("%d" % self.maxRepetition)
         
-        wx.PostEvent(self.module.get_gui(), aqopa_gui.ModuleSimulationStartedEvent())
+        if self.maxTime == 0:
+            wx.MessageBox('Maximum time is equal to 0. Cannot optimize.', 'Error', 
+                          wx.OK | wx.ICON_ERROR)
+            return
+        
+        self.startButton.Enable(False)
+        self.statusTextLabel = "Waiting for simulator"
+        self.statusText.SetLabel(self.statusTextLabel)
         
         self.resultsBoxSizer.Clear(True)
         hS = wx.BoxSizer(wx.HORIZONTAL)
@@ -1185,6 +1309,17 @@ class DistributedSystemOptimizationPanel(wx.Panel):
         
         self.Layout()
         
+        simulators.remove(self.maxSimulator)
+        self.progressTimer.Start(500)
+        self.optimizedSimulators = simulators
+        self.optimizedSimulatorIndex = 0
+        
+        wx.PostEvent(self.module.get_gui(), aqopa_gui.ModuleSimulationRequestEvent(module=self.module))
+          
+    def OnSimulationAllowed(self, event):
+        """ """
+        self.interpreter = event.interpreter
+        self._OptimizeNextSimulator()
             
     ################
     # PROGRESS BAR 
@@ -1192,43 +1327,10 @@ class DistributedSystemOptimizationPanel(wx.Panel):
         
     def OnProgressTimerTick(self, event):
         """ """
-        progress = self.GetProgress()
-        if progress == 1:
-            self.progressTimer.Stop()
-        self.PrintProgressbar(progress)
-        
-    def GetProgress(self):
-        all = 0.0
-        sum = 0.0
-        for simulator in self.interpreter.simulators:
-            all += 1
-            sum += simulator.context.get_progress()
-        progress = 0
-        if all > 0:
-            progress = sum / all
-        return progress
-        
-    def PrintProgressbar(self, progress):
-        """
-        Prints the formatted progressbar showing the progress of simulation. 
-        """
-        percentage = str(int(round(progress*100))) + '%'
-        self.percentLabel.SetLabel(percentage)
-        self.runPanel.Layout()
-        
-        if progress == 1:
-            self.statusLabel.SetLabel('Finished')
-            self.runPanel.Layout()
-            self.dotsLabel.SetLabel('')
-            self.runPanel.Layout()
-        else:
-            dots = self.dotsLabel.GetLabel()
-            if len(dots) > 10:
-                dots = "."
-            else:
-                dots += ".."
-            self.dotsLabel.SetLabel(dots)
-            self.runPanel.Layout()
+        self.dots  = (self.dots + 1) % 5
+        dotsText = "." * self.dots
+        self.statusText.SetLabel(dotsText + self.statusTextLabel + dotsText)
+        self.Layout()
         
 class MainResultsNotebook(wx.Notebook):
     """ """

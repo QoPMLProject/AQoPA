@@ -26,7 +26,8 @@ ModelParseErrorEvent, EVT_MODEL_PARSE_ERROR = wx.lib.newevent.NewEvent()
 ModulesChangedEvent, EVT_MODULES_CHANGED = wx.lib.newevent.NewEvent()
 
 # Modules communication events
-ModuleSimulationStartedEvent, EVT_MODULE_SIMULATION_STARTED = wx.lib.newevent.NewEvent()
+ModuleSimulationRequestEvent, EVT_MODULE_SIMULATION_REQUEST = wx.lib.newevent.NewEvent() # Parameters: module 
+ModuleSimulationAllowedEvent, EVT_MODULE_SIMULATION_ALLOWED = wx.lib.newevent.NewEvent() # Parameters: interpreter
 ModuleSimulationFinishedEvent, EVT_MODULE_SIMULATION_FINISHED = wx.lib.newevent.NewEvent()
 
 
@@ -637,7 +638,7 @@ class MainNotebook(wx.Notebook):
         
         from aqopa.module import timeanalysis
         m = timeanalysis.Module()
-        m.get_gui().Bind(EVT_MODULE_SIMULATION_STARTED, self.OnModuleSimulationStarted)
+        m.get_gui().Bind(EVT_MODULE_SIMULATION_REQUEST, self.OnModuleSimulationRequest)
         #EVT_MODULE_SIMULATION_FINISHED(m.get_gui(), self.OnModuleSimulationFinished)
         self.availableModules.append(m)
 
@@ -723,10 +724,13 @@ class MainNotebook(wx.Notebook):
         self.resultsTab.ClearResults()
         event.Skip()
         
-    def OnModuleSimulationStarted(self, event=None):
+    def OnModuleSimulationRequest(self, event):
         """ """
+        gui = event.module.get_gui()
         self.runTab.runButton.Enable(False)
         self.runTab.parseButton.Enable(False)
+        
+        wx.PostEvent(gui, ModuleSimulationAllowedEvent(interpreter=self.runTab.interpreter))
         
     def OnModuleSimulationFinished(self, event=None):
         """ """
