@@ -734,11 +734,6 @@ class MainNotebook(wx.Notebook):
         """ """
         self.runTab.parseButton.Enable(True)
 
-    def OnModuleSimulationFinished(self, event=None):
-        """ """
-        self.runTab.runButton.Enable(True)
-        self.runTab.parseButton.Enable(True)
-        
 ######################################
 #            LIBRARY
 ######################################
@@ -890,7 +885,8 @@ class LibraryFrame(wx.Frame):
         self.modelDescriptionPanel = ModelDescriptionPanel(self)
         self.modelDescriptionPanel.Bind(EVT_MODEL_SELECTED, self.OnLoadModelSelected)
         
-        self.modelsTree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnModelSelected) 
+        self.modelsTree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnModelSelected)
+        self.modelsTree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnModelDoubleClicked)
         
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.modelsTree, 1, wx.EXPAND)
@@ -907,7 +903,32 @@ class LibraryFrame(wx.Frame):
         model_data = self.modelsTree.GetPyData(itemID)
         if model_data:
             self.modelDescriptionPanel.ShowModel(model_data)
-            
+
+    def OnModelDoubleClicked(self, event=None):
+        """ """
+        itemID = event.GetItem()
+        if not itemID.IsOk():
+            itemID = self.tree.GetSelection()
+        model_info = self.modelsTree.GetPyData(itemID)
+        if model_info:
+            f = open(os.path.join(model_info['root'], model_info['files']['model']))
+            model_data = f.read()
+            f.close()
+
+            f = open(os.path.join(model_info['root'], model_info['files']['metrics']))
+            metrics_data = f.read()
+            f.close()
+
+            f = open(os.path.join(model_info['root'], model_info['files']['versions']))
+            versions_data = f.read()
+            f.close()
+
+            evt = ModelSelectedEvent(model_data=model_data,
+                                     metrics_data=metrics_data,
+                                     versions_data=versions_data)
+            wx.PostEvent(self, evt)
+            self.Close()
+
     def OnLoadModelSelected(self, event=None):
         """ """
         wx.PostEvent(self, event)

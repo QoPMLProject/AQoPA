@@ -128,6 +128,14 @@ class SingleVersionPanel(wx.Panel):
     def RemoveAllSimulations(self):
         """ """
         self.versionsList.Clear()
+        self.versionsList.SetValue("")
+        self.versionSimulator = {}
+
+        self.hostChoosePanels = []
+        self.checkBoxInformations = {}
+        self.hostCheckBoxes = []
+        self.hostsBoxSizer.Clear(True)
+
         self.SetVersionsResultsVisibility(False)
 
     #################
@@ -642,10 +650,9 @@ class VersionsChartsPanel(wx.Panel):
         
         hostsRepetitions = self._GetHostsRepetitions()
         for hostName in hostsRepetitions:
-            if hostsRepetitions[hostName] > 1:
-                radioBtn = wx.RadioButton(self.chartPanel, label=hostName)
-                leftBoxSizer.Add(radioBtn)
-                self.hostRadios.append(radioBtn)
+            radioBtn = wx.RadioButton(self.chartPanel, label=hostName)
+            leftBoxSizer.Add(radioBtn)
+            self.hostRadios.append(radioBtn)
         
         onShowChartBtnClicked = None
         if timeType == TIME_TYPE_MAX:
@@ -919,10 +926,31 @@ class VersionsChartsPanel(wx.Panel):
     def AddFinishedSimulation(self, simulator):
         """ """
         self.simulators.append(simulator)
-        
+
+        self.chartTypeBox.Show()
+        self.totalTimeOnRepetitionBtn.Show()
+        self.totalTimeOnMetricsBtn.Show()
+        self.totalTimeOnVersionsBtn.Show()
+        self.avgTimeOnRepetitionBtn.Show()
+        self.avgTimeOnMetricsBtn.Show()
+
+        self.chartConfigBox.Show()
+        self.chartConfigBox.SetLabel("Chart Configuration")
+        self.Layout()
+
     def RemoveAllSimulations(self):
         """ """
         self.simulators = []
+        self.chartTypeBox.Hide()
+        self.totalTimeOnRepetitionBtn.Hide()
+        self.totalTimeOnMetricsBtn.Hide()
+        self.totalTimeOnVersionsBtn.Hide()
+        self.avgTimeOnRepetitionBtn.Hide()
+        self.avgTimeOnMetricsBtn.Hide()
+
+        self.chartConfigBox.Hide()
+        self.chartConfigBoxSizer.Clear(True)
+        self.Layout()
         
     def ShowChartFrame(self, chartTitle, xTitle, yTitle, curvesData, 
                        buildLegendPanelFun = None):
@@ -1049,8 +1077,8 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.dots = 0
         self.Bind(wx.EVT_TIMER, self.OnProgressTimerTick, self.progressTimer)
         
-        processBox = wx.StaticBox(self, label="Optimization process")
-        processBoxSizer = wx.StaticBoxSizer(processBox, wx.VERTICAL)
+        self.processBox = wx.StaticBox(self, label="Optimization process")
+        processBoxSizer = wx.StaticBoxSizer(self.processBox, wx.VERTICAL)
         
         self.statusText = wx.StaticText(self, label="Not started")
         self.dotsText = wx.StaticText(self, label="")
@@ -1058,36 +1086,39 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.repetitionText = wx.StaticText(self, label="")
         self.repetitionText.Hide()
         
-        maximumBox = wx.StaticBox(self, label="Maximum time version")
-        maximumBoxSizer = wx.StaticBoxSizer(maximumBox, wx.VERTICAL)
+        self.maximumBox = wx.StaticBox(self, label="Maximum time version")
+        maximumBoxSizer = wx.StaticBoxSizer(self.maximumBox, wx.VERTICAL)
         
         hs = wx.BoxSizer(wx.HORIZONTAL)
-        hs.Add(wx.StaticText(self, label="Version:"), 0)
+        self.versionsLabel = wx.StaticText(self, label="Version:")
+        hs.Add(self.versionsLabel, 0)
         self.maximumVersionText = wx.StaticText(self, label="")
         hs.Add(self.maximumVersionText, 0, wx.ALIGN_RIGHT)
         maximumBoxSizer.Add(hs, 0)
         
         hs = wx.BoxSizer(wx.HORIZONTAL)
-        hs.Add(wx.StaticText(self, label="Time:"), 0)
+        self.timeLabel = wx.StaticText(self, label="Time:")
+        hs.Add(self.timeLabel, 0)
         self.maximumTimeText = wx.StaticText(self, label="")
         hs.Add(self.maximumTimeText, 0, wx.ALIGN_RIGHT)
         maximumBoxSizer.Add(hs, 0)
         
         hs = wx.BoxSizer(wx.HORIZONTAL)
-        hs.Add(wx.StaticText(self, label="Hosts number:"), 0)
+        self.hostsNumberLabel = wx.StaticText(self, label="Hosts number:")
+        hs.Add(self.hostsNumberLabel, 0)
         self.maximumRepetitionText = wx.StaticText(self, label="")
         hs.Add(self.maximumRepetitionText, 0, wx.ALIGN_RIGHT)
         maximumBoxSizer.Add(hs, 0)
         
-        resultsBox = wx.StaticBox(self, label="Optimization results")
-        self.resultsBoxSizer = wx.StaticBoxSizer(resultsBox, wx.VERTICAL)
+        self.resultsBox = wx.StaticBox(self, label="Optimization results")
+        self.resultsBoxSizer = wx.StaticBoxSizer(self.resultsBox, wx.VERTICAL)
         
         processBoxSizer.Add(self.statusText, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         processBoxSizer.Add(self.dotsText, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         processBoxSizer.Add(self.repetitionText, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         processBoxSizer.Add(maximumBoxSizer, 0, wx.EXPAND|wx.ALL, 10)
         processBoxSizer.Add(self.resultsBoxSizer, 0, wx.EXPAND|wx.ALL, 10)
-        
+
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(descText, 0, wx.EXPAND | wx.ALL, 10)
         sizer.Add(configurationBoxSizer, 0, wx.EXPAND|wx.ALL, 10)
@@ -1151,7 +1182,6 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
                 return
             
             if (self.currentTime <= self.previousTime) and (self.currentRepetition >= self.previousRepetition):
-                print self.currentRepetition, " = ", self.currentTime, ", ", self.previousRepetition, " = ", self.previousTime
                 self.currentTime = None
                 self.currentRepetition = None
                 self._FinishSimulatorOptimization()
@@ -1210,7 +1240,8 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
             self.dotsText.Hide()
             self.repetitionText.SetLabel("")
             self.repetitionText.Hide()
-            self.progressTimer.Stop() 
+            self.Layout()
+            self.progressTimer.Stop()
             self.startButton.Enable(True)
             wx.PostEvent(self.module.get_gui(), aqopa_gui.ModuleSimulationFinishedEvent())
             return
@@ -1293,11 +1324,37 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         
     def RemoveAllSimulations(self):
         """ """
-        self.startButton.Enable(False)
-        self.versionsSelectSizer.Clear(True)
         self.checkBoxes = []
         self.checkBoxToSimulator = {}
-        
+        self.optimizedSimulators = []
+        self.optimizedSimulatorIndex = 0
+
+        self.startButton.Enable(False)
+        self.hostCombo.Clear()
+        self.hostCombo.SetValue("")
+        self.versionsSelectSizer.Clear(True)
+
+        self.processBox.Hide()
+        self.statusText.Hide()
+        self.dotsText.Hide()
+        self.repetitionText.Hide()
+
+        self.maximumBox.Hide()
+        self.versionsLabel.Hide()
+        self.timeLabel.Hide()
+        self.hostsNumberLabel.Hide()
+        self.maximumRepetitionText.Hide()
+        self.maximumRepetitionText.SetLabel("")
+        self.maximumTimeText.Hide()
+        self.maximumTimeText.SetLabel("")
+        self.maximumVersionText.Hide()
+        self.maximumVersionText.SetLabel("")
+
+        self.resultsBox.Hide()
+        self.resultsBoxSizer.Clear(True)
+
+        self.Layout()
+
     def AddFinishedSimulation(self, simulator):
         """ """
         version = simulator.context.version
@@ -1319,12 +1376,27 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.hostCombo.Clear()
         self.hostCombo.AppendItems(items)
         self.hostCombo.Select(0)
-        
+
         self.startButton.Enable(True)
+        self.Layout()
     
     def OnStartClick(self, event=None):
         """ """
-        
+        self.processBox.Show()
+        self.statusText.Show()
+        self.dotsText.Show()
+        self.repetitionText.Show()
+
+        self.maximumBox.Show()
+        self.versionsLabel.Show()
+        self.timeLabel.Show()
+        self.hostsNumberLabel.Show()
+        self.maximumRepetitionText.Show()
+        self.maximumTimeText.Show()
+        self.maximumVersionText.Show()
+
+        self.resultsBox.Show()
+
         simulators = []
         for ch in self.checkBoxes:
             if ch.IsChecked():
