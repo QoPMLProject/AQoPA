@@ -87,7 +87,7 @@ class ModelPartDataPanel(wx.Panel):
         if ofdlg.GetPath():
             wildcard, types = wx.richtext.RichTextBuffer.GetExtWildcard(save=False)
             fileType = types[ofdlg.GetFilterIndex()]
-            self.dataTextArea.LoadFile(ofdlg.GetPath(), fileType)  # self.rtc is the RichTExtCtrl object
+            self.dataTextArea.LoadFile(ofdlg.GetPath(), fileType)
         ofdlg.Destroy()
         
     def onSave(self, event):
@@ -556,9 +556,7 @@ class ResultsPanel(wx.Panel):
         mainSizer.Add(self.resultsBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
         
         self.SetSizer(mainSizer)
-        self.modulesBoxSizer.Layout()
-        self.resultsBoxSizer.Layout()
-        mainSizer.Layout()
+        self.Layout()
         
     def _BuildModulesLayout(self):
         """ """
@@ -639,7 +637,7 @@ class MainNotebook(wx.Notebook):
         from aqopa.module import timeanalysis
         m = timeanalysis.Module()
         m.get_gui().Bind(EVT_MODULE_SIMULATION_REQUEST, self.OnModuleSimulationRequest)
-        #EVT_MODULE_SIMULATION_FINISHED(m.get_gui(), self.OnModuleSimulationFinished)
+        m.get_gui().Bind(EVT_MODULE_SIMULATION_FINISHED, self.OnModuleSimulationFinished)
         self.availableModules.append(m)
 
         ###########
@@ -731,7 +729,11 @@ class MainNotebook(wx.Notebook):
         self.runTab.parseButton.Enable(False)
         
         wx.PostEvent(gui, ModuleSimulationAllowedEvent(interpreter=self.runTab.interpreter))
-        
+
+    def OnModuleSimulationFinished(self, event):
+        """ """
+        self.runTab.parseButton.Enable(True)
+
     def OnModuleSimulationFinished(self, event=None):
         """ """
         self.runTab.runButton.Enable(True)
