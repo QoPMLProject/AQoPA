@@ -4,6 +4,9 @@
 
 Next release:
  
+v0.5.2 (2013-11-09)
+ - Added distributed system optimization functionality.
+ - Added GUI fixes.
 
 v0.5.1 (2013-10-30)
  - Added logo and configured package data in setup.py
