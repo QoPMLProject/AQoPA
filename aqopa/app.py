@@ -824,6 +824,10 @@ class Interpreter():
         if len(parser.get_syntax_errors()) > 0:
             raise ConfigurationParserException('Invalid syntax.', syntax_errors=parser.get_syntax_errors())
     
+    def install_modules(self, simulator):
+        """ """
+        raise NotImplementedError()
+    
     def run(self):
         """ Runs all simulations """
         raise NotImplementedError()
@@ -849,8 +853,12 @@ class ConsoleInterpreter(Interpreter):
         for version in self.store.versions:
             simulator = self.builder.build_simulator(self.store, version)
             self.simulators.append(simulator)
-            for m in self._modules:
-                m.install_console(simulator)
+            self.install_modules(simulator)
+    
+    def install_modules(self, simulator):
+        """ """
+        for m in self._modules:
+            m.install_console(simulator)
         
     def run(self):
         """ Runs all simulations """
@@ -878,12 +886,13 @@ class GuiInterpreter(Interpreter):
         """ Prepares for run """
         for version in self.store.versions:
             simulator = self.builder.build_simulator(self.store, version)
-            
-            for m in self._modules:
-                m.install_gui(simulator)
-            
+            self.install_modules(simulator)
             self.simulators.append(simulator)
-            
+    
+    def install_modules(self, simulator):
+        """ """
+        for m in self._modules:
+            m.install_gui(simulator)
             
     def run_simulation(self, simulator):
         """ """

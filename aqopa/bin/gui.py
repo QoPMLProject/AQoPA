@@ -18,13 +18,18 @@ import aqopa
 from aqopa import app
 from aqopa.model.parser import MetricsParserException,\
     ConfigurationParserException, ModelParserException
-from aqopa.module import timeanalysis
 from aqopa.simulator.error import EnvironmentDefinitionException,\
     RuntimeException
 
 ModelParsedEvent, EVT_MODEL_PARSED = wx.lib.newevent.NewEvent()
 ModelParseErrorEvent, EVT_MODEL_PARSE_ERROR = wx.lib.newevent.NewEvent()
 ModulesChangedEvent, EVT_MODULES_CHANGED = wx.lib.newevent.NewEvent()
+
+# Modules communication events
+ModuleSimulationRequestEvent, EVT_MODULE_SIMULATION_REQUEST = wx.lib.newevent.NewEvent() # Parameters: module 
+ModuleSimulationAllowedEvent, EVT_MODULE_SIMULATION_ALLOWED = wx.lib.newevent.NewEvent() # Parameters: interpreter
+ModuleSimulationFinishedEvent, EVT_MODULE_SIMULATION_FINISHED = wx.lib.newevent.NewEvent()
+
 
 class ModelPartDataPanel(wx.Panel):
     """ 
@@ -82,7 +87,7 @@ class ModelPartDataPanel(wx.Panel):
         if ofdlg.GetPath():
             wildcard, types = wx.richtext.RichTextBuffer.GetExtWildcard(save=False)
             fileType = types[ofdlg.GetFilterIndex()]
-            self.dataTextArea.LoadFile(ofdlg.GetPath(), fileType)  # self.rtc is the RichTExtCtrl object
+            self.dataTextArea.LoadFile(ofdlg.GetPath(), fileType)
         ofdlg.Destroy()
         
     def onSave(self, event):
@@ -551,9 +556,7 @@ class ResultsPanel(wx.Panel):
         mainSizer.Add(self.resultsBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
         
         self.SetSizer(mainSizer)
-        self.modulesBoxSizer.Layout()
-        self.resultsBoxSizer.Layout()
-        mainSizer.Layout()
+        self.Layout()
         
     def _BuildModulesLayout(self):
         """ """
@@ -629,7 +632,13 @@ class MainNotebook(wx.Notebook):
         # MODULES 
         ###########
         
-        self.availableModules = [ timeanalysis.Module() ]
+        self.availableModules = []
+        
+        from aqopa.module import timeanalysis
+        m = timeanalysis.Module()
+        m.get_gui().Bind(EVT_MODULE_SIMULATION_REQUEST, self.OnModuleSimulationRequest)
+        m.get_gui().Bind(EVT_MODULE_SIMULATION_FINISHED, self.OnModuleSimulationFinished)
+        self.availableModules.append(m)
 
         ###########
         # TABS
@@ -712,6 +721,23 @@ class MainNotebook(wx.Notebook):
     def OnModelParsed(self, event):
         self.resultsTab.ClearResults()
         event.Skip()
+        
+    def OnModuleSimulationRequest(self, event):
+        """ """
+        gui = event.module.get_gui()
+        self.runTab.runButton.Enable(False)
+        self.runTab.parseButton.Enable(False)
+        
+        wx.PostEvent(gui, ModuleSimulationAllowedEvent(interpreter=self.runTab.interpreter))
+
+    def OnModuleSimulationFinished(self, event):
+        """ """
+        self.runTab.parseButton.Enable(True)
+
+    def OnModuleSimulationFinished(self, event=None):
+        """ """
+        self.runTab.runButton.Enable(True)
+        self.runTab.parseButton.Enable(True)
         
 ######################################
 #            LIBRARY
