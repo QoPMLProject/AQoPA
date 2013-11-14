@@ -45,10 +45,12 @@ class Populator():
             if not isinstance(expr, TupleExpression):
                 expr = reducer.reduce(expr)
             if not isinstance(expr, TupleExpression):
-                raise RuntimeException("Cannot compute expression %s. Variable '%s' is not a tuple. It is: %s." % (unicode(expression), expression.variable_name, unicode(expr)))
+                raise RuntimeException("Cannot compute expression %s. Variable '%s' is not a tuple. It is: %s."
+                                       % (unicode(expression), expression.variable_name, unicode(expr)))
             if len(expr.elements) <= expression.index:
-                raise RuntimeException("Cannot compute expression %s. Variable '%s' does not have index %s. It has %d elements." % 
-                                        (expression.variable_name, expression.index, len(expr.elements)))
+                raise RuntimeException(
+                    "Cannot compute expression %s. Variable '%s' does not have index %s. It has %d elements."
+                    % (unicode(expression), expression.variable_name, expression.index, len(expr.elements)))
             return self.populate(expr.elements[expression.index], variables, reducer)
         
         return expression.clone()
