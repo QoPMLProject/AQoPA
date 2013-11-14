@@ -4,6 +4,9 @@
 
 Next release:
  
+v0.5.3 (2013-11-14)
+ - Fixed: To less arguments for exception aobut tuple indexing.
+
 v0.5.2 (2013-11-09)
  - Added distributed system optimization functionality.
  - Added GUI fixes.
