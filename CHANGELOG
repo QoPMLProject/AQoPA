@@ -3,6 +3,9 @@
 #########################################
 
 Next release:
+
+v0.5.5 (2013-11-20)
+ - Removed chart results. Added library to package.
  
 v0.5.4 (2013-11-14)
  - Removed versions from requirements.
