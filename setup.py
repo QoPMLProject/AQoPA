@@ -6,12 +6,30 @@ Created on 28-10-2013
 '''
 
 from setuptools import setup, find_packages
+import os
 import aqopa
 
 def read(filename):
     with open(filename) as f:
         return f.read()
 
+def find_library_data():
+    data_files = []
+    path = os.path.join('aqopa', 'library', 'models')
+    for dir_name in os.listdir(path):
+        dir_path = os.path.join(path, dir_name) 
+        
+        if os.path.isdir(dir_path):
+            dir_data_files = []
+            for filename in os.listdir(dir_path):
+                file_path = os.path.join(dir_path, filename)
+                if os.path.isfile(file_path):
+                    dir_data_files.append(file_path)
+            if len(dir_data_files) > 0:
+                data_files.append((dir_path, dir_data_files))
+    return data_files
+    
+print find_library_data()
 
 setup(name='AQoPA',
       
@@ -28,7 +46,8 @@ setup(name='AQoPA',
       install_requires=[read('requirements').split("\n")],
       
       packages=find_packages(),
-      package_data={'aqopa': ['bin/assets/logo.png']},
+      package_data={'aqopa' : ['bin/assets/logo.png']},
+      data_files=find_library_data(),
       
       entry_points = {
         'console_scripts': [
@@ -56,3 +75,4 @@ setup(name='AQoPA',
         'Topic :: System :: Monitoring',
       ]
      )
+
