@@ -162,6 +162,7 @@ class PreInstructionHook(Hook):
         # Check if other hosts should send their message 
         # through this channel before
         current_host_time = self.module.get_current_time(self.simulator, context.get_current_host())
+        min_hosts_time = (context.get_current_host(), current_host_time)
         delay_communication_execution = False
         for h in context.hosts:
             # Omit finished hosts
@@ -178,7 +179,14 @@ class PreInstructionHook(Hook):
             current_instruction = h.get_current_instructions_context()\
                                     .get_current_instruction()
             if isinstance(current_instruction, CommunicationInstruction):
-                
+
+                ch = context.channels_manager.find_channel_for_host_instruction(
+                                                        context, h, current_instruction)
+                if ch == channel:
+                    host_time = self.module.get_current_time(self.simulator, h)
+                    if host_time < min_hosts_time[1]:
+                        min_hosts_time = (h, host_time)
+
                 ch = None
                 if instruction.is_out(): # OUT instruction
                     if not current_instruction.is_out(): # IN instruction
@@ -190,15 +198,16 @@ class PreInstructionHook(Hook):
                                                         context, h, current_instruction)
                 if ch == channel:
                     continue
-            
+
             if self.module.get_current_time(self.simulator, h) < current_host_time:
                 delay_communication_execution = True
-                
-        # Delay execution of this instruction 
-        # if needed according to previous check      
-#        if delay_communication_execution:
-#            return ExecutionResult(custom_index_management=True, 
-#                                   finish_instruction_execution=True)
+
+        # Delay execution of this instruction
+        # if needed according to previous check
+        if delay_communication_execution:
+            if context.get_current_host() != min_hosts_time[0]:
+                return ExecutionResult(custom_index_management=True,
+                                       finish_instruction_execution=True)
                 
                 
         if instruction.is_out():

@@ -61,6 +61,7 @@ class ModelParserExtension(LexYaccParserExtension):
     def equations_specification(self, t):
         """
         specification : EQUATIONS_SPECIFICATION BLOCKOPEN equations_list BLOCKCLOSE
+                      | EQUATIONS_SPECIFICATION BLOCKOPEN  BLOCKCLOSE
         """
         pass
     

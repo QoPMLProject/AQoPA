@@ -303,6 +303,8 @@ class Builder():
             if channel is None:
                 # Find first channel (zero indexes) with original name of repeated channel
                 channel = find_channel(existing_channels, original_name(channel_name) + '.0.0')
+                if channel is None:
+                    raise EnvironmentDefinitionException("Channel '%s' undefined." % original_name(channel_name))
                 channel = channel.clone()
                 indexes = name_indexes(channel_name)
                 
