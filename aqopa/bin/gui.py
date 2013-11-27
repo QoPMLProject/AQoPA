@@ -974,7 +974,7 @@ class MainFrame(wx.Frame):
         pic.SetBitmap(wx.Bitmap(logo_filepath))
         
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(logoPanel, 0, wx.CENTER, 5)
+        sizer.Add(logoPanel, 0, wx.CENTER|wx.ALL, 5)
         sizer.Add(self.mainNotebook, 1, wx.ALL|wx.EXPAND, 5)
         self.SetSizer(sizer)
         
