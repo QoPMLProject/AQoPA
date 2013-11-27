@@ -1,9 +1,0 @@
-Host: One.0 	M = t10();
-Host: Two.0 	M = t50();
-Host: Three.0 	t100(...)
-Host: One.0 	in (ch2: M);
-Host: Two.0 	out (ch1: M);
-Host: Three.0 	in (ch1: M);
-Host: One.0 	in (ch2: M);
-Host: Three.0 	out (ch2: M);
-Host: One.0 	out (ch1: M);
