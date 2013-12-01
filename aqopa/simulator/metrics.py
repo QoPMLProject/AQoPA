@@ -4,7 +4,8 @@ Created on 14-05-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 from aqopa.simulator.error import RuntimeException
-from aqopa.model import TupleExpression, CallFunctionExpression
+from aqopa.model import TupleExpression, CallFunctionExpression, CallFunctionInstruction, IdentifierExpression, TupleElementExpression
+
 
 class HostMetrics():
     """
@@ -138,7 +139,7 @@ class Manager():
         return None
         
         
-    def get_expression_size(self, expression, host):
+    def get_expression_size(self, expression, context, host):
         """
         Returns the size in bytes of expression according to metrics.
         Metrics van specify exact size (ie. in bytes, bits, kilobytes, kilobits, megabytes, megabits)
@@ -146,24 +147,35 @@ class Manager():
         Expression cannot have variables - it must be filled with variables' values.
         """
         size = 0
-        
-        if isinstance(expression, TupleExpression):
+
+        if isinstance(expression, IdentifierExpression):
+            # If expression is an variable, get its value size
+            return self.get_expression_size(host.get_variable(expression.identifier), context, host)
+
+        if isinstance(expression, TupleElementExpression):
+            variable = host.get_variable(expression.variable_name)
+            variable = context.expression_reducer.reduce(variable)
+            if not isinstance(variable, TupleExpression):
+                raise RuntimeException('Cannot get tuple element on expression: %s.' % unicode(variable))
+            return self.get_expression_size(variable.elements[expression.index], context, host)
+
+        elif isinstance(expression, TupleExpression):
             # If expression is tuple, just sum its elements' sizes
             for expr in expression.elements:
-                size += self.get_expression_size(expr, host)
+                size += self.get_expression_size(expr, context, host)
             return size    
             
-        if isinstance(expression, CallFunctionExpression):
+        if isinstance(expression, CallFunctionExpression) or isinstance(expression, CallFunctionInstruction):
             metric = self.find_primitive(host, expression)
             
             if not metric:
                 raise RuntimeException("Cannot get expression size: No metric found for expression '%s'." 
                                        % unicode(expression))
-        
+
             block = metric.block
             for i in range(0, len(block.service_params)):
                 sparam = block.service_params[i]
-                
+
                 if sparam.service_name.lower() != "size":
                     continue
                 
@@ -173,20 +185,52 @@ class Manager():
             
                 if metric_type == "ratio":
                     mparts = metric_value.split(':')
-                    element_index = int(mparts[0])
+                    element_index = int(mparts[0])-1
                     percent = float(mparts[1])
                     
-                    size = self.get_expression_size(expression.arguments[element_index], host) \
+                    size = self.get_expression_size(expression.arguments[element_index], context, host) \
                             * percent
                             
                 elif metric_type == "exact":
                     if metric_unit == 'B':
-                        size = int(metric_value)
+                        size = float(metric_value)
+                    elif metric_unit == 'b':
+                        size = float(metric_value)/8.0
                     else:
                         raise RuntimeException('Cannot get expression size: Unsupported size value for exact type.')
-                    
+
+                elif metric_type == "block":
+                    mparts = metric_value.split(':')
+                    element_index = int(mparts[0])-1
+                    unit_value = int(mparts[1])
+
+                    factor = 1.0
+                    if metric_unit == 'b':
+                        factor = 1.0 / 8.0
+
+                    argument_size = self.get_expression_size(expression.arguments[element_index], context, host)
+                    argument_size_excess = argument_size % unit_value
+
+                    size = argument_size
+                    if argument_size_excess > 0:
+                        size += unit_value - argument_size_excess
+                    size *= factor
+
+                elif metric_type == "nested":
+                    mparts = metric_value.split(':')
+                    element_index = int(mparts[0])-1
+                    nested_element_index = int(mparts[1])-1
+
+                    nested_expression = expression.arguments[element_index]
+                    if not isinstance(expression, CallFunctionExpression) and \
+                        not isinstance(expression, CallFunctionInstruction):
+                        raise RuntimeException('Cannot get nested expression size: Not a function call.')
+
+                    size = self.get_expression_size(nested_expression[nested_element_index], context, host)
+
                 else:
                     raise RuntimeException('Cannot get expression size: Unsupported size type.')
+
+                return size
             
-        raise RuntimeException('Cannot get expression size: Unsupported expresstion type.')
-        
+        raise RuntimeException('Cannot get expression size: Unsupported expression type.')

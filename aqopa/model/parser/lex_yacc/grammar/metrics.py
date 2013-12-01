@@ -323,12 +323,14 @@ class MetricsParserExtension(LexYaccParserExtension):
     def metrics_services_size_type_unit(self, t):
         """
         metrics_services_size_type_unit : EXACT
+                                        | BLOCK
         """
         t[0] = t[1].lower()
     
     def metrics_services_size_type_non_unit(self, t):
         """
         metrics_services_size_type_non_unit : RATIO
+                                            | NESTED
         """
         t[0] = t[1].lower()
     
@@ -386,11 +388,14 @@ class MetricsParserExtension(LexYaccParserExtension):
 
         # Primhead
         self.parser.add_token('SEMICOLON', func=self.token_metricsprimhead_semicolon, states=['metricsprimhead'])
-        
+
         self.parser.add_reserved_word('size', 'SIZE', state='metricsprimhead', case_sensitive=False)
         self.parser.add_reserved_word('exact', 'EXACT', state='metricsprimhead', case_sensitive=False)
         self.parser.add_reserved_word('ratio', 'RATIO', state='metricsprimhead', case_sensitive=False)
+        self.parser.add_reserved_word('block', 'BLOCK', state='metricsprimhead', case_sensitive=False)
+        self.parser.add_reserved_word('nested', 'NESTED', state='metricsprimhead', case_sensitive=False)
         self.parser.add_reserved_word('B', 'B', state='metricsprimhead')
+        self.parser.add_reserved_word('ms', 'ms', state='metricsprimhead')
         
         #Primitive
         self.parser.add_token('SQLPARAN', func=self.token_metricsprimitive_sqlparan, states=['metricsprimitive'])

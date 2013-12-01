@@ -1,42 +1,77 @@
 versions {
 
-version NoNeighbour {
-	
+version DirectJoinToSink {
+
 	set host Sink(TelosB);
 	set host NewNode(TelosB);
 
 	run host Sink(*) {
-		run Main(InOnlyNewNode,CheckNode,MakeResponseToNewNodeDirectly,OutOnlyNewNode)
+	  run Main(InOnlyNewNode,HandleRequest_Original,CheckNode,MakeResponseToNewNodeDirectly,OutOnlyNewNode)
 	}
-	run host NewNode(*) {run Main(*)}
+	run host NewNode(*) {
+	  run Main(MakeRequestWithNewNodeIdOnly,HandleResponse_Direct_Original)
+	}
 }
 
-version WithNeighbourOnly {
+version IndirectJoinToSink_Original {
+
+	set host Sink(TelosB);
+	set host Neighbour(TelosB);
+	set host NewNode(TelosB);
+	set host J_OriginalForwarder(TelosB);
+
+	run host Sink(*) {
+		run Main(InFromIntermediateNode,HandleRequest_Original,CheckNode,MakeResponseToNeighbour_Original,OutToIntermediateNode)
+	}
+	run host Neighbour(*) {run Main(Forward_Original_To_NewNode)}
+	run host J_OriginalForwarder(*) {run Main(*)}
+	run host NewNode(*) {run Main(MakeRequestWithNewNodeIdOnly,HandleResponse_Indirect_Original)}
+}
+
+version IndirectJoinToSink_NK_EncDec {
 
 	set host Sink(TelosB);
 	set host Neighbour(TelosB);
 	set host NewNode(TelosB);
+	set host J_NK_EncDec(TelosB);
 
 	run host Sink(*) {
-		run Main(InWithNeighbourOnly,CheckNode,MakeResponseToNeighbour,OutWithNeighbourOnly)
+		run Main(InFromIntermediateNode,HandleRequest_NK_EncDec,CheckNode,MakeResponseToNeighbour_NK_EncDec,OutToIntermediateNode)
 	}
-	run host Neighbour(*) {run Main(*)}
-	run host NewNode(*) {run Main(*)}
+	run host Neighbour(*) {run Main(Forward_NK_EncDec_To_Sink,Forward_NK_EncDec_To_NewNode)}
+	run host J_NK_EncDec(*) {run Main(*)}
+	run host NewNode(*) {run Main(MakeRequestWithNewNodeAndNeighbourId,HandleResponse_Indirect_NK_EncDec)}
 }
 
-version WithForwarders_2Hops {
+version IndirectJoinToSink_SessKey_EncDec {
 
 	set host Sink(TelosB);
 	set host Neighbour(TelosB);
-	set host F1(TelosB);
 	set host NewNode(TelosB);
+	set host J_SessKey_EncDec(TelosB);
 
 	run host Sink(*) {
-		run Main(InHops_2,CheckNode,MakeResponseToNeighbour,OutHops_2)
+		run Main(InFromIntermediateNode,HandleRequest_SessKey_EncDec,CheckNode,MakeResponseToNeighbour_SessionKey_EncDec,OutToIntermediateNode)
 	}
-	run host F1(*) {run Main(*)}
-	run host Neighbour(*) {run Main(*)}
-	run host NewNode(*) {run Main(*)}
+	run host Neighbour(*) {run Main(Forward_SessionKey_EncDec_To_Sink,Forward_SessionKey_EncDec_To_NewNode)}
+	run host J_SessKey_EncDec(*) {run Main(*)}
+	run host NewNode(*) {run Main(MakeRequestWithNewNode_NeighbourAndIntermediateNodeId,HandleResponse_Indirect_SessKey_EncDec)}
 }
+
+version IndirectJoinToSink_Onion {
+
+	set host Sink(TelosB);
+	set host Neighbour(TelosB);
+	set host NewNode(TelosB);
+	set host J_Onion(TelosB);
+
+	run host Sink(*) {
+		run Main(InFromIntermediateNode,HandleRequest_Onion,CheckNode,MakeResponseToNeighbour_Onion,OutToIntermediateNode)
+	}
+	run host Neighbour(*) {run Main(Forward_NK_EncDec_To_Sink,Forward_NK_EncDec_To_NewNode)}
+	run host J_Onion(*) {run Main(*)}
+	run host NewNode(*) {run Main(MakeRequestWithNewNodeAndNeighbourId,HandleResponse_Indirect_Onion)}
+}
+
 
 }

@@ -441,19 +441,22 @@ class RunPanel(wx.Panel):
                 
             runResultValue = self.runResult.GetValue()
             resultMessage = runResultValue + \
-                "Version %s finished successfully.\n" \
+                "Version %s finished successfully.\n\n" \
                 % simulator.context.version.name
                     
         except RuntimeException, e:
             runResultValue = self.runResult.GetValue()
             resultMessage = runResultValue + \
-                "Version %s finished with error: %s.\n" \
-                % (simulator.context.version.name, e.args[0])
+                "Version %s finished with error: \nHost: %s \nInstruction: %s\nError: %s \n\n" \
+                % (simulator.context.version.name,
+                    unicode(simulator.context.get_current_host()),
+                    unicode(simulator.context.get_current_instruction()),
+                    e.args[0])
         except Exception, e:
             sys.stderr.write(traceback.format_exc())
             runResultValue = self.runResult.GetValue()
             resultMessage = runResultValue + \
-                "Version %s finished with unknown error.\n" \
+                "Version %s finished with unknown error.\n\n" \
                 % simulator.context.version.name
         
         if resultMessage:    
