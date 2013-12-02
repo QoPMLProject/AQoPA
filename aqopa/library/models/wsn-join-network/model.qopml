@@ -13,6 +13,8 @@ functions {
   fun sk(id) (secret key of id);
   fun pk(sk)[Time: key_size] (public key for sk secret key);
 
+  fun ecies_kdf_mac()[Time: key_size] (ecies key derivation function and MAC calculation before encryption);
+  fun ecies_kdf()[Time: key_size] (ecies key derivation function before decryption);
   fun ecies_enc(data, PK)[Time: inside_algorithm,key_size] (assymetric encryption using ECIES algorithm);
   fun ecies_dec(data, SK)[Time: inside_algorithm,key_size] (assymetric decryption using ECIES algorithm);
   fun ecies_temp_key()[Time: key_size] (generates temporary key for encryption);
@@ -77,7 +79,8 @@ host NewNode(rr)(*) {
 
     in(ch_in_NN: NN_RESP);
     E_RESP = NN_RESP[0];
-    RESP = ecies_dec(E_RESP, SK_NewNode)[XOR,128];
+    ecies_kdf()[128];
+    RESP = ecies_dec(E_RESP, SK_NewNode)[AES,128];
     
     subprocess HandleResponse_Direct_Original(*) {
       retNonce = RESP[0];
@@ -149,7 +152,8 @@ host Neighbour(rr)(*) {
       SessionKey_NN_N = gen_session_key(); 
       PK_NewNode = RESP[2];
       N_RESP = (RESP[0], id_n(), SessionKey_NN_N);
-      M = ecies_enc(N_RESP, PK_NewNode)[XOR,128];
+      ecies_kdf_mac()[128];
+      M = ecies_enc(N_RESP, PK_NewNode)[AES,128];
 
       ECIES_RESP = (M, ecies_temp_key()[128], ecies_mac());
       M = ECIES_RESP;
@@ -165,7 +169,8 @@ host Neighbour(rr)(*) {
       SessionKey_NN_N = gen_session_key(); 
       
       N_RESP = (SessionKey_NN_N, M2_RAW[1]);
-      M = ecies_enc(N_RESP, PK_NewNode)[XOR,128];
+      ecies_kdf_mac()[128];
+      M = ecies_enc(N_RESP, PK_NewNode)[AES,128];
 
       ECIES_RESP = (M, ecies_temp_key()[128], ecies_mac());
       M = ECIES_RESP;
@@ -181,7 +186,8 @@ host Neighbour(rr)(*) {
       SessionKey_NN_N = gen_session_key();
       
       N_RESP = (SessionKey_NN_N, M2_RAW[1]);
-      M = ecies_enc(N_RESP, PK_NewNode)[XOR,128];
+      ecies_kdf_mac()[128];
+      M = ecies_enc(N_RESP, PK_NewNode)[AES,128];
 
       ECIES_RESP = (M, ecies_temp_key()[128], ecies_mac());
       M = ECIES_RESP;
@@ -253,7 +259,8 @@ host Sink(rr)(*) {
     subprocess MakeResponseToNewNodeDirectly(*) {
       SessionKey_NN_S = gen_session_key();
       RESP = (REQ[0], id_s(), SessionKey_NN_S);
-      E_RESP = ecies_enc(RESP, PK_NewNode)[XOR,128];
+      ecies_kdf_mac()[128];
+      E_RESP = ecies_enc(RESP, PK_NewNode)[AES,128];
 
       ECIES_RESP = (E_RESP, ecies_temp_key()[128], ecies_mac());
       RESP_MSG = ECIES_RESP;

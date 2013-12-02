@@ -15,7 +15,7 @@ class Builder():
         metrics_services_param : SQLPARAN TIME COLON metrics_services_time_type LPARAN metrics_services_time_unit RPARAN SQRPARAN
                                 | SQLPARAN TIME COLON metrics_services_time_two_params_type LPARAN metrics_services_exact_time_unit COMMA metrics_services_size_unit RPARAN SQRPARAN
         """
-        if len(token) == 8:
+        if len(token) == 9:
             return MetricsServiceParam(token[2], token[4], token[6])
         else:
             return MetricsServiceParam(token[2], token[4], (token[6], token[8]))

@@ -104,47 +104,47 @@ class PreInstructionHook(Hook):
                 metric_value = metric.service_arguments[i]
 
                 if metric_type == "exact":
-                    
+
                     if metric_unit == "ms":
                         time = float(metric_value)
-                        
+
                     elif metric_unit == "s":
                         time = float(metric_value) * 1000
-                        
+
                     elif metric_unit == "mspb" or metric_unit == "mspB":
-                        
+
                         mparts = metric_value.split(':')
                         if len(mparts) != 2:
                             raise RuntimeException(
                                 'Metric unit is set as %s, but call argument to get size of is not set.'
                                 % metric_unit)
-                        
+
                         size = 0
                         call_params_indexes = mparts[1].split(',')
                         for index in call_params_indexes:
-                            
+                            index = int(index)
                             populated_expression = context.expression_populator.populate(
-                                                        expression.arguments[index],
+                                                        expression.arguments[index-1],
                                                         context.get_current_host().get_variables(),
                                                         context.expression_reducer)
-                            
+
                             size += context.metrics_manager.get_expression_size(
                                                                 populated_expression,
                                                                 context,
                                                                 context.get_current_host())
-                            
+
                         msperbyte = float(mparts[0])
                         if metric_unit == "mspb":
                             msperbyte = msperbyte / 8.0
-                            
+
                         time = msperbyte * size
-                    
+
                 elif metric_type == "range":
-                    
+
                     mvalues = metric_value.split('..')
                     val_from = float(mvalues[0])
-                    val_to = float(mvalues[1]) 
-                
+                    val_to = float(mvalues[1])
+
                     time = val_from + (val_to-val_from)*random.random()
 
                 elif metric_type == "block":
@@ -166,9 +166,11 @@ class PreInstructionHook(Hook):
                     if size_unit == 'b':
                         time *= 8.0
 
+                print context.version.name, unicode(expression), metric_unit, metric_value, time
+
         for expr in expression.arguments:
             time += self._get_time_for_expression(context, expr)
-            
+
         return time
                 
     def _execute_communication_instruction(self, context):

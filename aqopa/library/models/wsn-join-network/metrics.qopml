@@ -29,27 +29,37 @@ data(TelosB) {
     primhead[function][algorithm][key_size][time:block(ms,B)][size:nested];
     primitive[s_dec][AES-CTR][128][1:312:16][1:1];
     #
-    primhead[function][inside_algorithm][key_size][time:block(ms,B)][size:ratio];
-    primitive[ecies_enc][XOR][128][1:6042.5:16][1:1];
-    primitive[ecies_enc][XOR][160][1:5887.65:16][1:1];
-    primitive[ecies_enc][XOR][192][1:8823.9:16][1:1];
-    primitive[ecies_enc][AES][128][1:6341.15:16][1:1];
-    primitive[ecies_enc][AES][160][1:6222.4:16][1:1];
-    primitive[ecies_enc][AES][192][1:9102:16][1:1];
+    primhead[function][key_size][time:exact(ms)];
+    primitive[ecies_kdf_mac][128][6042.5];
+    primitive[ecies_kdf_mac][160][5887.65];
+    primitive[ecies_kdf][128][3008.55];
+    primitive[ecies_kdf][160][3713.7];
     #
-    primhead[function][algorithm][inside_algorithm][key_size][time:block(ms,B)][size:nested];
-    primitive[ecies_dec][XOR][128][1:3008.55:16][1:1];
-    primitive[ecies_dec][XOR][160][1:3713.7:16][1:1];
-    primitive[ecies_dec][XOR][192][1:5164.35:16][1:1];
-    primitive[ecies_dec][AES][128][1:3308.7:16][1:1];
-    primitive[ecies_dec][AES][160][1:4023.15:16][1:1];
-    primitive[ecies_dec][AES][192][1:5472.75:16][1:1];
+    primhead[function][inside_algorithm][key_size][time:exact(ms)][size:ratio];
+    primitive[ecies_enc][XOR][128][0][1:1];
+    primitive[ecies_enc][XOR][160][0][1:1];
+    primitive[ecies_enc][XOR][192][0][1:1];
+    #
+    primhead[function][inside_algorithm][key_size][time:block(ms,B)][size:ratio];
+    primitive[ecies_enc][AES][128][1:312:16][1:1];
+    primitive[ecies_enc][AES][160][1:312:16][1:1];
+    primitive[ecies_enc][AES][192][1:312:16][1:1];
+    #
+    primhead[function][inside_algorithm][key_size][time:block(ms,B)][size:nested];
+    primitive[ecies_dec][AES][128][1:312:16][1:1];
+    primitive[ecies_dec][AES][160][1:312:16][1:1];
+    primitive[ecies_dec][AES][192][1:312:16][1:1];
+    #
+    primhead[function][inside_algorithm][key_size][time:exact(ms)][size:ratio];
+    primitive[ecies_dec][XOR][128][0][1:1];
+    primitive[ecies_dec][XOR][160][0][1:1];
+    primitive[ecies_dec][XOR][192][0][1:1];
     #
     primhead[function][time:exact(ms)];
     primitive[send_headers][9.14];
     #
     primhead[function][time:exact(mspB)];
-    primitive[send_data][0.12];
+    primitive[send_data][0.12:1];
 }
 
 }
