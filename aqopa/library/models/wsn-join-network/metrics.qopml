@@ -55,11 +55,15 @@ data(TelosB) {
     primitive[ecies_dec][XOR][160][0][1:1];
     primitive[ecies_dec][XOR][192][0][1:1];
     #
-    primhead[function][time:exact(ms)];
-    primitive[send_headers][9.14];
+    primhead[function][time:exact(ms)][energy:current(mA)];
+    primitive[send_headers][9.14][22.8];
     #
-    primhead[function][time:exact(mspB)];
-    primitive[send_data][0.12:1];
+    primhead[function][time:exact(mspB)][energy:current(mA)];
+    primitive[send_data][0.12:1][22.8];
+    #
+    primhead[function][energy:current(mA)];
+    primitive[cpu][2.4];
+    primitive[radio][22.8];
 }
 
 }

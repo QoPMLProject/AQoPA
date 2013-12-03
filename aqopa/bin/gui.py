@@ -642,6 +642,10 @@ class MainNotebook(wx.Notebook):
         m.get_gui().Bind(EVT_MODULE_SIMULATION_REQUEST, self.OnModuleSimulationRequest)
         m.get_gui().Bind(EVT_MODULE_SIMULATION_FINISHED, self.OnModuleSimulationFinished)
         self.availableModules.append(m)
+        
+        from aqopa.module import energyanalysis
+        m = energyanalysis.Module()
+        self.availableModules.append(m)
 
         ###########
         # TABS
