@@ -643,13 +643,15 @@ class MainNotebook(wx.Notebook):
         self.availableModules = []
         
         from aqopa.module import timeanalysis
-        m = timeanalysis.Module()
-        m.get_gui().Bind(EVT_MODULE_SIMULATION_REQUEST, self.OnModuleSimulationRequest)
-        m.get_gui().Bind(EVT_MODULE_SIMULATION_FINISHED, self.OnModuleSimulationFinished)
-        self.availableModules.append(m)
+        timeanalysis_module = timeanalysis.Module()
+        timeanalysis_module.get_gui().Bind(EVT_MODULE_SIMULATION_REQUEST,
+                                           self.OnModuleSimulationRequest)
+        timeanalysis_module.get_gui().Bind(EVT_MODULE_SIMULATION_FINISHED,
+                                           self.OnModuleSimulationFinished)
+        self.availableModules.append(timeanalysis_module)
         
         from aqopa.module import energyanalysis
-        m = energyanalysis.Module()
+        m = energyanalysis.Module(timeanalysis_module)
         self.availableModules.append(m)
 
         ###########
