@@ -28,11 +28,11 @@ class SingleVersionPanel(wx.Panel):
         self.module = module
         self.versionSimulator = {}
 
-        self.hostChoosePanels       = []  # Panels used to choose hosts for times results
+        self.hostChoosePanels       = []  # Panels used to choose hosts for energy consumptions results
         self.checkBoxInformations   = []  # Tuples with host name, and index ranges widget
         self.hostCheckBoxes         = []  # List of checkboxes with hosts names used for hosts' selection
 
-        self.timeResultsPanel       = None
+        self.consumptionResultsPanel       = None
 
         #################
         # VERSION BOX
@@ -54,7 +54,7 @@ class SingleVersionPanel(wx.Panel):
         operationBox, operationBoxSizer = self._BuildOperationsBoxAndSizer()
         hostsBox, hostsBoxSizer = self._BuildHostsBoxAndSizer()
 
-        consumptionsBoxSizer = wx.StaticBoxSizer(self.timesBox, wx.VERTICAL)
+        consumptionsBoxSizer = wx.StaticBoxSizer(self.consumptionsBox, wx.VERTICAL)
         
         consumptionsHBoxSizer = wx.BoxSizer(wx.HORIZONTAL)
         consumptionsHBoxSizer.Add(operationBoxSizer, 0, wx.ALL | wx.EXPAND)
@@ -263,7 +263,7 @@ class SingleVersionPanel(wx.Panel):
     
     def ShowHostsConsumption(self, simulator, hosts):
         """ """
-        if self.onsumptionResultsPanel:
+        if self.consumptionResultsPanel:
             self.consumptionResultsPanel.Destroy()
             self.consumptionResultsPanel = None
             
@@ -272,7 +272,7 @@ class SingleVersionPanel(wx.Panel):
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         if len(hosts) == 0:
-            lbl = wx.StaticText(self.timeResultsPanel, label="No hosts selected")
+            lbl = wx.StaticText(self.consumptionResultsPanel, label="No hosts selected")
             sizer.Add(lbl)     
         else:
             for h in hosts:
@@ -280,7 +280,7 @@ class SingleVersionPanel(wx.Panel):
                 error = h.get_finish_error()
                 if error is not None:
                     lblText += " (Not Finished - %s)" % error
-                lbl = wx.StaticText(self.timeResultsPanel, label=lblText)
+                lbl = wx.StaticText(self.consumptionResultsPanel, label=lblText)
                 sizer.Add(lbl)
         
         self.consumptionResultsPanel.SetSizer(sizer)

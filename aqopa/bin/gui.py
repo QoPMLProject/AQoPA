@@ -580,7 +580,7 @@ class ResultsPanel(wx.Panel):
             self.moduleResultPanel[m] = resultPanel
             
             self.Layout()
-#            resultPanel.Hide()
+            resultPanel.Hide()
             
         uncheckedModules = []
         for m in self.moduleResultPanel:
@@ -624,6 +624,11 @@ class ResultsPanel(wx.Panel):
     def OnModuleButtonClicked(self, event):
         """ """
         btn = event.EventObject
+        for m in self.moduleResultPanel:
+            self.moduleResultPanel[m].Hide()
+        m = self.buttonsModule[btn]
+        self.moduleResultPanel[m].Show()
+        self.Layout()
         
 class MainNotebook(wx.Notebook):
     """ """
