@@ -8,7 +8,7 @@ version DirectJoinToSink {
 	run host Sink(*) {
 	  run Main(InOnlyNewNode,HandleRequest_Original,CheckNode,MakeResponseToNewNodeDirectly,OutOnlyNewNode)
 	}
-	run host NewNode(*) {
+	run host NewNode(*){10}[ch_out_NN,ch_in_NN] {
 	  run Main(MakeRequestWithNewNodeIdOnly,HandleResponse_Direct_Original)
 	}
 }
@@ -25,7 +25,9 @@ version IndirectJoinToSink_Original {
 	}
 	run host Neighbour(*) {run Main(Forward_Original_To_NewNode)}
 	run host J_OriginalForwarder(*) {run Main(*)}
-	run host NewNode(*) {run Main(MakeRequestWithNewNodeIdOnly,HandleResponse_Indirect_Original)}
+	run host NewNode(*){10}[ch_out_NN,ch_in_NN] {
+		run Main(MakeRequestWithNewNodeIdOnly,HandleResponse_Indirect_Original)
+	}
 }
 
 version IndirectJoinToSink_NK_EncDec {
@@ -40,7 +42,9 @@ version IndirectJoinToSink_NK_EncDec {
 	}
 	run host Neighbour(*) {run Main(Forward_NK_EncDec_To_Sink,Forward_NK_EncDec_To_NewNode)}
 	run host J_NK_EncDec(*) {run Main(*)}
-	run host NewNode(*) {run Main(MakeRequestWithNewNodeAndNeighbourId,HandleResponse_Indirect_NK_EncDec)}
+	run host NewNode(*){10}[ch_out_NN,ch_in_NN] {
+		run Main(MakeRequestWithNewNodeAndNeighbourId,HandleResponse_Indirect_NK_EncDec)
+	}
 }
 
 version IndirectJoinToSink_SessKey_EncDec {
@@ -55,7 +59,9 @@ version IndirectJoinToSink_SessKey_EncDec {
 	}
 	run host Neighbour(*) {run Main(Forward_SessionKey_EncDec_To_Sink,Forward_SessionKey_EncDec_To_NewNode)}
 	run host J_SessKey_EncDec(*) {run Main(*)}
-	run host NewNode(*) {run Main(MakeRequestWithNewNode_NeighbourAndIntermediateNodeId,HandleResponse_Indirect_SessKey_EncDec)}
+	run host NewNode(*){10}[ch_out_NN,ch_in_NN] {
+		run Main(MakeRequestWithNewNode_NeighbourAndIntermediateNodeId,HandleResponse_Indirect_SessKey_EncDec)
+	}
 }
 
 version IndirectJoinToSink_Onion {
@@ -70,7 +76,9 @@ version IndirectJoinToSink_Onion {
 	}
 	run host Neighbour(*) {run Main(Forward_NK_EncDec_To_Sink,Forward_NK_EncDec_To_NewNode)}
 	run host J_Onion(*) {run Main(*)}
-	run host NewNode(*) {run Main(MakeRequestWithNewNodeAndNeighbourId,HandleResponse_Indirect_Onion)}
+	run host NewNode(*){10}[ch_out_NN,ch_in_NN] {
+		run Main(MakeRequestWithNewNodeAndNeighbourId,HandleResponse_Indirect_Onion)
+	}
 }
 
 
