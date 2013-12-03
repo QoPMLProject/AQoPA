@@ -48,6 +48,8 @@ Run 'python bin/aqopa-console -h' to see all available options.
 INSTRUCTIONS FOR MICROSOFT WINDOWS
 ==================================
 
+Tested on Windows 7.
+
 1) INSTALLATION 
 
 1. Download and install Python 2.7 from website: http://www.python.org/download/releases/2.7.6/ (Python will be installed into "C:\Python27" directory by default.)
@@ -56,7 +58,7 @@ INSTRUCTIONS FOR MICROSOFT WINDOWS
  - Run: wmic ENVIRONMENT where "name='Path' and username='<%USERNAME%>'" set VariableValue="%Path%;C:\Python27\"
  - Restart Windows
 3. Download and install wxPython 2.8 from website: http://www.wxpython.org/download.php#stable
-4. Download and extract python PLY 3.4 package from website: http://qopml.org/aqopa/
+4. Download and extract python PLY 3.4 package from website: http://www.dabeaz.com/ply/
 5. Install PLY 3.4:
  - Open command line: Start > cmd
  - Go to extracted directory with ply-3.4
