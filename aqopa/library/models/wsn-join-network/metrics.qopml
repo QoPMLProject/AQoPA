@@ -63,7 +63,9 @@ data(TelosB) {
     #
     primhead[function][energy:current(mA)];
     primitive[cpu][2.4];
-    primitive[radio][22.8];
+    #
+    primhead[function][state][energy:current(mA)];
+    primitive[radio][listen][22.8];
 }
 
 }

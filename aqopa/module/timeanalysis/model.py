@@ -6,12 +6,13 @@ Created on 31-05-2013
 
 class TimeTrace():
     
-    def __init__(self, host, instruction, started_at, length):
+    def __init__(self, host, instruction, expressions_details, started_at, length):
         """ """
-        self.host           = host
-        self.instruction    = instruction
-        self.started_at     = started_at
-        self.length         = length
+        self.host                   = host
+        self.instruction            = instruction
+        self.expressions_details    = expressions_details
+        self.started_at             = started_at
+        self.length                 = length
         
 class ChannelMessageTrace():
     

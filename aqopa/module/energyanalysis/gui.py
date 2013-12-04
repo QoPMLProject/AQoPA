@@ -51,11 +51,17 @@ class SingleVersionPanel(wx.Panel):
         
         self.consumptionsBox = wx.StaticBox(self, label="Energy consumption results")
 
+        self.voltageLabel = wx.StaticText(self, label="Enther the Voltage value:")
+        self.voltageInput = wx.TextCtrl(self)
+        
+        voltageHBoxSizer = wx.BoxSizer(wx.HORIZONTAL)
+        voltageHBoxSizer.Add(self.voltageLabel, 0, wx.ALL | wx.EXPAND, 10)
+        voltageHBoxSizer.Add(self.voltageInput, 0, wx.ALL | wx.EXPAND, 10)
+        
         operationBox, operationBoxSizer = self._BuildOperationsBoxAndSizer()
         hostsBox, hostsBoxSizer = self._BuildHostsBoxAndSizer()
 
         consumptionsBoxSizer = wx.StaticBoxSizer(self.consumptionsBox, wx.VERTICAL)
-        
         consumptionsHBoxSizer = wx.BoxSizer(wx.HORIZONTAL)
         consumptionsHBoxSizer.Add(operationBoxSizer, 0, wx.ALL | wx.EXPAND)
         consumptionsHBoxSizer.Add(hostsBoxSizer, 1, wx.ALL | wx.EXPAND)
@@ -66,6 +72,7 @@ class SingleVersionPanel(wx.Panel):
         self.consumptionsResultBox = wx.StaticBox(self, label="Results")
         self.consumptionsResultBoxSizer = wx.StaticBoxSizer(self.consumptionsResultBox, wx.VERTICAL)
         
+        consumptionsBoxSizer.Add(voltageHBoxSizer, 0, wx.ALL | wx.EXPAND)
         consumptionsBoxSizer.Add(consumptionsHBoxSizer, 0, wx.ALL | wx.EXPAND)
         consumptionsBoxSizer.Add(self.showConsumptionBtn, 0, wx.ALL | wx.EXPAND)
         consumptionsBoxSizer.Add(self.consumptionsResultBoxSizer, 1, wx.ALL | wx.EXPAND)
@@ -101,14 +108,27 @@ class SingleVersionPanel(wx.Panel):
         versionName = self.versionsList.GetValue()
         simulator = self.versionSimulator[versionName]
         hosts = self._GetSelectedHosts(simulator)
+        
+        if len(hosts) == 0:
+            wx.MessageBox("Please select hosts.", 'Error', wx.OK | wx.ICON_ERROR)
+            return
+        
+        voltageText = self.voltageInput.GetValue().strip()
+        try:
+            voltage = float(voltageText)
+        except ValueError:
+            wx.MessageBox("Voltage '%s' is incorrect float number. Please correct it." % voltageText, 
+                          'Error', wx.OK | wx.ICON_ERROR)
+            return
+        
         if self.oneECRB.GetValue():
-            self.ShowHostsConsumption(simulator, hosts)
+            self.ShowHostsConsumption(simulator, hosts, voltage)
         elif self.avgECRB.GetValue():
-            self.ShowAverageHostsConsumption(simulator, hosts)
+            self.ShowAverageHostsConsumption(simulator, hosts, voltage)
         elif self.minECRB.GetValue():
-            self.ShowMinimalHostsConsumption(simulator, hosts)
+            self.ShowMinimalHostsConsumption(simulator, hosts, voltage)
         elif self.maxECRB.GetValue():
-            self.ShowMaximalHostsConsumption(simulator, hosts)
+            self.ShowMaximalHostsConsumption(simulator, hosts, voltage)
             
     def RemoveAllSimulations(self):
         """ """
@@ -209,6 +229,8 @@ class SingleVersionPanel(wx.Panel):
         widgets.append(self.hostsBox)
         widgets.append(self.showConsumptionBtn)
         widgets.append(self.consumptionsResultBox)
+        widgets.append(self.voltageLabel)
+        widgets.append(self.voltageInput)
         
         for w in widgets:
             if visible:
@@ -261,7 +283,7 @@ class SingleVersionPanel(wx.Panel):
         return hosts
         
     
-    def ShowHostsConsumption(self, simulator, hosts):
+    def ShowHostsConsumption(self, simulator, hosts, voltage):
         """ """
         if self.consumptionResultsPanel:
             self.consumptionResultsPanel.Destroy()
@@ -271,29 +293,27 @@ class SingleVersionPanel(wx.Panel):
         self.consumptionsResultBoxSizer.Add(self.consumptionResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
         
         sizer = wx.BoxSizer(wx.VERTICAL)
-        if len(hosts) == 0:
-            lbl = wx.StaticText(self.consumptionResultsPanel, label="No hosts selected")
-            sizer.Add(lbl)     
-        else:
-            for h in hosts:
-                lblText = "%s: %.2f " % (h.name, 666)
-                error = h.get_finish_error()
-                if error is not None:
-                    lblText += " (Not Finished - %s)" % error
-                lbl = wx.StaticText(self.consumptionResultsPanel, label=lblText)
-                sizer.Add(lbl)
+        consumptions = self.module.get_hosts_consumptions(simulator, hosts, voltage)
+        
+        for h in hosts:
+            lblText = "%s: %.2f mJ" % (h.name, consumptions[h])
+            error = h.get_finish_error()
+            if error is not None:
+                lblText += " (Not Finished - %s)" % error
+            lbl = wx.StaticText(self.consumptionResultsPanel, label=lblText)
+            sizer.Add(lbl)
         
         self.consumptionResultsPanel.SetSizer(sizer)
         self.consumptionResultsPanel.SetupScrolling(scroll_x=False)
         self.Layout()
     
-    def ShowAverageHostsConsumption(self, simulator, hosts):
+    def ShowAverageHostsConsumption(self, simulator, hosts, voltage):
         """ """
-        def GetVal(simulator, hosts):
+        def GetVal(consumptions, hosts):
             sum = 0.0
             n = len(hosts)
             for h in hosts:
-                sum += self.module.get_current_time(simulator, h)
+                sum += consumptions[h]
             return sum / float(n)
         
         if self.consumptionResultsPanel:
@@ -302,12 +322,8 @@ class SingleVersionPanel(wx.Panel):
         self.consumptionResultsPanel = scrolled.ScrolledPanel(self)
         self.consumptionsResultBoxSizer.Add(self.consumptionResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
-        lblText = ""
-        if len(hosts) == 0:
-            lblText = "---"
-        else:
-#            avg = GetVal(simulator, hosts)
-            lblText = "Average: %.2f" % 666
+        val = GetVal(self.module.get_hosts_consumptions(simulator, hosts, voltage), hosts)
+        lblText = "Average: %.2f mJ" % val
         lbl = wx.StaticText(self.consumptionResultsPanel, label=lblText)        
     
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -316,14 +332,14 @@ class SingleVersionPanel(wx.Panel):
         self.consumptionResultsPanel.SetSizer(sizer)
         self.Layout()
         
-    def ShowMinimalHostsConsumption(self, simulator, hosts):
+    def ShowMinimalHostsConsumption(self, simulator, hosts, voltage):
         """ """
-        def GetVal(simulator, hosts):
+        def GetVal(consumptions, hosts):
             val = None 
             for h in hosts:
-                t = self.module.get_current_time(simulator, h)
-                if val is None or t < val:
-                    val = t
+                v = consumptions[h]
+                if val is None or v < val:
+                    val = v
             return val
         
         if self.consumptionResultsPanel:
@@ -332,12 +348,8 @@ class SingleVersionPanel(wx.Panel):
         self.consumptionResultsPanel = scrolled.ScrolledPanel(self)
         self.consumptionsResultBoxSizer.Add(self.consumptionResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
-        lblText = ""
-        if len(hosts) == 0:
-            lblText = "---"
-        else:
-#            val = GetVal(simulator, hosts)
-            lblText = "Minimum: %.2f " % 666
+        val = GetVal(self.module.get_hosts_consumptions(simulator, hosts, voltage), hosts)
+        lblText = "Minimum: %.2f mJ" % val
         lbl = wx.StaticText(self.consumptionResultsPanel, label=lblText)        
     
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -346,14 +358,14 @@ class SingleVersionPanel(wx.Panel):
         self.consumptionResultsPanel.SetSizer(sizer)
         self.Layout()
     
-    def ShowMaximalHostsConsumption(self, simulator, hosts):
+    def ShowMaximalHostsConsumption(self, simulator, hosts, voltage):
         """ """
-        def GetVal(simulator, hosts):
+        def GetVal(consumptions, hosts):
             val = 0.0 
             for h in hosts:
-                t = self.module.get_current_time(simulator, h)
-                if t > val:
-                    val = t
+                v = consumptions[h]
+                if v > val:
+                    val = v
             return val
         
         if self.consumptionResultsPanel:
@@ -362,12 +374,8 @@ class SingleVersionPanel(wx.Panel):
         self.consumptionResultsPanel = scrolled.ScrolledPanel(self)
         self.consumptionsResultBoxSizer.Add(self.consumptionResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
-        lblText = ""
-        if len(hosts) == 0:
-            lblText = "---"
-        else:
-#            val = GetVal(simulator, hosts)
-            lblText = "Maximum: %.2f" % 666
+        val = GetVal(self.module.get_hosts_consumptions(simulator, hosts, voltage), hosts)
+        lblText = "Maximum: %.2f mJ" % val
         lbl = wx.StaticText(self.consumptionResultsPanel, label=lblText)     
     
         sizer = wx.BoxSizer(wx.HORIZONTAL)
