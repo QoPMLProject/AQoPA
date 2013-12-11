@@ -11,7 +11,7 @@ versions {
     run host Server(*) {
       run Server1(get_db,select_rows_100,get_rows)
     }
-    run host Client(*){100}[ch1, ch2] {
+    run host Client(*){1}[ch1, ch2] {
       run Client1(*)
     }
   }
@@ -27,7 +27,7 @@ versions {
     run host Server(*) {
       run Server1(get_db_key,decrypt_aes_128_sim_100,select_rows_100,get_rows)
     }
-    run host Client(*){100}[ch1, ch2] {
+    run host Client(*){1}[ch1, ch2] {
       run Client1(*)
     }
   }
@@ -43,7 +43,7 @@ versions {
     run host Server(*) {
       run Server1(get_db_key,decrypt_aes_256_sim_100,select_rows_100,get_rows)
     }
-    run host Client(*){100}[ch1, ch2] {
+    run host Client(*){1}[ch1, ch2] {
       run Client1(*)
     }
   }
@@ -59,7 +59,7 @@ versions {
     run host Server(*) {
       run Server1(get_db,select_rows_100,get_rows_with_hash_and_signature_100)
     }
-    run host Client(*){100}[ch1, ch2] {
+    run host Client(*){1}[ch1, ch2] {
       run Client1(*)
     }
   }
@@ -75,7 +75,7 @@ versions {
     run host Server(*) {
       run Server1(get_db_key,decrypt_aes_256_sim_100,select_rows_100,get_rows_with_hash_and_signature_100)
     }
-    run host Client(*){100}[ch1, ch2] {
+    run host Client(*){1}[ch1, ch2] {
       run Client1(*)
     }
   }
