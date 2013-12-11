@@ -1010,22 +1010,20 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.module = module
         self.checkBoxes = []
         self.checkBoxToSimulator = {}
+        self.optimizationResults = {}
         
         # OPTIMIZATION CONFIGURATION
         
-        descText = wx.StaticText(self, label="Distributed System Optimization can " + \
-        "automatically answer the question what is the difference in performance " + \
-        "between created scenarios. The difference is represented by number of " + \
-        "simultaneous clients that are used in the protocol. Optimization algorithm " + \
-        "tries to find the numbers of simultaneous clients for each version " + \
-        "such that the execution time of protocols will be the same (with tolerance)."
+        descText = wx.StaticText(self, label="Optimization algorithm " + \
+        "finds the numbers of simultaneous clients for each version " + \
+        "such that the execution time of protocols will be the same (with given tolerance)."
         , style=wx.TE_MULTILINE | wx.TE_READONLY)
         
         configurationBox = wx.StaticBox(self, label="Optimization configuration")
         configurationBoxSizer = wx.StaticBoxSizer(configurationBox, wx.VERTICAL)
         
         hostSizer = wx.BoxSizer(wx.HORIZONTAL)
-        hostText = wx.StaticText(self, label="Host:", size=(200, -1))
+        hostText = wx.StaticText(self, label="Repeated host:", size=(200, -1))
         self.hostCombo = wx.ComboBox(self, style=wx.TE_READONLY, size=(200, -1))
         hostSizer.Add(hostText, 1)
         hostSizer.Add(self.hostCombo, 1)
@@ -1047,12 +1045,19 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         typeSizer.Add(timeTypeText, 1)
         typeSizer.Add(timeTypeSelectSizer, 1)
         
+        toleranceSizer = wx.BoxSizer(wx.HORIZONTAL)
+        toleranceText = wx.StaticText(self, label="Tolerance: (in %)", size=(200, -1))
+        self.toleranceTextCtrl = wx.TextCtrl(self)
+        toleranceSizer.Add(toleranceText, 1)
+        toleranceSizer.Add(self.toleranceTextCtrl, 1)
+        
         self.startButton = wx.Button(self, label="Start optimization")
         self.startButton.Bind(wx.EVT_BUTTON, self.OnStartClick)
         
         configurationBoxSizer.Add(hostSizer, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         configurationBoxSizer.Add(versionsSizer, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         configurationBoxSizer.Add(typeSizer, 0, wx.ALIGN_CENTER|wx.ALL, 10)
+        configurationBoxSizer.Add(toleranceSizer, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         configurationBoxSizer.Add(self.startButton, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         
         # OPTIMIZATION PROCESS
@@ -1086,7 +1091,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.repetitionText = wx.StaticText(self, label="")
         self.repetitionText.Hide()
         
-        self.maximumBox = wx.StaticBox(self, label="Maximum time version")
+        self.maximumBox = wx.StaticBox(self, label="Version with maximum execution time")
         maximumBoxSizer = wx.StaticBoxSizer(self.maximumBox, wx.VERTICAL)
         
         hs = wx.BoxSizer(wx.HORIZONTAL)
@@ -1104,7 +1109,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         maximumBoxSizer.Add(hs, 0)
         
         hs = wx.BoxSizer(wx.HORIZONTAL)
-        self.hostsNumberLabel = wx.StaticText(self, label="Hosts number:")
+        self.hostsNumberLabel = wx.StaticText(self, label="Number of simultaneous clients:")
         hs.Add(self.hostsNumberLabel, 0)
         self.maximumRepetitionText = wx.StaticText(self, label="")
         hs.Add(self.maximumRepetitionText, 0, wx.ALIGN_RIGHT)
@@ -1159,7 +1164,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
             self._FinishSimulatorOptimization()
             return
          
-        self.repetitionText.SetLabel("Repetition: %d" % nextRepetition)
+        self.repetitionText.SetLabel("Number of simultaneous hosts: %d" % nextRepetition)
         self.newSimulator = self.interpreter.builder.build_simulator(self.interpreter.store, newVersion)
         self.interpreter.install_modules(self.newSimulator)
         wx.lib.delayedresult.startWorker(self._FinishStep, 
@@ -1210,16 +1215,19 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         """
         timeText = "Failed"
         repetitionText = ""
+        
+        simulator = self.optimizedSimulators[self.optimizedSimulatorIndex]
+        self.optimizationResults[simulator] = (self.currentTime, self.currentRepetition)
+        
         if self.currentTime is not None:
             timeText = "%.2f ms" % self.currentTime
             repetitionText = "%d" % self.currentRepetition
             
-        simulator = self.optimizedSimulators[self.optimizedSimulatorIndex]
         hS = wx.BoxSizer(wx.HORIZONTAL)
         hS.Add(wx.StaticText(self, label=simulator.context.version.name, size=(200, -1)), 0)
         hS.Add(wx.StaticText(self, label=timeText, size=(200, -1)), 0)
         hS.Add(wx.StaticText(self, label=repetitionText, size=(200, -1)), 0)
-        self.resultsBoxSizer.Add(hS)
+        self.resultsBoxSizer.Add(hS, 0, wx.ALL | wx.EXPAND, 0)
         self.Layout()
         
         self.optimizedSimulatorIndex += 1
@@ -1235,14 +1243,32 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         
         if self.optimizedSimulatorIndex >= len(self.optimizedSimulators):
             self.progressTimer.Stop()
+            self.startButton.Enable(True)
+            
             self.statusText.SetLabel("Finished")
             self.dotsText.SetLabel("")
             self.dotsText.Hide()
             self.repetitionText.SetLabel("")
             self.repetitionText.Hide()
+            
+            # Create report.
+            reportText = "The execution time of the scenario {0} ({1} simultaneous clients) is similar (with the {2}% tolerance): \n".format(
+                                self.maxSimulator.context.version.name, self.maxRepetition, self.tolerance*100.0)
+            
+            simulatorsReportTexts = []
+            for simulator in self.optimizedSimulators:
+                results = self.optimizationResults[simulator]
+                if results[0] is None:
+                    continue
+                    
+                simulatorsReportTexts.append(" - to the scenario {0} with {1} simultaneous clients".format(
+                                                simulator.context.version.name, results[1]))
+                            
+            reportText += " and\n".join(simulatorsReportTexts) + "."
+            reportTextCtrl = wx.StaticText(self, label=reportText, style=wx.TE_MULTILINE)
+            self.resultsBoxSizer.Add(reportTextCtrl, 0, wx.ALL | wx.EXPAND, 10)
+            
             self.Layout()
-            self.progressTimer.Stop()
-            self.startButton.Enable(True)
             wx.PostEvent(self.module.get_gui(), aqopa_gui.ModuleSimulationFinishedEvent())
             return
             
@@ -1327,6 +1353,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.checkBoxes = []
         self.checkBoxToSimulator = {}
         self.optimizedSimulators = []
+        self.optimizationResults = {}
         self.optimizedSimulatorIndex = 0
 
         self.startButton.Enable(False)
@@ -1407,6 +1434,23 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
                           wx.OK | wx.ICON_ERROR)
             return
         
+        try:
+            self.tolerance = float(self.toleranceTextCtrl.GetValue())/100.0 
+        except ValueError:
+            wx.MessageBox('Tolerance must be a float number.', 'Error', 
+                          wx.OK | wx.ICON_ERROR)
+            return
+        
+        if self.tolerance >= 1:
+            wx.MessageBox('Tolerance must be smaller than 100%.', 'Error', 
+                          wx.OK | wx.ICON_ERROR)
+            return
+        
+        if self.tolerance <= 0.01:
+            wx.MessageBox('Tolerance must be greater than 1%.', 'Error', 
+                          wx.OK | wx.ICON_ERROR)
+            return
+        
         self.timeType = TIME_TYPE_TOTAL
         if self.avgRadioBtn.GetValue():
             self.timeType = TIME_TYPE_AVG
@@ -1430,8 +1474,8 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         hS = wx.BoxSizer(wx.HORIZONTAL)
         hS.Add(wx.StaticText(self, label="Version", size=(200, -1)), 0)
         hS.Add(wx.StaticText(self, label="Time", size=(200, -1)), 0)
-        hS.Add(wx.StaticText(self, label="Hosts", size=(200, -1)), 0)
-        self.resultsBoxSizer.Add(hS)
+        hS.Add(wx.StaticText(self, label="Number of simulatenous hosts", size=(200, -1)), 0)
+        self.resultsBoxSizer.Add(hS, 0, wx.ALL | wx.EXPAND, 0)
         
         self.Layout()
         
