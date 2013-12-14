@@ -226,7 +226,7 @@ class Manager():
                         not isinstance(expression, CallFunctionInstruction):
                         raise RuntimeException('Cannot get nested expression size: Not a function call.')
 
-                    size = self.get_expression_size(nested_expression[nested_element_index], context, host)
+                    size = self.get_expression_size(nested_expression.arguments[nested_element_index], context, host)
 
                 else:
                     raise RuntimeException('Cannot get expression size: Unsupported size type.')
