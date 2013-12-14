@@ -62,7 +62,7 @@ class MetricsParserExtension(LexYaccParserExtension):
                                 | MSPBIT
                                 | MSPBYTE
         """
-        t[0] = t[1].lower()
+        t[0] = t[1]
 
     def metrics_services_exact_time_unit(self, t):
         """

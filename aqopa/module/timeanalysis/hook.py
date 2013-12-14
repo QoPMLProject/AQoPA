@@ -55,38 +55,47 @@ class PreInstructionHook(Hook):
         else:
             expression = instruction.condition
             
-        time = self._get_time_for_expression(context, expression)
+        # Return details for each expression in instruction
+        # In some instruction may be more expressions (tuple, nested call function)
+        total_time, time_details = self._get_time_details_for_expression(context, expression)
         
-        if time > 0:
+        if total_time > 0:
             host = context.get_current_host()
-            self.module.add_timetrace(self.simulator, host, instruction, 
-                                      self.module.get_current_time(self.simulator, host), time)
-            self.module.set_current_time(self.simulator, host, self.module.get_current_time(self.simulator, host) + time)
+            self.module.add_timetrace(self.simulator, host, host.get_current_process(),
+                                      instruction, time_details,
+                                      self.module.get_current_time(self.simulator, host),
+                                      total_time)
+            self.module.set_current_time(self.simulator, host, self.module.get_current_time(self.simulator, host) + total_time)
             
-    def _get_time_for_expression(self, context, expression):
+    def _get_time_details_for_expression(self, context, expression):
         """
         Returns calculated time that execution of expression takes.
         """
         if isinstance(expression, TupleExpression):
-            return self._calculate_time_for_tuple_expression(context, expression)
+            return self._get_time_details_for_tuple_expression(context, expression)
         elif isinstance(expression, CallFunctionExpression):
-            return self._calculate_time_for_expression(context, expression)
-        return 0
+            return self._get_time_details_for_simple_expression(context, expression)
+        return 0, []
 
-    def _calculate_time_for_tuple_expression(self, context, expression):
+    def _get_time_details_for_tuple_expression(self, context, expression):
         """
         Calculate execution time for tuple expression. 
         """
-        time = 0
+        total_time = 0
+        time_details = [] 
         for i in range(0, len(expression.elements)):
-            time += self._get_time_for_expression(context, expression.elements[i])
-        return time
+            element_total_time, element_time_details = self._get_time_details_for_expression(context, expression.elements[i])
+            total_time += element_total_time
+            time_details.extend(element_time_details)
+        return total_time, time_details
     
-    def _calculate_time_for_expression(self, context, expression):
+    def _get_time_details_for_simple_expression(self, context, expression):
         """
         Calculate time for expression.
         """
         time = 0
+        time_details = []
+        
         metric = context.metrics_manager\
             .find_primitive(context.get_current_host(), expression)
 
@@ -166,12 +175,16 @@ class PreInstructionHook(Hook):
                     if size_unit == 'b':
                         time *= 8.0
 
-                print context.version.name, unicode(expression), metric_unit, metric_value, time
+            if time > 0:
+                time_details.append((expression, time))
 
         for expr in expression.arguments:
-            time += self._get_time_for_expression(context, expr)
+            argument_time, argument_time_details = self._get_time_details_for_expression(context, expr)
+            
+            time += argument_time
+            time_details.extend(argument_time_details)
 
-        return time
+        return time, time_details
                 
     def _execute_communication_instruction(self, context):
         """ """
@@ -236,15 +249,14 @@ class PreInstructionHook(Hook):
                 
         if instruction.is_out():
             sender = context.get_current_host()
-              
-            
             receivers_list = channel.get_queue_of_receiving_hosts(expressions_cnt)
             for i in range(0, len(receivers_list)):
+                time_of_sending = self.module.get_current_time(self.simulator, sender)
+
                 if not receivers_list[i]: # No receiver for message
                     self.module.add_channel_message_trace(self.simulator, channel, 
                                                           self.module.get_channel_next_message_id(self.simulator, channel),
-                                                          sender,
-                                                          self.module.get_current_time(self.simulator, sender))
+                                                          sender, time_of_sending)
                 else:
                     if self.module.get_current_time(self.simulator, sender) < self.module.get_current_time(self.simulator, receivers_list[i]):
                         
@@ -253,13 +265,14 @@ class PreInstructionHook(Hook):
                                                             self.module.get_current_time(self.simulator, sender),
                                                             unicode(receivers_list[i]),
                                                             self.module.get_current_time(self.simulator, receivers_list[i])))
-                    
+
+                    # When someone is already waiting for the message
+                    # the sent at time and received at time are the same
+                    time_of_receiving = time_of_sending
                     self.module.add_channel_message_trace(self.simulator, channel,
                                                           self.module.get_channel_next_message_id(self.simulator, channel),
-                                                          sender,
-                                                          self.module.get_current_time(self.simulator, sender),
-                                                          receivers_list[i],
-                                                          self.module.get_current_time(self.simulator, receivers_list[i]))
+                                                          sender, time_of_sending,
+                                                          receivers_list[i], time_of_receiving)
                     self.module.set_current_time(self.simulator, receivers_list[i], self.module.get_current_time(self.simulator, sender))
                 
          
@@ -276,13 +289,12 @@ class PreInstructionHook(Hook):
                         if traces[j].sender == sending_hosts[i] and not traces[j].receiver:
                             
                             if self.module.get_current_time(self.simulator, sending_hosts[i]) < self.module.get_current_time(self.simulator, receiver):
-                                raise TimeSynchronizationException("Time synchronization error. " + \
-                                                           "Trying to send message from host '%s' at time %s ms " + \
-                                                           "while receiving host '%s' has time %s ms." % 
-                                                           (unicode(sender),
-                                                            self.module.get_current_time(self.simulator, sender),
-                                                            unicode(receivers_list[i]),
-                                                            self.module.get_current_time(self.simulator, receivers_list[i])))
+                                raise TimeSynchronizationException(("Time synchronization error. " +
+                                    "Trying to send message from host '%s' at time %s ms " +
+                                    "while receiving host '%s' has time %s ms.") %
+                                    (unicode(sender), self.module.get_current_time(self.simulator, sender),
+                                    unicode(traces[j].receiver),
+                                    self.module.get_current_time(self.simulator, traces[j].receiver)))
                                 
                             traces[j].add_receiver(receiver, self.module.get_current_time(self.simulator, receiver))
                             
