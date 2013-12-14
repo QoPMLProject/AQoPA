@@ -41,7 +41,7 @@ class PrintResultsHook(Hook):
             if h.finished():
                 self.output_file.write('Finished')
                 if h.get_finish_error():
-                    self.output_file.write('Finished with error: {0}'.format(h.get_finish_error()))
+                    self.output_file.write(' with error: {0}'.format(h.get_finish_error()))
             else:
                 self.output_file.write('NOT Finished: {0}'.format(unicode(h.get_current_instructions_context()\
                                                                 .get_current_instruction())))
