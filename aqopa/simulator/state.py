@@ -235,7 +235,7 @@ class Host():
         Moves host to next instructions context.
         """
         self._scheduler.goto_next_instruction_context()
-        if self._scheduler.finished():
+        if self._scheduler.finished() and not self.finished():
             self.finish_successfuly()
         
     def get_current_instructions_context(self):
@@ -711,11 +711,10 @@ class FinishInstructionExecutor(InstructionExecutor):
     
     def execute_instruction(self, context):
         """ Overriden """
-        command = context.get_current_instruction()
-        
-        if command == "end":
+        instruction = context.get_current_instruction()
+        if instruction.command == "end":
             context.get_current_host().finish_successfuly()
-        else: # command == "stop"
+        else:
             context.get_current_host().finish_failed('Executed stop instruction')
             
         context.get_current_host().mark_changed()
@@ -761,13 +760,13 @@ class IfInstructionExecutor(InstructionExecutor):
                                         context.functions,
                                         context.expression_populator, 
                                         context.expression_reducer)
-        
+
         instructions_list = []
         if contidion_result:
             instructions_list = instruction.true_instructions
         else:
             instructions_list = instruction.false_instructions
-            
+
         if len(instructions_list) > 0:
             context.get_current_host().get_current_instructions_context().add_instructions_list(
                                                                             instructions_list, 
@@ -893,7 +892,7 @@ class Executor():
                 break
            
         # Change the index of instructions in current host.
-        # It for example moves index to enxt instructions context.
+        # It for example moves index to next instructions context.
         # (Uses scheduler)     
         context.get_current_host().goto_next_instructions_context()
     
