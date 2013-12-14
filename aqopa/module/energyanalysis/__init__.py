@@ -1,4 +1,6 @@
 from aqopa import module
+from aqopa.module.energyanalysis.console import PrintResultsHook
+from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED
 from .gui import ModuleGui
 from aqopa.module.energyanalysis.parser import MetricsParserExtension
 from aqopa.model import WhileInstruction, AssignmentInstruction,\
@@ -33,6 +35,8 @@ class Module(module.Module):
     def install_console(self, simulator):
         """ Install module for console simulation """
         self._install(simulator)
+        hook = PrintResultsHook(self, simulator)
+        simulator.register_hook(HOOK_TYPE_SIMULATION_FINISHED, hook)
         return simulator
         
     def install_gui(self, simulator):
@@ -165,7 +169,7 @@ class Module(module.Module):
         
         # Firstly add the times of retrieving messages 
         for trace in channel_traces:
-            if trace.receiver:
+            if trace.receiver and trace.receiver in hosts:
                 host_finish_times[trace.receiver].append((trace.received_at, trace))
                 
         # Traverse each trace and get the time of waiting
@@ -173,9 +177,9 @@ class Module(module.Module):
             
             # Omit traces of not received messages
             host = trace.receiver
-            if not host:
+            if not host or host not in hosts:
                 continue
-            
+
             # Find or get metric
             if host not in hosts_listen_metric:
                 hosts_listen_metric[host] = self._get_current_radio_listen_for_host(metrics_manager, host)
@@ -184,12 +188,11 @@ class Module(module.Module):
             
             # Find the time when host started to wait for this message
             started_at = 0.0
-            for time in host_finish_times[host]:
-                if time > started_at and time < trace.received_at:
+            for time, current_trace in host_finish_times[host]:
+                if started_at < time < trace.received_at:
                     started_at = time
                      
             waiting_time = (trace.received_at - started_at) / 1000.0
-            
             hosts_consumption[host] += voltage * current * waiting_time
             
         return hosts_consumption

@@ -55,12 +55,12 @@ class Module(module.Module):
         self._install(simulator)
         return simulator
     
-    def add_timetrace(self, simulator, host, instruction, expressions_details, started_at, length):
+    def add_timetrace(self, simulator, host, process, instruction, expressions_details, started_at, length):
         """ """
         if simulator not in self.timetraces:
             self.timetraces[simulator] = []
         tt = self.timetraces[simulator]
-        tt.append(TimeTrace(host, instruction, expressions_details, started_at, length))
+        tt.append(TimeTrace(host, process, instruction, expressions_details, started_at, length))
         
     def add_channel_message_trace(self, simulator, channel, message_index, sender, sent_at, 
                                   receiver=None, received_at=None):

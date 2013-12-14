@@ -50,9 +50,9 @@ channels {
 hosts {
 
 host NewNode(rr)(*) {
-  #PK_S 		= pk(sk(id_s()))[128];
+  #PK_S 		= pk(sk(id_s()))[160];
   #SK_NewNode	= sk(id_nn());
-  #PK_NewNode 	= pk(SK_NewNode)[128];
+  #PK_NewNode 	= pk(SK_NewNode)[160];
   #D_NN_S = dh_key(PK_S, SK_NewNode);
 
   process Main(*) {
@@ -79,8 +79,8 @@ host NewNode(rr)(*) {
 
     in(ch_in_NN: NN_RESP);
     E_RESP = NN_RESP[0];
-    ecies_kdf()[128];
-    RESP = ecies_dec(E_RESP, SK_NewNode)[AES,128];
+    ecies_kdf()[160];
+    RESP = ecies_dec(E_RESP, SK_NewNode)[AES,160];
     
     subprocess HandleResponse_Direct_Original(*) {
       retNonce = RESP[0];
@@ -119,9 +119,9 @@ host NewNode(rr)(*) {
 }
 
 host Neighbour(rr)(*) {
-  #PK_S 		= pk(sk(id_s()))[128];
+  #PK_S 		= pk(sk(id_s()))[160];
   #SK_Neighbour 	= sk(id_n());
-  #PK_Neighbour 	= pk(SK_Neighbour)[128];
+  #PK_Neighbour 	= pk(SK_Neighbour)[160];
   #DH_Neighbour_S 	= dh_key(PK_S, SK_Neighbour);
   #NK 			= network_key();
   #SessKey_N_J	= session_key(id_n(), id_j());
@@ -153,10 +153,10 @@ host Neighbour(rr)(*) {
 	      SessionKey_NN_N = gen_session_key(); 
 	      PK_NewNode = RESP[2];
 	      N_RESP = (RESP[0], id_n(), SessionKey_NN_N);
-	      ecies_kdf_mac()[128];
-	      M = ecies_enc(N_RESP, PK_NewNode)[AES,128];
+	      ecies_kdf_mac()[160];
+	      M = ecies_enc(N_RESP, PK_NewNode)[AES,160];
 	
-	      ECIES_RESP = (M, ecies_temp_key()[128], ecies_mac());
+	      ECIES_RESP = (M, ecies_temp_key()[160], ecies_mac());
 	      M = ECIES_RESP;
 	    }
 	    
@@ -170,10 +170,10 @@ host Neighbour(rr)(*) {
 	      SessionKey_NN_N = gen_session_key(); 
 	      
 	      N_RESP = (SessionKey_NN_N, M2_RAW[1]);
-	      ecies_kdf_mac()[128];
-	      M = ecies_enc(N_RESP, PK_NewNode)[AES,128];
+	      ecies_kdf_mac()[160];
+	      M = ecies_enc(N_RESP, PK_NewNode)[AES,160];
 	
-	      ECIES_RESP = (M, ecies_temp_key()[128], ecies_mac());
+	      ECIES_RESP = (M, ecies_temp_key()[160], ecies_mac());
 	      M = ECIES_RESP;
 	    }
 	    
@@ -187,10 +187,10 @@ host Neighbour(rr)(*) {
 	      SessionKey_NN_N = gen_session_key();
 	      
 	      N_RESP = (SessionKey_NN_N, M2_RAW[1]);
-	      ecies_kdf_mac()[128];
-	      M = ecies_enc(N_RESP, PK_NewNode)[AES,128];
+	      ecies_kdf_mac()[160];
+	      M = ecies_enc(N_RESP, PK_NewNode)[AES,160];
 	
-	      ECIES_RESP = (M, ecies_temp_key()[128], ecies_mac());
+	      ECIES_RESP = (M, ecies_temp_key()[160], ecies_mac());
 	      M = ECIES_RESP;
 	    }
 	
@@ -204,8 +204,8 @@ host Neighbour(rr)(*) {
 
 host Sink(rr)(*) {
   #SK_S 		= sk(id_s());
-  #PK_NewNode 		= pk(sk(id_nn()))[128];
-  #PK_Neighbour 	= pk(sk(id_n()))[128];
+  #PK_NewNode 		= pk(sk(id_nn()))[160];
+  #PK_Neighbour 	= pk(sk(id_n()))[160];
   #DH_S_Neighbour 	= dh_key(PK_Neighbour, SK_S);
   #DH_S_NewNode     = dh_key(PK_NewNode, SK_S);
   #NK 			    = network_key();
@@ -263,10 +263,10 @@ host Sink(rr)(*) {
 	    subprocess MakeResponseToNewNodeDirectly(*) {
 	      SessionKey_NN_S = gen_session_key();
 	      RESP = (REQ[0], id_s(), SessionKey_NN_S);
-	      ecies_kdf_mac()[128];
-	      E_RESP = ecies_enc(RESP, PK_NewNode)[AES,128];
+	      ecies_kdf_mac()[160];
+	      E_RESP = ecies_enc(RESP, PK_NewNode)[AES,160];
 	
-	      ECIES_RESP = (E_RESP, ecies_temp_key()[128], ecies_mac());
+	      ECIES_RESP = (E_RESP, ecies_temp_key()[160], ecies_mac());
 	      RESP_MSG = ECIES_RESP;
 	    }
 	

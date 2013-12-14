@@ -32,8 +32,8 @@ data(TelosB) {
     primhead[function][key_size][time:exact(ms)];
     primitive[ecies_kdf_mac][128][6042.5];
     primitive[ecies_kdf_mac][160][5887.65];
-    primitive[ecies_kdf][128][3008.55];
-    primitive[ecies_kdf][160][3713.7];
+    primitive[ecies_kdf][128][3936.95];
+    primitive[ecies_kdf][160][4262.95];
     #
     primhead[function][inside_algorithm][key_size][time:exact(ms)][size:ratio];
     primitive[ecies_enc][XOR][128][0][1:1];

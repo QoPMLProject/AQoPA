@@ -61,8 +61,10 @@ class PreInstructionHook(Hook):
         
         if total_time > 0:
             host = context.get_current_host()
-            self.module.add_timetrace(self.simulator, host, instruction, time_details,
-                                      self.module.get_current_time(self.simulator, host), total_time)
+            self.module.add_timetrace(self.simulator, host, host.get_current_process(),
+                                      instruction, time_details,
+                                      self.module.get_current_time(self.simulator, host),
+                                      total_time)
             self.module.set_current_time(self.simulator, host, self.module.get_current_time(self.simulator, host) + total_time)
             
     def _get_time_details_for_expression(self, context, expression):
@@ -247,15 +249,14 @@ class PreInstructionHook(Hook):
                 
         if instruction.is_out():
             sender = context.get_current_host()
-              
-            
             receivers_list = channel.get_queue_of_receiving_hosts(expressions_cnt)
             for i in range(0, len(receivers_list)):
+                time_of_sending = self.module.get_current_time(self.simulator, sender)
+
                 if not receivers_list[i]: # No receiver for message
                     self.module.add_channel_message_trace(self.simulator, channel, 
                                                           self.module.get_channel_next_message_id(self.simulator, channel),
-                                                          sender,
-                                                          self.module.get_current_time(self.simulator, sender))
+                                                          sender, time_of_sending)
                 else:
                     if self.module.get_current_time(self.simulator, sender) < self.module.get_current_time(self.simulator, receivers_list[i]):
                         
@@ -264,13 +265,14 @@ class PreInstructionHook(Hook):
                                                             self.module.get_current_time(self.simulator, sender),
                                                             unicode(receivers_list[i]),
                                                             self.module.get_current_time(self.simulator, receivers_list[i])))
-                    
+
+                    # When someone is already waiting for the message
+                    # the sent at time and received at time are the same
+                    time_of_receiving = time_of_sending
                     self.module.add_channel_message_trace(self.simulator, channel,
                                                           self.module.get_channel_next_message_id(self.simulator, channel),
-                                                          sender,
-                                                          self.module.get_current_time(self.simulator, sender),
-                                                          receivers_list[i],
-                                                          self.module.get_current_time(self.simulator, receivers_list[i]))
+                                                          sender, time_of_sending,
+                                                          receivers_list[i], time_of_receiving)
                     self.module.set_current_time(self.simulator, receivers_list[i], self.module.get_current_time(self.simulator, sender))
                 
          
@@ -287,13 +289,12 @@ class PreInstructionHook(Hook):
                         if traces[j].sender == sending_hosts[i] and not traces[j].receiver:
                             
                             if self.module.get_current_time(self.simulator, sending_hosts[i]) < self.module.get_current_time(self.simulator, receiver):
-                                raise TimeSynchronizationException("Time synchronization error. " + \
-                                                           "Trying to send message from host '%s' at time %s ms " + \
-                                                           "while receiving host '%s' has time %s ms." % 
-                                                           (unicode(sender),
-                                                            self.module.get_current_time(self.simulator, sender),
-                                                            unicode(receivers_list[i]),
-                                                            self.module.get_current_time(self.simulator, receivers_list[i])))
+                                raise TimeSynchronizationException(("Time synchronization error. " +
+                                    "Trying to send message from host '%s' at time %s ms " +
+                                    "while receiving host '%s' has time %s ms.") %
+                                    (unicode(sender), self.module.get_current_time(self.simulator, sender),
+                                    unicode(traces[j].receiver),
+                                    self.module.get_current_time(self.simulator, traces[j].receiver)))
                                 
                             traces[j].add_receiver(receiver, self.module.get_current_time(self.simulator, receiver))
                             
