@@ -18,20 +18,14 @@ class PrintResultsHook(Hook):
     def execute(self, context):
         """ """
 
-        self.output_file.write('#'*20)
-        self.output_file.write('\n')
-        self.output_file.write('#      Energy Analysis')
-        self.output_file.write('\n')
-        self.output_file.write('#'*20)
-        self.output_file.write('\n')
-        self.output_file.write('\n')
-
         self.output_file.write('-'*20)
         self.output_file.write('\n')
-        self.output_file.write('Version: %s\n' % self.simulator.context.version.name)
+        self.output_file.write('Module\tEnergy Analysis')
+        self.output_file.write('\n')
+        self.output_file.write('Version\t%s\n' % self.simulator.context.version.name)
 
         if self.simulator.infinite_loop_occured():
-            self.output_file.write('ERROR: Infinite loop on {0} -> {1}\n'.format(
+            self.output_file.write('ERROR\tInfinite loop on {0} -> {1}\n'.format(
                                 unicode(self.simulator.context.get_current_host()),
                                 unicode(self.simulator.context.get_current_instruction())))
             self.output_file.write('\n')
@@ -40,15 +34,14 @@ class PrintResultsHook(Hook):
         consumptions = self.module.get_hosts_consumptions(self.simulator, context.hosts, voltage)
 
         for h in context.hosts:
-            self.output_file.write('{0: <15}: {1: <15} '.format(h.name, str(consumptions[h])))
+            self.output_file.write('{0}\t{1:}\t'.format(h.name, str(consumptions[h])))
             if h.finished():
                 self.output_file.write('Finished')
                 if h.get_finish_error():
-                    self.output_file.write(' with error: {0}'.format(h.get_finish_error()))
+                    self.output_file.write(' with error\t{0}'.format(h.get_finish_error()))
             else:
-                self.output_file.write('NOT Finished: {0}'.format(unicode(h.get_current_instructions_context()\
+                self.output_file.write('NOT Finished\t{0}'.format(unicode(h.get_current_instructions_context()\
                                                                 .get_current_instruction())))
             self.output_file.write("\n")
             
-        self.output_file.write('-'*20)
         self.output_file.write('\n')
