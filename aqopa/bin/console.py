@@ -85,15 +85,21 @@ def run(qopml_model, qopml_metrics, qopml_configuration,
     #####################################
     interpreter = ConsoleInterpreter()
     try:
+
+        time_module = timeanalysis.Module()
+        energy_module = energyanalysis.Module(time_module)
+        available_modules = []
+        available_modules.append(time_module)
+        available_modules.append(energy_module)
+
         interpreter.set_qopml_model(qopml_model)
         interpreter.set_qopml_metrics(qopml_metrics)
         interpreter.set_qopml_config(qopml_configuration)
 
-        ta_module = timeanalysis.Module()
-        interpreter.register_qopml_module(ta_module)
-        interpreter.register_qopml_module(energyanalysis.Module(ta_module))
+        interpreter.register_qopml_module(time_module)
+        interpreter.register_qopml_module(energyanalysis.Module(time_module))
         
-        interpreter.parse()
+        interpreter.parse(available_modules)
         interpreter.prepare()
         
         if save_states:

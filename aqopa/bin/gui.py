@@ -189,7 +189,7 @@ class ModulesPanel(wx.Panel):
             if ch.IsChecked():
                 modules.append(m)
         
-        wx.PostEvent(self, ModulesChangedEvent(modules = modules))
+        wx.PostEvent(self, ModulesChangedEvent(modules=modules, all_modules=self.allModules))
 
     def OnConfigureButtonClicked(self, event):
         """ """
@@ -212,6 +212,7 @@ class RunPanel(wx.Panel):
         self.qopml_metrics            = ""
         self.qopml_configuration      = ""
 
+        self.allModules = []
         self.selectedModules    = []
 
         self.interpreter        = None
@@ -327,6 +328,10 @@ class RunPanel(wx.Panel):
     def SetSelectedModules(self, modules):
         """ """
         self.selectedModules = modules
+
+    def SetAllModules(self, modules):
+        """ """
+        self.allModules = modules
         
     def OnParseClicked(self, event):
         """ """
@@ -341,7 +346,7 @@ class RunPanel(wx.Panel):
         try:
             resultMessage = ""
             error = False
-            self.interpreter.parse()
+            self.interpreter.parse(self.allModules)
             resultMessage = "SUCCESFULLY PARSED\n\n Now you can run simulation."
             wx.PostEvent(self, ModelParsedEvent())
         except EnvironmentDefinitionException, e:
@@ -730,6 +735,7 @@ class MainNotebook(wx.Notebook):
         
     def OnModulesChange(self, event):
         self.runTab.SetSelectedModules(event.modules)
+        self.runTab.SetAllModules(event.all_modules)
         self.resultsTab.SetSelectedModules(event.modules)
         
     def OnModelParsed(self, event):

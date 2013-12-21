@@ -802,7 +802,7 @@ class Interpreter():
         self._modules.append(qopml_module)
         return self
         
-    def parse(self):
+    def parse(self, all_modules):
         """
         Parses the model from model_as_text field and populates the store.
         """
@@ -811,17 +811,17 @@ class Interpreter():
     
         self.store = self.builder.build_store()
     
-        parser = self.builder.build_model_parser(self.store, self._modules)
+        parser = self.builder.build_model_parser(self.store, all_modules)
         parser.parse(self.model_as_text)
         if len(parser.get_syntax_errors()) > 0:
             raise ModelParserException('Invalid syntax.', syntax_errors=parser.get_syntax_errors())
     
-        parser = self.builder.build_metrics_parser(self.store, self._modules)
+        parser = self.builder.build_metrics_parser(self.store, all_modules)
         parser.parse(self.metrics_as_text)
         if len(parser.get_syntax_errors()) > 0:
             raise MetricsParserException('Invalid syntax.', syntax_errors=parser.get_syntax_errors())
     
-        parser = self.builder.build_config_parser(self.store, self._modules)
+        parser = self.builder.build_config_parser(self.store, all_modules)
         parser.parse(self.config_as_text)
         if len(parser.get_syntax_errors()) > 0:
             raise ConfigurationParserException('Invalid syntax.', syntax_errors=parser.get_syntax_errors())
