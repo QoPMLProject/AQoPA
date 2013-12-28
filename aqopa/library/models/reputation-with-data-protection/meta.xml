@@ -1,0 +1,11 @@
+<model>
+	<name>Reputation model including data protection analysis</name>
+	<author>Bogdan Ksiezopolski</author>
+	<author_email>bogdan.ksiezopolski@acm.org</author_email>
+	<description><![CDATA[Reputation model which introduces data protection analysis influencing the reputation calculation algorithm on example of eBay reputation system.]]></description>
+	<files>
+		<model>model.qopml</model>
+		<metrics>metrics.qopml</metrics>
+		<versions>versions.qopml</versions>
+	</files>
+</model>

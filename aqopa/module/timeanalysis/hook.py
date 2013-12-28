@@ -8,7 +8,7 @@ import random
 from aqopa.simulator.state import Hook, ExecutionResult
 from aqopa.model import AssignmentInstruction,\
     CallFunctionInstruction, IfInstruction, WhileInstruction,\
-    CommunicationInstruction, CallFunctionExpression, TupleExpression
+    CommunicationInstruction, CallFunctionExpression, TupleExpression, ComparisonExpression
 from aqopa.module.timeanalysis.error import TimeSynchronizationException
 from aqopa.simulator.error import RuntimeException
 
@@ -75,6 +75,8 @@ class PreInstructionHook(Hook):
             return self._get_time_details_for_tuple_expression(context, expression)
         elif isinstance(expression, CallFunctionExpression):
             return self._get_time_details_for_simple_expression(context, expression)
+        elif isinstance(expression, ComparisonExpression):
+            return self._get_time_details_for_comparison_expression(context, expression)
         return 0, []
 
     def _get_time_details_for_tuple_expression(self, context, expression):
@@ -87,6 +89,23 @@ class PreInstructionHook(Hook):
             element_total_time, element_time_details = self._get_time_details_for_expression(context, expression.elements[i])
             total_time += element_total_time
             time_details.extend(element_time_details)
+        return total_time, time_details
+
+    def _get_time_details_for_comparison_expression(self, context, expression):
+        """
+        Calculate execution time for tuple expression.
+        """
+        total_time = 0
+        time_details = []
+
+        element_total_time, element_time_details = self._get_time_details_for_expression(context, expression.left)
+        total_time += element_total_time
+        time_details.extend(element_time_details)
+
+        element_total_time, element_time_details = self._get_time_details_for_expression(context, expression.right)
+        total_time += element_total_time
+        time_details.extend(element_time_details)
+
         return total_time, time_details
     
     def _get_time_details_for_simple_expression(self, context, expression):

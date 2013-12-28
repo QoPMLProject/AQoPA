@@ -127,6 +127,10 @@ class Module(module.Module):
         """
         """
         metrics_manager = simulator.context.metrics_manager
+
+        if simulator not in self.timeanalysis_module.timetraces:
+            return []
+
         timetraces = self.timeanalysis_module.timetraces[simulator]
 
         # Clear results

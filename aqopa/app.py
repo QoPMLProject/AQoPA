@@ -701,17 +701,18 @@ class Builder():
         from aqopa.model.parser.lex_yacc import LexYaccParser
         from aqopa.model.parser.lex_yacc.grammar import main,\
                 functions, channels, equations, expressions, instructions,\
-                hosts, metrics
+                hosts, modules as modules_module
         
         parser = LexYaccParser()
         parser.set_store(store) \
                 .add_extension(main.ModelParserExtension()) \
+                .add_extension(modules_module.ModelParserExtension()) \
                 .add_extension(functions.ModelParserExtension()) \
                 .add_extension(channels.ModelParserExtension()) \
                 .add_extension(equations.ModelParserExtension()) \
                 .add_extension(expressions.ModelParserExtension()) \
                 .add_extension(instructions.ModelParserExtension()) \
-                .add_extension(hosts.ModelParserExtension()) 
+                .add_extension(hosts.ModelParserExtension())
                 
         for m in modules:
             parser = m.extend_model_parser(parser)

@@ -60,7 +60,8 @@ class Channel():
                 request.receiver.set_variable(request.instruction.variables_names[i],
                                               message.expression)
                 
-            request.receiver.get_current_instructions_context().goto_next_instruction()
+            request.receiver.get_instructions_context_of_instruction(request.instruction)\
+                .goto_next_instruction()
             request.receiver.mark_changed()
             
             self._waiting_requests.pop(0)
@@ -251,7 +252,7 @@ class Channel():
             expected_messages_count = 0
             
             i = 0
-            while expected_messages_count < accepted_expressions_count and len(self._waiting_requests) > 0:
+            while expected_messages_count < accepted_expressions_count and len(self._waiting_requests) >= i:
                 request = self._waiting_requests[i]
                 i += 1
                 

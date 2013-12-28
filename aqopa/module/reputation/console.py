@@ -20,7 +20,7 @@ class PrintResultsHook(Hook):
 
         self.output_file.write('-'*20)
         self.output_file.write('\n')
-        self.output_file.write('Module\tEnergy Analysis')
+        self.output_file.write('Module\tReputation')
         self.output_file.write('\n')
         self.output_file.write('Version\t%s\n' % self.simulator.context.version.name)
 
@@ -30,21 +30,21 @@ class PrintResultsHook(Hook):
                                 unicode(self.simulator.context.get_current_instruction())))
             self.output_file.write('\n')
 
-        voltage = 3.0
-        consumptions = self.module.get_hosts_consumptions(self.simulator, context.hosts, voltage)
-
         for h in context.hosts:
-            consumption = 'N/A'
-            if h in consumptions:
-                consumption = str(consumptions[h])
-            self.output_file.write('{0}\t{1:}\t'.format(h.name, consumption))
+            self.output_file.write('{0}\t'.format(h.name))
             if h.finished():
                 self.output_file.write('Finished')
                 if h.get_finish_error():
                     self.output_file.write(' with error\t{0}'.format(h.get_finish_error()))
             else:
-                self.output_file.write('NOT Finished\t{0}'.format(unicode(h.get_current_instructions_context()\
-                                                                .get_current_instruction())))
+                self.output_file.write('NOT Finished\t{0}'.format(
+                    unicode(h
+                    .get_current_instructions_context()
+                    .get_current_instruction())))
             self.output_file.write("\n")
-            
+
+            vars = self.module.get_host_vars(h)
+            for var_name in vars:
+                self.output_file.write('\t{0}\t{1}\n'.format(var_name, unicode(vars[var_name])))
+
         self.output_file.write('\n')

@@ -1,0 +1,166 @@
+functions {
+  fun post(id)[Reputation: rate] (adding a post);
+
+  fun id() (creates id of a session);
+  fun date() (creates a timestamp);
+  fun Vlist() (TLS versions list);
+  fun Clist() (creating ciphers list);
+  fun Comlist() (creating compression method list);
+
+  fun set(X) (setup the X parameter);
+  fun info(X) (creating information message about X);
+
+  fun ReadyEncClient();
+  fun FinClient();
+  fun ReadyEncServer();
+  fun FinServer();
+  fun Done();
+
+  fun cert(pk,id,t,ca)[Time: bitlength, algorithm] (generate certificate);
+  fun sk(id)[Time: bitlength, algorithm] (generate secret key for id);
+  fun pk(sk)[Time: bitlength, algorithm] (generate public key for secret key);
+  fun nonce() [Time: bitlength, algorithm] (generate new nounce);
+
+  fun skey()[Time: bitlength, algorithm] (generate symmetric key);
+  fun enc(data,key)[Time: bitlength, algorithm] (encrypt the data);
+  fun dec(data,key)[Time: bitlength, algorithm] (decrypt the data);
+  fun hmac(data)[Time: algorithm] (hmac generation);
+
+  fun newstate(state) (state of the protocol);
+  fun st_active() (active state);
+  fun st_closed() (closed state);
+}
+
+equations {
+  eq dec(enc(data,pk(SKid)),SKid) = data;
+  eq dec(enc(data,K),K) = data;
+}
+
+channels {
+  channel ch1, ch2, ch3, ch4, ch5, ch6 (*);
+}
+
+hosts {
+
+host Client(rr)(*) {
+
+  #ClientID = id();
+
+  process CSecure(ch1, ch2, ch3, ch4, ch5) {
+    ID1 = ClientID;
+    V1 = Vlist();
+    C1 = Clist();
+    Com1 = Comlist();
+    N1 = nonce()[256, Linux PRNG];
+    M1 = (ID1, V1, C1, Com1, N1);
+    out(ch1:M1);
+
+    in(ch2:Y);
+    PKScert = Y[4];
+    K1=skey()[256, Linux PRNG];
+    K1E=enc(K1,PKScert)[2048,RSA];
+    ReadyEC=info(ReadyEncClient());
+    FinC=info(FinClient());
+    M3=(K1E,ReadyEC,FinC);
+    out(ch3:M3);
+
+    in(ch4:Q);
+    StatusSecure = newstate(st_active());
+
+    P1=post(ClientID)[1];
+    P1E=enc(P1,K1)[256, AES, CBC];
+    P1MAC=hmac(P1E)[SHA1];
+    M5=(P1E,P1MAC);
+    out(ch5:M5);
+
+    StatusSecure = newstate(st_closed());
+  }
+
+  process CUnsecure(ch6) {
+
+    StatusUnsercure = newstate(st_active());
+
+    P1mod=post(ClientID)[1];
+    M5mod=(P1mod);
+    out(ch6:M5mod);
+
+    StatusUnsercure = newstate(st_closed());
+  }
+}
+
+host Server(rr)(*) {
+
+  #ServerID = id();
+  #CAID = id();
+  #SKS=sk(ServerID)[2048, RSA];
+  #PKS=pk(SKS)[2048, RSA];
+  #PKScert=cert(PKS,ServerID,date(),CAID)[2048, RSA];
+
+  process SSecure(ch1, ch2, ch3, ch4, ch5) {
+    while (true) {
+        in(ch1:X);
+        V1ok=set(X[1]);
+        C1ok=set(X[2]);
+        Com1ok=set(X[3]);
+        N2=nonce()[256, Linux PRNG];
+        DoneS=info(Done());
+        M2=(V1ok,C1ok,Com1ok,N2,PKScert,DoneS);
+        out(ch2:M2);
+
+        in(ch3:Y);
+        ReadyES=info(ReadyEncServer());
+        FinS=info(FinServer());
+        M4=(ReadyES, FinS);
+        out(ch4:M4);
+
+        StatusSecure=newstate(st_active());
+
+        in(ch5:Z);
+        K1E=Y[0];
+        P1E=Z[0];
+        P1MAC=Z[1];
+        K1=dec(K1E,SKS)[2048,RSA];
+        P1EVerif=hmac(P1E)[SHA1];
+        if (P1EVerif == P1MAC) {
+            P1=dec(P1E,K1)[256, AES, CBC];
+        } else {
+            stop;
+        }
+
+        StatusSecure=newstate(st_closed());
+    }
+  }
+
+  process SUnsecure(ch6) {
+    while (true) {
+        StatusUnsecure=newstate(st_active());
+
+        in(ch6:ZZ);
+        P1mod=ZZ[0];
+
+        StatusUnsecure=newstate(st_closed());
+    }
+  }
+
+}
+}
+
+modules {
+
+  reputation {
+    # rep = 0;
+
+    algorithm alg1 (rate) {
+
+        if (used(P1E)) {
+            sec = 1.3;
+        } else {
+            sec = 0.7;
+        }
+
+        rep = rep + (sec * rate);
+    }
+
+  }
+
+}

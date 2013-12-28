@@ -108,11 +108,14 @@ class LexYaccParser(QoPMLModelParser):
             raise ParserException('Invalid state type State type must be either inclusive or exclusive.')
         self.states.append((name, state_type))
     
-    def add_precedence(self, token_name, precedence):
+    def add_precedence(self, token_names, precedence):
         """
         Adds precedence for token
         """
-        self.precedences.append((precedence, token_name))
+        args = [precedence]
+        for t in token_names:
+            args.append(t)
+        self.precedence.append(tuple(args))
     
     def add_token(self, name, regex=None, func=None, precedence=None, states=[], include_in_tokens=True):
         """
@@ -138,7 +141,7 @@ class LexYaccParser(QoPMLModelParser):
             setattr(self, 't_%s' % field_name, func)
             
         if precedence:
-            self.add_precedence(name, precedence)
+            self.add_precedence([name], precedence)
     
     def add_reserved_word(self, word, token, func=None, state='INITIAL', case_sensitive=True):
         """
@@ -149,7 +152,7 @@ class LexYaccParser(QoPMLModelParser):
         
         if state not in self.reserved_words:
             self.reserved_words[state] = {}
-        self.reserved_words[state][word]= (token, func, case_sensitive)
+        self.reserved_words[state][word] = (token, func, case_sensitive)
     
     def get_reserved_words(self):
         """

@@ -1,0 +1,44 @@
+versions {
+
+version Secure {
+
+	set host Client(Poster);
+	set host Server(Poster);
+
+	run host Client(*) {
+	  run CSecure(){100}[ch1, ch2, ch3, ch4, ch5]
+	}
+	run host Server(*){
+	  run SSecure()
+	}
+}
+
+version Unsecure {
+
+	set host Client(Poster);
+	set host Server(Poster);
+
+	run host Client(*) {
+	  run CUnsecure(){100}[ch6]
+	}
+	run host Server(*){
+	  run SUnsecure()
+	}
+}
+
+version Mixed {
+
+	set host Client(Poster);
+	set host Server(Poster);
+
+	run host Client(*) {
+	  run CSecure(){50}[ch1, ch2, ch3, ch4, ch5]
+	  run CUnsecure(){50}[ch6]
+	}
+	run host Server(*){
+	  run SSecure()
+	  run SUnsecure()
+	}
+}
+
+}
