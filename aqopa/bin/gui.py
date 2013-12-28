@@ -694,6 +694,7 @@ class MainNotebook(wx.Notebook):
         self.AddPage(self.modulesTab, "Modules")
         
         self.runTab = RunPanel(self)
+        self.runTab.SetAllModules(self.availableModules)
         self.runTab.Layout()
         self.runTab.Bind(EVT_MODEL_PARSED, self.OnModelParsed)
         self.AddPage(self.runTab, "Run")
@@ -738,7 +739,6 @@ class MainNotebook(wx.Notebook):
         
     def OnModulesChange(self, event):
         self.runTab.SetSelectedModules(event.modules)
-        self.runTab.SetAllModules(event.all_modules)
         self.resultsTab.SetSelectedModules(event.modules)
         
     def OnModelParsed(self, event):
