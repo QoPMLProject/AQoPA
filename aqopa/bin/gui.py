@@ -659,8 +659,8 @@ class MainNotebook(wx.Notebook):
         m = energyanalysis.Module(timeanalysis_module)
         self.availableModules.append(m)
 
-        from aqopa.module import reputation
-        self.availableModules.append(reputation.Module())
+#        from aqopa.module import reputation
+#        self.availableModules.append(reputation.Module())
 
         ###########
         # TABS

@@ -102,7 +102,7 @@ def run(qopml_model, qopml_metrics, qopml_configuration,
 
         interpreter.register_qopml_module(time_module)
         interpreter.register_qopml_module(energy_module)
-        interpreter.register_qopml_module(reputation_module)
+#        interpreter.register_qopml_module(reputation_module)
         
         interpreter.parse(available_modules)
         interpreter.prepare()
