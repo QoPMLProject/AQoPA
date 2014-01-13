@@ -4,6 +4,17 @@
 
 Next release:
 
+v0.6 (2014-01-13)
+ - All modules are used for parsing.
+ - Fixed finish instruction execution error.
+ - Fixed reduction error reporting.
+ - Fixed report form in time and energy analysis modules.
+ - Fixed error of size calculation.
+ - Added energy module.
+ - Updated README file.
+ - Added logo.
+ - Added models to library.
+
 v0.5.5 (2013-11-20)
  - Removed chart results. Added library to package.
  
