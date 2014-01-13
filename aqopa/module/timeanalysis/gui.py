@@ -116,6 +116,11 @@ class SingleVersionPanel(wx.Panel):
         versionName = self.versionsList.GetValue()
         simulator = self.versionSimulator[versionName]
         hosts = self._GetSelectedHosts(simulator)
+        
+        if len(hosts) == 0:
+            wx.MessageBox("Please select hosts.", 'Error', wx.OK | wx.ICON_ERROR)
+            return
+        
         if self.oneTimeRB.GetValue():
             self.ShowHostsTimes(simulator, hosts)
         elif self.avgTimeRB.GetValue():
@@ -297,20 +302,16 @@ class SingleVersionPanel(wx.Panel):
         self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
         
         sizer = wx.BoxSizer(wx.VERTICAL)
-        if len(hosts) == 0:
-            lbl = wx.StaticText(self.timeResultsPanel, label="No hosts selected")
-            sizer.Add(lbl)     
-        else:
-            for h in hosts:
-                
-                lblText = "%s: %.2f ms" % (h.name,self.module.get_current_time(simulator, h))
-                
-                error = h.get_finish_error()
-                if error is not None:
-                    lblText += " (Not Finished - %s)" % error
-                
-                lbl = wx.StaticText(self.timeResultsPanel, label=lblText)
-                sizer.Add(lbl)
+        for h in hosts:
+            
+            lblText = "%s: %.2f ms" % (h.name,self.module.get_current_time(simulator, h))
+            
+            error = h.get_finish_error()
+            if error is not None:
+                lblText += " (Not Finished - %s)" % error
+            
+            lbl = wx.StaticText(self.timeResultsPanel, label=lblText)
+            sizer.Add(lbl)
         
         self.timeResultsPanel.SetSizer(sizer)
         self.timeResultsPanel.SetupScrolling(scroll_x=False)
@@ -331,12 +332,8 @@ class SingleVersionPanel(wx.Panel):
         self.timeResultsPanel = scrolled.ScrolledPanel(self)
         self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
-        lblText = ""
-        if len(hosts) == 0:
-            lblText = "---"
-        else:
-            avg = GetVal(simulator, hosts)
-            lblText = "Average: %.2f ms" % avg
+        avg = GetVal(simulator, hosts)
+        lblText = "Average: %.2f ms" % avg
         lbl = wx.StaticText(self.timeResultsPanel, label=lblText)        
     
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -361,12 +358,8 @@ class SingleVersionPanel(wx.Panel):
         self.timeResultsPanel = scrolled.ScrolledPanel(self)
         self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
-        lblText = ""
-        if len(hosts) == 0:
-            lblText = "---"
-        else:
-            val = GetVal(simulator, hosts)
-            lblText = "Minimum: %.2f ms" % val
+        val = GetVal(simulator, hosts)
+        lblText = "Minimum: %.2f ms" % val
         lbl = wx.StaticText(self.timeResultsPanel, label=lblText)        
     
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -391,12 +384,8 @@ class SingleVersionPanel(wx.Panel):
         self.timeResultsPanel = scrolled.ScrolledPanel(self)
         self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
-        lblText = ""
-        if len(hosts) == 0:
-            lblText = "---"
-        else:
-            val = GetVal(simulator, hosts)
-            lblText = "Maximum: %.2f ms" % val
+        val = GetVal(simulator, hosts)
+        lblText = "Maximum: %.2f ms" % val
         lbl = wx.StaticText(self.timeResultsPanel, label=lblText)     
     
         sizer = wx.BoxSizer(wx.HORIZONTAL)

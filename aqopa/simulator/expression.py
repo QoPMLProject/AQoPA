@@ -84,7 +84,7 @@ class Checker():
             for i in range(0, len(left.arguments)):
                 if not self._are_equal(left.arguments[i], right.arguments[i]):
                     return False
-        return False
+        return True
     
     def result(self, condition, variables, functions, populator, reducer):
         """
@@ -106,7 +106,7 @@ class Checker():
             
             left = reducer.reduce(left)
             right = reducer.reduce(right)
-            
+
             result = self._are_equal(left, right)
             del left
             del right
@@ -282,7 +282,7 @@ class Reducer():
         
             if len(reduction_points) > 0:
                 
-                # For each poing:
+                # For each point:
                 #  - temporary reduce at this point
                 #  - remove used point from reduction points list
                 #  - generate new reduction points list for reduced expression
@@ -310,7 +310,7 @@ class Reducer():
                         if not found:
                             raise RuntimeException("Equations '%s' and '%s are ambiguous for expression: %s." % 
                                                    (unicode(old_reduction_point.equation),
-                                                    unicode(new_reduction_point.equation),
+                                                    unicode(reduction_point.equation),
                                                     unicode(expression)))
                             
                     # Cancel reduction

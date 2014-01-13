@@ -189,7 +189,7 @@ class ModulesPanel(wx.Panel):
             if ch.IsChecked():
                 modules.append(m)
         
-        wx.PostEvent(self, ModulesChangedEvent(modules = modules))
+        wx.PostEvent(self, ModulesChangedEvent(modules=modules, all_modules=self.allModules))
 
     def OnConfigureButtonClicked(self, event):
         """ """
@@ -212,6 +212,7 @@ class RunPanel(wx.Panel):
         self.qopml_metrics            = ""
         self.qopml_configuration      = ""
 
+        self.allModules = []
         self.selectedModules    = []
 
         self.interpreter        = None
@@ -327,6 +328,10 @@ class RunPanel(wx.Panel):
     def SetSelectedModules(self, modules):
         """ """
         self.selectedModules = modules
+
+    def SetAllModules(self, modules):
+        """ """
+        self.allModules = modules
         
     def OnParseClicked(self, event):
         """ """
@@ -341,7 +346,7 @@ class RunPanel(wx.Panel):
         try:
             resultMessage = ""
             error = False
-            self.interpreter.parse()
+            self.interpreter.parse(self.allModules)
             resultMessage = "SUCCESFULLY PARSED\n\n Now you can run simulation."
             wx.PostEvent(self, ModelParsedEvent())
         except EnvironmentDefinitionException, e:
@@ -441,19 +446,22 @@ class RunPanel(wx.Panel):
                 
             runResultValue = self.runResult.GetValue()
             resultMessage = runResultValue + \
-                "Version %s finished successfully.\n" \
+                "Version %s finished successfully.\n\n" \
                 % simulator.context.version.name
                     
         except RuntimeException, e:
             runResultValue = self.runResult.GetValue()
             resultMessage = runResultValue + \
-                "Version %s finished with error: %s.\n" \
-                % (simulator.context.version.name, e.args[0])
+                "Version %s finished with error: \nHost: %s \nInstruction: %s\nError: %s \n\n" \
+                % (simulator.context.version.name,
+                    unicode(simulator.context.get_current_host()),
+                    unicode(simulator.context.get_current_instruction()),
+                    e.args[0])
         except Exception, e:
             sys.stderr.write(traceback.format_exc())
             runResultValue = self.runResult.GetValue()
             resultMessage = runResultValue + \
-                "Version %s finished with unknown error.\n" \
+                "Version %s finished with unknown error.\n\n" \
                 % simulator.context.version.name
         
         if resultMessage:    
@@ -577,7 +585,7 @@ class ResultsPanel(wx.Panel):
             self.moduleResultPanel[m] = resultPanel
             
             self.Layout()
-#            resultPanel.Hide()
+            resultPanel.Hide()
             
         uncheckedModules = []
         for m in self.moduleResultPanel:
@@ -621,6 +629,11 @@ class ResultsPanel(wx.Panel):
     def OnModuleButtonClicked(self, event):
         """ """
         btn = event.EventObject
+        for m in self.moduleResultPanel:
+            self.moduleResultPanel[m].Hide()
+        m = self.buttonsModule[btn]
+        self.moduleResultPanel[m].Show()
+        self.Layout()
         
 class MainNotebook(wx.Notebook):
     """ """
@@ -635,10 +648,19 @@ class MainNotebook(wx.Notebook):
         self.availableModules = []
         
         from aqopa.module import timeanalysis
-        m = timeanalysis.Module()
-        m.get_gui().Bind(EVT_MODULE_SIMULATION_REQUEST, self.OnModuleSimulationRequest)
-        m.get_gui().Bind(EVT_MODULE_SIMULATION_FINISHED, self.OnModuleSimulationFinished)
+        timeanalysis_module = timeanalysis.Module()
+        timeanalysis_module.get_gui().Bind(EVT_MODULE_SIMULATION_REQUEST,
+                                           self.OnModuleSimulationRequest)
+        timeanalysis_module.get_gui().Bind(EVT_MODULE_SIMULATION_FINISHED,
+                                           self.OnModuleSimulationFinished)
+        self.availableModules.append(timeanalysis_module)
+        
+        from aqopa.module import energyanalysis
+        m = energyanalysis.Module(timeanalysis_module)
         self.availableModules.append(m)
+
+        from aqopa.module import reputation
+        self.availableModules.append(reputation.Module())
 
         ###########
         # TABS
@@ -672,6 +694,7 @@ class MainNotebook(wx.Notebook):
         self.AddPage(self.modulesTab, "Modules")
         
         self.runTab = RunPanel(self)
+        self.runTab.SetAllModules(self.availableModules)
         self.runTab.Layout()
         self.runTab.Bind(EVT_MODEL_PARSED, self.OnModelParsed)
         self.AddPage(self.runTab, "Run")

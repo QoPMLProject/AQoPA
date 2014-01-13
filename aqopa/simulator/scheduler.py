@@ -22,12 +22,32 @@ class Scheduler():
         Returns instructions context executed in current state.
         """
         raise NotImplementedError()
+
+    def get_instructions_context_of_instruction(self, instruction):
+        """
+        Returns instruction context with the instruction from parameter
+        as the current instruction
+        """
+        raise NotImplementedError()
     
     def goto_next_instruction_context(self):
         """
         Move hosts state to next instructions list.
         """
         raise NotImplementedError()
+
+    def get_contexts_number(self):
+        """
+        Returns the number of contexts in scheduler.
+        """
+        raise NotImplementedError()
+
+    def get_current_context_index(self):
+        """
+        Returns the index of current context (zero-based)
+        """
+        raise NotImplementedError()
+
 
 class FifoScheduler(Scheduler):
     
@@ -49,11 +69,32 @@ class FifoScheduler(Scheduler):
     def get_current_context(self):
         """ """
         return self.context
+
+    def get_instructions_context_of_instruction(self, instruction):
+        """
+        Returns instruction context with the instruction from parameter
+        as the current instruction
+        """
+        if self.context.get_current_instruction() == instruction:
+            return self.context
+        return None
     
     def goto_next_instruction_context(self):
         """ """
         # Fifo has only one context
         pass
+
+    def get_contexts_number(self):
+        """
+        Returns the number of contexts in scheduler.
+        """
+        return 1
+
+    def get_current_context_index(self):
+        """
+        Returns the index of current context (zero-based)
+        """
+        return 0
         
 
 class RoundRobinScheduler(Scheduler):
@@ -102,6 +143,16 @@ class RoundRobinScheduler(Scheduler):
     def get_current_context(self):
         """ """
         return self.contexts[self._current_context_index]
+
+    def get_instructions_context_of_instruction(self, instruction):
+        """
+        Returns instruction context with the instruction from parameter
+        as the current instruction
+        """
+        for icontext in self.contexts:
+            if not icontext.finished() and icontext.get_current_instruction() == instruction:
+                return icontext
+        return None
     
     def goto_next_instruction_context(self):
         """ """
@@ -111,10 +162,22 @@ class RoundRobinScheduler(Scheduler):
         
         while now_index != self._current_context_index and self.get_current_context().finished():
             self._current_context_index = (self._current_context_index + 1) % len(self.contexts)
+
+    def get_contexts_number(self):
+        """
+        Returns the number of contexts in scheduler.
+        """
+        return len(self.contexts)
+
+    def get_current_context_index(self):
+        """
+        Returns the index of current context (zero-based)
+        """
+        return self._current_context_index
         
         
-SCHEDULE_ALGORITHM_ROUND_ROBIN  = 'rr'
-SCHEDULE_ALGORITHM_FIFO         = 'fifo'
+SCHEDULE_ALGORITHM_ROUND_ROBIN = 'rr'
+SCHEDULE_ALGORITHM_FIFO = 'fifo'
 
 def create(host, algorithm):
     if algorithm == SCHEDULE_ALGORITHM_FIFO:

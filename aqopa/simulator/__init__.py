@@ -60,8 +60,7 @@ class Simulator():
         The difference is that it does not check 
         whether simulation is finished.
         """
-        if self.context.hosts_loop_ended():
-            
+        if self.context.has_epoch_ended():
             self._execute_hook(HOOK_TYPE_PRE_HOST_LIST_EXECUTION)
             
             if self._first_loop:
@@ -81,7 +80,8 @@ class Simulator():
                                             unicode(h.get_current_instructions_context().get_current_instruction()))
                             
                 self.context.mark_all_hosts_unchanged()
-                   
+
+        self.context.get_current_host().touch()
         self._executor.execute_instruction(self.context)
         self.context.goto_next_host()
     
@@ -155,7 +155,7 @@ class Simulator():
         """
         if not self.is_ready_to_run():
             raise EnvironmentDefinitionException("Simulation is not yet ready to run.")
-        
+
         self._executor.prepend_instruction_executor(self._before_instruction_executor)
         self._executor.append_instruction_executor(self._after_instruction_executor)
         

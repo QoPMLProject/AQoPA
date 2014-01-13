@@ -1,0 +1,13 @@
+<model>
+	<name>EBay-like secure reputation model</name>
+	<author>Bogdan Ksiezopolski</author>
+	<author_email>bogdan.ksiezopolski@acm.org</author_email>
+	<description><![CDATA[This model is the modified version of the eBay reputation system.
+The transactions rates are modiﬁed depending on the fact of securing the transmission channel between transaction reviewer and eBay portal.
+It shows that reputation systems which take into account factors related to information security can provide protection against technical attacks on them.]]></description>
+	<files>
+		<model>model.qopml</model>
+		<metrics>metrics.qopml</metrics>
+		<versions>versions.qopml</versions>
+	</files>
+</model>
