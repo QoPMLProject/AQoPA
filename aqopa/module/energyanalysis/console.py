@@ -1,5 +1,5 @@
 '''
-Created on 07-09-2013
+Created on 05-12-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
@@ -20,18 +20,24 @@ class PrintResultsHook(Hook):
 
         self.output_file.write('-'*20)
         self.output_file.write('\n')
-        self.output_file.write('Module\tTime Analysis')
+        self.output_file.write('Module\tEnergy Analysis')
         self.output_file.write('\n')
         self.output_file.write('Version\t%s\n' % self.simulator.context.version.name)
-        
+
         if self.simulator.infinite_loop_occured():
             self.output_file.write('ERROR\tInfinite loop on {0} -> {1}\n'.format(
                                 unicode(self.simulator.context.get_current_host()),
                                 unicode(self.simulator.context.get_current_instruction())))
             self.output_file.write('\n')
 
+        voltage = 3.0
+        consumptions = self.module.get_hosts_consumptions(self.simulator, context.hosts, voltage)
+
         for h in context.hosts:
-            self.output_file.write('{0}\t{1}\t'.format(h.name, str(self.module.get_current_time(self.simulator, h))))
+            consumption = 'N/A'
+            if h in consumptions:
+                consumption = str(consumptions[h])
+            self.output_file.write('{0}\t{1:}\t'.format(h.name, consumption))
             if h.finished():
                 self.output_file.write('Finished')
                 if h.get_finish_error():
@@ -41,13 +47,4 @@ class PrintResultsHook(Hook):
                                                                 .get_current_instruction())))
             self.output_file.write("\n")
             
-        self.output_file.write('\n')
-        self.output_file.write('Dropped messages\n')
-        i = 0
-        for c in context.channels_manager.channels:
-            if c.get_number_of_dropped_messages() > 0:
-                i += 1
-                self.output_file.write('%s\t%d\n' % (c.name, c.get_number_of_dropped_messages()))
-        if i == 0:
-            self.output_file.write('None\n')
         self.output_file.write('\n')

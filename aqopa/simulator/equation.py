@@ -106,8 +106,9 @@ class Validator():
             if not function:
                 raise EnvironmentDefinitionException('Function %s does not exist.' % expression.function_name)
             if len(function.params) != len(expression.arguments):
-                raise EnvironmentDefinitionException('Function %s called with wrong number of arguments - expected: %d, got: %d.' 
-                                                     % expression.function_name, len(function.params), len(expression.arguments))
+                raise EnvironmentDefinitionException(
+                    'Function %s called with wrong number of arguments - expected: %d, got: %d.'
+                    % (expression.function_name, len(function.params), len(expression.arguments)))
             for arg in expression.arguments:
                 if isinstance(arg, CallFunctionExpression):
                     self._validate_function_names(arg, functions)

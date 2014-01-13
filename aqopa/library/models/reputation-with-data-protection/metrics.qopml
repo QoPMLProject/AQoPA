@@ -1,0 +1,26 @@
+metrics {
+
+conf (Poster) {
+	CPU = N/A;
+}
+
+data(Poster) {
+    primhead[function][reputation:algorithm][size:exact(B)];
+    primitive[post][alg1][8];
+    #
+    primhead[function][bit_length][algorithm][time:exact(ms)];
+    primitive[enc][2048][RSA][0.049];
+    primitive[dec][2048][RSA][1.611];
+    #
+    primhead[function][bit_length][algorithm][mode][time:exact(mspB)][Size:ratio];
+    primitive[enc][256][AES][CBC][0.0000000049:1][1:1];
+    primitive[dec][256][AES][CBC][0.0000000049:1][1:1];
+    #
+    primhead[function][algorithm][time:exact(ms)];
+    primitive[hmac][SHA1][2.475];
+    #
+    primhead[function][size:exact(B)];
+    primitive[id][8];
+}
+
+}

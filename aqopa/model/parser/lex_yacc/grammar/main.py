@@ -56,17 +56,15 @@ class ModelParserExtension(LexYaccParserExtension):
             i -= 1
             
         return t
+
+    def token_float(self, t):
+        r'([1-9][0-9]*\.[0-9]+)|(0\.[0-9]+)'
+        t.value = float(t.value)
+        return t
     
     def token_integer(self, t):
         r'0|[1-9][0-9]*'
-        
         t.value = int(t.value)
-        return t
-    
-    def token_float(self, t):
-        r'[1-9][0-9]*(\.[0-9]+)?'
-        
-        t.value = float(t.value)
         return t
         
     
@@ -80,6 +78,19 @@ class ModelParserExtension(LexYaccParserExtension):
             | model specification
         """
         pass
+
+    def rule_empty(self, t):
+        """
+        empty :
+        """
+        pass
+
+    def rule_number(self, t):
+        """
+        number : FLOAT
+                | INTEGER
+        """
+        t[0] = t[1]
 
     def rule_identifiers_list(self, t):
         """
@@ -109,6 +120,7 @@ class ModelParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('false', 'BOOL', func=self.word_bool)
         
         self.parser.add_token('COMMA', r',')
+        self.parser.add_token('FLOAT', func=self.token_float)
         self.parser.add_token('INTEGER', func=self.token_integer)
         self.parser.add_token('QUALIFIED_IDENTIFIER', r'[_a-zA-Z][_a-zA-Z0-9]*(\.[1-9][0-9]*)+')
         self.parser.add_token('IDENTIFIER', func=self.token_identifier)
@@ -127,6 +139,8 @@ class ModelParserExtension(LexYaccParserExtension):
         self.parser.add_token('BLOCKCLOSE', r'}')
         
         self.parser.add_rule(self.rule_model)
+        self.parser.add_rule(self.rule_empty)
+        self.parser.add_rule(self.rule_number)
         self.parser.add_rule(self.rule_identifiers_list)
         self.parser.add_rule(self.rule_qualified_identifiers_list)
         
@@ -185,17 +199,17 @@ class MetricsParserExtension(LexYaccParserExtension):
             i -= 1
             
         return t
+
+    def token_float(self, t):
+        r'([1-9][0-9]*\.[0-9]+)|(0\.[0-9]+)'
+
+        t.value = float(t.value)
+        return t
     
     def token_integer(self, t):
         r'0|[1-9][0-9]*'
         
         t.value = int(t.value)
-        return t
-    
-    def token_float(self, t):
-        r'[1-9][0-9]*(\.[0-9]+)?'
-        
-        t.value = float(t.value)
         return t
         
     
@@ -205,10 +219,23 @@ class MetricsParserExtension(LexYaccParserExtension):
     
     def rule_metrics(self, t):
         """
-        metrics : specification 
+        metrics : specification
             | metrics specification
         """
         pass
+
+    def rule_empty(self, t):
+        """
+        empty :
+        """
+        pass
+
+    def rule_number(self, t):
+        """
+        number : FLOAT
+                | INTEGER
+        """
+        t[0] = t[1]
 
     def rule_identifiers_list(self, t):
         """
@@ -235,6 +262,7 @@ class MetricsParserExtension(LexYaccParserExtension):
     def _extend(self):
         
         self.parser.add_token('COMMA', r',')
+        self.parser.add_token('FLOAT', func=self.token_float)
         self.parser.add_token('INTEGER', func=self.token_integer)
         self.parser.add_token('QUALIFIED_IDENTIFIER', r'[_a-zA-Z][_a-zA-Z0-9]*(\.[1-9][0-9]*)+')
         self.parser.add_token('IDENTIFIER', func=self.token_identifier)
@@ -253,6 +281,8 @@ class MetricsParserExtension(LexYaccParserExtension):
         self.parser.add_token('BLOCKCLOSE', r'}')
         
         self.parser.add_rule(self.rule_metrics)
+        self.parser.add_rule(self.rule_empty)
+        self.parser.add_rule(self.rule_number)
         self.parser.add_rule(self.rule_identifiers_list)
         self.parser.add_rule(self.rule_qualified_identifiers_list)
         
@@ -312,17 +342,17 @@ class ConfigParserExtension(LexYaccParserExtension):
             i -= 1
             
         return t
+
+    def token_float(self, t):
+        r'([1-9][0-9]*\.[0-9]+)|(0\.[0-9]+)'
+
+        t.value = float(t.value)
+        return t
     
     def token_integer(self, t):
         r'0|[1-9][0-9]*'
         
         t.value = int(t.value)
-        return t
-    
-    def token_float(self, t):
-        r'[1-9][0-9]*(\.[0-9]+)?'
-        
-        t.value = float(t.value)
         return t
         
     
@@ -336,6 +366,19 @@ class ConfigParserExtension(LexYaccParserExtension):
             | configuration specification
         """
         pass
+
+    def rule_empty(self, t):
+        """
+        empty :
+        """
+        pass
+
+    def rule_number(self, t):
+        """
+        number : FLOAT
+                | INTEGER
+        """
+        t[0] = t[1]
 
     def rule_identifiers_list(self, t):
         """
@@ -365,6 +408,7 @@ class ConfigParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('false', 'BOOL', func=self.word_bool)
         
         self.parser.add_token('COMMA', r',')
+        self.parser.add_token('FLOAT', func=self.token_float)
         self.parser.add_token('INTEGER', func=self.token_integer)
         self.parser.add_token('QUALIFIED_IDENTIFIER', r'[_a-zA-Z][_a-zA-Z0-9]*(\.[1-9][0-9]*)+')
         self.parser.add_token('IDENTIFIER', func=self.token_identifier)
@@ -383,6 +427,8 @@ class ConfigParserExtension(LexYaccParserExtension):
         self.parser.add_token('BLOCKCLOSE', r'}')
         
         self.parser.add_rule(self.rule_configuration)
+        self.parser.add_rule(self.rule_empty)
+        self.parser.add_rule(self.rule_number)
         self.parser.add_rule(self.rule_identifiers_list)
         self.parser.add_rule(self.rule_qualified_identifiers_list)
         

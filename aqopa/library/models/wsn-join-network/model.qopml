@@ -1,221 +1,437 @@
 functions {
-	fun id_s() (ID of Sink);
-	fun id_nn() (ID of New node);
-	fun id_n() (ID of neighbour node);
+  fun id_s() (ID of Sink);
+  fun id_nn() (ID of New node);
+  fun id_n() (ID of neighbour node);
+  fun id_j() (ID of intermediate node);
 
-	fun gen_join_req(ID) (generates join request for node ID);
-	fun req_response() (generates the response for request);
-	fun gen_sym_key() (generates symmetric key);
-	fun check_node(nodeID) (checks if node nodeID can join network);
+  fun check_node(nodeID) (checks if node nodeID can join network);
+  
+  fun nonce() (generates nonce);
+  fun network_key() (returns the network key used by all nodes);
+  fun gen_session_key(ID1, ID2) (generates session key);
 
-	fun sk(id) (secret key of id);
-	fun pk(sk) (public key for sk secret key);
+  fun sk(id) (secret key of id);
+  fun pk(sk)[Time: key_size] (public key for sk secret key);
 
-	fun a_enc(data, PK) (assymetric encryption);
-	fun a_dec(data, SK) (assymetric decryption);
-	fun s_enc(data, K) (symmetric encryption);
-	fun s_dec(data, K) (symmetric decryption);
+  fun ecies_kdf_mac()[Time: key_size] (ecies key derivation function and MAC calculation before encryption);
+  fun ecies_kdf()[Time: key_size] (ecies key derivation function before decryption);
+  fun ecies_enc(data, PK)[Time: inside_algorithm,key_size] (assymetric encryption using ECIES algorithm);
+  fun ecies_dec(data, SK)[Time: inside_algorithm,key_size] (assymetric decryption using ECIES algorithm);
+  fun ecies_temp_key()[Time: key_size] (generates temporary key for encryption);
+  fun ecies_mac() (generates MAC for encrypted message);
 
-	fun dh_key(PK_ID1, SK_ID2) (generates Diffie-Hellman key between to nodes ID1 and ID2 using their public and secret keys);
+  fun s_enc(data, K)[Time: algorithm,key_size] (symmetric encryption);
+  fun s_dec(data, K)[Time: algorithm,key_size] (symmetric decryption);
+  
+  fun dh_key(PK_ID1, SK_ID2) (generates Diffie-Hellman key between two nodes ID1 and ID2 using their public and secret keys);
+  fun session_key(ID1, ID2) (returns the session key between two nodes ID1 and ID2);
 
-	fun send() (function simulates communication time);
+  fun send(X) (function simulates communication time for sending X as message);
 }
 
 equations {
-	eq a_enc(a_dec(data, SK), pk(SK)) = data;
-	eq a_dec(a_enc(data, pk(SK)), SK) = data;
-	eq s_enc(s_dec(data, K), K) = data;
-	eq s_dec(s_enc(data, K), K) = data;
+  eq ecies_enc(ecies_dec(data, SK), pk(SK)) = data;
+  eq ecies_dec(ecies_enc(data, pk(SK)), SK) = data;
+  eq s_enc(s_dec(data, K), K) = data;
+  eq s_dec(s_enc(data, K), K) = data;
 
-	eq s_dec(s_enc(data, dh_key(pk(sk(ID1)), sk(ID2))), dh_key(pk(sk(ID2)), sk(ID1))) = data;
-	eq s_enc(s_dec(data, dh_key(pk(sk(ID1)), sk(ID2))), dh_key(pk(sk(ID2)), sk(ID1))) = data;
+  eq s_dec(s_enc(data, dh_key(pk(sk(ID1)), sk(ID2))), dh_key(pk(sk(ID2)), sk(ID1))) = data;
+  eq s_enc(s_dec(data, dh_key(pk(sk(ID1)), sk(ID2))), dh_key(pk(sk(ID2)), sk(ID1))) = data;
+
+  eq s_dec(s_enc(data, session_key(ID1, ID2)), session_key(ID2, ID1)) = data;
+  eq s_enc(s_dec(data, session_key(ID1, ID2)), session_key(ID2, ID1)) = data;
 }
 
 channels {
-	channel ch_out_NN, ch_in_NN, ch_out_N, ch_in_N (*);
-	channel ch_out_F1, ch_in_F1, ch_out_F2, ch_in_F2, ch_out_F3, ch_in_F3, ch_out_F4, ch_in_F4, ch_out_F5, ch_in_F5 (*);
-	channel ch_out_F6, ch_in_F6, ch_out_F7, ch_in_F7 (*);
+  channel ch_out_NN, ch_in_NN, ch_out_N, ch_in_N (*);
+  channel ch_out_F1, ch_in_F1 (*);
 }
 
 hosts {
 
 host NewNode(rr)(*) {
-#PK_S 		= pk(sk(id_s()));
-#SK_NewNode	= sk(id_nn());
-#PK_NewNode 	= pk(SK_NewNode);
+  #PK_S 		= pk(sk(id_s()))[160];
+  #SK_NewNode	= sk(id_nn());
+  #PK_NewNode 	= pk(SK_NewNode)[160];
+  #D_NN_S = dh_key(PK_S, SK_NewNode);
 
-process Main(*) {
-		D_NN_S = dh_key(PK_S, SK_NewNode); 
-		REQ = gen_join_req(id_nn());
-		ENC_REQ = s_enc(REQ, D_NN_S)[16B]; 
-		send()[16B];
-		out(ch_out_NN: ENC_REQ);
+  process Main(*) {
+    nNN = nonce();
+    
+    subprocess MakeRequestWithNewNodeIdOnly(*) {
+      REQ = (nNN, id_nn());
+    }
+    
+    subprocess MakeRequestWithNewNodeAndNeighbourId(*) {
+      REQ = (nNN, id_nn(), id_n());
+    }
+    
+    subprocess MakeRequestWithNewNode_NeighbourAndIntermediateNodeId(*) {
+      REQ = (nNN, id_nn(), id_n(), id_j());
+    }
+    
+    ENC_REQ = s_enc(REQ, D_NN_S)[AES-CTR,128];
 
-		in(ch_in_NN: E_RESP);
-		RESP = a_dec(E_RESP, SK_NewNode)[join_response]; 
-		SymKey_NN_N = RESP[1];
-		Join_RESP = RESP[0];
-}
+    send_headers();
+    send_data(ENC_REQ);
+    out(ch_out_NN: ENC_REQ);
+    
+
+    in(ch_in_NN: NN_RESP);
+    E_RESP = NN_RESP[0];
+    ecies_kdf()[160];
+    RESP = ecies_dec(E_RESP, SK_NewNode)[AES,160];
+    
+    subprocess HandleResponse_Direct_Original(*) {
+      retNonce = RESP[0];
+      idS = RESP[1];
+      SymKey_NN_N = RESP[2];
+    }
+    
+    subprocess HandleResponse_Indirect_Original(*) {
+      retNonce = RESP[0];
+      idN = RESP[1];
+      SymKey_NN_N = RESP[2];
+    }
+    
+    subprocess HandleResponse_Indirect_NK_EncDec(*) {
+      SymKey_NN_N = RESP[0];
+      E_DH_RESP = RESP[1];
+      DH_RESP = s_dec(E_DH_RESP, D_NN_S)[AES-CTR,128];
+      nNN_resp = DH_RESP[0];
+    }
+    
+    subprocess HandleResponse_Indirect_SessKey_EncDec(*) {
+      SymKey_NN_N = RESP[0];
+      E_DH_RESP = RESP[1];
+      DH_RESP = s_dec(E_DH_RESP, D_NN_S)[AES-CTR,128];
+      nNN_resp = DH_RESP[0];
+    }
+    
+    subprocess HandleResponse_Indirect_Onion(*) {
+      SymKey_NN_N = RESP[0];
+      E_DH_RESP = RESP[1];
+      DH_RESP = s_dec(E_DH_RESP, D_NN_S)[AES-CTR,128];
+      nNN_resp = DH_RESP[0];
+    }
+		  
+  }
 }
 
 host Neighbour(rr)(*) {
-#PK_S 		= pk(sk(id_s()));
-#SK_Neighbour 	= sk(id_n());
-#PK_Neighbour 	= pk(SK_Neighbour);
+  #PK_S 		= pk(sk(id_s()))[160];
+  #SK_Neighbour 	= sk(id_n());
+  #PK_Neighbour 	= pk(SK_Neighbour)[160];
+  #DH_Neighbour_S 	= dh_key(PK_S, SK_Neighbour);
+  #NK 			= network_key();
+  #SessKey_N_J	= session_key(id_n(), id_j());
 
-#DH_Neighbour_S = dh_key(PK_S, SK_Neighbour);
-
-process Main(*) {
-	in(ch_out_NN:M);
-	send()[16B];
-	out(ch_out_N:M);
-
-	in(ch_in_N:E_S_RESP);
-
-	S_RESP = s_dec(E_S_RESP, DH_Neighbour_S)[40B]; 
-	SymKey_N_NN = gen_sym_key(); 
-	PK_NewNode = S_RESP[1];
-	N_RESP = (S_RESP[0], SymKey_N_NN);
-	E_N_RESP = a_enc(N_RESP, PK_NewNode)[join_response]; 
-	send()[80B];
-
-	out(ch_in_NN:E_N_RESP);
-}
+  process Main(*) {
+    while (true) {
+	    in(ch_out_NN:M);
+	    
+	    subprocess Forward_NK_EncDec_To_Sink(*) {
+	      N = nonce();
+	      TMP_M = (N, M);
+	      M = s_enc(TMP_M, NK)[AES-CTR,128];
+	    }
+	    
+	    subprocess Forward_SessionKey_EncDec_To_Sink(*) {
+	      N = nonce();
+	      TMP_M = (N, M);
+	      M = s_enc(TMP_M, SessKey_N_J)[AES-CTR,128];
+	    }
+	
+	    send_headers();
+	    send_data(M);
+	    out(ch_out_N:M);
+	
+	    in(ch_in_N:M);
+	    
+	    subprocess Forward_Original_To_NewNode(*) {
+	      RESP = s_dec(M, DH_Neighbour_S)[AES-CTR,128];
+	      SessionKey_NN_N = gen_session_key(); 
+	      PK_NewNode = RESP[2];
+	      N_RESP = (RESP[0], id_n(), SessionKey_NN_N);
+	      ecies_kdf_mac()[160];
+	      M = ecies_enc(N_RESP, PK_NewNode)[AES,160];
+	
+	      ECIES_RESP = (M, ecies_temp_key()[160], ecies_mac());
+	      M = ECIES_RESP;
+	    }
+	    
+	    subprocess Forward_NK_EncDec_To_NewNode(*) {
+	      SINK_RAW_RESP = s_dec(M, NK)[AES-CTR,128];
+	      M2 = SINK_RAW_RESP[1];
+	      
+	      M2_RAW = s_dec(M2, DH_Neighbour_S)[AES-CTR,128];
+	      PK_NewNode = M2_RAW[0];
+	      
+	      SessionKey_NN_N = gen_session_key(); 
+	      
+	      N_RESP = (SessionKey_NN_N, M2_RAW[1]);
+	      ecies_kdf_mac()[160];
+	      M = ecies_enc(N_RESP, PK_NewNode)[AES,160];
+	
+	      ECIES_RESP = (M, ecies_temp_key()[160], ecies_mac());
+	      M = ECIES_RESP;
+	    }
+	    
+	    subprocess Forward_SessionKey_EncDec_To_NewNode(*) {
+	      SINK_RAW_RESP = s_dec(M, SessKey_N_J)[AES-CTR,128];
+	      M2 = SINK_RAW_RESP[1];
+	      
+	      M2_RAW = s_dec(M2, DH_Neighbour_S)[AES-CTR,128];
+	      PK_NewNode = M2_RAW[0];
+	      
+	      SessionKey_NN_N = gen_session_key();
+	      
+	      N_RESP = (SessionKey_NN_N, M2_RAW[1]);
+	      ecies_kdf_mac()[160];
+	      M = ecies_enc(N_RESP, PK_NewNode)[AES,160];
+	
+	      ECIES_RESP = (M, ecies_temp_key()[160], ecies_mac());
+	      M = ECIES_RESP;
+	    }
+	
+	    send_headers();
+	    send_data(M);
+	   	out(ch_in_NN:M);
+	}
+  }
 }
 
 
 host Sink(rr)(*) {
-#SK_S 		= sk(id_s());
-#PK_NewNode 	= pk(sk(id_nn()));
-#PK_Neighbour 	= pk(sk(id_n()));
-#DH_S_Neighbour = dh_key(PK_Neighbour, SK_S);
+  #SK_S 		= sk(id_s());
+  #PK_NewNode 		= pk(sk(id_nn()))[160];
+  #PK_Neighbour 	= pk(sk(id_n()))[160];
+  #DH_S_Neighbour 	= dh_key(PK_Neighbour, SK_S);
+  #DH_S_NewNode     = dh_key(PK_NewNode, SK_S);
+  #NK 			    = network_key();
+  #SessKey_J_S		= session_key(id_j(), id_s());
 
-process Main(*) {
+  process Main(*) {
 
-	subprocess InOnlyNewNode(*) {in(ch_out_NN:ER);}
-	subprocess InWithNeighbourOnly(*) {in(ch_out_N:ER);}
-	subprocess InHops_2(*) {in(ch_out_F1:ER);}
-	subprocess InHops_3(*) {in(ch_out_F2:ER);}
-	subprocess InHops_4(*) {in(ch_out_F3:ER);}
-	subprocess InHops_5(*) {in(ch_out_F4:ER);}
-	subprocess InHops_6(*) {in(ch_out_F5:ER);}
-	subprocess InHops_7(*) {in(ch_out_F6:ER);}
-	subprocess InHops_8(*) {in(ch_out_F7:ER);}
+	while (true) {
 
+	    subprocess InOnlyNewNode(*) {in(ch_out_NN:ER);}
+	    subprocess InFromIntermediateNode(*) {in(ch_out_F1:ER);}
+	    
+	    subprocess HandleRequest_Original(*) {
+	      REQ = s_dec(ER, DH_S_NewNode)[AES-CTR,128];
+	      
+	      newNodeId = REQ[1];
+	    }
+	    
+	    subprocess HandleRequest_NK_EncDec(*) {
+	      EREQ = s_dec(ER, NK)[AES-CTR,128];
 	
-	subprocess CheckNode(*) {
-		DH_S_NewNode = dh_key(PK_NewNode, SK_S); 
-		R = s_dec(ER, dh_key(PK_NewNode, SK_S))[16B]; 
-		check_node(R[0]);
-	}
-
-	subprocess MakeResponseToNeighbour(*) {
-		RESP = (req_response(), PK_NewNode);
-		E_RESP = s_enc(RESP, DH_S_Neighbour)[40B]; 
-		send()[40B];
-		
-		RESP_MSG = E_RESP;	
-	}
-
-	subprocess MakeResponseToNewNodeDirectly(*) {
-		
-		SymKey_N_NN = gen_sym_key();
-		NN_RESP = (req_response(), SymKey_N_NN);
-		E_NN_RESP = a_enc(NN_RESP, PK_NewNode)[join_response]; 
-		send()[80B];
-
-		RESP_MSG = E_NN_RESP;
-	}
-
-	subprocess OutOnlyNewNode(*) {out(ch_in_NN:RESP_MSG);}
-	subprocess OutWithNeighbourOnly(*) {out(ch_in_N:RESP_MSG);}
-	subprocess OutHops_2(*) { out(ch_in_F1:RESP_MSG);}
-	subprocess OutHops_3(*) { out(ch_in_F2:RESP_MSG);}
-	subprocess OutHops_4(*) { out(ch_in_F3:RESP_MSG);}
-	subprocess OutHops_5(*) { out(ch_in_F4:RESP_MSG);}
-	subprocess OutHops_6(*) { out(ch_in_F5:RESP_MSG);}
-	subprocess OutHops_7(*) { out(ch_in_F6:RESP_MSG);}
-	subprocess OutHops_8(*) { out(ch_in_F7:RESP_MSG);}
-
+	      REQ = s_dec(EREQ[2], DH_S_NewNode)[AES-CTR,128];
+	      
+	      Nj = EREQ[0];
+	      Nr = EREQ[1];
+	      newNodeId = REQ[1];
+	    }
+	    
+	    subprocess HandleRequest_SessKey_EncDec(*) {
+	      EREQ = s_dec(ER, SessKey_J_S)[AES-CTR,128];
 	
-}
+	      REQ = s_dec(EREQ[2], DH_S_NewNode)[AES-CTR,128];
+	      
+	      Nj = EREQ[0];
+	      Nr = EREQ[1];
+	      newNodeId = REQ[1];
+	    }
+	    
+	    subprocess HandleRequest_Onion(*) {
+	      EREQ1 = s_dec(ER, NK)[AES-CTR,128];
+	      Nj = EREQ1[0];
+	    
+	      EREQ = s_dec(EREQ1[1], NK)[AES-CTR,128];
+	      Nr = EREQ[0];
+	
+	      REQ = s_dec(EREQ[1], DH_S_NewNode)[AES-CTR,128];
+	      
+	      newNodeId = REQ[1];
+	    }
+	    
+	    subprocess CheckNode(*) {
+	      check_node(newNodeId);
+	    }
+	
+	    subprocess MakeResponseToNewNodeDirectly(*) {
+	      SessionKey_NN_S = gen_session_key();
+	      RESP = (REQ[0], id_s(), SessionKey_NN_S);
+	      ecies_kdf_mac()[160];
+	      E_RESP = ecies_enc(RESP, PK_NewNode)[AES,160];
+	
+	      ECIES_RESP = (E_RESP, ecies_temp_key()[160], ecies_mac());
+	      RESP_MSG = ECIES_RESP;
+	    }
+	
+	    subprocess MakeResponseToNeighbour_Original(*) {
+	      RESP = (REQ[0], id_s(), PK_NewNode);
+	      E_RESP = s_enc(RESP, DH_S_Neighbour)[AES-CTR,128];
+	      
+	      RESP_MSG = E_RESP;	
+	    }
+	
+	    subprocess MakeResponseToNeighbour_NK_EncDec(*) {
+	      IN_RESP = (REQ[0], REQ[1], REQ[2], id_s());
+	      E_IN_RESP = s_enc(IN_RESP, DH_S_NewNode)[AES-CTR,128];
+	      
+	      M2 = (PK_NewNode, E_IN_RESP);
+	      E_M2 = s_enc(M2, DH_S_Neighbour)[AES-CTR,128];
+	      
+	      RESP = (Nj, Nr, E_M2);
+	      E_RESP = s_enc(RESP, NK)[AES-CTR,128];
+	      
+	      RESP_MSG = E_RESP;	
+	    }
+	
+	    subprocess MakeResponseToNeighbour_SessionKey_EncDec(*) {
+	      IN_RESP = (REQ[0], REQ[1], REQ[2], REQ[3], id_s());
+	      E_IN_RESP = s_enc(IN_RESP, DH_S_NewNode)[AES-CTR,128];
+	      
+	      M2 = (PK_NewNode, E_IN_RESP);
+	      E_M2 = s_enc(M2, DH_S_Neighbour)[AES-CTR,128];
+	      
+	      RESP = (Nj, Nr, E_M2);
+	      E_RESP = s_enc(RESP, SessKey_J_S)[AES-CTR,128];
+	      
+	      RESP_MSG = E_RESP;	
+	    }
+	
+	    subprocess MakeResponseToNeighbour_Onion(*) {
+	      IN_RESP = (REQ[0], REQ[1], REQ[2], id_s());
+	      E_IN_RESP = s_enc(IN_RESP, DH_S_NewNode)[AES-CTR,128];
+	      
+	      M2 = (PK_NewNode, E_IN_RESP);
+	      E_M2 = s_enc(M2, DH_S_Neighbour)[AES-CTR,128];
+	      
+	      RESP1 = (Nr, E_M2);
+	      E_RESP1 = s_enc(RESP1, NK)[AES-CTR,128];
+	    
+	      RESP = (Nj, E_RESP1);
+	      E_RESP = s_enc(RESP, NK)[AES-CTR,128];
+	      
+	      RESP_MSG = E_RESP;	
+	    }
+	
+	    subprocess OutOnlyNewNode(*) {
+	        send_headers();
+	        send_data(RESP_MSG);
+	        out(ch_in_NN:RESP_MSG);
+	    }
+	    subprocess OutToIntermediateNode(*) {
+	        send_headers();
+	        send_data(RESP_MSG);
+	        out(ch_in_F1:RESP_MSG);
+	    }
+	}
+  }
 }
 
-host F1(rr)(*) {
-process Main(*) {
-	in(ch_out_N:M);
-	send()[16B];
-	out(ch_out_F1:M);
-	in(ch_in_F1:M);
-	send()[40B];
-	out(ch_in_N:M);
-}
-}
-
-host F2(rr)(*) {
-process Main(*) {
-	in(ch_out_F1:M);
-	send()[16B];
-	out(ch_out_F2:M);
-	in(ch_in_F2:M);
-	send()[40B];
-	out(ch_in_F1:M);
-}
+host J_OriginalForwarder(rr)(*) {
+  process Main(*) {
+  	while (true) {
+	    in(ch_out_N:M);
+	
+	    send_headers();
+	    send_data(M);
+	    out(ch_out_F1:M);
+	
+	    in(ch_in_F1:M);
+	
+	    send_headers();
+	    send_data(M);
+	    out(ch_in_N:M);
+	}
+  }
 }
 
-host F3(rr)(*) {
-process Main(*) {
-	in(ch_out_F2:M);
-	send()[16B];
-	out(ch_out_F3:M);
-	in(ch_in_F3:M);
-	send()[40B];
-	out(ch_in_F2:M);
-}
+host J_NK_EncDec(rr)(*) {
+  #NK = network_key();
+
+  process Main(*) {
+  	while (true) {
+	    in(ch_out_N:EM);
+	    TMP_M = s_dec(EM, NK)[AES-CTR,128];
+	    N = nonce();
+	    M = (N, TMP_M[0], TMP_M[1]);
+	    EM = s_enc(M, NK)[AES-CTR,128];
+	
+	    send_headers();
+	    send_data(EM);
+	    out(ch_out_F1:EM);
+	    
+	    
+	    in(ch_in_F1:EM);
+	    TMP_M = s_dec(EM, NK)[AES-CTR,128];
+	    M = (TMP_M[1], TMP_M[2]);
+	    EM = s_enc(M, NK)[AES-CTR,128];
+	
+	    send_headers();
+	    send_data(EM);
+	    out(ch_in_N:EM);
+	}
+  }
 }
 
-host F4(rr)(*) {
-process Main(*) {
-	in(ch_out_F3:M);
-	send()[16B];
-	out(ch_out_F4:M);
-	in(ch_in_F4:M);
-	send()[40B];
-	out(ch_in_F3:M);
-}
+host J_SessKey_EncDec(rr)(*) {
+  #SessKey_N_J = session_key(id_n(), id_j());
+  #SessKey_J_S = session_key(id_j(), id_s());
+
+  process Main(*) {
+  	while (true) {
+	    in(ch_out_N:EM);
+	    TMP_M = s_dec(EM, SessKey_N_J)[AES-CTR,128];
+	    N = nonce();
+	    M = (N, TMP_M[0], TMP_M[1]);
+	    EM = s_enc(M, SessKey_J_S)[AES-CTR,128];
+	
+	    send_headers();
+	    send_data(EM);
+	    out(ch_out_F1:EM);
+	    
+	    
+	    in(ch_in_F1:EM);
+	    TMP_M = s_dec(EM, SessKey_J_S)[AES-CTR,128];
+	    M = (TMP_M[1], TMP_M[2]);
+	    EM = s_enc(M, SessKey_N_J)[AES-CTR,128];
+	
+	    send_headers();
+	    send_data(EM);
+	    out(ch_in_N:EM);
+	}
+  }
 }
 
-host F5(rr)(*) {
-process Main(*) {
-	in(ch_out_F4:M);
-	send()[16B];
-	out(ch_out_F5:M);
-	in(ch_in_F5:M);
-	send()[40B];
-	out(ch_in_F4:M);
-}
-}
-
-host F6(rr)(*) {
-process Main(*) {
-	in(ch_out_F5:M);
-	send()[16B];
-	out(ch_out_F6:M);
-	in(ch_in_F6:M);
-	send()[40B];
-	out(ch_in_F5:M);
-}
-}
-
-host F7(rr)(*) {
-process Main(*) {
-	in(ch_out_F6:M);
-	send()[16B];
-	out(ch_out_F7:M);
-	in(ch_in_F7:M);
-	send()[40B];
-	out(ch_in_F6:M);
-}
+host J_Onion(rr)(*) {
+  #NK = network_key();
+  
+  process Main(*) {
+  	while (true) {
+	    in(ch_out_N:EM);
+	    N = nonce();
+	    M = (N, EM);
+	    EM = s_enc(M, NK)[AES-CTR,128];
+	
+	    send_headers();
+	    send_data(EM);
+	    out(ch_out_F1:EM);
+	    
+	    
+	    in(ch_in_F1:EM);
+	    TMP_M = s_dec(EM, NK)[AES-CTR,128];
+	    M = TMP_M[1];
+	
+	    send_headers();
+	    send_data(M);
+	    out(ch_in_N:M);
+	}
+  }
 }
 
 }

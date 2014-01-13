@@ -66,14 +66,19 @@ class Context():
             all += 1
         return float(ended)/float(all) if all > 0 else 0
     
-    def hosts_loop_ended(self):
+    def has_epoch_ended(self):
         """
-        Returns True when all hosts tried to go to next state in current loop.
+        Returns True when all hosts finished their epoch. Each host tried to execute an instruction
+        in all its instruction contexts.
         Going to the next state is done for one host in next state generation step, so to finish
-        the one loop for all (let N) host, simulater must call function N times.
+        the one loop for all hosts' instruction contexts (let N), simulator must call function N times.
         """
-        return self._previous_host_index < 0 or self._previous_host_index >= self._current_host_index
-    
+        for h in self.hosts:
+            if not h.finished():
+                if not h.has_epoch_ended():
+                    return False
+        return True
+
     def any_host_changed(self):
         """
         Return True in any host has changed in last next state generation loop performed 
@@ -86,7 +91,8 @@ class Context():
     
     def mark_all_hosts_unchanged(self):
         """
-        Sets the state of all hosts to unchanged. Used before each next state generation loop.
+        Sets the state of all hosts to unchanged.
+        Used before each next state generation loop.
         """
         for h in self.hosts:
             h.mark_unchanged()
@@ -97,11 +103,12 @@ class Context():
         """
         self._previous_host_index = self._current_host_index
         self._current_host_index = (self._current_host_index + 1) % len(self.hosts)
-        
+
         # Go to next host until current host is not finihed
         while self._current_host_index != self._previous_host_index and self.get_current_host().finished():
             self._current_host_index = (self._current_host_index + 1) % len(self.hosts)
-    
+
+
 # ----------- Hook
 
 HOOK_TYPE_PRE_HOST_LIST_EXECUTION       = 1
@@ -143,6 +150,9 @@ class Host():
         self._changed = False
         self._status = HOST_STATUS_RUNNING 
         self._finish_error = None
+
+        self._touches = 0 # How many times the host has been touched.
+        # When touches is greater than number of instruction contexts, the epoch end.
         
     def __unicode__(self):
         return u"host %s" % unicode(self.name)
@@ -171,11 +181,35 @@ class Host():
         if name not in self._variables:
             raise RuntimeException("Variable '%s' undefined in host '%s'." % (name, self.name))
         return self._variables[name]
-    
+
+    def has_variable(self, name):
+        """ Returns True if variable is defined """
+        return name in self._variables
+
     def get_variables(self):
         """ Get variables dict """
         return self._variables
-        
+
+    def touch(self):
+        """
+        Host is touched before the execution of its instruction.
+        It is used to check if all processes were tried to execute - hence whether the epoc has ended.
+        Each time is touching is started when the first instruction context is executed.
+        """
+        # Touches equal to zero means that new epoch has been started.
+        # The counter is started when the forst context is executed.
+        if self._touches == 0:
+            if self._scheduler.get_current_context_index() == 0:
+                self._touches += 1
+        else:
+            self._touches += 1
+
+    def has_epoch_ended(self):
+        """
+        Returns True when host tried to execute each instructions context in current epoch.
+        """
+        return self._touches > self._scheduler.get_contexts_number()
+
     def mark_changed(self):
         """ Marks host changed. Means that host have changes in last state. """
         self._changed = True
@@ -183,6 +217,7 @@ class Host():
     def mark_unchanged(self):
         """ Marks host unchanged. Clears changes from last state. """
         self._changed = False
+        self._touches = 0
         
     def has_changed(self):
         """ Returns True if host has changed """
@@ -235,7 +270,7 @@ class Host():
         Moves host to next instructions context.
         """
         self._scheduler.goto_next_instruction_context()
-        if self._scheduler.finished():
+        if self._scheduler.finished() and not self.finished():
             self.finish_successfuly()
         
     def get_current_instructions_context(self):
@@ -243,6 +278,13 @@ class Host():
         Returns the currnt instructions context retrived from scheduler.
         """
         return self._scheduler.get_current_context()
+
+    def get_instructions_context_of_instruction(self, instruction):
+        """
+        Returns instruction context with the instruction from parameter
+        as the current instruction
+        """
+        return self._scheduler.get_instructions_context_of_instruction(instruction)
     
     def get_current_process(self):
         """ """
@@ -711,11 +753,10 @@ class FinishInstructionExecutor(InstructionExecutor):
     
     def execute_instruction(self, context):
         """ Overriden """
-        command = context.get_current_instruction()
-        
-        if command == "end":
+        instruction = context.get_current_instruction()
+        if instruction.command == "end":
             context.get_current_host().finish_successfuly()
-        else: # command == "stop"
+        else:
             context.get_current_host().finish_failed('Executed stop instruction')
             
         context.get_current_host().mark_changed()
@@ -761,13 +802,13 @@ class IfInstructionExecutor(InstructionExecutor):
                                         context.functions,
                                         context.expression_populator, 
                                         context.expression_reducer)
-        
+
         instructions_list = []
         if contidion_result:
             instructions_list = instruction.true_instructions
         else:
             instructions_list = instruction.false_instructions
-            
+
         if len(instructions_list) > 0:
             context.get_current_host().get_current_instructions_context().add_instructions_list(
                                                                             instructions_list, 
@@ -893,7 +934,7 @@ class Executor():
                 break
            
         # Change the index of instructions in current host.
-        # It for example moves index to enxt instructions context.
+        # It for example moves index to next instructions context.
         # (Uses scheduler)     
         context.get_current_host().goto_next_instructions_context()
     

@@ -15,6 +15,8 @@ metrics {
     primhead[function][algorithm][key_bitlength][mode][input_size][simultaneous_operations][time:exact(ms)];
     primitive[s_dec][AES][128][CBC][300MB][100][12132.5026];
     primitive[s_dec][AES][256][CBC][300MB][100][12239.8706];
+    primitive[s_enc][AES][256][CBC][32B][1][8.5378];
+    primitive[s_dec][AES][256][CBC][32B][1][8.3022];
     #
     primhead[function][algorithm][input_size][simultaneous_operations][time:exact(ms)];
     primitive[hash][SHA1][1MB][100][0.1797];    
