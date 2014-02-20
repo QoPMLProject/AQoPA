@@ -58,7 +58,7 @@ class FifoScheduler(Scheduler):
     
     def _build_context(self):
         """ """
-        context = InstructionsContext()
+        context = InstructionsContext(self.host)
         context.add_instructions_list(self.host.instructions_list)
         return context
     
@@ -108,7 +108,7 @@ class RoundRobinScheduler(Scheduler):
     
     def _build_contexts(self):
         """ """
-        host_instructions_context = InstructionsContext()
+        host_instructions_context = InstructionsContext(self.host)
         host_instructions_list = []
         
         host_context_added = False
@@ -118,7 +118,7 @@ class RoundRobinScheduler(Scheduler):
                 process = i
                 
                 if len(process.instructions_list) > 0:
-                    process_context = InstructionsContext()
+                    process_context = InstructionsContext(self.host)
                     self.contexts.append(process_context)
                     
                     process_context.add_instructions_list(

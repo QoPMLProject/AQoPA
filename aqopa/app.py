@@ -874,6 +874,11 @@ class ConsoleInterpreter(Interpreter):
     def on_finished(self, simulator):
         pass
 
+    def is_finished(self):
+        for s in self.simulators:
+            if not s.is_simulation_finished():
+                return False
+        return True
 
 class GuiInterpreter(Interpreter):
     

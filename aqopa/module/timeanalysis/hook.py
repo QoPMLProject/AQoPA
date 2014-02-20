@@ -213,109 +213,139 @@ class PreInstructionHook(Hook):
         
         instruction = context.get_current_instruction()
         expressions_cnt = len(instruction.variables_names)
-        
-        # Check if other hosts should send their message 
-        # through this channel before
-        current_host_time = self.module.get_current_time(self.simulator, context.get_current_host())
-        min_hosts_time = (context.get_current_host(), current_host_time)
-        delay_communication_execution = False
-        for h in context.hosts:
-            # Omit finished hosts
-            if h.finished():
-                continue
-            # Omit current host
-            if h == context.get_current_host():
-                continue
-            # Omit hosts not using current channel 
-            if not channel.connected_with_host(h):
-                continue
-            
-            # Omit hosts that are waiting for the message on current channel
-            current_instruction = h.get_current_instructions_context()\
-                .get_current_instruction()
-            if isinstance(current_instruction, CommunicationInstruction):
 
-                ch = context.channels_manager.find_channel_for_host_instruction(
-                    context, h, current_instruction)
-                if ch == channel:
-                    if current_instruction.is_out():
-                        host_time = self.module.get_current_time(self.simulator, h)
-                        if host_time < min_hosts_time[1]:
-                            min_hosts_time = (h, host_time)
+        # If host does not want to receive or send message,
+        # let it go
+        if isinstance(instruction, CommunicationInstruction):
 
-                ch = None
-                if instruction.is_out(): # OUT instruction
-                    if not current_instruction.is_out(): # IN instruction
-                        ch = context.channels_manager.find_channel_for_host_instruction(
-                            context, h, current_instruction)
-                else: # IN instruction
-                    if current_instruction.is_out(): # OUT instruction
-                        ch = context.channels_manager.find_channel_for_host_instruction(
-                            context, h, current_instruction)
-                if ch == channel:
+            # Check if other hosts should send or receive their message through this channel before
+            current_host_time = self.module.get_current_time(self.simulator, context.get_current_host())
+            min_hosts_time = (context.get_current_host(), current_host_time)
+            delay_communication_execution = False
+
+            for h in context.hosts:
+                # Omit finished hosts
+                if h.finished():
+                    continue
+                # Omit current host
+                if h == context.get_current_host():
+                    continue
+                # Omit hosts not using current channel
+                if not channel.connected_with_host(h):
                     continue
 
-            if self.module.get_current_time(self.simulator, h) < current_host_time:
-                delay_communication_execution = True
+                # Check the time of other hosts
+                host_time = self.module.get_current_time(self.simulator, h)
+                # If checked (in loop) host is in the past relative to the time of actual host
+                if host_time < min_hosts_time[1]:
+                    current_instruction = h.get_current_instructions_context().get_current_instruction()
+                    if isinstance(current_instruction, CommunicationInstruction):
+                        # If the checked host (the one in the past) want to send message
+                        # it should be first
+                        if current_instruction.is_out():
+                            delay_communication_execution = True
+                        else:
+                            # The checked host (the one in the past) is waiting for the message
+                            # Lets check if the message fot the host is in the channel
+                            # If there is, it should be executed first so wait for it
+                            vars_cnt = len(current_instruction.variables_names)
+                            channel = context.channels_manager.find_channel_for_host_instruction(
+                                context, h, current_instruction)
+                            # If channel has enough vars
+                            if len(channel.get_queue_of_sending_hosts(vars_cnt)) >= vars_cnt:
+                                delay_communication_execution = True
+                    else:
+                        # If the checked host (the one in the past) executes some non-communication operation
+                        # it should be done first
+                        delay_communication_execution = True
 
-        # Delay execution of this instruction
-        # if needed according to previous check
-        if delay_communication_execution:
-            if context.get_current_host() != min_hosts_time[0]:
+
+                    #ch = context.channels_manager.find_channel_for_host_instruction(
+                    #    context, h, current_instruction)
+                    #if ch == channel:
+                    #    if current_instruction.is_out():
+                    #        host_time = self.module.get_current_time(self.simulator, h)
+                    #        if host_time < min_hosts_time[1]:
+                    #            min_hosts_time = (h, host_time)
+                    #
+                    #ch = None
+                    #if instruction.is_out(): # OUT instruction
+                    #    if not current_instruction.is_out(): # IN instruction
+                    #        ch = context.channels_manager.find_channel_for_host_instruction(
+                    #            context, h, current_instruction)
+                    #else: # IN instruction
+                    #    if current_instruction.is_out(): # OUT instruction
+                    #        ch = context.channels_manager.find_channel_for_host_instruction(
+                    #            context, h, current_instruction)
+                    #if ch == channel:
+                    #    continue
+                    #
+                    #if self.module.get_current_time(self.simulator, h) < current_host_time:
+                    #    delay_communication_execution = True
+
+            ## Delay execution of this instruction
+            ## if needed according to previous check
+            #if delay_communication_execution:
+            #    if context.get_current_host() != min_hosts_time[0]:
+            #        return ExecutionResult(custom_index_management=True,
+            #                               finish_instruction_execution=True)
+
+            if delay_communication_execution:
                 return ExecutionResult(custom_index_management=True,
                                        finish_instruction_execution=True)
-                
-                
-        if instruction.is_out():
-            sender = context.get_current_host()
-            receivers_list = channel.get_queue_of_receiving_hosts(expressions_cnt)
-            for i in range(0, len(receivers_list)):
+
+            if instruction.is_out():
+                sender = context.get_current_host()
+                receivers_list = channel.get_queue_of_receiving_hosts(expressions_cnt)
                 time_of_sending = self.module.get_current_time(self.simulator, sender)
+                for i in range(0, len(receivers_list)):
+                    if not receivers_list[i]:  # No receiver for message
+                        self.module.add_channel_message_trace(self.simulator, channel,
+                                                              self.module.get_channel_next_message_id(self.simulator,
+                                                                                                      channel),
+                                                              sender, time_of_sending)
+                    else:
+                        if self.module.get_current_time(self.simulator, sender) < self.module.get_current_time(self.simulator, receivers_list[i]):
 
-                if not receivers_list[i]: # No receiver for message
-                    self.module.add_channel_message_trace(self.simulator, channel, 
-                                                          self.module.get_channel_next_message_id(self.simulator, channel),
-                                                          sender, time_of_sending)
-                else:
-                    if self.module.get_current_time(self.simulator, sender) < self.module.get_current_time(self.simulator, receivers_list[i]):
-                        
-                        raise TimeSynchronizationException("Time synchronization error. Trying to send message from host '%s' at time %s ms while receiving host '%s' has time %s ms." % 
-                                                           (unicode(sender),
-                                                            self.module.get_current_time(self.simulator, sender),
-                                                            unicode(receivers_list[i]),
-                                                            self.module.get_current_time(self.simulator, receivers_list[i])))
+                            raise TimeSynchronizationException("Time synchronization error. Trying to send message from host '%s' at time %s ms while receiving host '%s' has time %s ms." %
+                                                               (unicode(sender),
+                                                                self.module.get_current_time(self.simulator, sender),
+                                                                unicode(receivers_list[i]),
+                                                                self.module.get_current_time(self.simulator, receivers_list[i])))
 
-                    # When someone is already waiting for the message
-                    # the sent at time and received at time are the same
-                    time_of_receiving = time_of_sending
-                    self.module.add_channel_message_trace(self.simulator, channel,
-                                                          self.module.get_channel_next_message_id(self.simulator, channel),
-                                                          sender, time_of_sending,
-                                                          receivers_list[i], time_of_receiving)
-                    self.module.set_current_time(self.simulator, receivers_list[i], self.module.get_current_time(self.simulator, sender))
-                
-         
-        else: # IN communication step
-            sender = None
-            receiver = context.get_current_host()
-            
-            sending_hosts = channel.get_queue_of_sending_hosts(expressions_cnt)
-            for i in range(0, len(sending_hosts)):
-                
-                traces = self.module.get_channel_message_traces(self.simulator, channel)
-                if len(traces):
-                    for j in range(0, len(traces)):
-                        if traces[j].sender == sending_hosts[i] and not traces[j].receiver:
-                            
-                            if self.module.get_current_time(self.simulator, sending_hosts[i]) < self.module.get_current_time(self.simulator, receiver):
-                                raise TimeSynchronizationException(("Time synchronization error. " +
-                                    "Trying to send message from host '%s' at time %s ms " +
-                                    "while receiving host '%s' has time %s ms.") %
+                        # When someone is already waiting for the message
+                        # the sent at time and received at time are the same
+                        time_of_receiving = time_of_sending
+                        self.module.add_channel_message_trace(self.simulator, channel,
+                                                              self.module.get_channel_next_message_id(self.simulator, channel),
+                                                              sender, time_of_sending,
+                                                              receivers_list[i], time_of_receiving)
+                        self.module.set_current_time(self.simulator, receivers_list[i], time_of_receiving)
+
+
+            else: # IN communication step
+                sender = None
+                receiver = context.get_current_host()
+                sending_hosts = channel.get_queue_of_sending_hosts(expressions_cnt)
+                for sending_host in sending_hosts:
+                    traces = self.module.get_channel_message_traces(self.simulator, channel)
+                    for trace in traces:
+                        if trace.sender == sending_host and not trace.receiver:
+                            time_of_sending = self.module.get_current_time(self.simulator, sending_host)
+                            time_of_receiving = self.module.get_current_time(self.simulator, receiver)
+                            if time_of_sending < time_of_receiving:
+                                raise TimeSynchronizationException(
+                                    ("Time synchronization error. " +
+                                     "Trying to send message from host '%s' at time %s ms " +
+                                     "while receiving host '%s' has time %s ms.") %
                                     (unicode(sender), self.module.get_current_time(self.simulator, sender),
-                                    unicode(traces[j].receiver),
-                                    self.module.get_current_time(self.simulator, traces[j].receiver)))
-                                
-                            traces[j].add_receiver(receiver, self.module.get_current_time(self.simulator, receiver))
+                                     unicode(trace.receiver),
+                                     self.module.get_current_time(self.simulator, trace.receiver)))
+                            # Calculate time of receiving as the maximum of sending and receiving
+                            time_of_receiving = max(time_of_sending, time_of_receiving)
+                            trace.add_receiver(receiver, time_of_receiving)
+                            self.module.set_current_time(self.simulator, receiver, time_of_receiving)
+
                             
             
         

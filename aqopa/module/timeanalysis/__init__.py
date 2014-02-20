@@ -65,8 +65,10 @@ class Module(module.Module):
     def add_channel_message_trace(self, simulator, channel, message_index, sender, sent_at, 
                                   receiver=None, received_at=None):
         if simulator not in self.channel_message_traces:
-            self.channel_message_traces[simulator] = []
-        cmt = self.channel_message_traces[simulator]
+            self.channel_message_traces[simulator] = {}
+        if channel not in self.channel_message_traces[simulator]:
+            self.channel_message_traces[simulator][channel] = []
+        cmt = self.channel_message_traces[simulator][channel]
         cmt.append(ChannelMessageTrace(channel, message_index, sender, sent_at, receiver, received_at))
         
     def set_current_time(self, simulator, host, time):
