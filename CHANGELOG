@@ -4,6 +4,9 @@
 
 Next release:
 
+v0.6.1 (2014-02-20)
+- Fixed the implementation of communication delay in TimeAnalysis hook.
+
 v0.6 (2014-01-13)
  - All modules are used for parsing.
  - Fixed finish instruction execution error.

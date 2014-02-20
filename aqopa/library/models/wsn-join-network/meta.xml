@@ -1,13 +1,12 @@
 <model>
-	<name>WSN Join Network</name>
+	<name>WSN Multihop Authentication</name>
 	<author>Damian Rusinek</author>
 	<author_email>Damian.Rusinek@gmail.com</author_email>
-	<description><![CDATA[The model several mechanisms that allow a node to join a multihop WSN in a secure way.
+	<description><![CDATA[The model presents different multihop node authentication protocols for wireless sensor networks.
 It distinguishes two class of protocols:
 1. Direct Join the Sink (DJS): a node joins directly through the sink.
-2. Indirect Join the Sink (IJS): a node joins the network through intermediate nodes in order to reach the sink.
-
-By default, ten new nodes try to join the network.]]></description>
+2. Indirect Join the Sink (IJS): a node joins the network through intermediate node in order to reach the sink.
+]]></description>
 	<files>
 		<model>model.qopml</model>
 		<metrics>metrics.qopml</metrics>

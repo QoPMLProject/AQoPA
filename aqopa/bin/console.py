@@ -28,9 +28,9 @@ class ProgressThread(threading.Thread):
     def get_progress(self):
         all_progress = 0.0
         sum_progress = 0.0
-        for thr in self.interpreter.threads:
+        for s in self.interpreter.simulators:
             all_progress += 1
-            sum_progress += thr.simulator.context.get_progress()
+            sum_progress += s.context.get_progress()
         progress = 0
         if all_progress > 0:
             progress = sum_progress / all_progress
@@ -39,12 +39,13 @@ class ProgressThread(threading.Thread):
     def run(self):
         
         progress = self.get_progress()
-        while progress < 1:
+        while progress < 1 and not self.interpreter.is_finished():
             self.print_progressbar(progress)
-            time.sleep(0.1)
+            time.sleep(0.2)
             progress = self.get_progress()
         self.print_progressbar(progress)
-        
+        self.file.write("\n")
+
         
     def print_progressbar(self, progress):
             """
@@ -101,7 +102,7 @@ def run(qopml_model, qopml_metrics, qopml_configuration,
         interpreter.set_qopml_config(qopml_configuration)
 
         interpreter.register_qopml_module(time_module)
-        interpreter.register_qopml_module(energy_module)
+#        interpreter.register_qopml_module(energy_module)
 #        interpreter.register_qopml_module(reputation_module)
         
         interpreter.parse(available_modules)

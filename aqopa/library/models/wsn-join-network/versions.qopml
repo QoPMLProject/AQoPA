@@ -1,83 +1,169 @@
+
 versions {
 
-version DirectJoinToSink {
+
+version DirectJoinToSink_128b {
 
 	set host Sink(TelosB);
 	set host NewNode(TelosB);
 
 	run host Sink(*) {
-	  run Main(InOnlyNewNode,HandleRequest_Original,CheckNode,MakeResponseToNewNodeDirectly,OutOnlyNewNode)
+	  run Main(Init128b,InOnlyNewNode,HandleRequest_Original,CheckNode,MakeResponseToNewNodeDirectly_128b,OutOnlyNewNode)
 	}
-	run host NewNode(*){10}[ch_out_NN,ch_in_NN] {
-	  run Main(MakeRequestWithNewNodeIdOnly,HandleResponse_Direct_Original)
+	run host NewNode(*) {
+	  run Main(Init128b,MakeRequestWithNewNodeIdOnly,DecryptResponse_128b,HandleResponse_Direct_Original)
+	}
+}
+version DirectJoinToSink_160b {
+
+	set host Sink(TelosB);
+	set host NewNode(TelosB);
+
+	run host Sink(*) {
+	  run Main(Init160b,InOnlyNewNode,HandleRequest_Original,CheckNode,MakeResponseToNewNodeDirectly_160b,OutOnlyNewNode)
+	}
+	run host NewNode(*) {
+	  run Main(Init160b,MakeRequestWithNewNodeIdOnly,DecryptResponse_160b,HandleResponse_Direct_Original)
 	}
 }
 
-version IndirectJoinToSink_Original {
+
+
+version IndirectJoinToSink_Original_128b {
 
 	set host Sink(TelosB);
 	set host Neighbour(TelosB);
 	set host NewNode(TelosB);
-	set host J_OriginalForwarder(TelosB);
+	set host J_OriginalForwarder_1(TelosB);
 
 	run host Sink(*) {
-		run Main(InFromIntermediateNode,HandleRequest_Original,CheckNode,MakeResponseToNeighbour_Original,OutToIntermediateNode)
+		run Main(Init128b,InFromIntermediateNode,HandleRequest_Original,CheckNode,MakeResponseToNeighbour_Original,OutToIntermediateNode)
 	}
-	run host Neighbour(*) {run Main(Forward_Original_To_NewNode)}
-	run host J_OriginalForwarder(*) {run Main(*)}
-	run host NewNode(*){10}[ch_out_NN,ch_in_NN] {
-		run Main(MakeRequestWithNewNodeIdOnly,HandleResponse_Indirect_Original)
+	run host Neighbour(*) {run Main(Init128b,Forward_Original_To_NewNode,ECIESEncryptNRESP_128b)}
+	run host J_OriginalForwarder_1(*) {run Main(*)}
+	run host NewNode(*) {
+		run Main(Init128b,MakeRequestWithNewNodeIdOnly,DecryptResponse_128b,HandleResponse_Indirect_Original)
 	}
 }
-
-version IndirectJoinToSink_NK_EncDec {
+version IndirectJoinToSink_Original_160b {
 
 	set host Sink(TelosB);
 	set host Neighbour(TelosB);
 	set host NewNode(TelosB);
-	set host J_NK_EncDec(TelosB);
+	set host J_OriginalForwarder_1(TelosB);
 
 	run host Sink(*) {
-		run Main(InFromIntermediateNode,HandleRequest_NK_EncDec,CheckNode,MakeResponseToNeighbour_NK_EncDec,OutToIntermediateNode)
+		run Main(Init160b,InFromIntermediateNode,HandleRequest_Original,CheckNode,MakeResponseToNeighbour_Original,OutToIntermediateNode)
 	}
-	run host Neighbour(*) {run Main(Forward_NK_EncDec_To_Sink,Forward_NK_EncDec_To_NewNode)}
-	run host J_NK_EncDec(*) {run Main(*)}
-	run host NewNode(*){10}[ch_out_NN,ch_in_NN] {
-		run Main(MakeRequestWithNewNodeAndNeighbourId,HandleResponse_Indirect_NK_EncDec)
+	run host Neighbour(*) {run Main(Init160b,Forward_Original_To_NewNode,ECIESEncryptNRESP_160b)}
+	run host J_OriginalForwarder_1(*) {run Main(*)}
+	run host NewNode(*) {
+		run Main(Init160b,MakeRequestWithNewNodeIdOnly,DecryptResponse_160b,HandleResponse_Indirect_Original)
 	}
 }
 
-version IndirectJoinToSink_SessKey_EncDec {
+
+
+version IndirectJoinToSink_NK_EncDec_128b {
 
 	set host Sink(TelosB);
 	set host Neighbour(TelosB);
 	set host NewNode(TelosB);
-	set host J_SessKey_EncDec(TelosB);
+	set host J_NK_EncDec_1(TelosB);
 
 	run host Sink(*) {
-		run Main(InFromIntermediateNode,HandleRequest_SessKey_EncDec,CheckNode,MakeResponseToNeighbour_SessionKey_EncDec,OutToIntermediateNode)
+		run Main(Init128b,InFromIntermediateNode,HandleRequest_NK_EncDec,CheckNode,MakeResponseToNeighbour_NK_EncDec,OutToIntermediateNode)
 	}
-	run host Neighbour(*) {run Main(Forward_SessionKey_EncDec_To_Sink,Forward_SessionKey_EncDec_To_NewNode)}
-	run host J_SessKey_EncDec(*) {run Main(*)}
-	run host NewNode(*){10}[ch_out_NN,ch_in_NN] {
-		run Main(MakeRequestWithNewNode_NeighbourAndIntermediateNodeId,HandleResponse_Indirect_SessKey_EncDec)
+	run host Neighbour(*) {run Main(Init128b,Forward_NK_EncDec_To_Sink,Forward_NK_EncDec_To_NewNode,ECIESEncryptNRESP_128b)}
+	run host J_NK_EncDec_1(*) {run Main(*)}
+	run host NewNode(*) {
+		run Main(Init128b,MakeRequestWithNewNodeAndNeighbourId,DecryptResponse_128b,HandleResponse_Indirect_NK_EncDec)
 	}
 }
-
-version IndirectJoinToSink_Onion {
+version IndirectJoinToSink_NK_EncDec_160b {
 
 	set host Sink(TelosB);
 	set host Neighbour(TelosB);
 	set host NewNode(TelosB);
-	set host J_Onion(TelosB);
+	set host J_NK_EncDec_1(TelosB);
 
 	run host Sink(*) {
-		run Main(InFromIntermediateNode,HandleRequest_Onion,CheckNode,MakeResponseToNeighbour_Onion,OutToIntermediateNode)
+		run Main(Init160b,InFromIntermediateNode,HandleRequest_NK_EncDec,CheckNode,MakeResponseToNeighbour_NK_EncDec,OutToIntermediateNode)
 	}
-	run host Neighbour(*) {run Main(Forward_NK_EncDec_To_Sink,Forward_NK_EncDec_To_NewNode)}
-	run host J_Onion(*) {run Main(*)}
-	run host NewNode(*){10}[ch_out_NN,ch_in_NN] {
-		run Main(MakeRequestWithNewNodeAndNeighbourId,HandleResponse_Indirect_Onion)
+	run host Neighbour(*) {run Main(Init160b,Forward_NK_EncDec_To_Sink,Forward_NK_EncDec_To_NewNode,ECIESEncryptNRESP_160b)}
+	run host J_NK_EncDec_1(*) {run Main(*)}
+	run host NewNode(*) {
+		run Main(Init160b,MakeRequestWithNewNodeAndNeighbourId,DecryptResponse_160b,HandleResponse_Indirect_NK_EncDec)
+	}
+}
+
+
+
+version IndirectJoinToSink_SessKey_EncDec_128b {
+
+	set host Sink(TelosB);
+	set host Neighbour(TelosB);
+	set host NewNode(TelosB);
+	set host J_SessKey_EncDec_1(TelosB);
+
+	run host Sink(*) {
+		run Main(Init128b,InFromIntermediateNode,HandleRequest_SessKey_EncDec,CheckNode,MakeResponseToNeighbour_SessionKey_EncDec,OutToIntermediateNode)
+	}
+	run host Neighbour(*) {run Main(Init128b,Forward_SessionKey_EncDec_To_Sink,Forward_SessionKey_EncDec_To_NewNode,ECIESEncryptNRESP_128b)}
+	run host J_SessKey_EncDec_1(*) {run Main(*)}
+	run host NewNode(*) {
+		run Main(Init128b,MakeRequestWithNewNode_NeighbourAndIntermediateNodeId,DecryptResponse_128b,HandleResponse_Indirect_SessKey_EncDec)
+	}
+}
+version IndirectJoinToSink_SessKey_EncDec_160b {
+
+	set host Sink(TelosB);
+	set host Neighbour(TelosB);
+	set host NewNode(TelosB);
+	set host J_SessKey_EncDec_1(TelosB);
+
+	run host Sink(*) {
+		run Main(Init160b,InFromIntermediateNode,HandleRequest_SessKey_EncDec,CheckNode,MakeResponseToNeighbour_SessionKey_EncDec,OutToIntermediateNode)
+	}
+	run host Neighbour(*) {run Main(Init160b,Forward_SessionKey_EncDec_To_Sink,Forward_SessionKey_EncDec_To_NewNode,ECIESEncryptNRESP_160b)}
+	run host J_SessKey_EncDec_1(*) {run Main(*)}
+	run host NewNode(*) {
+		run Main(Init160b,MakeRequestWithNewNode_NeighbourAndIntermediateNodeId,DecryptResponse_160b,HandleResponse_Indirect_SessKey_EncDec)
+	}
+}
+
+
+
+version IndirectJoinToSink_Onion_128b {
+
+	set host Sink(PC);
+	set host Neighbour(TelosB);
+	set host NewNode(TelosB);
+	set host J_Onion_1(TelosB);
+
+	run host Sink(*) {
+		run Main(Init128b,InFromIntermediateNode,HandleRequest_Onion,CheckNode,MakeResponseToNeighbour_Onion,OutToIntermediateNode)
+	}
+	run host Neighbour(*) {run Main(Init128b,Forward_NK_EncDec_To_Sink,Forward_NK_EncDec_To_NewNode,ECIESEncryptNRESP_128b)}
+	run host J_Onion_1(*) {run Main(*)}
+	run host NewNode(*) {
+		run Main(Init128b,MakeRequestWithNewNodeAndNeighbourId,DecryptResponse_128b,HandleResponse_Indirect_Onion)
+	}
+}
+version IndirectJoinToSink_Onion_160b {
+
+	set host Sink(PC);
+	set host Neighbour(TelosB);
+	set host NewNode(TelosB);
+	set host J_Onion_1(TelosB);
+
+	run host Sink(*) {
+		run Main(Init160b,InFromIntermediateNode,HandleRequest_Onion,CheckNode,MakeResponseToNeighbour_Onion,OutToIntermediateNode)
+	}
+	run host Neighbour(*) {run Main(Init160b,Forward_NK_EncDec_To_Sink,Forward_NK_EncDec_To_NewNode,ECIESEncryptNRESP_160b)}
+	run host J_Onion_1(*) {run Main(*)}
+	run host NewNode(*) {
+		run Main(Init160b,MakeRequestWithNewNodeAndNeighbourId,DecryptResponse_160b,HandleResponse_Indirect_Onion)
 	}
 }
 

@@ -145,9 +145,9 @@ class Simulator():
     def is_simulation_finished(self):
         """
         Returns True if simulation has ended.
-        Simulation can end with success or error.
+        Simulation can end with success or error (eg. infinite loop occured).
         """
-        return self.is_ready_to_run() and self.context.all_hosts_finished()
+        return self.is_ready_to_run() and (self.context.all_hosts_finished() or self.infinite_loop_occured())
     
     def run(self):
         """
@@ -164,7 +164,6 @@ class Simulator():
                 self._internal_goto_next_state()
             except InfiniteLoopException:
                 self._infinite_loop_error = True
-                break
-        
+
         self._execute_hook(HOOK_TYPE_SIMULATION_FINISHED)
         

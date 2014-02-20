@@ -289,7 +289,17 @@ class Host():
     def get_current_process(self):
         """ """
         return self.get_current_instructions_context().get_process_of_current_list()
-    
+
+    def check_if_finished(self):
+        """
+        Method checks if host has no more instructions to execute
+        and updates host's status.
+        """
+        if self._scheduler.finished():
+            if self._status == HOST_STATUS_RUNNING:
+                self._status = HOST_STATUS_FINISHED
+                self._finish_error = None
+
     def finished(self):
         """ 
         Returns True when host is finished
@@ -405,7 +415,8 @@ class InstructionsList:
 
 class InstructionsContext:
     
-    def __init__(self):
+    def __init__(self, host):
+        self.host = host
         self.stack = []        # Stack of instructions list
         
     def _get_current_list(self):
@@ -439,14 +450,23 @@ class InstructionsContext:
         """
         Moves context to the next instruction.
         """
+        # Go to next instruction in current list
         self._get_current_list().goto_next_instruction()
+
+        # While current list is finished but context is not finished
         while not self.finished() and self._get_current_list().finished():
+            # Remove current list
             self.stack.pop()
-            
+            # If context is still not finished and new current list is not LOOP
+            # Go to next instruction in new current list
             if not self.finished():
                 if not isinstance(self._get_current_list().get_current_instruction(), WhileInstruction):
                     self._get_current_list().goto_next_instruction()
-        
+            # And repeat this process
+        # When moving to the next instruction in instructions context is finished
+        # update host's status - it may be
+        self.host.check_if_finished()
+
     def finished(self):
         """
         Returns True if context is finished.
@@ -729,7 +749,6 @@ class CommunicationInstructionExecutor(InstructionExecutor):
             expressions = []
             for p in params:
                 expressions.append(context.get_current_host().get_variable(p).clone())
-                
             channel.send_message(context.get_current_host(), expressions)
             
             context.get_current_host().get_current_instructions_context().goto_next_instruction()
@@ -933,8 +952,8 @@ class Executor():
             if execution_result and execution_result.finish_instruction_execution:
                 break
            
-        # Change the index of instructions in current host.
-        # It for example moves index to next instructions context.
-        # (Uses scheduler)     
+        # Change the index of instructions in current host
+        # according to the scheduler algorithm.
+        # It moves index to next instructions context.
         context.get_current_host().goto_next_instructions_context()
     
