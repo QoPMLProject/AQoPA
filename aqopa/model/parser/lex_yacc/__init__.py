@@ -3,6 +3,7 @@ Created on 22-04-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
+from ply.lex import LexError
 from aqopa.model.parser import ParserException, QoPMLModelParser
 
     
@@ -81,7 +82,10 @@ class LexYaccParser(QoPMLModelParser):
         return self
     
     def parse(self, s):
-        self.yaccer.parse(input = s, lexer = self.lexer)
+        try:
+            self.yaccer.parse(input = s, lexer = self.lexer)
+        except LexError:
+            pass
         return self.store
         
     # LEX
@@ -167,11 +171,11 @@ class LexYaccParser(QoPMLModelParser):
     
     def p_error(self, t):
         if not t:
-            self.syntax_errors.append("Syntax error 'Unexpected end of file' \n")
+            self.syntax_errors.append("Syntax error 'Unexpected end of file'")
         else:
             last_cr = t.lexer.lexdata.rfind('\n',0,t.lexpos)
             if last_cr < 0:
                 last_cr = 0
             column = (t.lexpos - last_cr) + 1
-            self.syntax_errors.append(("Line [%s:%s, pos: %s]: Syntax error near '%s' \n" % (t.lexer.lineno, column, t.lexer.lexpos, t.value)))
+            self.syntax_errors.append(("Line [%s:%s, pos: %s]: Syntax error near '%s'" % (t.lexer.lineno, column, t.lexer.lexpos, t.value)))
     
