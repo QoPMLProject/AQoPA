@@ -4,6 +4,12 @@
 
 Next release:
 
+v0.6.2 (2014-02-28)
+- Turned off Reputation module in GUI.
+- Fixed the error with channel traces in Energy Analysis module.
+- Qualified identifiers are now cought by parser in metric sets.
+- Fixed lexer error. It is cought now and added to syntax errors in Parser.
+
 v0.6.1 (2014-02-20)
 - Fixed the implementation of communication delay in TimeAnalysis hook.
 
