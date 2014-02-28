@@ -124,7 +124,7 @@ class ModelParserExtension(LexYaccParserExtension):
         self.parser.add_token('INTEGER', func=self.token_integer)
         self.parser.add_token('QUALIFIED_IDENTIFIER', r'[_a-zA-Z][_a-zA-Z0-9]*(\.[1-9][0-9]*)+')
         self.parser.add_token('IDENTIFIER', func=self.token_identifier)
-        self.parser.add_token('TEXT', r'[-_A-Za-z0-9 ]+')  
+        self.parser.add_token('TEXT', r'[-_A-Za-z0-9 ]+')
         
         self.parser.add_token('SEMICOLON', r';')
         self.parser.add_token('COLON', r':',)
@@ -266,7 +266,7 @@ class MetricsParserExtension(LexYaccParserExtension):
         self.parser.add_token('INTEGER', func=self.token_integer)
         self.parser.add_token('QUALIFIED_IDENTIFIER', r'[_a-zA-Z][_a-zA-Z0-9]*(\.[1-9][0-9]*)+')
         self.parser.add_token('IDENTIFIER', func=self.token_identifier)
-        self.parser.add_token('TEXT', r'[-_A-Za-z0-9 ]+')  
+        self.parser.add_token('TEXT', r'[-_A-Za-z0-9 ]+')
         
         self.parser.add_token('SEMICOLON', r';')
         self.parser.add_token('COLON', r':',)
@@ -308,6 +308,10 @@ class ConfigParserExtension(LexYaccParserExtension):
     #                TOKENS
     ##########################################
     
+    def token_qualified_identifier(self, t):
+        r'[_a-zA-Z][_a-zA-Z0-9]*(\.[1-9][0-9]*)+'
+        return t
+
     def token_identifier(self, t):
         r'[_a-zA-Z][_a-zA-Z0-9]*'
         
@@ -410,9 +414,9 @@ class ConfigParserExtension(LexYaccParserExtension):
         self.parser.add_token('COMMA', r',')
         self.parser.add_token('FLOAT', func=self.token_float)
         self.parser.add_token('INTEGER', func=self.token_integer)
-        self.parser.add_token('QUALIFIED_IDENTIFIER', r'[_a-zA-Z][_a-zA-Z0-9]*(\.[1-9][0-9]*)+')
+        self.parser.add_token('QUALIFIED_IDENTIFIER', func=self.token_qualified_identifier)
         self.parser.add_token('IDENTIFIER', func=self.token_identifier)
-        self.parser.add_token('TEXT', r'[-_A-Za-z0-9 ]+')  
+        self.parser.add_token('TEXT', r'[-_A-Za-z0-9 ]+')
         
         self.parser.add_token('SEMICOLON', r';')
         self.parser.add_token('COLON', r':',)

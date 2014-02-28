@@ -167,37 +167,40 @@ class Module(module.Module):
             
         # Traverse channel traces
         # Look for times when host was waiting for message
-        channel_traces = self.timeanalysis_module.channel_message_traces[simulator]
-        
-        hosts_listen_metric = {}
-        
-        # Firstly add the times of retrieving messages 
-        for trace in channel_traces:
-            if trace.receiver and trace.receiver in hosts:
-                host_finish_times[trace.receiver].append((trace.received_at, trace))
-                
-        # Traverse each trace and get the time of waiting
-        for trace in channel_traces:
-            
-            # Omit traces of not received messages
-            host = trace.receiver
-            if not host or host not in hosts:
-                continue
+        channels_traces = self.timeanalysis_module.channel_message_traces[simulator]
 
-            # Find or get metric
-            if host not in hosts_listen_metric:
-                hosts_listen_metric[host] = self._get_current_radio_listen_for_host(metrics_manager, host)
-                
-            current = hosts_listen_metric[host]
-            
-            # Find the time when host started to wait for this message
-            started_at = 0.0
-            for time, current_trace in host_finish_times[host]:
-                if started_at < time < trace.received_at:
-                    started_at = time
-                     
-            waiting_time = (trace.received_at - started_at) / 1000.0
-            hosts_consumption[host] += voltage * current * waiting_time
+        hosts_listen_metric = {}
+
+        for channel in channels_traces:
+            channel_traces = channels_traces[channel]
+
+            # Firstly add the times of retrieving messages
+            for trace in channel_traces:
+                if trace.receiver and trace.receiver in hosts:
+                    host_finish_times[trace.receiver].append((trace.received_at, trace))
+
+            # Traverse each trace and get the time of waiting
+            for trace in channel_traces:
+
+                # Omit traces of not received messages
+                host = trace.receiver
+                if not host or host not in hosts:
+                    continue
+
+                # Find or get metric
+                if host not in hosts_listen_metric:
+                    hosts_listen_metric[host] = self._get_current_radio_listen_for_host(metrics_manager, host)
+
+                current = hosts_listen_metric[host]
+
+                # Find the time when host started to wait for this message
+                started_at = 0.0
+                for time, current_trace in host_finish_times[host]:
+                    if started_at < time < trace.received_at:
+                        started_at = time
+
+                waiting_time = (trace.received_at - started_at) / 1000.0
+                hosts_consumption[host] += voltage * current * waiting_time
             
         return hosts_consumption
             
