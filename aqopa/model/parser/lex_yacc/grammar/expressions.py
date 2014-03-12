@@ -109,10 +109,10 @@ class ModelParserExtension(LexYaccParserExtension):
         """
         if len(t) == 2:
             t[0] = []
-            t[0].append(t[1])
+            t[0].append(t[1].strip())
         else:
             t[0] = t[1]
-            t[0].append(t[3])
+            t[0].append(t[3].strip())
     
     def expression_simple(self, t):
         """
