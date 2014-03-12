@@ -307,7 +307,7 @@ class MetricsParserExtension(LexYaccParserExtension):
         """
         metrics_primitive_argument : SQLPARAN ARGUMENTVALUE SQRPARAN
         """
-        t[0] = t[2]
+        t[0] = t[2].strip()
 
     #######################
     #    Metrics Size
