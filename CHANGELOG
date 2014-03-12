@@ -4,6 +4,9 @@
 
 Next release:
 
+v0.6.3 (2014-03-11)
+- Stripped function QoP arguments in metrics and in call function expression.
+
 v0.6.2 (2014-02-28)
 - Turned off Reputation module in GUI.
 - Fixed the error with channel traces in Energy Analysis module.
