@@ -249,10 +249,10 @@ class PreInstructionHook(Hook):
                             # Lets check if the message fot the host is in the channel
                             # If there is, it should be executed first so wait for it
                             vars_cnt = len(current_instruction.variables_names)
-                            channel = context.channels_manager.find_channel_for_host_instruction(
+                            host_channel = context.channels_manager.find_channel_for_host_instruction(
                                 context, h, current_instruction)
                             # If channel has enough vars
-                            if len(channel.get_queue_of_sending_hosts(vars_cnt)) >= vars_cnt:
+                            if len(host_channel.get_queue_of_sending_hosts(vars_cnt)) >= vars_cnt:
                                 delay_communication_execution = True
                     else:
                         # If the checked host (the one in the past) executes some non-communication operation
