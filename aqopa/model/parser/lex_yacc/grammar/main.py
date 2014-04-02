@@ -130,6 +130,8 @@ class ModelParserExtension(LexYaccParserExtension):
         self.parser.add_token('COLON', r':',)
         self.parser.add_token('STAR', r'\*')
         self.parser.add_token('EQUAL', r'\=')
+        self.parser.add_token('EXCLAMATION', r'\!')
+        self.parser.add_token('PIPE', r'\|')
         
         self.parser.add_token('LPARAN', r'\(')
         self.parser.add_token('RPARAN', r'\)')
@@ -417,7 +419,7 @@ class ConfigParserExtension(LexYaccParserExtension):
         self.parser.add_token('QUALIFIED_IDENTIFIER', func=self.token_qualified_identifier)
         self.parser.add_token('IDENTIFIER', func=self.token_identifier)
         self.parser.add_token('TEXT', r'[-_A-Za-z0-9 ]+')
-        
+
         self.parser.add_token('SEMICOLON', r';')
         self.parser.add_token('COLON', r':',)
         self.parser.add_token('STAR', r'\*')

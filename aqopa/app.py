@@ -701,7 +701,7 @@ class Builder():
         from aqopa.model.parser.lex_yacc import LexYaccParser
         from aqopa.model.parser.lex_yacc.grammar import main,\
                 functions, channels, equations, expressions, instructions,\
-                hosts, modules as modules_module
+                hosts, modules as modules_module, communication
         
         parser = LexYaccParser()
         parser.set_store(store) \
@@ -711,6 +711,7 @@ class Builder():
                 .add_extension(channels.ModelParserExtension()) \
                 .add_extension(equations.ModelParserExtension()) \
                 .add_extension(expressions.ModelParserExtension()) \
+                .add_extension(communication.ModelParserExtension()) \
                 .add_extension(instructions.ModelParserExtension()) \
                 .add_extension(hosts.ModelParserExtension())
                 
@@ -743,11 +744,12 @@ class Builder():
         and populates the store.
         """
         from aqopa.model.parser.lex_yacc import LexYaccParser
-        from aqopa.model.parser.lex_yacc.grammar import versions, main
+        from aqopa.model.parser.lex_yacc.grammar import versions, main, communication
         
         parser = LexYaccParser()
         parser.set_store(store)\
                 .add_extension(main.ConfigParserExtension())\
+                .add_extension(communication.ModelParserExtension()) \
                 .add_extension(versions.ConfigParserExtension())
                 
         for m in modules:

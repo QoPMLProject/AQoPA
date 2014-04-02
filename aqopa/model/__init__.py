@@ -64,9 +64,10 @@ COMMUNICATION_TYPE_OUT = 2
     
 class Channel():
     
-    def __init__(self, name, buffor_size):
+    def __init__(self, name, buffor_size, tag_name=None):
         self.name = name
         self.buffor_size = buffor_size # Buffor size < 0 is unlimited
+        self.tag_name = tag_name
 
     def __unicode__(self):
         buffor_size = str(self.buffor_size) if self.buffor_size >= 0 else "*"
@@ -133,18 +134,25 @@ class CallFunctionExpression():
         return CallFunctionExpression(copy.copy(self.function_name), 
                                       [ a.clone() for a in self.arguments ],
                                       [ copy.copy(a) for a in self.qop_arguments ])
-        
+
+COMPARISON_TYPE_EQUAL = 1
+COMPARISON_TYPE_NOT_EQUAL = 2
+
 class ComparisonExpression():
     
-    def __init__(self, left, right):
+    def __init__(self, left, right, comparison_type):
         self.left = left
         self.right = right
+        self.comparison_type = comparison_type
         
     def __unicode__(self):
         return "%s == %s" % (unicode(self.left), unicode(self.right))
+
+    def is_equal_type(self):
+        return self.comparison_type == COMPARISON_TYPE_EQUAL
     
     def clone(self):
-        return ComparisonExpression(self.left.clone(), self.right.clone())
+        return ComparisonExpression(self.left.clone(), self.right.clone(), self.comparison_type)
     
 class TupleExpression():
     
@@ -224,10 +232,11 @@ class AssignmentInstruction():
     
 class CommunicationInstruction():
     
-    def __init__(self, communication_type, channel_name, variables_names):
+    def __init__(self, communication_type, channel_name, variables_names, filters=[]):
         self.communication_type = communication_type
         self.channel_name = channel_name
         self.variables_names = variables_names
+        self.filters = filters
         
     def clone(self):
         return CommunicationInstruction(copy.copy(self.communication_type),

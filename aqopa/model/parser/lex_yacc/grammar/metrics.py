@@ -330,6 +330,7 @@ class MetricsParserExtension(LexYaccParserExtension):
     def metrics_services_size_type_non_unit(self, t):
         """
         metrics_services_size_type_non_unit : RATIO
+                                            | SUM_RATIO
                                             | NESTED
         """
         t[0] = t[1].lower()
@@ -392,6 +393,7 @@ class MetricsParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('size', 'SIZE', state='metricsprimhead', case_sensitive=False)
         self.parser.add_reserved_word('exact', 'EXACT', state='metricsprimhead', case_sensitive=False)
         self.parser.add_reserved_word('ratio', 'RATIO', state='metricsprimhead', case_sensitive=False)
+        self.parser.add_reserved_word('sum_ratio', 'SUM_RATIO', state='metricsprimhead', case_sensitive=False)
         self.parser.add_reserved_word('block', 'BLOCK', state='metricsprimhead', case_sensitive=False)
         self.parser.add_reserved_word('nested', 'NESTED', state='metricsprimhead', case_sensitive=False)
         self.parser.add_reserved_word('B', 'B', state='metricsprimhead')

@@ -29,6 +29,21 @@ class Builder():
         
         return s
 
+    def build_communication_instruction(self, token):
+        """
+        instruction_communication : IN LPARAN IDENTIFIER COLON identifiers_list RPARAN SEMICOLON
+            | IN LPARAN IDENTIFIER COLON identifiers_list RPARAN COLON PIPE instruction_in_filters_list PIPE SEMICOLON
+            | OUT LPARAN IDENTIFIER COLON identifiers_list RPARAN SEMICOLON
+        """
+        communication_type = COMMUNICATION_TYPE_OUT
+        if token[1].lower() == 'in':
+            communication_type = COMMUNICATION_TYPE_IN
+
+        filters = []
+        if len(token) == 12:
+            filters = token[9]
+        return CommunicationInstruction(communication_type, token[3], token[5], filters)
+
 class ModelParserExtension(LexYaccParserExtension):
     """
     Extension for parsing functions
@@ -122,14 +137,30 @@ class ModelParserExtension(LexYaccParserExtension):
     def instruction_communication(self, t):
         """
         instruction_communication : IN LPARAN IDENTIFIER COLON identifiers_list RPARAN SEMICOLON
-                                | OUT LPARAN IDENTIFIER COLON identifiers_list RPARAN SEMICOLON
+            | IN LPARAN IDENTIFIER COLON identifiers_list COLON PIPE instruction_in_filters_list PIPE RPARAN SEMICOLON
+            | OUT LPARAN IDENTIFIER COLON identifiers_list RPARAN SEMICOLON
         """
-        communication_type = COMMUNICATION_TYPE_OUT
-        if t[1].lower() == 'in':
-            communication_type = COMMUNICATION_TYPE_IN
-            
-        t[0] = CommunicationInstruction(communication_type, t[3], t[5])
-    
+        t[0] = self.builder.build_communication_instruction(t)
+
+    def instruction_in_filters_list(self, t):
+        """
+        instruction_in_filters_list : instruction_in_filter
+                                | instruction_in_filters_list COMMA instruction_in_filter
+        """
+        if len(t) == 2:
+            t[0] = []
+            t[0].append(t[1])
+        else:
+            t[0] = t[1]
+            t[0].append(t[2])
+
+    def instruction_in_filter(self, t):
+        """
+        instruction_in_filter : STAR
+                        | expression_call_function
+        """
+        t[0] = t[1]
+
     def instruction_while(self, t):
         """
         instruction_while : WHILE LPARAN expression_conditional RPARAN BLOCKOPEN instructions_list BLOCKCLOSE
@@ -187,6 +218,8 @@ class ModelParserExtension(LexYaccParserExtension):
         self.parser.add_rule(self.instruction_subprocess)
         self.parser.add_rule(self.instruction_assignment)
         self.parser.add_rule(self.instruction_communication)
+        self.parser.add_rule(self.instruction_in_filters_list)
+        self.parser.add_rule(self.instruction_in_filter)
         self.parser.add_rule(self.instruction_while)
         self.parser.add_rule(self.instruction_if)
         self.parser.add_rule(self.instruction_special_command)

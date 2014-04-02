@@ -107,7 +107,10 @@ class Checker():
             left = reducer.reduce(left)
             right = reducer.reduce(right)
 
-            result = self._are_equal(left, right)
+            if condition.is_equal_type():
+                result = self._are_equal(left, right)
+            else:
+                result = not self._are_equal(left, right)
             del left
             del right
             return result

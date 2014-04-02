@@ -7,7 +7,7 @@ Created on 22-04-2013
 from aqopa.model.parser.lex_yacc import LexYaccParserExtension
 from aqopa.model import BooleanExpression, TupleExpression,\
     TupleElementExpression, IdentifierExpression, ComparisonExpression,\
-    CallFunctionExpression
+    CallFunctionExpression, COMPARISON_TYPE_EQUAL, COMPARISON_TYPE_NOT_EQUAL
 
 
 class Builder():
@@ -31,7 +31,14 @@ class Builder():
             qop_arguments = token[6]
             
         return CallFunctionExpression(token[1], arguments, qop_arguments)
-        
+
+    def build_comparison_expression(self, token):
+        """
+        expression_comaprison : expression_simple EQUAL EQUAL expression_simple
+                            | expression_simple EXCLAMATION EQUAL expression_simple
+        """
+        comparison_type = COMPARISON_TYPE_EQUAL if token[2] == '=' else COMPARISON_TYPE_NOT_EQUAL
+        return ComparisonExpression(token[1], token[4], comparison_type)
 
 class ModelParserExtension(LexYaccParserExtension):
     """
@@ -132,8 +139,9 @@ class ModelParserExtension(LexYaccParserExtension):
     def expression_comaprison(self, t):
         """
         expression_comaprison : expression_simple EQUAL EQUAL expression_simple
+                            | expression_simple EXCLAMATION EQUAL expression_simple
         """
-        t[0] = ComparisonExpression(t[1], t[4])
+        t[0] = self.builder.build_comparison_expression(t)
     
     def _extend(self):
         
