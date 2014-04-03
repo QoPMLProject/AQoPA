@@ -11,22 +11,25 @@ from aqopa.simulator.error import RuntimeException
 
 class Populator():
     
-    def populate(self, expression, variables, reducer):
+    def populate(self, expression, variables, reducer, main_expression=None):
         """
         Returns new expression with replaced variables names 
         with copies of values of variables from variables list.
         Reducer is used for special types of variables, 
         eg. tuple element expressions.
         """
+        if main_expression is None:
+            main_expression = expression
+        
         if isinstance(expression, IdentifierExpression):
             if expression.identifier not in variables:
-                raise RuntimeException("Variable '%s' does not exist." % expression.identifier)
+                raise RuntimeException("Variable {0} does not exist in expression '{1}'.".format(expression.identifier, unicode(main_expression)))
             return variables[expression.identifier].clone()
             
         if isinstance(expression, CallFunctionExpression):
             arguments = []
             for arg in expression.arguments:
-                arguments.append(self.populate(arg, variables, reducer))
+                arguments.append(self.populate(arg, variables, reducer, main_expression=main_expression))
             qop_arguments = []
             for qop_arg in expression.qop_arguments:
                 qop_arguments.append(qop_arg)
@@ -35,23 +38,24 @@ class Populator():
         if isinstance(expression, TupleExpression):
             elements = []
             for e in expression.elements:
-                elements.append(self.populate(e, variables, reducer))
+                elements.append(self.populate(e, variables, reducer, main_expression=main_expression))
             return TupleExpression(elements)
         
         if isinstance(expression, TupleElementExpression):
             if expression.variable_name not in variables:
-                raise RuntimeException("Variable '%s' does not exist." % expression.variable_name)
+                raise RuntimeException("Variable {0} does not exist in expression '{1}'.".format(
+                                            expression.variable_name, unicode(main_expression)))
             expr = variables[expression.variable_name]
             if not isinstance(expr, TupleExpression):
                 expr = reducer.reduce(expr)
             if not isinstance(expr, TupleExpression):
-                raise RuntimeException("Cannot compute expression %s. Variable '%s' is not a tuple. It is: %s."
-                                       % (unicode(expression), expression.variable_name, unicode(expr)))
+                raise RuntimeException("Cannot compute expression '{0}'. Variable {1} is not a tuple. It is: {2}.".format(
+                                            unicode(main_expression), expression.variable_name, unicode(expr)))
             if len(expr.elements) <= expression.index:
-                raise RuntimeException(
-                    "Cannot compute expression %s. Variable '%s' does not have index %s. It has %d elements."
-                    % (unicode(expression), expression.variable_name, expression.index, len(expr.elements)))
-            return self.populate(expr.elements[expression.index], variables, reducer)
+                raise RuntimeException( 
+                        "Cannot compute expression '{0}'. Variable {1} does not have index {2}. It has {3} elements.".format(
+                            unicode(main_expression), expression.variable_name, expression.index, len(expr.elements)))
+            return self.populate(expr.elements[expression.index], variables, reducer, main_expression=main_expression)
         
         return expression.clone()
 
