@@ -66,6 +66,10 @@ class ModelParserExtension(LexYaccParserExtension):
         r'0|[1-9][0-9]*'
         t.value = int(t.value)
         return t
+    
+    def token_comment(self, t):
+        r'\%[^\n]*'
+        pass
         
     
     ##########################################
@@ -139,6 +143,8 @@ class ModelParserExtension(LexYaccParserExtension):
         self.parser.add_token('SQRPARAN', r'\]')
         self.parser.add_token('BLOCKOPEN', r'{')
         self.parser.add_token('BLOCKCLOSE', r'}')
+        
+        self.parser.add_token('COMMENT', self.token_comment, include_in_tokens=False)
         
         self.parser.add_rule(self.rule_model)
         self.parser.add_rule(self.rule_empty)
