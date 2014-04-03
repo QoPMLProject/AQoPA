@@ -5,7 +5,8 @@ Created on 22-04-2013
 '''
 
 from aqopa.model.parser.lex_yacc import LexYaccParserExtension
-from aqopa.model import Channel
+from aqopa.model import Channel, TopologyRuleHost, TopologyRule,\
+    AlgWhile, AlgCallFunction, AlgIf, AlgReturn, AlgAssignment
 
 
 class Builder():
@@ -72,21 +73,29 @@ class ModelParserExtension(LexYaccParserExtension):
         """
         comm_specification : TOPOLOGY_SPECIFICATION SQLPARAN IDENTIFIER SQRPARAN BLOCKOPEN topology_rules_list BLOCKCLOSE
         """
-        pass
-
+        self.parser.store.topologies[t[3]] = {'rules': t[6]}
+    
     def topology_rules_list(self, t):
         """
         topology_rules_list : topology_rule
                         | topology_rules_list topology_rule
         """
-        pass
+        if len(t) == 3:
+            t[0] = t[1]
+            t[0].append(t[2])
+        else:
+            t[0] = []
+            t[0].append(t[1])
 
     def topology_rule(self, t):
         """
         topology_rule : IDENTIFIER topology_arrow IDENTIFIER SEMICOLON
                     | IDENTIFIER topology_arrow IDENTIFIER COLON FLOAT SEMICOLON
         """
-        pass
+        quality = 1
+        if len(t) == 7:
+            quality = t[5]
+        t[0] = TopologyRule(TopologyRuleHost(t[1]), t[2], TopologyRuleHost(t[3]), quality=quality)
 
     def topology_arrow(self, t):
         """
@@ -94,7 +103,7 @@ class ModelParserExtension(LexYaccParserExtension):
             | ARROWLEFT
             | ARROWBOTH
         """
-        pass
+        t[0] = t[1]
 
     def algoriths_specification(self, t):
         """
@@ -113,14 +122,19 @@ class ModelParserExtension(LexYaccParserExtension):
         """
         comm_algorithm : ALGORITHM IDENTIFIER LPARAN IDENTIFIER RPARAN BLOCKOPEN comm_algorithm_instructions BLOCKCLOSE
         """
-        pass
+        self.parser.store.communication_algorithms[t[2]] = {'parameter': t[4], 'instructions': t[7]}
 
     def comm_algorithm_instructions(self, t):
         """
         comm_algorithm_instructions : comm_algorithm_instruction
                                 | comm_algorithm_instructions comm_algorithm_instruction
         """
-        pass
+        if len(t) == 3:
+            t[0] = t[1]
+            t[0].append(t[2])
+        else:
+            t[0] = []
+            t[0].append(t[1])
 
     def comm_algorithm_instruction(self, t):
         """
@@ -129,32 +143,35 @@ class ModelParserExtension(LexYaccParserExtension):
                             | comm_algorithm_instruction_if
                             | comm_algorithm_instruction_while
         """
-        pass
+        t[0] = t[1]
 
     def comm_algorithm_instruction_assignment(self, t):
         """
         comm_algorithm_instruction_assignment : IDENTIFIER EQUAL comm_algorithm_expression
         """
-        pass
+        t[0] = AlgAssignment(identifier=t[1], expression=t[3])
 
     def comm_algorithm_instruction_return(self, t):
         """
         comm_algorithm_instruction_return : RETURN comm_algorithm_expression
         """
-        pass
+        t[0] = AlgReturn(expression=t[2])
 
     def comm_algorithm_instruction_if(self, t):
         """
         comm_algorithm_instruction_if : IF LPARAN comm_algorithm_expression_conditional RPARAN BLOCKOPEN comm_algorithm_instructions BLOCKCLOSE
             | IF LPARAN comm_algorithm_expression_conditional RPARAN BLOCKOPEN comm_algorithm_instructions BLOCKCLOSE ELSE BLOCKOPEN comm_algorithm_instructions BLOCKCLOSE
         """
-        pass
+        if len(t) == 8:
+            t[0] = AlgIf(condition=t[3], true_instructions=t[6], false_instructions=[])
+        else:
+            t[0] = AlgIf(condition=t[3], true_instructions=t[6], false_instructions=t[10])
 
     def comm_algorithm_instruction_while(self, t):
         """
         comm_algorithm_instruction_while : WHILE LPARAN comm_algorithm_expression_conditional RPARAN BLOCKOPEN comm_algorithm_instructions BLOCKCLOSE
         """
-        pass
+        t[0] = AlgWhile(condition=t[3], instructions=t[6])
 
     def comm_algorithm_expression_conditional_comparison(self, t):
         """
@@ -167,32 +184,45 @@ class ModelParserExtension(LexYaccParserExtension):
                                         | comm_algorithm_expression_conditional AND AND comm_algorithm_expression_conditional
                                         | comm_algorithm_expression_conditional OR OR comm_algorithm_expression_conditional
         """
-        pass
+        t[0] = t[1]
+        sign = t[2]
+        if len(t) == 5:
+            sign += t[3]
+            t[0].append(sign)
+            t[0].extend(t[4])
+        else:
+            t[0].append(sign)
+            t[0].extend(t[4])
 
     def comm_algorithm_expression_conditional_paran(self, t):
         """
         comm_algorithm_expression_conditional : LPARAN comm_algorithm_expression_conditional RPARAN
         """
-        pass
+        t[0] = t[2]
+        t[0].prepend('(')
+        t[0].append(')')
 
     def comm_algorithm_expression_simple(self, t):
         """
         comm_algorithm_expression : number
                             | IDENTIFIER
         """
-        pass
+        t[0] = [t[1]]
 
     def comm_algorithm_expression_uminus(self, t):
         """
         comm_algorithm_expression : COMM_MINUS comm_algorithm_expression %prec COMM_UMINUS
         """
-        pass
+        t[0] = t[2]
+        t[0].prepend('-')
 
     def comm_algorithm_expression_paran(self, t):
         """
         comm_algorithm_expression : LPARAN comm_algorithm_expression RPARAN
         """
-        pass
+        t[0] = t[2]
+        t[0].prepend('(')
+        t[0].append(')')
 
     def comm_algorithm_expression_operations(self, t):
         """
@@ -201,7 +231,9 @@ class ModelParserExtension(LexYaccParserExtension):
                             | comm_algorithm_expression COMM_TIMES comm_algorithm_expression
                             | comm_algorithm_expression COMM_DIVIDE comm_algorithm_expression
         """
-        pass
+        t[0] = t[1]
+        t[0].append(t[2])
+        t[0].extend(t[3])
 
     def comm_algorithm_expression_function(self, t):
         """
@@ -209,7 +241,12 @@ class ModelParserExtension(LexYaccParserExtension):
                                 | SIZE LPARAN IDENTIFIER RPARAN
                                 | SIZE LPARAN IDENTIFIER SQLPARAN INTEGER SQRPARAN RPARAN
         """
-        pass
+        args = []
+        if len(t) == 5:
+            args = [t[3]]
+        elif len(t) == 8:
+            args = [t[3], t[5]]
+        t[0] = [AlgCallFunction(t[1], args)]
     
     def _extend(self):
         
@@ -328,14 +365,19 @@ class ConfigParserExtension(LexYaccParserExtension):
         """
         version_comm_specification : TOPOLOGY_SPECIFICATION SQLPARAN IDENTIFIER SQRPARAN BLOCKOPEN version_topology_rules_list BLOCKCLOSE
         """
-        pass
+        self.parser.store.topologies[t[3]] = {'rules': t[6]}
 
     def version_topology_rules_list(self, t):
         """
         version_topology_rules_list : version_topology_rule
                         | version_topology_rules_list version_topology_rule
         """
-        pass
+        if len(t) == 3:
+            t[0] = t[1]
+            t[0].append(t[2])
+        else:
+            t[0] = []
+            t[0].append(t[1])
 
     def version_topology_rule(self, t):
         """
@@ -348,9 +390,14 @@ class ConfigParserExtension(LexYaccParserExtension):
                     | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_indicies SEMICOLON
                     | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_indicies COLON FLOAT SEMICOLON
                     | IDENTIFIER version_topology_arrow version_topology_host_with_i_index SEMICOLON
+                    | IDENTIFIER version_topology_arrow version_topology_host_with_i_index COLON FLOAT SEMICOLON
                     | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_i_index SEMICOLON
+                    | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_i_index COLON FLOAT SEMICOLON
         """
-        pass
+        quality = 1
+        if len(t) > 5:
+            quality = t[5]
+        t[0] = TopologyRule(t[1], t[2], t[3], quality=quality)
     
     def version_topology_host_with_indicies(self, t):
         """
@@ -359,7 +406,17 @@ class ConfigParserExtension(LexYaccParserExtension):
                 | IDENTIFIER SQLPARAN COLON INTEGER SQRPARAN
                 | IDENTIFIER SQLPARAN INTEGER COLON INTEGER SQRPARAN
         """
-        pass
+        index_range = None
+        if len(t) == 5:
+            index_range = (t[3], t[3]+1)
+        elif len(t) == 6:
+            if t[3] == ':':
+                index_range = (None, t[4])
+            else:
+                index_range = (t[4], None)
+        elif len(t) == 7:
+            index_range = (t[3], t[5])
+        t[0] = TopologyRuleHost(t[1], index_range=index_range)
     
     def version_topology_host_with_i_index(self, t):
         """
@@ -367,7 +424,15 @@ class ConfigParserExtension(LexYaccParserExtension):
                 | IDENTIFIER SQLPARAN I_INDEX COMM_PLUS INTEGER SQRPARAN
                 | IDENTIFIER SQLPARAN I_INDEX COMM_MINUS INTEGER SQRPARAN
         """
-        pass
+        
+        i_shift = 0
+        if len(t) == 6:
+            if t[3] == '-':
+                i_shift = - t[4]
+            else:
+                i_shift = t[4]
+        
+        t[0] = TopologyRuleHost(t[1], i_shift=i_shift)
         
 
     def version_topology_arrow(self, t):
@@ -376,7 +441,7 @@ class ConfigParserExtension(LexYaccParserExtension):
             | ARROWLEFT
             | ARROWBOTH
         """
-        pass
+        t[0] = t[1]
 
     
     def _extend(self):

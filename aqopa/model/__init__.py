@@ -534,4 +534,57 @@ class MetricsPrimitive():
         
     def clone(self):
         return MetricsPrimitive(copy.deepcopy(self.arguments))
+      
+################################
+#        Communication
+################################
+
+class TopologyRuleHost():
+    
+    def __init__(self, identifier, index_range = None, i_shift=0):
+        self.identifier = identifier
+        self.index_range = index_range
+        self.i_shift = i_shift
+
+class TopologyRule():
+    
+    def __init__(self, left_host, arrow, right_host, quality=1):
+        self.left_host = left_host
+        self.right_host = right_host
+        self.arrow = arrow
+        self.quality = quality
+      
+################################
+#       Algorithms
+################################
+
+class AlgCallFunction():
+    
+    def __init__(self, function_name, args):
+        self.function_name = function_name
+        self.args = args
+        
+class AlgWhile():
+    
+    def __init__(self, condition, instructions):
+        self.condition = condition
+        self.instructions = instructions
+        
+class AlgIf():
+    
+    def __init__(self, condition, true_instructions, false_instructions):
+        self.condition = condition
+        self.true_instructions = true_instructions
+        self.false_instructions = false_instructions
+        
+class AlgReturn():
+    
+    def __init__(self, expression):
+        self.expression = expression
+        
+class AlgAssignment():
+    
+    def __init__(self, identifier, expression):
+        self.identifier = identifier
+        self.expression = expression
     

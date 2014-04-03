@@ -16,8 +16,9 @@ class QoPMLModelStore():
         self.metrics_configurations  = []
         self.metrics_datas           = []
         self.init_version_number     = []
-        self.communication_topology_rules = []
-        self.communication_algorithms = []
+        
+        self.topologies = {}
+        self.communication_algorithms = {}
     
     
     def find_host(self, name):
