@@ -701,7 +701,7 @@ class Builder():
         from aqopa.model.parser.lex_yacc import LexYaccParser
         from aqopa.model.parser.lex_yacc.grammar import main,\
                 functions, channels, equations, expressions, instructions,\
-                hosts, modules as modules_module, communication
+                hosts, modules as modules_module, communication as comm_grammar
         
         parser = LexYaccParser()
         parser.set_store(store) \
@@ -711,7 +711,7 @@ class Builder():
                 .add_extension(channels.ModelParserExtension()) \
                 .add_extension(equations.ModelParserExtension()) \
                 .add_extension(expressions.ModelParserExtension()) \
-                .add_extension(communication.ModelParserExtension()) \
+                .add_extension(comm_grammar.ModelParserExtension()) \
                 .add_extension(instructions.ModelParserExtension()) \
                 .add_extension(hosts.ModelParserExtension())
                 
@@ -726,12 +726,12 @@ class Builder():
         and populates the store.
         """
         from aqopa.model.parser.lex_yacc import LexYaccParser
-        from aqopa.model.parser.lex_yacc.grammar import main, metrics
+        from aqopa.model.parser.lex_yacc.grammar import main, metrics as metrics_grammar
         
         parser = LexYaccParser()
         parser.set_store(store)\
                 .add_extension(main.MetricsParserExtension())\
-                .add_extension(metrics.MetricsParserExtension())
+                .add_extension(metrics_grammar.MetricsParserExtension())
                 
         for m in modules:
             parser = m.extend_metrics_parser(parser)
@@ -744,12 +744,12 @@ class Builder():
         and populates the store.
         """
         from aqopa.model.parser.lex_yacc import LexYaccParser
-        from aqopa.model.parser.lex_yacc.grammar import versions, main, communication
+        from aqopa.model.parser.lex_yacc.grammar import versions, main, communication as comm_grammar
         
         parser = LexYaccParser()
         parser.set_store(store)\
                 .add_extension(main.ConfigParserExtension())\
-                .add_extension(communication.ModelParserExtension()) \
+                .add_extension(comm_grammar.ConfigParserExtension()) \
                 .add_extension(versions.ConfigParserExtension())
                 
         for m in modules:

@@ -191,6 +191,7 @@ class ConfigParserExtension(LexYaccParserExtension):
     def version(self, t):
         """
         version : VERSION IDENTIFIER BLOCKOPEN metrics_sets version_run_hosts BLOCKCLOSE
+                | VERSION IDENTIFIER BLOCKOPEN metrics_sets version_run_hosts version_communication BLOCKCLOSE
         """
         self.parser.store.versions.append(self.builder.build_version(t))
     

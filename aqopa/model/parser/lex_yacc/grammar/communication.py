@@ -272,4 +272,141 @@ class ModelParserExtension(LexYaccParserExtension):
         self.parser.add_precedence(['COMM_UMINUS'], 'right')
 
 
+class ConfigParserExtension(LexYaccParserExtension):
+    """
+    Extension for parsing functions
+    """
+    
+    def __init__(self):
+        LexYaccParserExtension.__init__(self)
+        self.builder = Builder()
+        self.open_blocks_cnt = 0
+
+    ##########################################
+    #           RESERVED WORDS
+    ##########################################
+    
+    def word_communication_specification(self, t):
+        t.lexer.push_state('versioncommunication')
+        return t
+    
+    ##########################################
+    #                TOKENS
+    ##########################################
+
+    def token_block_open(self, t):
+        r'{'
+        self.open_blocks_cnt += 1
+        return t
+
+    def token_block_close(self, t):
+        r'}'
+        self.open_blocks_cnt -= 1
+        if self.open_blocks_cnt == 0:
+            t.lexer.pop_state()
+        return t
+    
+    ##########################################
+    #                RULES
+    ##########################################
+    
+    def version_communication(self, t):
+        """
+        version_communication : COMMUNICATION_SPECIFICATION BLOCKOPEN version_comm_specifications BLOCKCLOSE
+        """
+        pass
+    
+    
+    def version_comm_specifications(self, t):
+        """
+        version_comm_specifications : version_comm_specification
+                    | version_comm_specifications version_comm_specification
+        """
+        pass
+    
+    def version_topology_specification(self, t):
+        """
+        version_comm_specification : TOPOLOGY_SPECIFICATION SQLPARAN IDENTIFIER SQRPARAN BLOCKOPEN version_topology_rules_list BLOCKCLOSE
+        """
+        pass
+
+    def version_topology_rules_list(self, t):
+        """
+        version_topology_rules_list : version_topology_rule
+                        | version_topology_rules_list version_topology_rule
+        """
+        pass
+
+    def version_topology_rule(self, t):
+        """
+        version_topology_rule : IDENTIFIER version_topology_arrow IDENTIFIER SEMICOLON
+                    | IDENTIFIER version_topology_arrow IDENTIFIER COLON FLOAT SEMICOLON
+                    | version_topology_host_with_indicies version_topology_arrow IDENTIFIER SEMICOLON
+                    | version_topology_host_with_indicies version_topology_arrow IDENTIFIER COLON FLOAT SEMICOLON
+                    | IDENTIFIER version_topology_arrow version_topology_host_with_indicies SEMICOLON
+                    | IDENTIFIER version_topology_arrow version_topology_host_with_indicies COLON FLOAT SEMICOLON
+                    | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_indicies SEMICOLON
+                    | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_indicies COLON FLOAT SEMICOLON
+                    | IDENTIFIER version_topology_arrow version_topology_host_with_i_index SEMICOLON
+                    | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_i_index SEMICOLON
+        """
+        pass
+    
+    def version_topology_host_with_indicies(self, t):
+        """
+        version_topology_host_with_indicies : IDENTIFIER SQLPARAN INTEGER SQRPARAN
+                | IDENTIFIER SQLPARAN INTEGER COLON SQRPARAN
+                | IDENTIFIER SQLPARAN COLON INTEGER SQRPARAN
+                | IDENTIFIER SQLPARAN INTEGER COLON INTEGER SQRPARAN
+        """
+        pass
+    
+    def version_topology_host_with_i_index(self, t):
+        """
+        version_topology_host_with_i_index : IDENTIFIER SQLPARAN I_INDEX SQRPARAN
+                | IDENTIFIER SQLPARAN I_INDEX COMM_PLUS INTEGER SQRPARAN
+                | IDENTIFIER SQLPARAN I_INDEX COMM_MINUS INTEGER SQRPARAN
+        """
+        pass
+        
+
+    def version_topology_arrow(self, t):
+        """
+        version_topology_arrow : ARROWRIGHT
+            | ARROWLEFT
+            | ARROWBOTH
+        """
+        pass
+
+    
+    def _extend(self):
+        
+        self.parser.add_state('versioncommunication', 'inclusive')
+
+        self.parser.add_reserved_word('communication', 'COMMUNICATION_SPECIFICATION',
+                                      func=self.word_communication_specification)
+        self.parser.add_reserved_word('topology', 'TOPOLOGY_SPECIFICATION', state='versioncommunication',)
+        self.parser.add_reserved_word('i', 'I_INDEX', state='versioncommunication')
+
+        self.parser.add_token('BLOCKOPEN', func=self.token_block_open, states=['versioncommunication'])
+        self.parser.add_token('BLOCKCLOSE', func=self.token_block_close, states=['versioncommunication'])
+        self.parser.add_token('ARROWRIGHT', r'\-\>', states=['versioncommunication'])
+        self.parser.add_token('ARROWLEFT', r'\<\-', states=['versioncommunication'])
+        self.parser.add_token('ARROWBOTH', r'\<\-\>', states=['versioncommunication'])
+
+        self.parser.add_token('COMM_PLUS', r'\+', states=['versioncommunication'])
+        self.parser.add_token('COMM_MINUS', r'\-', states=['versioncommunication'])
+
+
+        self.parser.add_rule(self.version_communication)
+        self.parser.add_rule(self.version_comm_specifications)
+        self.parser.add_rule(self.version_topology_specification)
+        self.parser.add_rule(self.version_topology_rules_list)
+        self.parser.add_rule(self.version_topology_rule)
+        self.parser.add_rule(self.version_topology_host_with_indicies)
+        self.parser.add_rule(self.version_topology_host_with_i_index)
+        self.parser.add_rule(self.version_topology_arrow)
+
+
+
     

@@ -219,6 +219,10 @@ class MetricsParserExtension(LexYaccParserExtension):
         
         t.value = int(t.value)
         return t
+    
+    def token_comment(self, t):
+        r'\%[^\n]*'
+        pass
         
     
     ##########################################
@@ -287,6 +291,8 @@ class MetricsParserExtension(LexYaccParserExtension):
         self.parser.add_token('SQRPARAN', r'\]')
         self.parser.add_token('BLOCKOPEN', r'{')
         self.parser.add_token('BLOCKCLOSE', r'}')
+        
+        self.parser.add_token('COMMENT', self.token_comment, include_in_tokens=False)
         
         self.parser.add_rule(self.rule_metrics)
         self.parser.add_rule(self.rule_empty)
@@ -366,6 +372,10 @@ class ConfigParserExtension(LexYaccParserExtension):
         
         t.value = int(t.value)
         return t
+    
+    def token_comment(self, t):
+        r'\%[^\n]*'
+        pass
         
     
     ##########################################
@@ -437,6 +447,8 @@ class ConfigParserExtension(LexYaccParserExtension):
         self.parser.add_token('SQRPARAN', r'\]')
         self.parser.add_token('BLOCKOPEN', r'{')
         self.parser.add_token('BLOCKCLOSE', r'}')
+        
+        self.parser.add_token('COMMENT', self.token_comment, include_in_tokens=False)
         
         self.parser.add_rule(self.rule_configuration)
         self.parser.add_rule(self.rule_empty)
