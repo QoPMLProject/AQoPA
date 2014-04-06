@@ -68,6 +68,8 @@ class ModelParserExtension(LexYaccParserExtension):
                     | comm_specifications comm_specification
         """
         pass
+
+    #   Topology
     
     def topology_specification(self, t):
         """
@@ -104,6 +106,8 @@ class ModelParserExtension(LexYaccParserExtension):
             | ARROWBOTH
         """
         t[0] = t[1]
+
+    #   Algorithms
 
     def algoriths_specification(self, t):
         """
@@ -192,7 +196,7 @@ class ModelParserExtension(LexYaccParserExtension):
             t[0].extend(t[4])
         else:
             t[0].append(sign)
-            t[0].extend(t[4])
+            t[0].extend(t[3])
 
     def comm_algorithm_expression_conditional_paran(self, t):
         """
@@ -247,6 +251,8 @@ class ModelParserExtension(LexYaccParserExtension):
         elif len(t) == 8:
             args = [t[3], t[5]]
         t[0] = [AlgCallFunction(t[1], args)]
+
+    #   Predefined functions
     
     def _extend(self):
         

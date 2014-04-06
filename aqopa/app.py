@@ -194,8 +194,8 @@ class Builder():
             """
             for predefined_value in predefined_values:
                 host.set_variable(predefined_value.variable_name, 
-                                  populator.populate(predefined_value.expression, 
-                                                     host.get_variables(), 
+                                  populator.populate(predefined_value.expression,
+                                                     host,
                                                      reducer))
         
         def set_scheduler(host, algorithm):

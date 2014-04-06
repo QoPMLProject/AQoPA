@@ -153,7 +153,7 @@ class PreInstructionHook(Hook):
                             index = int(index)
                             populated_expression = context.expression_populator.populate(
                                                         expression.arguments[index-1],
-                                                        context.get_current_host().get_variables(),
+                                                        context.get_current_host(),
                                                         context.expression_reducer)
 
                             size += context.metrics_manager.get_expression_size(

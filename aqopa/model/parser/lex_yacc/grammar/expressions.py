@@ -32,6 +32,27 @@ class Builder():
             
         return CallFunctionExpression(token[1], arguments, qop_arguments)
 
+    def build_expression_call_id_function(self, token):
+        """
+        expression_call_function : ID LPARAN RPARAN
+                                | ID LPARAN IDENTIFIER RPARAN
+                                | ID LPARAN QUALIFIED_IDENTIFIER RPARAN
+        """
+        arguments = []
+        if len(token) == 5:
+            arguments.append(IdentifierExpression(token[3]))
+        return CallFunctionExpression(token[1], arguments)
+
+    def build_expression_call_routing_next(self, token):
+        """
+        expression_call_routing_next_function : ROUTING_NEXT LPARAN expression_call_routing_next_argument RPARAN
+                                            | ROUTING_NEXT LPARAN expression_call_routing_next_argument COMMA expression_call_routing_next_argument RPARAN
+        """
+        arguments = [token[3]]
+        if len(token) == 7:
+            arguments.append(token[5])
+        return CallFunctionExpression(token[1], arguments)
+
     def build_comparison_expression(self, token):
         """
         expression_comaprison : expression_simple EQUAL EQUAL expression_simple
@@ -108,6 +129,32 @@ class ModelParserExtension(LexYaccParserExtension):
                                 | IDENTIFIER LPARAN expression_function_arguments RPARAN SQLPARAN expression_function_qop_arguments SQRPARAN
         """
         t[0] = self.builder.build_expression_call_function(t)
+
+    def expression_call_id_function(self, t):
+        """
+        expression_call_function : ID LPARAN RPARAN
+                                | ID LPARAN IDENTIFIER RPARAN
+                                | ID LPARAN QUALIFIED_IDENTIFIER RPARAN
+        """
+        t[0] = self.builder.build_expression_call_id_function(t)
+
+    def expression_call_routing_next_function(self, t):
+        """
+        expression_call_function : ROUTING_NEXT LPARAN expression_call_routing_next_argument RPARAN
+                                            | ROUTING_NEXT LPARAN expression_call_routing_next_argument COMMA expression_call_routing_next_argument RPARAN
+        """
+        t[0] = self.builder.build_expression_call_routing_next(t)
+
+    def expression_call_routing_next_argument(self, t):
+        """
+        expression_call_routing_next_argument : expression_call_function
+                                            | expression_tuple_element
+                                            | IDENTIFIER
+        """
+        if isinstance(t[1], str) or isinstance(t[1], unicode):
+            t[0] = IdentifierExpression(t[1])
+        else:
+            t[0] = t[1]
     
     def expression_function_qop_arguments(self, t):
         """
@@ -144,12 +191,18 @@ class ModelParserExtension(LexYaccParserExtension):
         t[0] = self.builder.build_comparison_expression(t)
     
     def _extend(self):
+
+        self.parser.add_reserved_word('routing_next', 'ROUTING_NEXT', case_sensitive=True)
+        self.parser.add_reserved_word('id', 'ID', case_sensitive=True)
         
         self.parser.add_rule(self.expression_conditional)
         self.parser.add_rule(self.expression_tuple)
         self.parser.add_rule(self.expression_tuple_element)
         self.parser.add_rule(self.expression_function_arguments)
         self.parser.add_rule(self.expression_call_function)
+        self.parser.add_rule(self.expression_call_id_function)
+        self.parser.add_rule(self.expression_call_routing_next_function)
+        self.parser.add_rule(self.expression_call_routing_next_argument)
         self.parser.add_rule(self.expression_function_qop_arguments)
         self.parser.add_rule(self.expression_simple)
         self.parser.add_rule(self.expression_comaprison)

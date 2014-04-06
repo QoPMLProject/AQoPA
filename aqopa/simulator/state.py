@@ -611,30 +611,13 @@ class AssignmentInstructionExecutor(InstructionExecutor):
         if isinstance(expression, BooleanExpression):
             return expression.clone()
         
-        if isinstance(expression, IdentifierExpression):
+        if isinstance(expression, IdentifierExpression) or isinstance(expression, CallFunctionExpression) \
+                or isinstance(expression, TupleExpression) or isinstance(expression, TupleElementExpression):
             return context.expression_populator.populate(
-                                                expression, 
-                                                context.get_current_host().get_variables(),
-                                                context.expression_reducer)
+                expression,
+                context.get_current_host(),
+                context.expression_reducer)
         
-        if isinstance(expression, CallFunctionExpression):
-            return context.expression_populator.populate(
-                                                expression, 
-                                                context.get_current_host().get_variables(),
-                                                context.expression_reducer)
-            
-        if isinstance(expression, TupleExpression):
-            return context.expression_populator.populate(
-                                                expression, 
-                                                context.get_current_host().get_variables(),
-                                                context.expression_reducer)
-            
-        if isinstance(expression, TupleElementExpression):
-            return context.expression_populator.populate(
-                                                expression, 
-                                                context.get_current_host().get_variables(),
-                                                context.expression_reducer)
-            
         raise RuntimeException("Expression '%s' cannot be a value of variable.")
 
     def execute_instruction(self, context):
@@ -650,7 +633,7 @@ class AssignmentInstructionExecutor(InstructionExecutor):
 #        print "%s - %s: %s <- %s" % (id(context.get_current_host()), 
 #                                     context.get_current_host().name, 
 #                                     instruction.variable_name, unicode(expression))
-        
+
         context.get_current_host().set_variable(instruction.variable_name, expression)
         context.get_current_host().mark_changed()
         
@@ -817,8 +800,7 @@ class IfInstructionExecutor(InstructionExecutor):
         current_process = context.get_current_host().get_current_process()
         
         contidion_result = context.expression_checker.result(instruction.condition, 
-                                        context.get_current_host().get_variables(),
-                                        context.functions,
+                                        context.get_current_host(),
                                         context.expression_populator, 
                                         context.expression_reducer)
 
@@ -854,10 +836,9 @@ class WhileInstructionExecutor(InstructionExecutor):
         """ Overriden """
         instruction = context.get_current_instruction()
         current_process = context.get_current_host().get_current_process()
-        
-        contidion_result = context.expression_checker.result(instruction.condition, 
-                                        context.get_current_host().get_variables(),
-                                        context.functions, 
+
+        contidion_result = context.expression_checker.result(instruction.condition,
+                                        context.get_current_host(),
                                         context.expression_populator,
                                         context.expression_reducer)
         

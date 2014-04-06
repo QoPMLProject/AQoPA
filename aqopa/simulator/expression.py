@@ -6,12 +6,13 @@ Created on 07-05-2013
 import copy
 from aqopa.model import IdentifierExpression, CallFunctionExpression, TupleExpression,\
     BooleanExpression, ComparisonExpression, TupleElementExpression
+from aqopa.simulator import predefined
 from aqopa.simulator.error import RuntimeException
 
 
 class Populator():
     
-    def populate(self, expression, variables, reducer, main_expression=None):
+    def populate(self, expression, host, reducer, main_expression=None):
         """
         Returns new expression with replaced variables names 
         with copies of values of variables from variables list.
@@ -20,16 +21,23 @@ class Populator():
         """
         if main_expression is None:
             main_expression = expression
-        
+
+        variables = host.get_variables()
+
         if isinstance(expression, IdentifierExpression):
             if expression.identifier not in variables:
                 raise RuntimeException("Variable {0} does not exist in expression '{1}'.".format(expression.identifier, unicode(main_expression)))
             return variables[expression.identifier].clone()
             
         if isinstance(expression, CallFunctionExpression):
+
+            if predefined.is_function_predefined(expression.function_name):
+                populated = predefined.populate_call_function_expression_result(expression, host, self, reducer)
+                return predefined.clone_call_function_expression(populated)
+
             arguments = []
             for arg in expression.arguments:
-                arguments.append(self.populate(arg, variables, reducer, main_expression=main_expression))
+                arguments.append(self.populate(arg, host, reducer, main_expression=main_expression))
             qop_arguments = []
             for qop_arg in expression.qop_arguments:
                 qop_arguments.append(qop_arg)
@@ -38,7 +46,7 @@ class Populator():
         if isinstance(expression, TupleExpression):
             elements = []
             for e in expression.elements:
-                elements.append(self.populate(e, variables, reducer, main_expression=main_expression))
+                elements.append(self.populate(e, host, reducer, main_expression=main_expression))
             return TupleExpression(elements)
         
         if isinstance(expression, TupleElementExpression):
@@ -55,7 +63,7 @@ class Populator():
                 raise RuntimeException( 
                         "Cannot compute expression '{0}'. Variable {1} does not have index {2}. It has {3} elements.".format(
                             unicode(main_expression), expression.variable_name, expression.index, len(expr.elements)))
-            return self.populate(expr.elements[expression.index], variables, reducer, main_expression=main_expression)
+            return self.populate(expr.elements[expression.index], host, reducer, main_expression=main_expression)
         
         return expression.clone()
 
@@ -81,6 +89,10 @@ class Checker():
             return left.val == right.val
 
         if isinstance(left, CallFunctionExpression):
+
+            if predefined.is_function_predefined(left.function_name):
+                return predefined.are_equal_call_function_expressions(left, right)
+
             if left.function_name != right.function_name:
                 return False
             if len(left.arguments) != len(right.arguments):
@@ -90,7 +102,7 @@ class Checker():
                     return False
         return True
     
-    def result(self, condition, variables, functions, populator, reducer):
+    def result(self, condition, host, populator, reducer):
         """
         Method checks the result of condition.
         Returns True if condition is true or can be reduced to true condition.
@@ -105,8 +117,8 @@ class Checker():
             left = condition.left
             right = condition.right
             
-            left = populator.populate(left, variables, reducer)
-            right = populator.populate(right, variables, reducer)
+            left = populator.populate(left, host, reducer)
+            right = populator.populate(right, host, reducer)
             
             left = reducer.reduce(left)
             right = reducer.reduce(right)
