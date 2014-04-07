@@ -399,7 +399,7 @@ class VersionRunHost():
         self.all_channels_active = False
         self.active_channels = []
         self.repetitions = 1
-        self.repeated_channels = []
+        self.repeated_channels = [] # deprecated
         self.run_processes = []
         
     def __unicode__(self):
@@ -424,7 +424,7 @@ class VersionRunProcess():
         self.all_subprocesses_active = False
         self.active_subprocesses = []
         self.repetitions = 1
-        self.repeated_channels = []
+        self.repeated_channels = [] # deprecated
         self.follower = None
         
     def __unicode__(self):

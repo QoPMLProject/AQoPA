@@ -146,7 +146,6 @@ class Host():
         self._variables = predefined_variables
         
         self._scheduler = None
-        self._channels_map = {}
         self._changed = False
         self._status = HOST_STATUS_RUNNING 
         self._finish_error = None
@@ -223,48 +222,6 @@ class Host():
         """ Returns True if host has changed """
         return self._changed
         
-    def connect_with_channel(self, channel):
-        """
-        Assigns channel to this host.
-        """
-        if channel.original_name() not in self._channels_map:
-            self._channels_map[channel.original_name()] = []
-        if channel in self._channels_map[channel.original_name()]:
-            return
-        self._channels_map[channel.original_name()].append(channel)
-        channel.connect_with_host(self)
-    
-    def find_channel(self, name):
-        """
-        Search for and retuen assigned channel by name (including indexes)
-        """
-        original_channel_name = original_name(name)
-        indexes = name_indexes(name)
-
-        if original_channel_name not in self._channels_map:
-            return None
-        channels = self._channels_map[original_channel_name]
-        if len(channels) == 0:
-            return None
-        
-        for ch in channels:
-            # Check if channels has the same original name
-            if ch.original_name() == name:
-                i = 0
-                #Check if channels have the same indexes
-                ch_indexes = ch.indexes()
-                while i < len(indexes):
-                    if indexes[i] != ch_indexes[i]:
-                        break
-                    i += 1
-                # If while loop was broken
-                if i < len(indexes):
-                    continue
-                else:
-                    # All indexes were the same
-                    return ch
-        return None
-        
     def goto_next_instructions_context(self):
         """
         Moves host to next instructions context.
@@ -332,7 +289,6 @@ class Process():
         self.instructions_list = instructions_list
     
         self.follower = None
-        self._channels_map = {}
         
     def original_name(self):
         """"""
@@ -344,48 +300,6 @@ class Process():
         Before: name = ch, index = 1. After: name = ch.1
         """
         self.name += ".%d" % index
-        
-    def connect_with_channel(self, channel):
-        """
-        Assigns channel to this host.
-        """
-        if channel.original_name() not in self._channels_map:
-            self._channels_map[channel.original_name()] = []
-        if channel in self._channels_map[channel.original_name()]:
-            return
-        self._channels_map[channel.original_name()].append(channel)
-        channel.connect_with_process(self)
-    
-    def find_channel(self, name):
-        """
-        Search for and retuen assigned channel by name (including indexes)
-        """
-        original_channel_name = original_name(name)
-        indexes = name_indexes(name)
-
-        if original_channel_name not in self._channels_map:
-            return None
-        channels = self._channels_map[original_channel_name]
-        if len(channels) == 0:
-            return None
-        
-        for ch in channels:
-            # Check if channels has the same original name
-            if ch.original_name() == name:
-                i = 0
-                #Check if channels have the same indexes
-                ch_indexes = ch.indexes()
-                while i < len(indexes):
-                    if indexes[i] != ch_indexes[i]:
-                        break
-                    i += 1
-                # If while loop was broken
-                if i < len(indexes):
-                    continue
-                else:
-                    # All indexes were the same
-                    return ch
-        return None
         
     def __unicode__(self):
         return u"process %s" % unicode(self.name)

@@ -259,36 +259,8 @@ class PreInstructionHook(Hook):
                         # it should be done first
                         delay_communication_execution = True
 
-
-                    #ch = context.channels_manager.find_channel_for_host_instruction(
-                    #    context, h, current_instruction)
-                    #if ch == channel:
-                    #    if current_instruction.is_out():
-                    #        host_time = self.module.get_current_time(self.simulator, h)
-                    #        if host_time < min_hosts_time[1]:
-                    #            min_hosts_time = (h, host_time)
-                    #
-                    #ch = None
-                    #if instruction.is_out(): # OUT instruction
-                    #    if not current_instruction.is_out(): # IN instruction
-                    #        ch = context.channels_manager.find_channel_for_host_instruction(
-                    #            context, h, current_instruction)
-                    #else: # IN instruction
-                    #    if current_instruction.is_out(): # OUT instruction
-                    #        ch = context.channels_manager.find_channel_for_host_instruction(
-                    #            context, h, current_instruction)
-                    #if ch == channel:
-                    #    continue
-                    #
-                    #if self.module.get_current_time(self.simulator, h) < current_host_time:
-                    #    delay_communication_execution = True
-
             ## Delay execution of this instruction
             ## if needed according to previous check
-            #if delay_communication_execution:
-            #    if context.get_current_host() != min_hosts_time[0]:
-            #        return ExecutionResult(custom_index_management=True,
-            #                               finish_instruction_execution=True)
 
             if delay_communication_execution:
                 return ExecutionResult(custom_index_management=True,
