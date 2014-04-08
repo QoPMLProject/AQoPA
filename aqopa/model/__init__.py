@@ -229,27 +229,44 @@ class AssignmentInstruction():
         
     def __unicode__(self):
         return u"%s = %s;" % (unicode(self.variable_name), unicode(self.expression))
-    
+
+
 class CommunicationInstruction():
     
-    def __init__(self, communication_type, channel_name, variables_names, filters=[]):
+    def __init__(self, communication_type, channel_name, variables_names, filters):
         self.communication_type = communication_type
         self.channel_name = channel_name
         self.variables_names = variables_names
         self.filters = filters
         
     def clone(self):
+        filters = []
+        for f in self.filters:
+            if isinstance(f, basestring):
+                filters.append(copy.copy(f))
+            else:
+                filters.append(f.clone())
         return CommunicationInstruction(copy.copy(self.communication_type),
                                         copy.copy(self.channel_name), 
-                                        copy.deepcopy(self.variables_names))
+                                        copy.deepcopy(self.variables_names),
+                                        filters)
         
     def is_out(self):
         return self.communication_type == COMMUNICATION_TYPE_OUT
         
     def __unicode__(self):
-        type_name = 'in' if self.communication_type == COMMUNICATION_TYPE_IN else 'out'
-        return u"%s (%s: %s);" % (unicode(type_name), unicode(self.channel_name), unicode(', '.join(self.variables_names)))
-        
+        if self.communication_type == COMMUNICATION_TYPE_IN:
+            filters_str = u""
+            if len(self.filters) > 0:
+                filters_str = u", ".join([unicode(f) for f in self.filters])
+                filters_str = u": |%s|" % filters_str
+            return u"in (%s: %s%s);" % (unicode(self.channel_name),
+                                        unicode(', '.join(self.variables_names)),
+                                        filters_str)
+        else:
+            return u"out (%s: %s);" % (unicode(self.channel_name), unicode(', '.join(self.variables_names)))
+
+
 class IfInstruction():
     
     def __init__(self, condition, true_instructions, false_instructions=[]):

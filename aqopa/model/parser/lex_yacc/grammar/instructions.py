@@ -32,7 +32,7 @@ class Builder():
     def build_communication_instruction(self, token):
         """
         instruction_communication : IN LPARAN IDENTIFIER COLON identifiers_list RPARAN SEMICOLON
-            | IN LPARAN IDENTIFIER COLON identifiers_list RPARAN COLON PIPE instruction_in_filters_list PIPE SEMICOLON
+            | IN LPARAN IDENTIFIER COLON identifiers_list COLON PIPE instruction_in_filters_list PIPE RPARAN SEMICOLON
             | OUT LPARAN IDENTIFIER COLON identifiers_list RPARAN SEMICOLON
         """
         communication_type = COMMUNICATION_TYPE_OUT
@@ -41,7 +41,7 @@ class Builder():
 
         filters = []
         if len(token) == 12:
-            filters = token[9]
+            filters = token[8]
         return CommunicationInstruction(communication_type, token[3], token[5], filters)
 
 class ModelParserExtension(LexYaccParserExtension):
@@ -152,7 +152,7 @@ class ModelParserExtension(LexYaccParserExtension):
             t[0].append(t[1])
         else:
             t[0] = t[1]
-            t[0].append(t[2])
+            t[0].append(t[3])
 
     def instruction_in_filter(self, t):
         """

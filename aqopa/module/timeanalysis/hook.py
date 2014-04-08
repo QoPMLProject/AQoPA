@@ -34,7 +34,8 @@ class PreInstructionHook(Hook):
             return
         
         if isinstance(instruction, CommunicationInstruction):
-            return self._execute_communication_instruction(context)
+            #return self._execute_communication_instruction(context)
+            pass
         else:
             self._update_time(context)
             return ExecutionResult()
@@ -45,7 +46,6 @@ class PreInstructionHook(Hook):
         """
         instruction = context.get_current_instruction()
         
-        expression = None
         if isinstance(instruction, AssignmentInstruction):
             expression = instruction.expression
         elif isinstance(instruction, CallFunctionInstruction):
@@ -231,7 +231,7 @@ class PreInstructionHook(Hook):
                 if h == context.get_current_host():
                     continue
                 # Omit hosts not using current channel
-                if not channel.connected_with_host(h):
+                if not channel.is_connected_with_host(h):
                     continue
 
                 # Check the time of other hosts

@@ -643,16 +643,26 @@ class CommunicationInstructionExecutor(InstructionExecutor):
         
         if instruction.communication_type == COMMUNICATION_TYPE_OUT:
             params = instruction.variables_names
-            expressions = []
+            messages = []
             for p in params:
-                expressions.append(context.get_current_host().get_variable(p).clone())
-            channel.send_message(context.get_current_host(), expressions)
-            
+                # Expressions as variables values are already populated
+                messages.append(context.channels_manager.build_message(
+                    context.get_current_host(),
+                    context.get_current_host().get_variable(p).clone(),
+                    context.expression_checker,
+                    context.expression_populator,
+                    context.expression_reducer))
+            channel.send_messages(context.get_current_host(), messages)
+
+            # Go to next instruction
             context.get_current_host().get_current_instructions_context().goto_next_instruction()
             context.get_current_host().mark_changed()
             
         else:
-            request = context.channels_manager.build_message_request(context.get_current_host(), instruction)
+            request = context.channels_manager.build_message_request(context.get_current_host(),
+                                                                     instruction,
+                                                                     context.expression_populator,
+                                                                     context.expression_reducer)
             channel.wait_for_message(request)
             
         return ExecutionResult(consumes_cpu=True, 

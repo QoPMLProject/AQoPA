@@ -1,11 +1,11 @@
 from aqopa.model import original_name, CallFunctionExpression
+from aqopa.simulator.error import RuntimeException
 
 ###############################
 #    PREDEFINED FUNCTIONS
 ###############################
 
 # Function ID
-from aqopa.simulator.error import RuntimeException
 
 
 def _predefined_id_function__populate(call_function_expression, host, populator, reducer):
@@ -39,6 +39,20 @@ def _predefined_id_function__are_equal(left, right):
         return False
     return left_host_name == right_host_name
 
+# Function routing_next
+
+
+def _predefined_routing_next_function__populate(call_function_expression, host, populator, reducer):
+
+    # TODO: Include topology
+
+    call_function_id_expression = call_function_expression.arguments[0]
+    return _predefined_id_function__populate(call_function_id_expression, host, populator, reducer)
+
+
+def _predefined_routing_next_function__clone(call_function_expression):
+    return call_function_expression.clone()
+
 ###############################
 #    PREDEFINED MANAGEMENT
 ###############################
@@ -47,7 +61,12 @@ functions_map = {
     'id': {
         'populate': _predefined_id_function__populate,
         'clone': _predefined_id_function__clone,
-        'compare': _predefined_id_function__are_equal
+        'are_equal': _predefined_id_function__are_equal
+    },
+    'routing_next': {
+        'populate': _predefined_routing_next_function__populate,
+        'clone': _predefined_routing_next_function__clone,
+        'are_equal': None
     }
 }
 
