@@ -334,11 +334,84 @@ class Builder():
             built_channels.append(channel)
         return built_channels
     
-    def _build_channels_manager(self, channels):
+    def _build_topology(self, topology_rules, hosts):
+        
+        def find_left_hosts(topology_host, hosts):
+            found_hosts = []
+            for host in hosts:
+                # If host has the same identifier
+                if host.original_name() == topology_host.identifier:
+                    # If no range is specified
+                    if topology_host.index_range is None:
+                        found_hosts.append(host)
+                    else:
+                        # Range is specified
+                        start_i = topology_host.index_range[0]
+                        end_i = topology_host.index_range[1]
+                        i = host.get_name_index()
+                        if (start_i is None or i >= start_i) and (end_i is None or i < end_i):
+                            found_hosts.append(host)
+            return found_hosts
+        
+        def find_right_hosts(topology_host, hosts, current_host):
+            found_hosts = []
+            for host in hosts:
+                # If host has the same identifier
+                if host.original_name() == topology_host.identifier:
+                    # If no range is specified
+                    if topology_host.index_range is None:
+                        # If no index shift is specified
+                        if topology_host.i_shift is None:
+                            found_hosts.append(host)
+                        else:
+                            # Index shift is specified
+                            i = host.get_name_index()
+                            i += topology_host.i_shift
+                            shifted_host_name = topology_host.identifier + "." + i
+                            for h in hosts:
+                                if h.name == shifted_host_name:
+                                    found_hosts.append(h)
+                    else:
+                        # Range is specified
+                        start_i = topology_host.index_range[0]
+                        end_i = topology_host.index_range[1]
+                        i = host.get_name_index()
+                        if (start_i is None or i >= start_i) and (end_i is None or i < end_i):
+                            found_hosts.append(host)
+            return found_hosts
+        
+        def add_connection(topology, from_host, to_host, quality):
+            if from_host not in topology:
+                topology[from_host] = {'hosts': [], 'quality': {}}
+            if to_host not in topology[from_host]['hosts']:
+                topology[from_host]['hosts'].append(to_host)
+                topology[from_host]['quality'][to_host] = quality
+            return topology
+        
+        topology = {}
+        for rule in topology_rules:
+            for left_host in find_left_hosts(rule.left_host, hosts):
+                for right_host in find_right_hosts(rule.right_host, hosts, left_host):
+                    if rule.arrow == '->' or rule.arrow == '<->':
+                        topology = add_connection(topology, left_host, right_host, rule.quality)
+                    if rule.arrow == '<-' or rule.arrow == '<->':
+                        topology = add_connection(topology, right_host, left_host, rule.quality)
+        return topology
+        
+    
+    def _build_channels_manager(self, channels, built_hosts, version, store):
         """ 
         Build channels manager
         """
-        return communication.Manager(channels)
+        mgr = communication.Manager(channels)
+        for n in version.communication['topologies']:
+            topology_rules = version.communication['topologies'][n]['rules']
+            mgr.add_topology(n, self._build_topology(topology_rules, built_hosts))
+        for n in store.topologies:
+            if not mgr.has_topology(n):
+                topology_rules = store.topologies[n]['rules']
+                mgr.add_topology(n, self._build_topology(topology_rules, built_hosts))
+        return mgr
         
     def _build_metrics_manager(self, store, hosts, version):
         """
@@ -435,7 +508,7 @@ class Builder():
         c.expression_checker = expression_checker
         c.expression_populator = expression_populator
         c.metrics_manager = self._build_metrics_manager(store, hosts, version);
-        c.channels_manager = self._build_channels_manager(channels)
+        c.channels_manager = self._build_channels_manager(channels, hosts, version, store)
         return c
     
     def build_executor(self):

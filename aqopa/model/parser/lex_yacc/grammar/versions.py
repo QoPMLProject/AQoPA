@@ -17,12 +17,17 @@ class Builder():
     def build_version(self, token):
         """
         version : VERSION IDENTIFIER BLOCKOPEN metrics_sets version_run_hosts BLOCKCLOSE
+                | VERSION IDENTIFIER BLOCKOPEN metrics_sets version_run_hosts version_communication BLOCKCLOSE
         """
         v = Version(token[2])
         for metrics_set in token[4]:
             v.metrics_sets.append(metrics_set)
         for run_host in token[5]:
             v.run_hosts.append(run_host)
+            
+        if len(token) == 8:
+            v.communication = token[6]
+            
         return v
     
     def create_metrics_set(self, token):

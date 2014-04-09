@@ -241,6 +241,13 @@ class Manager():
     
     def __init__(self, channels):
         self.channels = channels
+        self.topologies = {}
+        
+    def add_topology(self, name, topology):
+        self.topologies[name] = topology
+        
+    def has_topology(self, name):
+        return name in self.topologies
         
     def find_channel(self, name, predicate=None):
         """

@@ -393,6 +393,7 @@ class Version():
         self.name = name
         self.run_hosts = []
         self.metrics_sets = []
+        self.communication = {'topologies': {}} 
         
     def __unicode__(self):
         return u"version %d" % self.name
@@ -558,7 +559,7 @@ class MetricsPrimitive():
 
 class TopologyRuleHost():
     
-    def __init__(self, identifier, index_range = None, i_shift=0):
+    def __init__(self, identifier, index_range = None, i_shift=None):
         self.identifier = identifier
         self.index_range = index_range
         self.i_shift = i_shift

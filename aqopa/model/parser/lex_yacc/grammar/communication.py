@@ -14,7 +14,15 @@ class Builder():
     Builder for store objects
     """
     
-    pass
+    def build_version_communication(self, token):
+        """
+        version_communication : COMMUNICATION_SPECIFICATION BLOCKOPEN version_comm_specifications BLOCKCLOSE
+        """
+        topologies = {}
+        for item in token[3]:
+            if item['type'] == 'topology':
+                topologies[item['name']] = item
+        return {'topologies': topologies}
 
 
 class ModelParserExtension(LexYaccParserExtension):
@@ -94,6 +102,10 @@ class ModelParserExtension(LexYaccParserExtension):
         topology_rule : IDENTIFIER topology_arrow IDENTIFIER SEMICOLON
                     | IDENTIFIER topology_arrow IDENTIFIER COLON FLOAT SEMICOLON
         """
+        if isinstance(t[1], basestring):
+            t[1] = TopologyRuleHost(t[1])
+        if isinstance(t[3], basestring):
+            t[3] = TopologyRuleHost(t[3])
         quality = 1
         if len(t) == 7:
             quality = t[5]
@@ -357,7 +369,7 @@ class ConfigParserExtension(LexYaccParserExtension):
         """
         version_communication : COMMUNICATION_SPECIFICATION BLOCKOPEN version_comm_specifications BLOCKCLOSE
         """
-        pass
+        t[0] = self.builder.build_version_communication(t)
     
     
     def version_comm_specifications(self, t):
@@ -365,13 +377,18 @@ class ConfigParserExtension(LexYaccParserExtension):
         version_comm_specifications : version_comm_specification
                     | version_comm_specifications version_comm_specification
         """
-        pass
+        if len(t) == 3:
+            t[0] = t[1]
+            t[0].append(t[2])
+        else:
+            t[0] = []
+            t[0].append(t[1])
     
     def version_topology_specification(self, t):
         """
         version_comm_specification : TOPOLOGY_SPECIFICATION SQLPARAN IDENTIFIER SQRPARAN BLOCKOPEN version_topology_rules_list BLOCKCLOSE
         """
-        self.parser.store.topologies[t[3]] = {'rules': t[6]}
+        t[0] = {'type': 'topology', 'name': t[3], 'rules': t[6]}
 
     def version_topology_rules_list(self, t):
         """
@@ -400,6 +417,10 @@ class ConfigParserExtension(LexYaccParserExtension):
                     | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_i_index SEMICOLON
                     | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_i_index COLON FLOAT SEMICOLON
         """
+        if isinstance(t[1], basestring):
+            t[1] = TopologyRuleHost(t[1])
+        if isinstance(t[3], basestring):
+            t[3] = TopologyRuleHost(t[3])
         quality = 1
         if len(t) > 5:
             quality = t[5]
@@ -431,7 +452,7 @@ class ConfigParserExtension(LexYaccParserExtension):
                 | IDENTIFIER SQLPARAN I_INDEX COMM_MINUS INTEGER SQRPARAN
         """
         
-        i_shift = 0
+        i_shift = None
         if len(t) == 6:
             if t[3] == '-':
                 i_shift = - t[4]

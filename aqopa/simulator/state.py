@@ -167,6 +167,15 @@ class Host():
         """
         self.name += ".%d" % index
         
+    def get_name_index(self):
+        """
+        Returns repetition index of this host
+        """
+        elems = self.name.split('.')
+        if len(elems) < 2:
+            return 0
+        return int(elems[1])
+        
     def set_scheduler(self, scheduler):
         """Set scheduler"""
         self._scheduler = scheduler
