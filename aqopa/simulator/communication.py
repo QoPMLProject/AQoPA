@@ -13,12 +13,10 @@ class ChannelMessage():
     Message sent through channel.
     """
     
-    def __init__(self, sender, expression, expression_checker, expression_populator, expression_reducer):
+    def __init__(self, sender, expression, expression_checker):
         self.sender = sender  # The host that sent the expression
         self.expression = expression  # The sent expression
         self.expression_checker = expression_checker  # checker used to check if message passes given filters
-        self.expression_populator = expression_populator #
-        self.expression_reducer = expression_reducer
 
         self.given_to_hosts = []  # List of hosts that this expression has been given to
 
@@ -48,9 +46,7 @@ class ChannelMessage():
                 continue
             else:
                 cmp_expr = ComparisonExpression(f, self.expression.elements[i], COMPARISON_TYPE_EQUAL)
-                if not self.expression_checker.result(cmp_expr, self.sender,
-                                                      self.expression_populator,
-                                                      self.expression_reducer):
+                if not self.expression_checker.result(cmp_expr, self.sender):
                     return False
         return True
 
@@ -241,14 +237,17 @@ class Manager():
     
     def __init__(self, channels):
         self.channels = channels
-        self.topologies = {}
+        self.router = Router()
         
     def add_topology(self, name, topology):
-        self.topologies[name] = topology
+        self.router.add_topology(name, topology)
         
     def has_topology(self, name):
-        return name in self.topologies
-        
+        return self.router.has_topology(name)
+    
+    def get_router(self):
+        return self.router
+    
     def find_channel(self, name, predicate=None):
         """
         """
@@ -283,25 +282,41 @@ class Manager():
             return self.find_channel(instruction.channel_name,
                                      predicate=lambda x: x.is_connected_with_host(host))
 
-    def build_message(self, sender, expression, expression_checker,
-                      expression_populator, expression_reducer):
+    def build_message(self, sender, expression, expression_checker):
         """
         Creates a message that will be sent.
         """
-        return ChannelMessage(sender, expression, expression_checker,
-                              expression_populator, expression_reducer)
+        return ChannelMessage(sender, expression, expression_checker)
 
     def build_message_request(self, receiver, communication_instruction,
-                              expression_populator, expression_reducer):
+                              expression_populator):
         """
         Creates a request for message when host executes instruction IN
         """
         filters = []
         for f in communication_instruction.filters:
             if isinstance(f, CallFunctionExpression):
-                filters.append(expression_populator.populate(f, receiver, expression_reducer))
+                filters.append(expression_populator.populate(f, receiver))
             else:
                 filters.append(f)
         return ChannelMessageRequest(receiver, communication_instruction)
+    
+    
+class Router():
+    
+    def __init__(self):
+        self.topologies = {}
+        self.routing = {}
+        
+    def add_topology(self, name, topology):
+        self.topologies[name] = topology
+        self.routing[name] = {} # SENDER -> [(NEXT, [RECEIVER1, RECEIVER2, ...), ...]
+        
+    def has_topology(self, name):
+        return name in self.topologies
+    
+    def get_next_hop_host(self, topology_name, sender, receiver):
+        return receiver
+     
     
     

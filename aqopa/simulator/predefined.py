@@ -1,14 +1,16 @@
-from aqopa.model import original_name, CallFunctionExpression
+from aqopa.model import original_name, CallFunctionExpression,\
+    IdentifierExpression
 from aqopa.simulator.error import RuntimeException
 
 ###############################
 #    PREDEFINED FUNCTIONS
 ###############################
 
+
 # Function ID
 
 
-def _predefined_id_function__populate(call_function_expression, host, populator, reducer):
+def _predefined_id_function__populate(call_function_expression, host, populator, context=None):
     existing_host_name = getattr(call_function_expression, '_host_name', None)
     if existing_host_name is not None:
         return call_function_expression
@@ -39,58 +41,98 @@ def _predefined_id_function__are_equal(left, right):
         return False
     return left_host_name == right_host_name
 
+
 # Function routing_next
 
 
-def _predefined_routing_next_function__populate(call_function_expression, host, populator, reducer):
+def _predefined_routing_next_function__populate(call_function_expression, host, populator, context=None):
 
+    topology_name = call_function_expression.arguments[0].identifier
+
+    receiver_function_id_expression = call_function_expression.arguments[1]
+    receiver_function_id_expression = _predefined_id_function__populate(receiver_function_id_expression, 
+                                                                        host, populator)
+    receiver_name = getattr(receiver_function_id_expression, '_host_name')
+    
+    receiver = None
+    for h in context.hosts:
+        if h.name == receiver_name:
+            receiver = h
+            break
+         
+    sender = host
+    if len(call_function_expression.arguments) > 2:
+        sender_function_id_expression = call_function_expression.arguments[2]
+        sender_function_id_expression = _predefined_id_function__populate(sender_function_id_expression, 
+                                                                          host, populator)
+        sender_name = getattr(sender_function_id_expression, '_host_name')
+        if sender_name != sender.name:
+            sender = None
+            for h in context.hosts:
+                if h.name == sender_name:
+                    sender = h
+                    break
+    
+    if sender is None:
+        raise RuntimeException("Host '%s' undefined." % sender_name)
+    if receiver is None:
+        raise RuntimeException("Host '%s' undefined." % receiver_name)
+    
     # TODO: Include topology
+    host = context.channels_manager.get_router().get_next_hop_host(topology_name, sender, receiver)
+    if host is None:
+        raise RuntimeException("The route from host '%s' to host '%s' cannot be found." 
+                               % (sender_name, receiver_name))
 
-    call_function_id_expression = call_function_expression.arguments[0]
-    return _predefined_id_function__populate(call_function_id_expression, host, populator, reducer)
-
+    id_function = CallFunctionExpression('id', arguments=[IdentifierExpression(host.name)])
+    setattr(id_function, '_host_name', host.name)
+    return id_function
 
 def _predefined_routing_next_function__clone(call_function_expression):
     return call_function_expression.clone()
+
 
 ###############################
 #    PREDEFINED MANAGEMENT
 ###############################
 
-functions_map = {
-    'id': {
-        'populate': _predefined_id_function__populate,
-        'clone': _predefined_id_function__clone,
-        'are_equal': _predefined_id_function__are_equal
-    },
-    'routing_next': {
-        'populate': _predefined_routing_next_function__populate,
-        'clone': _predefined_routing_next_function__clone,
-        'are_equal': None
-    }
-}
+class FunctionsManager():
+    
+    def __init__(self, context):
+        self.context = context
+        self.functions_map = {
+                'id': {
+                    'populate': _predefined_id_function__populate,
+                    'clone': _predefined_id_function__clone,
+                    'are_equal': _predefined_id_function__are_equal
+                },
+                'routing_next': {
+                    'populate': _predefined_routing_next_function__populate,
+                    'clone': _predefined_routing_next_function__clone,
+                    'are_equal': None
+                }
+            }
 
-
-def is_function_predefined(function_name):
-    return function_name in functions_map
-
-
-def populate_call_function_expression_result(call_function_expression, host, populator, reducer):
-    fun_name = call_function_expression.function_name
-    if not is_function_predefined(fun_name):
-        return call_function_expression
-    return functions_map[fun_name]['populate'](call_function_expression, host, populator, reducer)
-
-
-def clone_call_function_expression(call_function_expression):
-    fun_name = call_function_expression.function_name
-    if not is_function_predefined(fun_name):
-        return call_function_expression.clone()
-    return functions_map[fun_name]['clone'](call_function_expression)
-
-
-def are_equal_call_function_expressions(left, right):
-    if not isinstance(left, CallFunctionExpression) or not isinstance(right, CallFunctionExpression):
-        raise RuntimeException("Trying to compare predefined functions expressions, but they are not.")
-    return functions_map[left.function_name]['are_equal'](left, right)
-
+    def is_function_predefined(self, function_name):
+        return function_name in self.functions_map
+    
+    
+    def populate_call_function_expression_result(self, call_function_expression, host, populator):
+        fun_name = call_function_expression.function_name
+        if not self.is_function_predefined(fun_name):
+            return call_function_expression
+        return self.functions_map[fun_name]['populate'](call_function_expression, host, populator, context=self.context)
+    
+    
+    def clone_call_function_expression(self, call_function_expression):
+        fun_name = call_function_expression.function_name
+        if not self.is_function_predefined(fun_name):
+            return call_function_expression.clone()
+        return self.functions_map[fun_name]['clone'](call_function_expression)
+    
+    
+    def are_equal_call_function_expressions(self, left, right):
+        if not isinstance(left, CallFunctionExpression) or not isinstance(right, CallFunctionExpression):
+            raise RuntimeException("Trying to compare predefined functions expressions, but they are not.")
+        return self.functions_map[left.function_name]['are_equal'](left, right)
+    

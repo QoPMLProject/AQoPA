@@ -536,10 +536,7 @@ class AssignmentInstructionExecutor(InstructionExecutor):
         
         if isinstance(expression, IdentifierExpression) or isinstance(expression, CallFunctionExpression) \
                 or isinstance(expression, TupleExpression) or isinstance(expression, TupleElementExpression):
-            return context.expression_populator.populate(
-                expression,
-                context.get_current_host(),
-                context.expression_reducer)
+            return context.expression_populator.populate(expression, context.get_current_host())
         
         raise RuntimeException("Expression '%s' cannot be a value of variable.")
 
@@ -658,9 +655,7 @@ class CommunicationInstructionExecutor(InstructionExecutor):
                 messages.append(context.channels_manager.build_message(
                     context.get_current_host(),
                     context.get_current_host().get_variable(p).clone(),
-                    context.expression_checker,
-                    context.expression_populator,
-                    context.expression_reducer))
+                    context.expression_checker))
             channel.send_messages(context.get_current_host(), messages)
 
             # Go to next instruction
@@ -670,8 +665,7 @@ class CommunicationInstructionExecutor(InstructionExecutor):
         else:
             request = context.channels_manager.build_message_request(context.get_current_host(),
                                                                      instruction,
-                                                                     context.expression_populator,
-                                                                     context.expression_reducer)
+                                                                     context.expression_populator)
             channel.wait_for_message(request)
             
         return ExecutionResult(consumes_cpu=True, 
@@ -733,9 +727,7 @@ class IfInstructionExecutor(InstructionExecutor):
         current_process = context.get_current_host().get_current_process()
         
         contidion_result = context.expression_checker.result(instruction.condition, 
-                                        context.get_current_host(),
-                                        context.expression_populator, 
-                                        context.expression_reducer)
+                                        context.get_current_host())
 
         instructions_list = []
         if contidion_result:
@@ -771,9 +763,7 @@ class WhileInstructionExecutor(InstructionExecutor):
         current_process = context.get_current_host().get_current_process()
 
         contidion_result = context.expression_checker.result(instruction.condition,
-                                        context.get_current_host(),
-                                        context.expression_populator,
-                                        context.expression_reducer)
+                                        context.get_current_host())
         
         if contidion_result:
             instructions_list = instruction.instructions

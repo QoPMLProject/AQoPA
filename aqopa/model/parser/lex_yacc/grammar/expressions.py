@@ -45,12 +45,12 @@ class Builder():
 
     def build_expression_call_routing_next(self, token):
         """
-        expression_call_routing_next_function : ROUTING_NEXT LPARAN expression_call_routing_next_argument RPARAN
-                                            | ROUTING_NEXT LPARAN expression_call_routing_next_argument COMMA expression_call_routing_next_argument RPARAN
+        expression_call_function : ROUTING_NEXT LPARAN IDENTIFIER COMMA expression_call_routing_next_argument RPARAN
+                                            | ROUTING_NEXT LPARAN IDENTIFIER COMMA expression_call_routing_next_argument COMMA expression_call_routing_next_argument RPARAN
         """
-        arguments = [token[3]]
-        if len(token) == 7:
-            arguments.append(token[5])
+        arguments = [IdentifierExpression(token[3]), token[5]]
+        if len(token) == 9:
+            arguments.append(token[7])
         return CallFunctionExpression(token[1], arguments)
 
     def build_comparison_expression(self, token):
@@ -140,8 +140,8 @@ class ModelParserExtension(LexYaccParserExtension):
 
     def expression_call_routing_next_function(self, t):
         """
-        expression_call_function : ROUTING_NEXT LPARAN expression_call_routing_next_argument RPARAN
-                                            | ROUTING_NEXT LPARAN expression_call_routing_next_argument COMMA expression_call_routing_next_argument RPARAN
+        expression_call_function : ROUTING_NEXT LPARAN IDENTIFIER COMMA expression_call_routing_next_argument RPARAN
+                                            | ROUTING_NEXT LPARAN IDENTIFIER COMMA expression_call_routing_next_argument COMMA expression_call_routing_next_argument RPARAN
         """
         t[0] = self.builder.build_expression_call_routing_next(t)
 

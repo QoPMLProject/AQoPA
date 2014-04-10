@@ -13,7 +13,7 @@ from aqopa.model.store import QoPMLModelStore
 from aqopa.model import HostProcess, name_indexes, original_name,\
     HostSubprocess, WhileInstruction, IfInstruction
 from aqopa.simulator import Simulator,\
-    expression, state, equation, metrics, communication, scheduler
+    expression, state, equation, metrics, communication, scheduler, predefined
     
 from aqopa.simulator.state import Executor,\
     AssignmentInstructionExecutor, IfInstructionExecutor,\
@@ -241,17 +241,6 @@ class Builder():
                     host_instructions_list.append(simulated_process)
             
             return host_instructions_list
-            
-        def set_predefined_variables(host, predefined_values, populator, reducer):
-            """
-            Populate predefined values with expressions 
-            and save them as variables in host
-            """
-            for predefined_value in predefined_values:
-                host.set_variable(predefined_value.variable_name, 
-                                  populator.populate(predefined_value.expression,
-                                                     host,
-                                                     reducer))
         
         def set_scheduler(host, algorithm):
             """
@@ -288,12 +277,6 @@ class Builder():
                 # Set scheduler
                 set_scheduler(simulation_host, parsed_host.schedule_algorithm)
                 
-                # Save predefined values as variables
-                set_predefined_variables(simulation_host, 
-                                         parsed_host.predefined_values, 
-                                         populator, 
-                                         reducer)
-                
                 for ch in assigned_channels:
                     ch.connect_with_host(simulation_host)
                 
@@ -302,19 +285,36 @@ class Builder():
             hosts_numbers[run_host.host_name] += run_host.repetitions 
             
         return built_hosts
+
+    def _set_hosts_predefined_values(self, store, hosts, populator):
+            
+        def set_predefined_variables(host, predefined_values, populator):
+            """
+            Populate predefined values with expressions 
+            and save them as variables in host
+            """
+            for predefined_value in predefined_values:
+                host.set_variable(predefined_value.variable_name, 
+                                  populator.populate(predefined_value.expression,
+                                                     host))    
+        for host in hosts:
+            parsed_host = store.find_host(host.original_name())
+            # Save predefined values as variables
+            set_predefined_variables(host, parsed_host.predefined_values, populator)
+        return hosts
     
-    def _build_expression_populator(self):
+    def _build_expression_populator(self, reducer):
         """
         Build and return object that populates expressions
         with variables' values.
         """
-        return expression.Populator()
+        return expression.Populator(reducer)
     
-    def _build_expression_checker(self):
+    def _build_expression_checker(self, populator):
         """
         Build and return object that checks the logic value of expressions.
         """
-        return expression.Checker()
+        return expression.Checker(populator)
     
     def _build_expression_reducer(self, equations):
         """
@@ -412,6 +412,12 @@ class Builder():
                 topology_rules = store.topologies[n]['rules']
                 mgr.add_topology(n, self._build_topology(topology_rules, built_hosts))
         return mgr
+    
+    def _build_predefined_functions_manager(self, context):
+        """
+        Build manager for predefined functions
+        """
+        return predefined.FunctionsManager(context)
         
     def _build_metrics_manager(self, store, hosts, version):
         """
@@ -495,12 +501,13 @@ class Builder():
         functions = self._build_functions(store)
         equations = self._build_equations(store, functions)
         expression_reducer = self._build_expression_reducer(equations)
-        expression_populator = self._build_expression_populator()
-        expression_checker = self._build_expression_checker()
+        expression_populator = self._build_expression_populator(expression_reducer)
+        expression_checker = self._build_expression_checker(expression_populator)
         channels = self._build_channels(store, version)
         hosts = self._build_hosts(store, version, functions, channels,
                                   expression_populator, expression_reducer)
 
+        # Context
         c = state.Context(version)
         c.functions = functions
         c.hosts = hosts
@@ -509,6 +516,14 @@ class Builder():
         c.expression_populator = expression_populator
         c.metrics_manager = self._build_metrics_manager(store, hosts, version);
         c.channels_manager = self._build_channels_manager(channels, hosts, version, store)
+        
+        # Predefined manager
+        predefined_functions_manager = self._build_predefined_functions_manager(c)
+        expression_populator.predefined_functions_manager = predefined_functions_manager 
+        
+        # Predefined hosts' variables
+        self._set_hosts_predefined_values(store, hosts, expression_populator)
+        
         return c
     
     def build_executor(self):
