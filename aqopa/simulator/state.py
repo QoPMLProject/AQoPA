@@ -375,7 +375,6 @@ class InstructionsContext:
         """
         # Go to next instruction in current list
         self._get_current_list().goto_next_instruction()
-
         # While current list is finished but context is not finished
         while not self.finished() and self._get_current_list().finished():
             # Remove current list
@@ -640,12 +639,15 @@ class CommunicationInstructionExecutor(InstructionExecutor):
         """ Overriden """
         instruction = context.get_current_instruction()
         channel = context.channels_manager.find_channel_for_current_instruction(context)
-        
+
+        if context.channels_manager.find_channel(instruction.channel_name) is None:
+            raise RuntimeException("Channel {0} undefined.".format(instruction.channel_name))
+
         if not channel:
             context.get_current_host().get_current_instructions_context().goto_next_instruction()
             context.get_current_host().mark_changed()
-            return ExecutionResult(consumes_cpu=True, 
-                               custom_index_management=True)
+            return ExecutionResult(consumes_cpu=True,
+                                   custom_index_management=True)
         
         if instruction.communication_type == COMMUNICATION_TYPE_OUT:
             params = instruction.variables_names

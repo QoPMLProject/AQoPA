@@ -102,10 +102,6 @@ class ModelParserExtension(LexYaccParserExtension):
         topology_rule : IDENTIFIER topology_arrow IDENTIFIER SEMICOLON
                     | IDENTIFIER topology_arrow IDENTIFIER COLON FLOAT SEMICOLON
         """
-        if isinstance(t[1], basestring):
-            t[1] = TopologyRuleHost(t[1])
-        if isinstance(t[3], basestring):
-            t[3] = TopologyRuleHost(t[3])
         quality = 1
         if len(t) == 7:
             quality = t[5]
@@ -440,7 +436,7 @@ class ConfigParserExtension(LexYaccParserExtension):
             if t[3] == ':':
                 index_range = (None, t[4])
             else:
-                index_range = (t[4], None)
+                index_range = (t[3], None)
         elif len(t) == 7:
             index_range = (t[3], t[5])
         t[0] = TopologyRuleHost(t[1], index_range=index_range)
@@ -453,14 +449,14 @@ class ConfigParserExtension(LexYaccParserExtension):
         """
         
         i_shift = None
-        if len(t) == 6:
-            if t[3] == '-':
-                i_shift = - t[4]
+        if len(t) == 5:
+            i_shift = 0
+        elif len(t) == 7:
+            if t[4] == '-':
+                i_shift = - t[5]
             else:
-                i_shift = t[4]
-        
+                i_shift = t[5]
         t[0] = TopologyRuleHost(t[1], i_shift=i_shift)
-        
 
     def version_topology_arrow(self, t):
         """

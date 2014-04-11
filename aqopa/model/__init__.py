@@ -559,10 +559,27 @@ class MetricsPrimitive():
 
 class TopologyRuleHost():
     
-    def __init__(self, identifier, index_range = None, i_shift=None):
+    def __init__(self, identifier, index_range=None, i_shift=None):
         self.identifier = identifier
         self.index_range = index_range
         self.i_shift = i_shift
+
+    def __unicode__(self):
+        s = self.identifier
+        if self.index_range is not None:
+            s += "["
+            if self.index_range[0] is not None:
+                s += str(self.index_range[0])
+            s += ":"
+            if self.index_range[1] is not None:
+                s += str(self.index_range[1])
+            s += "]"
+        elif self.i_shift is not None:
+            s += "[i"
+            if self.i_shift >= 0:
+                s += "+"
+            s += str(self.i_shift) + "]"
+        return unicode(s)
 
 class TopologyRule():
     
@@ -571,6 +588,9 @@ class TopologyRule():
         self.right_host = right_host
         self.arrow = arrow
         self.quality = quality
+
+    def __unicode__(self):
+        return u"%s %s %s : %s" % (unicode(self.left_host), self.arrow, unicode(self.right_host), str(self.quality))
       
 ################################
 #       Algorithms

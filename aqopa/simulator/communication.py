@@ -3,6 +3,8 @@ Created on 07-05-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
+import copy
+import sys
 from aqopa.model import original_name, name_indexes,\
     CommunicationInstruction, TupleExpression, ComparisonExpression, COMPARISON_TYPE_EQUAL, CallFunctionExpression
 from aqopa.simulator.error import RuntimeException
@@ -211,7 +213,7 @@ class Channel():
                     request.receiver.set_variable(request.instruction.variables_names[i],
                                                   message.expression)
                     message.use_by_host(request.receiver)
-                
+
                 request.receiver.get_instructions_context_of_instruction(request.instruction)\
                     .goto_next_instruction()
                 request.receiver.mark_changed()
@@ -305,18 +307,148 @@ class Manager():
 class Router():
     
     def __init__(self):
-        self.topologies = {}
-        self.routing = {}
+        self.topologies = {}  # { TOPOLOGY_NAME ->
+                              #     { SENDER -> {
+                              #         'hosts': [HOST, HOST, ...]
+                              #         'quality': { HOST -> QUALITY, HOST -> QUALITY, ... }
+                              #     } }
+                              # }
+        self.routing = {}  # { TOPOLOGY_NAME ->
+                           #    SENDER -> {
+                           #        NEXT -> [RECEIVER1, RECEIVER2, ...),
+                           #        ...
+                           #    }
+                           # }
         
     def add_topology(self, name, topology):
-        self.topologies[name] = topology
-        self.routing[name] = {} # SENDER -> [(NEXT, [RECEIVER1, RECEIVER2, ...), ...]
+        self.topologies[name] = topology  # { SENDER -> {
+                                          #         'hosts': [HOST, HOST, ...]
+                                          #         'quality': { HOST -> QUALITY, HOST -> QUALITY, ... }
+                                          #     }
+        self.routing[name] = {}  # SENDER -> {
+                                 #     NEXT -> [RECEIVER1, RECEIVER2, ...),
+                                 #     ...
+                                 # }
         
     def has_topology(self, name):
         return name in self.topologies
-    
+
+    def _find_existing_next_hop_host(self, topology_name, sender, receiver):
+        """
+        Finds existing next hop host in the path from sender to receiver.
+        If path does not exist, return None.
+        """
+        routing = self.routing[topology_name]
+        if not sender in routing:
+            return None
+        sender_routing = routing[sender]
+        for next_hop in sender_routing:
+            if receiver in sender_routing[next_hop]:
+                return next_hop
+        return None
+
     def get_next_hop_host(self, topology_name, sender, receiver):
-        return receiver
-     
-    
-    
+        """
+        Returns the next host which is in the path between sender and receiver.
+        If path does not exist, None is returned.
+        """
+        # Check if path already exists
+        existing_next_hop = self._find_existing_next_hop_host(topology_name, sender, receiver)
+        if existing_next_hop is not None:
+            return existing_next_hop
+        # Build path using Dijsktra algorithm
+        topology = self.topologies[topology_name]
+
+        def find_closest_host(distances, out):
+            closest_host = None
+            d = -1
+            for h in distances:
+                if d < 0 or d > distances[h]:
+                    if h not in out:
+                        closest_host = h
+                        d = distances[h]
+            return closest_host, d
+
+        # Dijsktra
+        distances = {sender: 0}
+        out = []
+        closest, closes_distance = find_closest_host(distances, out)
+        while (closest is not None) and (closest != receiver):
+            if closest in topology:
+                qualities = topology[closest]['quality']
+                for next_host in qualities:
+                    if (next_host not in distances) \
+                            or ((closes_distance + qualities[next_host]) < distances[next_host]):
+                        distances[next_host] = closes_distance + qualities[next_host]
+            out.append(closest)
+            closest, closes_distance = find_closest_host(distances, out)
+
+        def update_paths(topology_name, sender, distances):
+            topology = self.topologies[topology_name]
+            routing = self.routing[topology_name]
+
+            hosts_to_update = [(sender, distances[sender], [sender])]
+            while len(hosts_to_update) > 0:
+                # Get element from the en of list (FIFO)
+                current_host_tuple = hosts_to_update.pop()
+                current_host = current_host_tuple[0]
+                current_distance = current_host_tuple[1]
+                current_path = copy.copy(current_host_tuple[2])
+
+                if current_host in topology:
+                    host_topology = topology[current_host]
+                    for next_host in host_topology['quality']:
+                        # If is on the shortest path
+                        if next_host in distances \
+                                and (distances[next_host] == current_distance + host_topology['quality'][next_host]):
+                            current_path.append(next_host)
+
+                            # Insert next host to
+                            hosts_to_update.insert(0, (next_host, distances[next_host], current_path))
+
+                            # Add all possible connection in the path
+                            for i in range(0, len(current_path)-1):
+                                from_host = current_path[i]
+                                nxt_host = current_path[i+1]
+                                to_host = current_path[-1]
+                                if from_host not in routing:
+                                    routing[from_host] = {}
+                                if nxt_host not in routing[from_host]:
+                                    routing[from_host][nxt_host] = []
+                                if to_host not in routing[from_host][nxt_host]:
+                                    routing[from_host][nxt_host].append(to_host)
+
+
+#
+#        Printer().print_routing(self.routing[topology_name])
+#
+
+        update_paths(topology_name, sender, distances)
+        return self._find_existing_next_hop_host(topology_name, sender, receiver)
+
+
+class Printer():
+
+    def print_topology(self, topology):
+        for sender in topology:
+            snlen = len(sender.name)
+            print sender.name
+
+            for next in topology[sender]['quality']:
+                print " " * snlen, ' -> ', next.name, ' : ', topology[sender]['quality'][next]
+
+    def print_routing(self, routing):
+        for sender in routing:
+            snlen = len(sender.name)
+            print sender.name
+
+            for next in routing[sender]:
+                nnlen = len(next.name)
+                print " " * snlen, ' -> ', next.name
+
+                for receiver in routing[sender][next]:
+                    print " " * (snlen+nnlen+4), ' -> ', receiver.name
+
+
+
+

@@ -68,9 +68,11 @@ class Populator():
                 raise RuntimeException("Cannot compute expression '{0}'. Variable {1} is not a tuple. It is: {2}.".format(
                                             unicode(main_expression), expression.variable_name, unicode(expr)))
             if len(expr.elements) <= expression.index:
+                print host.name
                 raise RuntimeException( 
-                        "Cannot compute expression '{0}'. Variable {1} does not have index {2}. It has {3} elements.".format(
-                            unicode(main_expression), expression.variable_name, expression.index, len(expr.elements)))
+                    "Cannot compute expression '{0}'. Variable {1} does not have index {2}. It has {3} elements: {4}."\
+                    .format(unicode(main_expression), expression.variable_name,
+                            expression.index, len(expr.elements), unicode(expr)))
             return self.populate(expr.elements[expression.index], host, main_expression=main_expression)
         
         return expression.clone()

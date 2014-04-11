@@ -335,7 +335,7 @@ class Builder():
         return built_channels
     
     def _build_topology(self, topology_rules, hosts):
-        
+
         def find_left_hosts(topology_host, hosts):
             found_hosts = []
             for host in hosts:
@@ -365,12 +365,11 @@ class Builder():
                             found_hosts.append(host)
                         else:
                             # Index shift is specified
-                            i = host.get_name_index()
+                            i = current_host.get_name_index()
                             i += topology_host.i_shift
-                            shifted_host_name = topology_host.identifier + "." + i
-                            for h in hosts:
-                                if h.name == shifted_host_name:
-                                    found_hosts.append(h)
+                            shifted_host_name = topology_host.identifier + "." + str(i)
+                            if host.name == shifted_host_name:
+                                found_hosts.append(host)
                     else:
                         # Range is specified
                         start_i = topology_host.index_range[0]
@@ -387,7 +386,7 @@ class Builder():
                 topology[from_host]['hosts'].append(to_host)
                 topology[from_host]['quality'][to_host] = quality
             return topology
-        
+
         topology = {}
         for rule in topology_rules:
             for left_host in find_left_hosts(rule.left_host, hosts):
