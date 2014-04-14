@@ -123,7 +123,7 @@ class Channel():
     
     def get_dropped_messages_nb(self):
         """
-        Return number of messages dropped on this channel  
+        Return number of messages dropped on this channel
         """
         return self._dropped_messages_cnt
 
@@ -173,18 +173,28 @@ class Channel():
         
         # Check if request can be bound with expressions
         self._bind_sent_expressions_with_receivers()
-        
+
     def _bind_sent_expressions_with_receivers(self):
         """
         Checks if have any messages and requests and if yes, bind them.
         """
-        checked_hosts = []
+
+        # TODO: Think about ommiting host
+        # On one hand message should not be used twice by the same host because if host has a buffer
+        # then the same message could go to the same host in followed in instruction
+        # (can be divided by instruction contexts)
+        #
+        # On the other hand, why message should not go twice to the same host while it is still in the channel?
+        # Maybe host has two processes that may work on the same messages - then one message shuld go to both processes.
+        # That's is how it is in real world.
+
+        checked_and_unfilled_hosts = []
         for request in self._waiting_requests:
             # If receiver has been already checked in this function call
+            # and the request has not been fullfiled
             # omit his next requests (FIFO)
-            if request.receiver in checked_hosts:
+            if request.receiver in checked_and_unfilled_hosts:
                 continue
-            checked_hosts.append(request.receiver)
 
             needed_expressions_nb = len(request.instruction.variables_names)
             filters = request.instruction.filters
@@ -219,6 +229,9 @@ class Channel():
                 request.receiver.mark_changed()
             
                 self._waiting_requests.remove(request)
+            else:
+                # Add host to unfilled hosts list
+                checked_and_unfilled_hosts.append(request.receiver)
 
         # Update sent messages list according to buffer size
         removed_messages = []
