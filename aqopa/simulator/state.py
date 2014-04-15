@@ -662,6 +662,7 @@ class CommunicationInstructionExecutor(InstructionExecutor):
                         context.get_current_host(),
                         context.get_current_host().get_variable(p).clone(),
                         context.expression_checker))
+                kwargs['sent_messages'] = messages
             channel.send_messages(context.get_current_host(), messages)
 
             # Go to next instruction
@@ -669,13 +670,18 @@ class CommunicationInstructionExecutor(InstructionExecutor):
             context.get_current_host().mark_changed()
             
         else:
-            request = context.channels_manager.build_message_request(context.get_current_host(),
-                                                                     instruction,
-                                                                     context.expression_populator)
+            if kwargs is not None and 'messages_request' in kwargs:
+                request = kwargs['messages_request']
+            else:
+                request = context.channels_manager.build_message_request(context.get_current_host(), instruction,
+                                                                         context.expression_populator)
+                kwargs['messages_request'] = request
+
             channel.wait_for_message(request)
             
         return ExecutionResult(consumes_cpu=True, 
-                               custom_index_management=True)
+                               custom_index_management=True,
+                               result_kwargs=kwargs)
                 
     def can_execute_instruction(self, instruction):
         """ Overriden """

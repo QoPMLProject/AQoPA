@@ -18,8 +18,10 @@ class Module(module.Module):
         
         self.guis           = {}        # Divided by simulators - the reason for dict
         
-        self.channel_message_traces = {}  # Divided by simulators - the reason for dict
-        self.channel_next_message_id = {} # Divided by simulators - the reason for dict
+        self.channel_request_times = {}  # Times when a request has been created
+                                         # (divided by simulators - the reason for dict)
+        self.channel_message_times = {}  # Times when a message has been sent
+                                         # (divided by simulators - the reason for dict)
 
     def get_gui(self):
         if not getattr(self, '__gui', None):
@@ -62,15 +64,6 @@ class Module(module.Module):
         tt = self.timetraces[simulator]
         tt.append(TimeTrace(host, process, instruction, expressions_details, started_at, length))
         
-    def add_channel_message_trace(self, simulator, channel, message_index, sender, sent_at, 
-                                  receiver=None, received_at=None):
-        if simulator not in self.channel_message_traces:
-            self.channel_message_traces[simulator] = {}
-        if channel not in self.channel_message_traces[simulator]:
-            self.channel_message_traces[simulator][channel] = []
-        cmt = self.channel_message_traces[simulator][channel]
-        cmt.append(ChannelMessageTrace(channel, message_index, sender, sent_at, receiver, received_at))
-        
     def set_current_time(self, simulator, host, time):
         """ """
         if simulator not in self.current_times:
@@ -84,22 +77,30 @@ class Module(module.Module):
         if host not in self.current_times[simulator]:
             self.current_times[simulator][host] = 0
         return self.current_times[simulator][host]
-    
-    def get_channel_message_traces(self, simulator, channel):
+
+    def add_message_sent_time(self, simulator, message, time):
         """ """
-        if simulator not in self.channel_message_traces:
-            return []
-        if channel not in self.channel_message_traces[simulator]:
-            return []
-        return self.channel_message_traces[simulator][channel]
-    
-    def get_channel_next_message_id(self, simulator, channel):
+        if simulator not in self.channel_message_times:
+            self.channel_message_times[simulator] = {}
+        self.channel_message_times[simulator][message] = time
+
+    def get_message_sent_time(self, simulator, message):
+        if simulator not in self.channel_message_times:
+            return None
+        if message not in self.channel_message_times[simulator]:
+            return None
+        return self.channel_message_times[simulator][message]
+
+    def add_request_created_time(self, simulator, request, time):
         """ """
-        if simulator not in self.channel_next_message_id:
-            self.channel_next_message_id[simulator] = {}
-        if channel not in self.channel_next_message_id[simulator]:
-            self.channel_next_message_id[simulator][channel] = 0
-        result = self.channel_next_message_id[simulator][channel]
-        self.channel_next_message_id[simulator][channel] += 1
-        return result
-        
+        if simulator not in self.channel_request_times:
+            self.channel_request_times[simulator] = {}
+        self.channel_request_times[simulator][request] = time
+
+    def get_request_created_time(self, simulator, request):
+        if simulator not in self.channel_request_times:
+            return None
+        if request not in self.channel_request_times[simulator]:
+            return None
+        return self.channel_request_times[simulator][request]
+

@@ -137,13 +137,13 @@ class Channel():
                 nb += 1
         return nb
 
-    def is_waiting_for_message(self, request):
+    def is_waiting_on_instruction(self, receiver, instruction):
         """
         Returns True if channel is waiting for message.
         """
         for i in range(0, len(self._waiting_requests)):
             waiting_request = self._waiting_requests[i]
-            if waiting_request.instruction == request.instruction and waiting_request.receiver == request.receiver:
+            if waiting_request.instruction == instruction and waiting_request.receiver == receiver:
                 return True
         return False
 
@@ -155,7 +155,7 @@ class Channel():
         if not self.is_connected_with_host(request.receiver):
             raise RuntimeException("Channel '%s' is not connected with host '%s'." % (self.name, request.receiver.name))
         
-        if not self.is_waiting_for_message(request):
+        if not self.is_waiting_on_instruction(request.receiver, request.instruction):
             self._waiting_requests.append(request)
             
         # Check if request can be bound with expressions
@@ -174,33 +174,45 @@ class Channel():
         # Check if request can be bound with expressions
         self._bind_sent_expressions_with_receivers()
 
-    def _bind_sent_expressions_with_receivers(self):
+    def get_fulfilled_requests(self, messages=None, messages_request=None, include_all_sent_messages=False):
         """
-        Checks if have any messages and requests and if yes, bind them.
+        Returns list of tuples (request, [messages that will be binded to this request]).
+        The result list may contain all sent messages - not only those from optional parameter.
         """
+        # We have decided that one message can be assigined to one host ONLY ONCE
+        # and that the next request can be fulfilled when all previous have been fulfilled.
+        # TODO: Maybe it will be worth changing later.
 
-        # TODO: Think about ommiting host
-        # On one hand message should not be used twice by the same host because if host has a buffer
-        # then the same message could go to the same host in followed in instruction
-        # (can be divided by instruction contexts)
-        #
-        # On the other hand, why message should not go twice to the same host while it is still in the channel?
-        # Maybe host has two processes that may work on the same messages - then one message shuld go to both processes.
-        # That's is how it is in real world.
+        all_messages = []
+        all_messages.extend(self._sent_messages)
+        if messages is not None:
+            all_messages.extend(messages)
 
-        checked_and_unfilled_hosts = []
-        for request in self._waiting_requests:
+        all_requests = []
+        all_requests.extend(self._waiting_requests)
+        if messages_request is not None:
+            all_requests.append(messages_request)
+
+        def find_request_tuple(tuples, request):
+            for t in tuples:
+                if t[0] == request:
+                    return t
+            return None
+
+        tuples = []
+        checked_hosts = []
+        for request in all_requests:
             # If receiver has been already checked in this function call
-            # and the request has not been fullfiled
             # omit his next requests (FIFO)
-            if request.receiver in checked_and_unfilled_hosts:
+            if request.receiver in checked_hosts:
                 continue
+            checked_hosts.append(request.receiver)
 
             needed_expressions_nb = len(request.instruction.variables_names)
             filters = request.instruction.filters
 
             found_msgs = []
-            for message in self._sent_messages:
+            for message in all_messages:
                 # Omit messages that has been used by host
                 if message.is_used_by_host(request.receiver):
                     continue
@@ -212,26 +224,45 @@ class Channel():
                 found_msgs.append(message)
 
                 # Stop loop if all needed expressions are found
-                if len(found_msgs) >= needed_expressions_nb:
+                if not include_all_sent_messages and (len(found_msgs) >= needed_expressions_nb):
                     break
 
             # If, after loop, all needed expressions are found
-            # use them by receiver
+            # assign receiver to all messages
             if len(found_msgs) >= needed_expressions_nb:
-                for i in range(0, needed_expressions_nb):
+                for i in range(0, len(found_msgs)):
                     message = found_msgs[i]
-                    request.receiver.set_variable(request.instruction.variables_names[i],
-                                                  message.expression)
-                    message.use_by_host(request.receiver)
+                    t = find_request_tuple(tuples, request)
+                    if t is None:
+                        t = (request, [message])
+                        tuples.append(t)
+                    else:
+                        t[1].append(message)
+        return tuples
 
-                request.receiver.get_instructions_context_of_instruction(request.instruction)\
-                    .goto_next_instruction()
-                request.receiver.mark_changed()
-            
-                self._waiting_requests.remove(request)
-            else:
-                # Add host to unfilled hosts list
-                checked_and_unfilled_hosts.append(request.receiver)
+    def _bind_sent_expressions_with_receivers(self):
+        """
+        Checks if have any messages and requests and if yes, bind them.
+        """
+        # Handle all fulfilled requests (those for which all required messages are found)
+        for request, messages in self.get_fulfilled_requests(messages=None):
+            # For each required expression
+            needed_expressions_nb = len(request.instruction.variables_names)
+            for i in range(0, needed_expressions_nb):
+                message = messages[i]
+                # Set variable sent in message
+                request.receiver.set_variable(request.instruction.variables_names[i],
+                                              message.expression.clone())
+                # Set message as used by host
+                message.use_by_host(request.receiver)
+
+            # Move instructions context to the next instruction
+            request.receiver.get_instructions_context_of_instruction(request.instruction)\
+                .goto_next_instruction()
+            request.receiver.mark_changed()
+
+            # Remove request from list of waiting requests
+            self._waiting_requests.remove(request)
 
         # Update sent messages list according to buffer size
         removed_messages = []

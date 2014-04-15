@@ -212,10 +212,15 @@ class PreInstructionHook(Hook):
         """ """
         channel = context.channels_manager.find_channel_for_current_instruction(context)
         if not channel:
-            return None
-        
+            return ExecutionResult(result_kwargs=kwargs)
+
+        if kwargs is None:
+            kwargs = {}
+
         instruction = context.get_current_instruction()
-        expressions_cnt = len(instruction.variables_names)
+
+        # TODO: Consider situation when host has many context and in one context it is waiting for message
+        # while in second one it can go further (non communication instruction)
 
         # Check if other hosts should send or receive their message through this channel before
         current_host_time = self.module.get_current_time(self.simulator, context.get_current_host())
@@ -247,12 +252,22 @@ class PreInstructionHook(Hook):
                         # The checked host (the one in the past) is waiting for the message
                         # Lets check if the message fot the host is in the channel
                         # If there is, it should be executed first so wait for it
-                        vars_cnt = len(current_instruction.variables_names)
                         host_channel = context.channels_manager.find_channel_for_host_instruction(
                             context, h, current_instruction)
-                        # If channel has enough vars
-                        if len(host_channel.get_queue_of_sending_hosts(vars_cnt)) >= vars_cnt:
-                            delay_communication_execution = True
+
+                        if host_channel:
+                            messages_request = None
+                            if not host_channel.is_waiting_on_instruction(h, current_instruction):
+                                messages_request = context.channels_manager.build_message_request(
+                                    h, current_instruction, context.expression_populator)
+
+                            # Check if request of this host is fulfilled
+                            # If yes, let it go first
+                            fulfilled_requests = host_channel.get_fulfilled_requests(messages_request=messages_request)
+                            for request, messages in fulfilled_requests:
+                                if request.receiver == h and request.instruction == current_instruction:
+                                    delay_communication_execution = True
+                                    break
                 else:
                     # If the checked host (the one in the past) executes some non-communication operation
                     # it should be done first
@@ -260,20 +275,24 @@ class PreInstructionHook(Hook):
 
         ## Delay execution of this instruction
         ## if needed according to previous check
-
         if delay_communication_execution:
             return ExecutionResult(custom_index_management=True,
-                                   finish_instruction_execution=True)
+                                   finish_instruction_execution=True,
+                                   result_kwargs=kwargs)
 
+        ##############################################
         # Now the host with minimal time is executed
+        ##############################################
 
-        # TODO: To be fixed
+        sent_messages = None
+        messages_request = None
 
         if instruction.is_out():
+            # OUT instruction
             sender = context.get_current_host()
-
-            # Build list of messages
-            if kwargs is not None and 'sent_messages' in kwargs:
+            # Get list of messages being sent from upper executor or
+            # build new list
+            if 'sent_messages' in kwargs:
                 sent_messages = kwargs['sent_messages']
             else:
                 sent_messages = []
@@ -283,62 +302,75 @@ class PreInstructionHook(Hook):
                         context.get_current_host(),
                         context.get_current_host().get_variable(p).clone(),
                         context.expression_checker))
+                kwargs['sent_messages'] = sent_messages
 
+            sender_time = self.module.get_current_time(self.simulator, sender)
+            for msg in sent_messages:
                 # Get time of sending and update sender time
-                sending_time = self._get_time_of_sending(message)
-                self.module.set_current_time(sender, self.module.get_current_time(sender) + sending_time)
+                self.module.add_message_sent_time(self.simulator, msg, sender_time)
+                sending_time = self._get_time_of_sending(msg)
+                sender_time += sending_time
+                self.module.set_current_time(self.simulator, sender, sender_time)
 
+        else:
+            # IN instruction
 
-            receivers_list = channel.get_queue_of_receiving_hosts(expressions_cnt)
-            time_of_sending = self.module.get_current_time(self.simulator, sender)
-            for i in range(0, len(receivers_list)):
-                if not receivers_list[i]:  # No receiver for message
-                    self.module.add_channel_message_trace(self.simulator, channel,
-                                                          self.module.get_channel_next_message_id(self.simulator,
-                                                                                                  channel),
-                                                          sender, time_of_sending)
-                else:
-                    if self.module.get_current_time(self.simulator, sender) < self.module.get_current_time(self.simulator, receivers_list[i]):
+            if 'messages_request' in kwargs:
+                request = kwargs['messages_request']
+            else:
+                request = context.channels_manager.build_message_request(context.get_current_host(),
+                                                                         instruction,
+                                                                         context.expression_populator)
+                kwargs['messages_request'] = request
 
-                        raise TimeSynchronizationException("Time synchronization error. Trying to send message from host '%s' at time %s ms while receiving host '%s' has time %s ms." %
-                                                           (unicode(sender),
-                                                            self.module.get_current_time(self.simulator, sender),
-                                                            unicode(receivers_list[i]),
-                                                            self.module.get_current_time(self.simulator, receivers_list[i])))
+            # If waiting request has NOT been created and added before
+            if not channel.is_waiting_on_instruction(request.receiver, request.instruction):
+                receiver = context.get_current_host()
+                self.module.add_request_created_time(self.simulator, receiver,
+                                                     self.module.get_current_time(self.simulator, receiver))
+                messages_request = request
 
-                    # When someone is already waiting for the message
-                    # the sent at time and received at time are the same
-                    time_of_receiving = time_of_sending
-                    self.module.add_channel_message_trace(self.simulator, channel,
-                                                          self.module.get_channel_next_message_id(self.simulator, channel),
-                                                          sender, time_of_sending,
-                                                          receivers_list[i], time_of_receiving)
-                    self.module.set_current_time(self.simulator, receivers_list[i], time_of_receiving)
+        # Now we can update the times of hosts depending on the fulfilled request
+        fulfilled_requests = channel.get_fulfilled_requests(messages=sent_messages, messages_request=messages_request,
+                                                            include_all_sent_messages=True)
+        for request, messages in fulfilled_requests:
+            request_time = self.module.get_request_created_time(self.simulator, request)
+            # Traverse all messages needed to fulfill request
+            for msg in messages:
+                # If sender time is smaller than time when received asked for message
+                # it would mean that sender wants to send message from the past
+                # to the  receiver who started to wait message later
+                if self.module.get_message_sent_time(self.simulator, msg) < request_time:
+                    msg.use_by_host(request.receiver)
 
+        # The messages from the past to the future are removed
+        # Now lets try again to fulfill requests and update the times
+        fulfilled_requests = channel.get_fulfilled_requests(messages=sent_messages,
+                                                            messages_request=messages_request)
+        for request, messages in fulfilled_requests:
+            sorted_messages = []
+            for msg in messages:
+                added = False
+                msg_time = self.module.get_message_sent_time(self.simulator, msg)
+                for i in range(0, len(sorted_messages)):
+                    sorted_msg_time = self.module.get_message_sent_time(self.simulator, sorted_messages[i])
+                    if sorted_msg_time > msg_time:
+                        sorted_messages.insert(i, msg)
+                        added = True
+                if not added:
+                    sorted_messages.append(msg)
 
-        else: # IN communication step
-            sender = None
-            receiver = context.get_current_host()
-            sending_hosts = channel.get_queue_of_sending_hosts(expressions_cnt)
-            for sending_host in sending_hosts:
-                traces = self.module.get_channel_message_traces(self.simulator, channel)
-                for trace in traces:
-                    if trace.sender == sending_host and not trace.receiver:
-                        time_of_sending = self.module.get_current_time(self.simulator, sending_host)
-                        time_of_receiving = self.module.get_current_time(self.simulator, receiver)
-                        if time_of_sending < time_of_receiving:
-                            raise TimeSynchronizationException(
-                                ("Time synchronization error. " +
-                                 "Trying to send message from host '%s' at time %s ms " +
-                                 "while receiving host '%s' has time %s ms.") %
-                                (unicode(sender), self.module.get_current_time(self.simulator, sender),
-                                 unicode(trace.receiver),
-                                 self.module.get_current_time(self.simulator, trace.receiver)))
-                        # Calculate time of receiving as the maximum of sending and receiving
-                        time_of_receiving = max(time_of_sending, time_of_receiving)
-                        trace.add_receiver(receiver, time_of_receiving)
-                        self.module.set_current_time(self.simulator, receiver, time_of_receiving)
+            receiver_time = self.module.get_current_time(self.simulator, request.receiver)
+            for msg in sorted_messages:
+                # Msg time is greater or equal to request time
+                message_time = self.module.get_message_sent_time(self.simulator, msg)
+                # Check if current time of receiver is smaller that time when message was send
+                # If yes, increase receiver time to the time when message was sent
+                if receiver_time < message_time:
+                    receiver_time = message_time
+                # Add the time of receiving (usually equal to time of sending)
+                receiver_time += self._get_time_of_receiving(msg, request)
+            self.module.set_current_time(self.simulator, request.receiver, receiver_time)
 
-                            
-            
+        return ExecutionResult(result_kwargs=kwargs)
         
