@@ -127,7 +127,7 @@ class PreInstructionHook(Hook):
                 vars = update_vars(host, algorithm['instructions'], vars)
 
                 for var_name in self.module.init_vars:
-                    self.module.reputation_vars[host][var_name] = vars[var_name]
+                    self.module.set_reputation_var(host, var_name, vars[var_name])
 
     def _update_vars_tuple(self, context, expression):
         """

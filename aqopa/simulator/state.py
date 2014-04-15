@@ -155,7 +155,7 @@ class Host():
         
     def __unicode__(self):
         return u"host %s" % unicode(self.name)
-        
+
     def original_name(self):
         """"""
         return original_name(self.name)

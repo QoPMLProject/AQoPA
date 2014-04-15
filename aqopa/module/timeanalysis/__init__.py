@@ -14,7 +14,8 @@ class Module(module.Module):
     def __init__(self):
         """ """
         self.timetraces     = {}        # Generated timetraces list for each simulator
-        self.current_times  = {}        # Current times of hosts, key - host instance divided by simulators 
+                                        # (divided by simulators - the reason for dict)
+        self.current_times  = {}        # Current times of hosts, key - host instance divided by simulators
         
         self.guis           = {}        # Divided by simulators - the reason for dict
         
@@ -22,6 +23,8 @@ class Module(module.Module):
                                          # (divided by simulators - the reason for dict)
         self.channel_message_times = {}  # Times when a message has been sent
                                          # (divided by simulators - the reason for dict)
+        self.channel_message_traces = {}  # Time traces for communication steps
+                                          # (divided by simulators - the reason for dict)
 
     def get_gui(self):
         if not getattr(self, '__gui', None):
@@ -63,6 +66,34 @@ class Module(module.Module):
             self.timetraces[simulator] = []
         tt = self.timetraces[simulator]
         tt.append(TimeTrace(host, process, instruction, expressions_details, started_at, length))
+
+    def get_timetraces(self, simulator):
+        """ """
+        if simulator not in self.timetraces:
+            return []
+        return self.timetraces[simulator]
+
+    def add_channel_message_trace(self, simulator, channel, message_index, sender, sent_at, receiver, received_at):
+        if simulator not in self.channel_message_traces:
+            self.channel_message_traces[simulator] = {}
+        if channel not in self.channel_message_traces[simulator]:
+            self.channel_message_traces[simulator][channel] = []
+        cmt = self.channel_message_traces[simulator][channel]
+        cmt.append(ChannelMessageTrace(channel, message_index, sender, sent_at, receiver, received_at))
+
+    def get_channel_message_traces(self, simulator, channel):
+        """ """
+        if simulator not in self.channel_message_traces:
+            return []
+        if channel not in self.channel_message_traces[simulator]:
+            return []
+        return self.channel_message_traces[simulator][channel]
+
+    def get_all_channel_message_traces(self, simulator):
+        """ """
+        if simulator not in self.channel_message_traces:
+            return []
+        return self.channel_message_traces[simulator]
         
     def set_current_time(self, simulator, host, time):
         """ """

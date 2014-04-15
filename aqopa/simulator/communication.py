@@ -4,9 +4,8 @@ Created on 07-05-2013
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
 import copy
-import sys
-from aqopa.model import original_name, name_indexes,\
-    CommunicationInstruction, TupleExpression, ComparisonExpression, COMPARISON_TYPE_EQUAL, CallFunctionExpression
+from aqopa.model import CommunicationInstruction, TupleExpression, ComparisonExpression, COMPARISON_TYPE_EQUAL, \
+    CallFunctionExpression
 from aqopa.simulator.error import RuntimeException
 
 
@@ -391,6 +390,21 @@ class Router():
                 return next_hop
         return None
 
+    def get_hosts_sending_to_receiver(self, topology_name, receiver):
+        """
+        Returns ditictionary:
+         host -> quality
+        containing hosts that can send message to receiver.
+        """
+        if not self.has_topology(topology_name):
+            return {}
+        hosts = {}
+        for sender in self.topologies[topology_name]:
+            sender_topology = self.topologies[topology_name][sender]
+            if receiver in sender_topology['quality']:
+                hosts[sender] = sender_topology['quality'][receiver]
+        return hosts
+
     def get_next_hop_host(self, topology_name, sender, receiver):
         """
         Returns the next host which is in the path between sender and receiver.
@@ -427,47 +441,43 @@ class Router():
             out.append(closest)
             closest, closes_distance = find_closest_host(distances, out)
 
-        def update_paths(topology_name, sender, distances):
-            topology = self.topologies[topology_name]
+        def update_paths(topology_name, receiver, distances):
             routing = self.routing[topology_name]
-
-            hosts_to_update = [(sender, distances[sender], [sender])]
-            while len(hosts_to_update) > 0:
-                # Get element from the en of list (FIFO)
-                current_host_tuple = hosts_to_update.pop()
-                current_host = current_host_tuple[0]
-                current_distance = current_host_tuple[1]
-                current_path = copy.copy(current_host_tuple[2])
-
-                if current_host in topology:
-                    host_topology = topology[current_host]
-                    for next_host in host_topology['quality']:
-                        # If is on the shortest path
-                        if next_host in distances \
-                                and (distances[next_host] == current_distance + host_topology['quality'][next_host]):
-                            current_path.append(next_host)
-
-                            # Insert next host to
-                            hosts_to_update.insert(0, (next_host, distances[next_host], current_path))
-
-                            # Add all possible connection in the path
-                            for i in range(0, len(current_path)-1):
-                                from_host = current_path[i]
-                                nxt_host = current_path[i+1]
-                                to_host = current_path[-1]
-                                if from_host not in routing:
-                                    routing[from_host] = {}
-                                if nxt_host not in routing[from_host]:
-                                    routing[from_host][nxt_host] = []
-                                if to_host not in routing[from_host][nxt_host]:
-                                    routing[from_host][nxt_host].append(to_host)
-
-
+            # Start from receiver
+            current_host = receiver
+            distance = distances[receiver]
+            # Add receiver to path
+            hosts_path = [receiver]
+            # Repeat until we finish handling sender
+            while distance > 0:
+                # Find all hosts that are connected with current host
+                previous_hosts = self.get_hosts_sending_to_receiver(topology_name, current_host)
+                for prev_host in previous_hosts:
+                    # If prev host has not calculated distance, omit him
+                    if prev_host not in distances:
+                        continue
+                    # Check if this host is on the shortest path
+                    prev_quality = previous_hosts[prev_host]
+                    if distances[prev_host] + prev_quality == distances[current_host]:
+                        # Go one step earlier
+                        current_host = prev_host
+                        # Decrease current distance
+                        distance -= prev_quality
+                        if prev_host not in routing:
+                            routing[prev_host] = {}
+                        next_host = hosts_path[0]
+                        if next_host not in routing[prev_host]:
+                            routing[prev_host][next_host] = []
+                        for i in range(0, len(hosts_path)):
+                            routing[prev_host][next_host].append(hosts_path[i])
+                        # Add host to path
+                        hosts_path.insert(0, prev_host)
+                        break
 #
 #        Printer().print_routing(self.routing[topology_name])
 #
 
-        update_paths(topology_name, sender, distances)
+        update_paths(topology_name, receiver, distances)
         return self._find_existing_next_hop_host(topology_name, sender, receiver)
 
 

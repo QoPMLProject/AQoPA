@@ -370,6 +370,9 @@ class PreInstructionHook(Hook):
                     receiver_time = message_time
                 # Add the time of receiving (usually equal to time of sending)
                 receiver_time += self._get_time_of_receiving(msg, request)
+                # Add timetrace to module
+                self.module.add_channel_message_trace(self.simulator, channel, msg, msg.sender,
+                                                      message_time, request.receiver, receiver_time)
             self.module.set_current_time(self.simulator, request.receiver, receiver_time)
 
         return ExecutionResult(result_kwargs=kwargs)
