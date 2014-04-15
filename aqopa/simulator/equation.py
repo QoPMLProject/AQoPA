@@ -114,7 +114,7 @@ class Validator():
                     self._validate_function_names(arg, functions)
         return True
     
-    def _are_expressions_the_same(self, left, right, check_variables=False, variables={}):
+    def _are_expressions_the_same(self, left, right, check_variables=False, variables=None):
         """
         Method checks if expressions are the same in aspect of equations, which means that
         both expressions could be used to reduce another expression.
@@ -126,7 +126,10 @@ class Validator():
         f(x,y,x,x) == f(a,b,a,a) - are the same
         f(x,y,x,x) == f(a,b,a,b) - are not the same, because second b should be a
         """
-        
+
+        if variables is None:
+            variables = {}
+
         if left.__class__ != right.__class__:
             return False
         

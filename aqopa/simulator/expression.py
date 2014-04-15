@@ -40,7 +40,8 @@ class Populator():
         if isinstance(expression, CallFunctionExpression):
 
             if self.is_function_predefined(expression.function_name):
-                populated = self.predefined_functions_manager.populate_call_function_expression_result(expression, host, self)
+                populated = self.predefined_functions_manager.populate_call_function_expression_result(expression,
+                                                                                                       host, self)
                 return self.predefined_functions_manager.clone_call_function_expression(populated)
 
             arguments = []
@@ -130,10 +131,14 @@ class Checker():
         if isinstance(condition, ComparisonExpression):
             left = condition.left
             right = condition.right
-            
+
             left = self.populator.populate(left, host)
             right = self.populator.populate(right, host)
-            
+
+            # Additional populator execution to populate predefined function
+            left = self.populator.populate(left, host)
+            right = self.populator.populate(right, host)
+
             left = self.populator.reducer.reduce(left)
             right = self.populator.reducer.reduce(right)
 

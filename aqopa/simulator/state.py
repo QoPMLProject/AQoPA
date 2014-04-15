@@ -140,10 +140,13 @@ class Host():
     Simulation equivalent of host
     """
     
-    def __init__(self, name, instructions_list, predefined_variables={}):
+    def __init__(self, name, instructions_list, predefined_variables=None):
         self.name = name
         self.instructions_list = instructions_list
-        self._variables = predefined_variables
+
+        self._variables = {}
+        if predefined_variables is not None:
+            self._variables = predefined_variables
         
         self._scheduler = None
         self._changed = False
