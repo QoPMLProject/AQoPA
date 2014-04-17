@@ -8,7 +8,8 @@ import random
 from aqopa.simulator.state import Hook, ExecutionResult
 from aqopa.model import AssignmentInstruction,\
     CallFunctionInstruction, IfInstruction, WhileInstruction,\
-    CommunicationInstruction, CallFunctionExpression, TupleExpression, ComparisonExpression
+    CommunicationInstruction, CallFunctionExpression, TupleExpression, ComparisonExpression, COMMUNICATION_TYPE_OUT, \
+    COMMUNICATION_TYPE_IN
 from aqopa.module.timeanalysis.error import TimeSynchronizationException
 from aqopa.simulator.error import RuntimeException
 
@@ -202,11 +203,84 @@ class PreInstructionHook(Hook):
 
         return time, time_details
 
-    def _get_time_of_sending(self, message):
-        return 1
+    def _find_communication_metric(self, context, channel, host, communication_type):
+        """ Returns metric for communication step. """
+        qop_args = []
+        if channel.tag_name is not None:
+            qop_args = [channel.tag_name]
+        comm_instruction = 'out' if communication_type == COMMUNICATION_TYPE_OUT else 'in'
+        expression = CallFunctionExpression(comm_instruction, qop_arguments=qop_args)
+        return context.metrics_manager.find_primitive(host, expression)
 
-    def _get_time_of_receiving(self, message, request):
-        return 1
+    def _get_time_for_communication_step(self, context, host, metric, message):
+        """ Returns time of sending/receiving message """
+        time = 0
+        block = metric.block
+        for i in range(0, len(block.service_params)):
+            sparam = block.service_params[i]
+            if sparam.service_name.lower() != "time":
+                continue
+
+            metric_type = sparam.param_name.lower()
+            metric_unit = sparam.unit
+            metric_value = metric.service_arguments[i]
+
+            if metric_type == "exact":
+
+                if metric_unit == "ms":
+                    time = float(metric_value)
+
+                elif metric_unit == "s":
+                    time = float(metric_value) * 1000
+
+                elif metric_unit == "mspb" or metric_unit == "mspB":
+
+                    populated_expression = context.expression_populator.populate(
+                                                message.expression, host)
+                    size = context.metrics_manager.get_expression_size(
+                                                        populated_expression,
+                                                        context, host)
+                    msperbyte = float(metric_value)
+                    if metric_unit == "mspb":
+                        msperbyte = msperbyte / 8.0
+
+                    time = msperbyte * size
+
+            elif metric_type == "algorithm":
+
+                #TODO: wykonanie algorytmu
+                pass
+
+            elif metric_type == "block":
+
+                mparts = metric_value.split(':')
+                unit_time = float(mparts[0])
+                unit_size = int(mparts[1])
+                size_unit = metric_unit[1] # how big unit is
+                populated_expression = context.expression_populator.populate(
+                                            message.expression, host)
+                size = context.metrics_manager.get_expression_size(
+                                                    populated_expression,
+                                                    context, host)
+                units = ceil(size / float(unit_size))
+                time = units * unit_time
+                if size_unit == 'b':
+                    time *= 8.0
+        return time
+
+    def _get_time_of_sending(self, context, channel, message):
+        """ Returns time of message sending process """
+        metric = self._find_communication_metric(context, channel, message.sender, COMMUNICATION_TYPE_OUT)
+        if metric is None:
+            return 0
+        return self._get_time_for_communication_step(context, message.sender, metric, message)
+
+    def _get_time_of_receiving(self, context, channel, message, request):
+        """ Returns time of message receiving process """
+        metric = self._find_communication_metric(context, channel, request.receiver, COMMUNICATION_TYPE_IN)
+        if metric is None:
+            return 0
+        return self._get_time_for_communication_step(context, request.receiver, metric, message)
 
     def _execute_communication_instruction(self, context, kwargs=None):
         """ """
@@ -308,7 +382,7 @@ class PreInstructionHook(Hook):
             for msg in sent_messages:
                 # Get time of sending and update sender time
                 self.module.add_message_sent_time(self.simulator, msg, sender_time)
-                sending_time = self._get_time_of_sending(msg)
+                sending_time = self._get_time_of_sending(context, channel, msg)
                 sender_time += sending_time
                 self.module.set_current_time(self.simulator, sender, sender_time)
 
@@ -369,7 +443,7 @@ class PreInstructionHook(Hook):
                 if receiver_time < message_time:
                     receiver_time = message_time
                 # Add the time of receiving (usually equal to time of sending)
-                receiver_time += self._get_time_of_receiving(msg, request)
+                receiver_time += self._get_time_of_receiving(context, channel, msg, request)
                 # Add timetrace to module
                 self.module.add_channel_message_trace(self.simulator, channel, msg, msg.sender,
                                                       message_time, request.receiver, receiver_time)

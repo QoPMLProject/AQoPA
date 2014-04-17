@@ -42,7 +42,7 @@ class Populator():
             if self.is_function_predefined(expression.function_name):
                 populated = self.predefined_functions_manager.populate_call_function_expression_result(expression,
                                                                                                        host, self)
-                return self.predefined_functions_manager.clone_call_function_expression(populated)
+                return populated.clone()
 
             arguments = []
             for arg in expression.arguments:
@@ -60,20 +60,22 @@ class Populator():
         
         if isinstance(expression, TupleElementExpression):
             if expression.variable_name not in variables:
-                raise RuntimeException("Variable {0} does not exist in expression '{1}'.".format(
-                                            expression.variable_name, unicode(main_expression)))
+                raise RuntimeException("Variable {0} does not exist in host {1}. Trying expression '{2}'.".format(
+                    expression.variable_name, host.name, unicode(main_expression)))
             expr = variables[expression.variable_name]
             if not isinstance(expr, TupleExpression):
                 expr = self.reducer.reduce(expr)
             if not isinstance(expr, TupleExpression):
-                raise RuntimeException("Cannot compute expression '{0}'. Variable {1} is not a tuple. It is: {2}.".format(
-                                            unicode(main_expression), expression.variable_name, unicode(expr)))
+                raise RuntimeException(
+                    "Cannot compute expression '{0}' in host {1}. Variable {2} is not a tuple. It is: {3}."
+                    .format(unicode(main_expression), host.name, expression.variable_name, unicode(expr)))
             if len(expr.elements) <= expression.index:
                 print host.name
                 raise RuntimeException( 
-                    "Cannot compute expression '{0}'. Variable {1} does not have index {2}. It has {3} elements: {4}."\
-                    .format(unicode(main_expression), expression.variable_name,
-                            expression.index, len(expr.elements), unicode(expr)))
+                    "Cannot compute expression '{0}' in host {1}. "
+                    "Variable {2} does not have index {3}. It has {4} elements: {5}."
+                    .format(unicode(main_expression), host.name, expression.variable_name, expression.index,
+                            len(expr.elements), unicode(expr)))
             return self.populate(expr.elements[expression.index], host, main_expression=main_expression)
         
         return expression.clone()
@@ -225,6 +227,7 @@ class Reducer():
     
     def __init__(self, equations):
         self.equations = equations
+        self.predefined_functions_manager = None
         
         
     def _get_reduction_points_for_equation(self, equation, whole_expression, current_expression, 
@@ -235,7 +238,7 @@ class Reducer():
         points = []
         variables = {}
         
-        if equation._can_reduce(current_expression, equation.composite, variables):
+        if equation.can_reduce(current_expression, equation.composite, variables, self.predefined_functions_manager):
             
             if isinstance(equation.simple, IdentifierExpression):
                 simpler_value = variables[equation.simple.identifier]

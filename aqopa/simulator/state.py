@@ -540,8 +540,9 @@ class AssignmentInstructionExecutor(InstructionExecutor):
         
         if isinstance(expression, IdentifierExpression) or isinstance(expression, CallFunctionExpression) \
                 or isinstance(expression, TupleExpression) or isinstance(expression, TupleElementExpression):
+            # Population of variables which were previously populated (ie. additional attrs)
             return context.expression_populator.populate(expression, context.get_current_host())
-        
+
         raise RuntimeException("Expression '%s' cannot be a value of variable.")
 
     def execute_instruction(self, context, kwargs=None):
@@ -558,6 +559,8 @@ class AssignmentInstructionExecutor(InstructionExecutor):
 #                                     context.get_current_host().name, 
 #                                     instruction.variable_name, unicode(expression))
 
+        # print 'Host ', context.get_current_host().name, ' setting variable ', \
+        #     instruction.variable_name, ' = ', unicode(expression), ' (', getattr(expression, '_host_name', 'None'), ')'
         context.get_current_host().set_variable(instruction.variable_name, expression)
         context.get_current_host().mark_changed()
         

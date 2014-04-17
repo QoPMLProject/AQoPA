@@ -131,9 +131,18 @@ class CallFunctionExpression():
         return u 
 
     def clone(self):
-        return CallFunctionExpression(copy.copy(self.function_name), 
+        # Regular clone
+        expr = CallFunctionExpression(copy.copy(self.function_name),
                                       [a.clone() for a in self.arguments],
                                       [copy.copy(a) for a in self.qop_arguments])
+
+        # Copy additional values (may come from predefined functions or keep calculated size, etc.)
+        regular_vars = ['function_name', 'arguments', 'qop_arguments']
+        for attr_name in self.__dict__:
+            if attr_name not in regular_vars:
+                setattr(expr, attr_name, copy.deepcopy(self.__dict__[attr_name]))
+        return expr
+
 
 COMPARISON_TYPE_EQUAL = 1
 COMPARISON_TYPE_NOT_EQUAL = 2

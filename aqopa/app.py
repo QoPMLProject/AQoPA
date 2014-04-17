@@ -294,9 +294,11 @@ class Builder():
             and save them as variables in host
             """
             for predefined_value in predefined_values:
-                host.set_variable(predefined_value.variable_name, 
-                                  populator.populate(predefined_value.expression,
-                                                     host))    
+                populated_value = populator.populate(predefined_value.expression.clone(), host)
+                # print 'Setting predefined variable ', predefined_value.variable_name, \
+                #     ' in host ', host.name, ' with value ', unicode(populated_value), \
+                #     ' (', getattr(populated_value, '_host_name', 'None'), ')'
+                host.set_variable(predefined_value.variable_name, populated_value)
         for host in hosts:
             parsed_host = store.find_host(host.original_name())
             # Save predefined values as variables
@@ -330,7 +332,7 @@ class Builder():
         
         built_channels = []
         for parsed_channel in store.channels:
-            channel = communication.Channel(parsed_channel.name, parsed_channel.buffor_size)
+            channel = communication.Channel(parsed_channel.name, parsed_channel.buffor_size, parsed_channel.tag_name)
             built_channels.append(channel)
         return built_channels
     
@@ -513,12 +515,13 @@ class Builder():
         c.expression_reducer = expression_reducer
         c.expression_checker = expression_checker
         c.expression_populator = expression_populator
-        c.metrics_manager = self._build_metrics_manager(store, hosts, version);
+        c.metrics_manager = self._build_metrics_manager(store, hosts, version)
         c.channels_manager = self._build_channels_manager(channels, hosts, version, store)
         
         # Predefined manager
         predefined_functions_manager = self._build_predefined_functions_manager(c)
-        expression_populator.predefined_functions_manager = predefined_functions_manager 
+        expression_populator.predefined_functions_manager = predefined_functions_manager
+        expression_reducer.predefined_functions_manager = predefined_functions_manager
         
         # Predefined hosts' variables
         self._set_hosts_predefined_values(store, hosts, expression_populator)

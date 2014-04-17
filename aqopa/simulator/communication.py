@@ -68,11 +68,11 @@ class Channel():
     Simulation channel.
     """
     
-    def __init__(self, name, buffer_size):
+    def __init__(self, name, buffer_size, tag_name=None):
         self.name = name
         self._buffer_size = buffer_size   # Size of buffer, negative means that buffer is unlimited,
                                                     # zero means that channel is asynhronous 
-        
+        self.tag_name = tag_name
         self._connected_hosts = []  # List of hosts that can use this channel
         self._connected_processes = []  # List of processes that can use this channel
 
