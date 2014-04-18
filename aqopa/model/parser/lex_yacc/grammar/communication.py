@@ -226,7 +226,7 @@ class ModelParserExtension(LexYaccParserExtension):
         comm_algorithm_expression : COMM_MINUS comm_algorithm_expression %prec COMM_UMINUS
         """
         t[0] = t[2]
-        t[0].prepend('-')
+        t[0].prepend('--')
 
     def comm_algorithm_expression_paran(self, t):
         """

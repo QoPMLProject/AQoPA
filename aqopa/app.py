@@ -412,6 +412,8 @@ class Builder():
             if not mgr.has_topology(n):
                 topology_rules = store.topologies[n]['rules']
                 mgr.add_topology(n, self._build_topology(topology_rules, built_hosts))
+        for alg_name in store.communication_algorithms:
+            mgr.add_algorithm(alg_name, store.communication_algorithms[alg_name])
         return mgr
     
     def _build_predefined_functions_manager(self, context):

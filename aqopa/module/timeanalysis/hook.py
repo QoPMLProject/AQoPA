@@ -123,12 +123,12 @@ class PreInstructionHook(Hook):
             for i in range(0, len(block.service_params)):
                 sparam = block.service_params[i]
                 
-                if sparam.service_name.lower() != "time":
+                if sparam.service_name.lower().strip() != "time":
                     continue
 
-                metric_type = sparam.param_name.lower()
+                metric_type = sparam.param_name.lower().strip()
                 metric_unit = sparam.unit
-                metric_value = metric.service_arguments[i]
+                metric_value = metric.service_arguments[i].strip()
 
                 if metric_type == "exact":
 
@@ -212,18 +212,18 @@ class PreInstructionHook(Hook):
         expression = CallFunctionExpression(comm_instruction, qop_arguments=qop_args)
         return context.metrics_manager.find_primitive(host, expression)
 
-    def _get_time_for_communication_step(self, context, host, metric, message):
+    def _get_time_for_communication_step(self, context, channel, host, metric, message, request=None):
         """ Returns time of sending/receiving message """
         time = 0
         block = metric.block
         for i in range(0, len(block.service_params)):
             sparam = block.service_params[i]
-            if sparam.service_name.lower() != "time":
+            if sparam.service_name.lower().strip() != "time":
                 continue
 
-            metric_type = sparam.param_name.lower()
+            metric_type = sparam.param_name.lower().strip()
             metric_unit = sparam.unit
-            metric_value = metric.service_arguments[i]
+            metric_value = metric.service_arguments[i].strip()
 
             if metric_type == "exact":
 
@@ -248,20 +248,27 @@ class PreInstructionHook(Hook):
 
             elif metric_type == "algorithm":
 
-                #TODO: wykonanie algorytmu
-                pass
+                if not context.channels_manager.has_algorithm(metric_value):
+                    raise RuntimeException("Communication algorithm {0} undeclared.".format(metric_value))
+
+                link_quality = None
+                if request is not None:
+                    link_quality = context.channels_manager.get_router().get_link_quality(channel.tag_name,
+                                                                                          message.sender,
+                                                                                          request.receiver)
+                return context.channels_manager.get_algorithm_resolver()\
+                    .get_time(context, host, metric_value, message.expression, link_quality=link_quality)
 
             elif metric_type == "block":
 
                 mparts = metric_value.split(':')
                 unit_time = float(mparts[0])
                 unit_size = int(mparts[1])
-                size_unit = metric_unit[1] # how big unit is
+                size_unit = metric_unit[1]  # how big unit is
                 populated_expression = context.expression_populator.populate(
-                                            message.expression, host)
+                    message.expression, host)
                 size = context.metrics_manager.get_expression_size(
-                                                    populated_expression,
-                                                    context, host)
+                    populated_expression, context, host)
                 units = ceil(size / float(unit_size))
                 time = units * unit_time
                 if size_unit == 'b':
@@ -273,14 +280,14 @@ class PreInstructionHook(Hook):
         metric = self._find_communication_metric(context, channel, message.sender, COMMUNICATION_TYPE_OUT)
         if metric is None:
             return 0
-        return self._get_time_for_communication_step(context, message.sender, metric, message)
+        return self._get_time_for_communication_step(context, channel, message.sender, metric, message)
 
     def _get_time_of_receiving(self, context, channel, message, request):
         """ Returns time of message receiving process """
         metric = self._find_communication_metric(context, channel, request.receiver, COMMUNICATION_TYPE_IN)
         if metric is None:
             return 0
-        return self._get_time_for_communication_step(context, request.receiver, metric, message)
+        return self._get_time_for_communication_step(context, channel, request.receiver, metric, message, request)
 
     def _execute_communication_instruction(self, context, kwargs=None):
         """ """

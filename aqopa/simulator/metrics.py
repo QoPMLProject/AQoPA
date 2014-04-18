@@ -241,5 +241,5 @@ class Manager():
                     raise RuntimeException('Cannot get expression size: Unsupported size type.')
 
                 return size
-            
-        raise RuntimeException('Cannot get expression size: Unsupported expression type.')
+        raise RuntimeException('Cannot get expression size: Unsupported expression type. Expression: {0}.'
+                               .format(unicode(expression)))
