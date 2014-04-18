@@ -64,9 +64,17 @@ class Module(module.Module):
         """
         return deepcopy(self.algorithms[name])
 
+    def set_reputation_var(self, host, var, val):
+        """ """
+        if host not in self.reputation_vars:
+            self.reputation_vars[host] = {}
+        self.reputation_vars[host][var] = val
+
     def get_host_vars(self, host):
         """
         """
+        if host not in self.reputation_vars:
+            return {}
         return copy(self.reputation_vars[host])
 
 

@@ -11,22 +11,42 @@ from aqopa.simulator.error import RuntimeException
 
 class Populator():
     
-    def populate(self, expression, variables, reducer):
+    def __init__(self, reducer):
+        self.reducer = reducer
+        self.predefined_functions_manager = None
+        
+    def is_function_predefined(self, fun_name):
+        return self.predefined_functions_manager is not None \
+            and self.predefined_functions_manager.is_function_predefined(fun_name)
+    
+    def populate(self, expression, host, main_expression=None):
         """
         Returns new expression with replaced variables names 
         with copies of values of variables from variables list.
         Reducer is used for special types of variables, 
         eg. tuple element expressions.
         """
+        if main_expression is None:
+            main_expression = expression
+
+        variables = host.get_variables()
+
         if isinstance(expression, IdentifierExpression):
             if expression.identifier not in variables:
-                raise RuntimeException("Variable '%s' does not exist." % expression.identifier)
+                raise RuntimeException("Variable {0} does not exist in expression '{1}'."\
+                                       .format(expression.identifier, unicode(main_expression)))
             return variables[expression.identifier].clone()
             
         if isinstance(expression, CallFunctionExpression):
+
+            if self.is_function_predefined(expression.function_name):
+                populated = self.predefined_functions_manager.populate_call_function_expression_result(expression,
+                                                                                                       host, self)
+                return populated.clone()
+
             arguments = []
             for arg in expression.arguments:
-                arguments.append(self.populate(arg, variables, reducer))
+                arguments.append(self.populate(arg, host, main_expression=main_expression))
             qop_arguments = []
             for qop_arg in expression.qop_arguments:
                 qop_arguments.append(qop_arg)
@@ -35,23 +55,28 @@ class Populator():
         if isinstance(expression, TupleExpression):
             elements = []
             for e in expression.elements:
-                elements.append(self.populate(e, variables, reducer))
+                elements.append(self.populate(e, host, main_expression=main_expression))
             return TupleExpression(elements)
         
         if isinstance(expression, TupleElementExpression):
             if expression.variable_name not in variables:
-                raise RuntimeException("Variable '%s' does not exist." % expression.variable_name)
+                raise RuntimeException("Variable {0} does not exist in host {1}. Trying expression '{2}'.".format(
+                    expression.variable_name, host.name, unicode(main_expression)))
             expr = variables[expression.variable_name]
             if not isinstance(expr, TupleExpression):
-                expr = reducer.reduce(expr)
+                expr = self.reducer.reduce(expr)
             if not isinstance(expr, TupleExpression):
-                raise RuntimeException("Cannot compute expression %s. Variable '%s' is not a tuple. It is: %s."
-                                       % (unicode(expression), expression.variable_name, unicode(expr)))
-            if len(expr.elements) <= expression.index:
                 raise RuntimeException(
-                    "Cannot compute expression %s. Variable '%s' does not have index %s. It has %d elements."
-                    % (unicode(expression), expression.variable_name, expression.index, len(expr.elements)))
-            return self.populate(expr.elements[expression.index], variables, reducer)
+                    "Cannot compute expression '{0}' in host {1}. Variable {2} is not a tuple. It is: {3}."
+                    .format(unicode(main_expression), host.name, expression.variable_name, unicode(expr)))
+            if len(expr.elements) <= expression.index:
+                print host.name
+                raise RuntimeException( 
+                    "Cannot compute expression '{0}' in host {1}. "
+                    "Variable {2} does not have index {3}. It has {4} elements: {5}."
+                    .format(unicode(main_expression), host.name, expression.variable_name, expression.index,
+                            len(expr.elements), unicode(expr)))
+            return self.populate(expr.elements[expression.index], host, main_expression=main_expression)
         
         return expression.clone()
 
@@ -61,6 +86,9 @@ class Checker():
     Expression checker.
     Class used to check the result of expressions.
     """
+    
+    def __init__(self, populator):
+        self.populator = populator
     
     def _are_equal(self, left, right):
         """
@@ -77,6 +105,11 @@ class Checker():
             return left.val == right.val
 
         if isinstance(left, CallFunctionExpression):
+
+            if self.populator.is_function_predefined(left.function_name):
+                return self.populator.predefined_functions_manager\
+                    .are_equal_call_function_expressions(left, right)
+
             if left.function_name != right.function_name:
                 return False
             if len(left.arguments) != len(right.arguments):
@@ -86,7 +119,7 @@ class Checker():
                     return False
         return True
     
-    def result(self, condition, variables, functions, populator, reducer):
+    def result(self, condition, host):
         """
         Method checks the result of condition.
         Returns True if condition is true or can be reduced to true condition.
@@ -100,14 +133,21 @@ class Checker():
         if isinstance(condition, ComparisonExpression):
             left = condition.left
             right = condition.right
-            
-            left = populator.populate(left, variables, reducer)
-            right = populator.populate(right, variables, reducer)
-            
-            left = reducer.reduce(left)
-            right = reducer.reduce(right)
 
-            result = self._are_equal(left, right)
+            left = self.populator.populate(left, host)
+            right = self.populator.populate(right, host)
+
+            # Additional populator execution to populate predefined function
+            left = self.populator.populate(left, host)
+            right = self.populator.populate(right, host)
+
+            left = self.populator.reducer.reduce(left)
+            right = self.populator.reducer.reduce(right)
+
+            if condition.is_equal_type():
+                result = self._are_equal(left, right)
+            else:
+                result = not self._are_equal(left, right)
             del left
             del right
             return result
@@ -187,6 +227,7 @@ class Reducer():
     
     def __init__(self, equations):
         self.equations = equations
+        self.predefined_functions_manager = None
         
         
     def _get_reduction_points_for_equation(self, equation, whole_expression, current_expression, 
@@ -197,7 +238,7 @@ class Reducer():
         points = []
         variables = {}
         
-        if equation._can_reduce(current_expression, equation.composite, variables):
+        if equation.can_reduce(current_expression, equation.composite, variables, self.predefined_functions_manager):
             
             if isinstance(equation.simple, IdentifierExpression):
                 simpler_value = variables[equation.simple.identifier]
@@ -327,9 +368,5 @@ class Reducer():
                 continue_reducing = True
              
             return expression
-                
-                
-                
-                
                 
                 

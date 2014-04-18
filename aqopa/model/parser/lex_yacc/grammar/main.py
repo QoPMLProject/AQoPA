@@ -66,6 +66,10 @@ class ModelParserExtension(LexYaccParserExtension):
         r'0|[1-9][0-9]*'
         t.value = int(t.value)
         return t
+    
+    def token_comment(self, t):
+        r'\%[^\n]*'
+        pass
         
     
     ##########################################
@@ -130,6 +134,8 @@ class ModelParserExtension(LexYaccParserExtension):
         self.parser.add_token('COLON', r':',)
         self.parser.add_token('STAR', r'\*')
         self.parser.add_token('EQUAL', r'\=')
+        self.parser.add_token('EXCLAMATION', r'\!')
+        self.parser.add_token('PIPE', r'\|')
         
         self.parser.add_token('LPARAN', r'\(')
         self.parser.add_token('RPARAN', r'\)')
@@ -137,6 +143,8 @@ class ModelParserExtension(LexYaccParserExtension):
         self.parser.add_token('SQRPARAN', r'\]')
         self.parser.add_token('BLOCKOPEN', r'{')
         self.parser.add_token('BLOCKCLOSE', r'}')
+        
+        self.parser.add_token('COMMENT', self.token_comment, include_in_tokens=False)
         
         self.parser.add_rule(self.rule_model)
         self.parser.add_rule(self.rule_empty)
@@ -211,6 +219,10 @@ class MetricsParserExtension(LexYaccParserExtension):
         
         t.value = int(t.value)
         return t
+    
+    def token_comment(self, t):
+        r'\%[^\n]*'
+        pass
         
     
     ##########################################
@@ -279,6 +291,8 @@ class MetricsParserExtension(LexYaccParserExtension):
         self.parser.add_token('SQRPARAN', r'\]')
         self.parser.add_token('BLOCKOPEN', r'{')
         self.parser.add_token('BLOCKCLOSE', r'}')
+        
+        self.parser.add_token('COMMENT', self.token_comment, include_in_tokens=False)
         
         self.parser.add_rule(self.rule_metrics)
         self.parser.add_rule(self.rule_empty)
@@ -358,6 +372,10 @@ class ConfigParserExtension(LexYaccParserExtension):
         
         t.value = int(t.value)
         return t
+    
+    def token_comment(self, t):
+        r'\%[^\n]*'
+        pass
         
     
     ##########################################
@@ -417,7 +435,7 @@ class ConfigParserExtension(LexYaccParserExtension):
         self.parser.add_token('QUALIFIED_IDENTIFIER', func=self.token_qualified_identifier)
         self.parser.add_token('IDENTIFIER', func=self.token_identifier)
         self.parser.add_token('TEXT', r'[-_A-Za-z0-9 ]+')
-        
+
         self.parser.add_token('SEMICOLON', r';')
         self.parser.add_token('COLON', r':',)
         self.parser.add_token('STAR', r'\*')
@@ -429,6 +447,8 @@ class ConfigParserExtension(LexYaccParserExtension):
         self.parser.add_token('SQRPARAN', r'\]')
         self.parser.add_token('BLOCKOPEN', r'{')
         self.parser.add_token('BLOCKCLOSE', r'}')
+        
+        self.parser.add_token('COMMENT', self.token_comment, include_in_tokens=False)
         
         self.parser.add_rule(self.rule_configuration)
         self.parser.add_rule(self.rule_empty)

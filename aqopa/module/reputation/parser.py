@@ -216,7 +216,7 @@ class ModelParserExtension(LexYaccParserExtension):
                                         | reputation_expression SMALLER reputation_expression
                                         | reputation_expression SMALLER EQUAL reputation_expression
                                         | reputation_expression AND AND reputation_expression
-                                        | reputation_expression OR OR reputation_expression
+                                        | reputation_expression_conditional OR OR reputation_expression_conditional
         """
         t[0] = ''.join(t[1:])
 

@@ -45,9 +45,9 @@ class PrintResultsHook(Hook):
         self.output_file.write('Dropped messages\n')
         i = 0
         for c in context.channels_manager.channels:
-            if c.get_number_of_dropped_messages() > 0:
+            if c.get_dropped_messages_nb() > 0:
                 i += 1
-                self.output_file.write('%s\t%d\n' % (c.name, c.get_number_of_dropped_messages()))
+                self.output_file.write('%s\t%d\n' % (c.name, c.get_dropped_messages_nb()))
         if i == 0:
             self.output_file.write('None\n')
         self.output_file.write('\n')

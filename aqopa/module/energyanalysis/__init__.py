@@ -128,10 +128,7 @@ class Module(module.Module):
         """
         metrics_manager = simulator.context.metrics_manager
 
-        if simulator not in self.timeanalysis_module.timetraces:
-            return []
-
-        timetraces = self.timeanalysis_module.timetraces[simulator]
+        timetraces = self.timeanalysis_module.get_timetraces(simulator)
 
         # Clear results
         hosts_consumption = {}
@@ -167,7 +164,7 @@ class Module(module.Module):
             
         # Traverse channel traces
         # Look for times when host was waiting for message
-        channels_traces = self.timeanalysis_module.channel_message_traces[simulator]
+        channels_traces = self.timeanalysis_module.get_all_channel_message_traces(simulator)
 
         hosts_listen_metric = {}
 

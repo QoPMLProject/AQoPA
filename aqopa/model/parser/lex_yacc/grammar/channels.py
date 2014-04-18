@@ -16,14 +16,16 @@ class Builder():
     def build_channels(self, token):
         """
         channel : CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON
+            | CHANNEL identifiers_list LPARAN channel_buffor RPARAN SQLPARAN IDENTIFIER SQRPARAN SEMICOLON
         """
+        tag_name = token[7] if len(token) == 10 else None
         channels = []
         for name in token[2]:
             buffer_size = token[4]
             if (isinstance(buffer_size, str) or isinstance(buffer_size, unicode)) \
                 and buffer_size == "*":
                 buffer_size = -1
-            channels.append(Channel(name, buffer_size))
+            channels.append(Channel(name, buffer_size, tag_name))
         return channels
 
 
@@ -76,6 +78,7 @@ class ModelParserExtension(LexYaccParserExtension):
     def channel(self, t):
         """
         channel : CHANNEL identifiers_list LPARAN channel_buffor RPARAN SEMICOLON
+            | CHANNEL identifiers_list LPARAN channel_buffor RPARAN SQLPARAN IDENTIFIER SQRPARAN SEMICOLON
         """
         for ch in self.builder.build_channels(t):
             self.parser.store.channels.append(ch)
@@ -96,7 +99,6 @@ class ModelParserExtension(LexYaccParserExtension):
 
         self.parser.add_token('BLOCKCLOSE', func=self.token_block_close, states=['channels'])
         
-
         self.parser.add_rule(self.channels_specification)
         self.parser.add_rule(self.channels_list)
         self.parser.add_rule(self.channel)
