@@ -57,10 +57,20 @@ class ChannelMessageRequest():
     Representation of hosts' requests for messages.
     """
     
-    def __init__(self, receiver, communication_instruction):
+    def __init__(self, receiver, communication_instruction, expression_populator):
         """ """
         self.receiver = receiver
         self.instruction = communication_instruction
+        self.expression_populator = expression_populator  # populator used to populate current version of filters
+
+    def get_populated_filters(self):
+        filters = []
+        for f in self.instruction.filters:
+            if f == '*':
+                filters.append(f)
+            else:
+                filters.append(self.expression_populator.populate(f, self.receiver))
+        return filters
 
 
 class Channel():
@@ -208,7 +218,7 @@ class Channel():
             checked_hosts.append(request.receiver)
 
             needed_expressions_nb = len(request.instruction.variables_names)
-            filters = request.instruction.filters
+            filters = request.get_populated_filters()
 
             found_msgs = []
             for message in all_messages:
@@ -348,13 +358,7 @@ class Manager():
         """
         Creates a request for message when host executes instruction IN
         """
-        filters = []
-        for f in communication_instruction.filters:
-            if isinstance(f, CallFunctionExpression):
-                filters.append(expression_populator.populate(f, receiver))
-            else:
-                filters.append(f)
-        return ChannelMessageRequest(receiver, communication_instruction)
+        return ChannelMessageRequest(receiver, communication_instruction, expression_populator)
 
 
 #TODO: Move to timeanalysis module
