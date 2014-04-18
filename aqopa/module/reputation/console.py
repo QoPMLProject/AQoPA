@@ -30,5 +30,5 @@ class PrintResultsHook(Hook):
                 self.output_file.write('\t\tNo variables')
             self.output_file.write('\n')
             for var_name in variables:
-                self.output_file.write('\t{0}\t{1}\n'.format(var_name, unicode(vars[var_name])))
+                self.output_file.write('\t{0}\t{1}\n'.format(var_name, unicode(variables[var_name])))
         self.output_file.write('\n')
