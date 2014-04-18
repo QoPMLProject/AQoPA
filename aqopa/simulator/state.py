@@ -140,13 +140,15 @@ class Host():
     Simulation equivalent of host
     """
     
-    def __init__(self, name, instructions_list, predefined_variables={}):
+    def __init__(self, name, instructions_list, predefined_variables=None):
         self.name = name
         self.instructions_list = instructions_list
-        self._variables = predefined_variables
+
+        self._variables = {}
+        if predefined_variables is not None:
+            self._variables = predefined_variables
         
         self._scheduler = None
-        self._channels_map = {}
         self._changed = False
         self._status = HOST_STATUS_RUNNING 
         self._finish_error = None
@@ -156,7 +158,7 @@ class Host():
         
     def __unicode__(self):
         return u"host %s" % unicode(self.name)
-        
+
     def original_name(self):
         """"""
         return original_name(self.name)
@@ -167,6 +169,15 @@ class Host():
         Before: name = ch, index = 1. After: name = ch.1
         """
         self.name += ".%d" % index
+        
+    def get_name_index(self):
+        """
+        Returns repetition index of this host
+        """
+        elems = self.name.split('.')
+        if len(elems) < 2:
+            return 0
+        return int(elems[1])
         
     def set_scheduler(self, scheduler):
         """Set scheduler"""
@@ -222,48 +233,6 @@ class Host():
     def has_changed(self):
         """ Returns True if host has changed """
         return self._changed
-        
-    def connect_with_channel(self, channel):
-        """
-        Assigns channel to this host.
-        """
-        if channel.original_name() not in self._channels_map:
-            self._channels_map[channel.original_name()] = []
-        if channel in self._channels_map[channel.original_name()]:
-            return
-        self._channels_map[channel.original_name()].append(channel)
-        channel.connect_with_host(self)
-    
-    def find_channel(self, name):
-        """
-        Search for and retuen assigned channel by name (including indexes)
-        """
-        original_channel_name = original_name(name)
-        indexes = name_indexes(name)
-
-        if original_channel_name not in self._channels_map:
-            return None
-        channels = self._channels_map[original_channel_name]
-        if len(channels) == 0:
-            return None
-        
-        for ch in channels:
-            # Check if channels has the same original name
-            if ch.original_name() == name:
-                i = 0
-                #Check if channels have the same indexes
-                ch_indexes = ch.indexes()
-                while i < len(indexes):
-                    if indexes[i] != ch_indexes[i]:
-                        break
-                    i += 1
-                # If while loop was broken
-                if i < len(indexes):
-                    continue
-                else:
-                    # All indexes were the same
-                    return ch
-        return None
         
     def goto_next_instructions_context(self):
         """
@@ -332,7 +301,6 @@ class Process():
         self.instructions_list = instructions_list
     
         self.follower = None
-        self._channels_map = {}
         
     def original_name(self):
         """"""
@@ -344,48 +312,6 @@ class Process():
         Before: name = ch, index = 1. After: name = ch.1
         """
         self.name += ".%d" % index
-        
-    def connect_with_channel(self, channel):
-        """
-        Assigns channel to this host.
-        """
-        if channel.original_name() not in self._channels_map:
-            self._channels_map[channel.original_name()] = []
-        if channel in self._channels_map[channel.original_name()]:
-            return
-        self._channels_map[channel.original_name()].append(channel)
-        channel.connect_with_process(self)
-    
-    def find_channel(self, name):
-        """
-        Search for and retuen assigned channel by name (including indexes)
-        """
-        original_channel_name = original_name(name)
-        indexes = name_indexes(name)
-
-        if original_channel_name not in self._channels_map:
-            return None
-        channels = self._channels_map[original_channel_name]
-        if len(channels) == 0:
-            return None
-        
-        for ch in channels:
-            # Check if channels has the same original name
-            if ch.original_name() == name:
-                i = 0
-                #Check if channels have the same indexes
-                ch_indexes = ch.indexes()
-                while i < len(indexes):
-                    if indexes[i] != ch_indexes[i]:
-                        break
-                    i += 1
-                # If while loop was broken
-                if i < len(indexes):
-                    continue
-                else:
-                    # All indexes were the same
-                    return ch
-        return None
         
     def __unicode__(self):
         return u"process %s" % unicode(self.name)
@@ -452,7 +378,6 @@ class InstructionsContext:
         """
         # Go to next instruction in current list
         self._get_current_list().goto_next_instruction()
-
         # While current list is finished but context is not finished
         while not self.finished() and self._get_current_list().finished():
             # Remove current list
@@ -493,10 +418,10 @@ class InstructionExecutor():
         """
         raise NotImplementedError()
     
-    def execute_instruction(self, context):
+    def execute_instruction(self, context, kwargs=None):
         """
-        Changes the context according to the execution 
-        of current instruction.
+        Changes the context according to the execution of current instruction.
+        The second parameter `kwargs` keeps variables created be previous executors.
         Returns the result of execution containing information 
         about execution and the next steps: should it omit next executors?,
         does it consume cpu?, does it implement custom index management? etc.
@@ -508,13 +433,15 @@ class ExecutionResult():
     The result of execution of one instruction by one executor.
     """
     
-    def __init__(self,  consumes_cpu = False, 
-                        custom_index_management = False, 
-                        finish_instruction_execution = False):
+    def __init__(self, consumes_cpu=False,
+                 custom_index_management=False,
+                 finish_instruction_execution=False,
+                 result_kwargs=None):
         """ """
-        self.consumes_cpu               = consumes_cpu 
-        self.custom_index_management    = custom_index_management
-        self.finish_instruction_execution   = finish_instruction_execution
+        self.consumes_cpu = consumes_cpu
+        self.custom_index_management = custom_index_management
+        self.finish_instruction_execution = finish_instruction_execution
+        self.result_kwargs = result_kwargs
     
 class HookExecutor(InstructionExecutor):
     """
@@ -535,7 +462,7 @@ class HookExecutor(InstructionExecutor):
         return self
     
     
-    def execute_instruction(self, context):
+    def execute_instruction(self, context, kwargs=None):
         """ Overriden """
         consumes_cpu = False 
         custom_index_management = False 
@@ -568,7 +495,7 @@ class PrintExecutor(InstructionExecutor):
         
         self.result = ExecutionResult()
         
-    def execute_instruction(self, context):
+    def execute_instruction(self, context, kwargs=None):
         """ Overriden """
         self.file.write("Host: %s \t" % context.get_current_host().name)
         instruction = context.get_current_instruction()
@@ -611,33 +538,14 @@ class AssignmentInstructionExecutor(InstructionExecutor):
         if isinstance(expression, BooleanExpression):
             return expression.clone()
         
-        if isinstance(expression, IdentifierExpression):
-            return context.expression_populator.populate(
-                                                expression, 
-                                                context.get_current_host().get_variables(),
-                                                context.expression_reducer)
-        
-        if isinstance(expression, CallFunctionExpression):
-            return context.expression_populator.populate(
-                                                expression, 
-                                                context.get_current_host().get_variables(),
-                                                context.expression_reducer)
-            
-        if isinstance(expression, TupleExpression):
-            return context.expression_populator.populate(
-                                                expression, 
-                                                context.get_current_host().get_variables(),
-                                                context.expression_reducer)
-            
-        if isinstance(expression, TupleElementExpression):
-            return context.expression_populator.populate(
-                                                expression, 
-                                                context.get_current_host().get_variables(),
-                                                context.expression_reducer)
-            
+        if isinstance(expression, IdentifierExpression) or isinstance(expression, CallFunctionExpression) \
+                or isinstance(expression, TupleExpression) or isinstance(expression, TupleElementExpression):
+            # Population of variables which were previously populated (ie. additional attrs)
+            return context.expression_populator.populate(expression, context.get_current_host())
+
         raise RuntimeException("Expression '%s' cannot be a value of variable.")
 
-    def execute_instruction(self, context):
+    def execute_instruction(self, context, kwargs=None):
         """ Overriden """
         instruction = context.get_current_instruction()
         expression = self._compute_current_expression(instruction.expression, context)
@@ -650,7 +558,9 @@ class AssignmentInstructionExecutor(InstructionExecutor):
 #        print "%s - %s: %s <- %s" % (id(context.get_current_host()), 
 #                                     context.get_current_host().name, 
 #                                     instruction.variable_name, unicode(expression))
-        
+
+        # print 'Host ', context.get_current_host().name, ' setting variable ', \
+        #     instruction.variable_name, ' = ', unicode(expression), ' (', getattr(expression, '_host_name', 'None'), ')'
         context.get_current_host().set_variable(instruction.variable_name, expression)
         context.get_current_host().mark_changed()
         
@@ -667,7 +577,7 @@ class CallFunctionInstructionExecutor(InstructionExecutor):
     consumes cpu and changes host.
     """
     
-    def execute_instruction(self, context):
+    def execute_instruction(self, context, kwargs=None):
         """ Overriden """
         context.get_current_host().mark_changed()
         
@@ -682,7 +592,7 @@ class ProcessInstructionExecutor(InstructionExecutor):
     Executes process insructions.
     """
 
-    def execute_instruction(self, context):
+    def execute_instruction(self, context, kwargs=None):
         """ Overriden """
         process_instruction = context.get_current_instruction()
         current_process = context.get_current_host().get_current_process()
@@ -708,7 +618,7 @@ class SubprocessInstructionExecutor(InstructionExecutor):
     Executes subprocess insructions.
     """
 
-    def execute_instruction(self, context):
+    def execute_instruction(self, context, kwargs=None):
         """ Overriden """
         subprocess_instruction = context.get_current_instruction()
         current_process = context.get_current_host().get_current_process()
@@ -733,33 +643,51 @@ class CommunicationInstructionExecutor(InstructionExecutor):
     Executes communication in-out insructions.
     """
     
-    def execute_instruction(self, context):
+    def execute_instruction(self, context, kwargs=None):
         """ Overriden """
         instruction = context.get_current_instruction()
         channel = context.channels_manager.find_channel_for_current_instruction(context)
-        
+
+        if context.channels_manager.find_channel(instruction.channel_name) is None:
+            raise RuntimeException("Channel {0} undefined.".format(instruction.channel_name))
+
         if not channel:
             context.get_current_host().get_current_instructions_context().goto_next_instruction()
             context.get_current_host().mark_changed()
-            return ExecutionResult(consumes_cpu=True, 
-                               custom_index_management=True)
+            return ExecutionResult(consumes_cpu=True,
+                                   custom_index_management=True)
         
         if instruction.communication_type == COMMUNICATION_TYPE_OUT:
-            params = instruction.variables_names
-            expressions = []
-            for p in params:
-                expressions.append(context.get_current_host().get_variable(p).clone())
-            channel.send_message(context.get_current_host(), expressions)
-            
+            if kwargs is not None and 'sent_messages' in kwargs:
+                messages = kwargs['sent_messages']
+            else:
+                messages = []
+                for p in instruction.variables_names:
+                    # Expressions as variables values are already populated
+                    messages.append(context.channels_manager.build_message(
+                        context.get_current_host(),
+                        context.get_current_host().get_variable(p).clone(),
+                        context.expression_checker))
+                kwargs['sent_messages'] = messages
+            channel.send_messages(context.get_current_host(), messages)
+
+            # Go to next instruction
             context.get_current_host().get_current_instructions_context().goto_next_instruction()
             context.get_current_host().mark_changed()
             
         else:
-            request = context.channels_manager.build_message_request(context.get_current_host(), instruction)
+            if kwargs is not None and 'messages_request' in kwargs:
+                request = kwargs['messages_request']
+            else:
+                request = context.channels_manager.build_message_request(context.get_current_host(), instruction,
+                                                                         context.expression_populator)
+                kwargs['messages_request'] = request
+
             channel.wait_for_message(request)
             
         return ExecutionResult(consumes_cpu=True, 
-                               custom_index_management=True)
+                               custom_index_management=True,
+                               result_kwargs=kwargs)
                 
     def can_execute_instruction(self, instruction):
         """ Overriden """
@@ -770,7 +698,7 @@ class FinishInstructionExecutor(InstructionExecutor):
     Executes finish (end, stop) insructions.
     """
     
-    def execute_instruction(self, context):
+    def execute_instruction(self, context, kwargs=None):
         """ Overriden """
         instruction = context.get_current_instruction()
         if instruction.command == "end":
@@ -791,7 +719,7 @@ class ContinueInstructionExecutor(InstructionExecutor):
     Executes continue insructions.
     """
     
-    def execute_instruction(self, context):
+    def execute_instruction(self, context, kwargs=None):
         """ Overriden """
         instructions_context = context.get_current_host().get_current_instructions_context()
         instructions_context.stack.pop()
@@ -811,18 +739,14 @@ class IfInstructionExecutor(InstructionExecutor):
     Executes if-clause insructions.
     """
     
-    def execute_instruction(self, context):
+    def execute_instruction(self, context, kwargs=None):
         """ Overriden """
         instruction = context.get_current_instruction()
         current_process = context.get_current_host().get_current_process()
         
         contidion_result = context.expression_checker.result(instruction.condition, 
-                                        context.get_current_host().get_variables(),
-                                        context.functions,
-                                        context.expression_populator, 
-                                        context.expression_reducer)
+                                        context.get_current_host())
 
-        instructions_list = []
         if contidion_result:
             instructions_list = instruction.true_instructions
         else:
@@ -850,16 +774,13 @@ class WhileInstructionExecutor(InstructionExecutor):
     Executes while-clause insructions.
     """
     
-    def execute_instruction(self, context):
+    def execute_instruction(self, context, kwargs=None):
         """ Overriden """
         instruction = context.get_current_instruction()
         current_process = context.get_current_host().get_current_process()
-        
-        contidion_result = context.expression_checker.result(instruction.condition, 
-                                        context.get_current_host().get_variables(),
-                                        context.functions, 
-                                        context.expression_populator,
-                                        context.expression_reducer)
+
+        contidion_result = context.expression_checker.result(instruction.condition,
+                                        context.get_current_host())
         
         if contidion_result:
             instructions_list = instruction.instructions
@@ -919,13 +840,14 @@ class Executor():
             
             instr = context.get_current_instruction()
             custom_instructions_index_change = False
-            
+
+            exec_kwargs = {}
             for e in self.executors:
                 if e.can_execute_instruction(instr):
                     
                     # Execute current instruction by current executor. 
                     # Executor can change index.
-                    execution_result = e.execute_instruction(context)
+                    execution_result = e.execute_instruction(context, kwargs=exec_kwargs)
                     
                     # If executor does not return result
                     # create a default one
@@ -938,6 +860,9 @@ class Executor():
                     # Check if executor changes instructions index itself.
                     if execution_result.custom_index_management:
                         custom_instructions_index_change = True
+
+                    if execution_result.result_kwargs is not None:
+                        exec_kwargs.update(execution_result.result_kwargs)
                         
                 # Omit other executors if the result says that
                 if execution_result.finish_instruction_execution:

@@ -64,9 +64,10 @@ COMMUNICATION_TYPE_OUT = 2
     
 class Channel():
     
-    def __init__(self, name, buffor_size):
+    def __init__(self, name, buffor_size, tag_name=None):
         self.name = name
         self.buffor_size = buffor_size # Buffor size < 0 is unlimited
+        self.tag_name = tag_name
 
     def __unicode__(self):
         buffor_size = str(self.buffor_size) if self.buffor_size >= 0 else "*"
@@ -124,27 +125,43 @@ class CallFunctionExpression():
         self.qop_arguments = qop_arguments
         
     def __unicode__(self):
-        u = u"%s(%s)" % ( unicode(self.function_name), unicode(', '.join([ unicode(a) for a in self.arguments])) )
+        u = u"%s(%s)" % (unicode(self.function_name), unicode(', '.join([unicode(a) for a in self.arguments])))
         if len(self.qop_arguments) > 0:
             u += "[%s]" % unicode(', '.join([ unicode(a) for a in self.qop_arguments]))
         return u 
-        
+
     def clone(self):
-        return CallFunctionExpression(copy.copy(self.function_name), 
-                                      [ a.clone() for a in self.arguments ],
-                                      [ copy.copy(a) for a in self.qop_arguments ])
-        
+        # Regular clone
+        expr = CallFunctionExpression(copy.copy(self.function_name),
+                                      [a.clone() for a in self.arguments],
+                                      [copy.copy(a) for a in self.qop_arguments])
+
+        # Copy additional values (may come from predefined functions or keep calculated size, etc.)
+        regular_vars = ['function_name', 'arguments', 'qop_arguments']
+        for attr_name in self.__dict__:
+            if attr_name not in regular_vars:
+                setattr(expr, attr_name, copy.deepcopy(self.__dict__[attr_name]))
+        return expr
+
+
+COMPARISON_TYPE_EQUAL = 1
+COMPARISON_TYPE_NOT_EQUAL = 2
+
 class ComparisonExpression():
     
-    def __init__(self, left, right):
+    def __init__(self, left, right, comparison_type):
         self.left = left
         self.right = right
+        self.comparison_type = comparison_type
         
     def __unicode__(self):
         return "%s == %s" % (unicode(self.left), unicode(self.right))
+
+    def is_equal_type(self):
+        return self.comparison_type == COMPARISON_TYPE_EQUAL
     
     def clone(self):
-        return ComparisonExpression(self.left.clone(), self.right.clone())
+        return ComparisonExpression(self.left.clone(), self.right.clone(), self.comparison_type)
     
 class TupleExpression():
     
@@ -221,26 +238,44 @@ class AssignmentInstruction():
         
     def __unicode__(self):
         return u"%s = %s;" % (unicode(self.variable_name), unicode(self.expression))
-    
+
+
 class CommunicationInstruction():
     
-    def __init__(self, communication_type, channel_name, variables_names):
+    def __init__(self, communication_type, channel_name, variables_names, filters):
         self.communication_type = communication_type
         self.channel_name = channel_name
         self.variables_names = variables_names
+        self.filters = filters
         
     def clone(self):
+        filters = []
+        for f in self.filters:
+            if isinstance(f, basestring):
+                filters.append(copy.copy(f))
+            else:
+                filters.append(f.clone())
         return CommunicationInstruction(copy.copy(self.communication_type),
                                         copy.copy(self.channel_name), 
-                                        copy.deepcopy(self.variables_names))
+                                        copy.deepcopy(self.variables_names),
+                                        filters)
         
     def is_out(self):
         return self.communication_type == COMMUNICATION_TYPE_OUT
         
     def __unicode__(self):
-        type_name = 'in' if self.communication_type == COMMUNICATION_TYPE_IN else 'out'
-        return u"%s (%s: %s);" % (unicode(type_name), unicode(self.channel_name), unicode(', '.join(self.variables_names)))
-        
+        if self.communication_type == COMMUNICATION_TYPE_IN:
+            filters_str = u""
+            if len(self.filters) > 0:
+                filters_str = u", ".join([unicode(f) for f in self.filters])
+                filters_str = u": |%s|" % filters_str
+            return u"in (%s: %s%s);" % (unicode(self.channel_name),
+                                        unicode(', '.join(self.variables_names)),
+                                        filters_str)
+        else:
+            return u"out (%s: %s);" % (unicode(self.channel_name), unicode(', '.join(self.variables_names)))
+
+
 class IfInstruction():
     
     def __init__(self, condition, true_instructions, false_instructions=[]):
@@ -367,6 +402,7 @@ class Version():
         self.name = name
         self.run_hosts = []
         self.metrics_sets = []
+        self.communication = {'topologies': {}} 
         
     def __unicode__(self):
         return u"version %d" % self.name
@@ -390,7 +426,7 @@ class VersionRunHost():
         self.all_channels_active = False
         self.active_channels = []
         self.repetitions = 1
-        self.repeated_channels = []
+        self.repeated_channels = [] # deprecated
         self.run_processes = []
         
     def __unicode__(self):
@@ -415,7 +451,7 @@ class VersionRunProcess():
         self.all_subprocesses_active = False
         self.active_subprocesses = []
         self.repetitions = 1
-        self.repeated_channels = []
+        self.repeated_channels = [] # deprecated
         self.follower = None
         
     def __unicode__(self):
@@ -525,4 +561,77 @@ class MetricsPrimitive():
         
     def clone(self):
         return MetricsPrimitive(copy.deepcopy(self.arguments))
+      
+################################
+#        Communication
+################################
+
+class TopologyRuleHost():
+    
+    def __init__(self, identifier, index_range=None, i_shift=None):
+        self.identifier = identifier
+        self.index_range = index_range
+        self.i_shift = i_shift
+
+    def __unicode__(self):
+        s = self.identifier
+        if self.index_range is not None:
+            s += "["
+            if self.index_range[0] is not None:
+                s += str(self.index_range[0])
+            s += ":"
+            if self.index_range[1] is not None:
+                s += str(self.index_range[1])
+            s += "]"
+        elif self.i_shift is not None:
+            s += "[i"
+            if self.i_shift >= 0:
+                s += "+"
+            s += str(self.i_shift) + "]"
+        return unicode(s)
+
+class TopologyRule():
+    
+    def __init__(self, left_host, arrow, right_host, quality=1):
+        self.left_host = left_host
+        self.right_host = right_host
+        self.arrow = arrow
+        self.quality = quality
+
+    def __unicode__(self):
+        return u"%s %s %s : %s" % (unicode(self.left_host), self.arrow, unicode(self.right_host), str(self.quality))
+      
+################################
+#       Algorithms
+################################
+
+class AlgCallFunction():
+    
+    def __init__(self, function_name, args):
+        self.function_name = function_name
+        self.args = args
+        
+class AlgWhile():
+    
+    def __init__(self, condition, instructions):
+        self.condition = condition
+        self.instructions = instructions
+        
+class AlgIf():
+    
+    def __init__(self, condition, true_instructions, false_instructions):
+        self.condition = condition
+        self.true_instructions = true_instructions
+        self.false_instructions = false_instructions
+        
+class AlgReturn():
+    
+    def __init__(self, expression):
+        self.expression = expression
+        
+class AlgAssignment():
+    
+    def __init__(self, identifier, expression):
+        self.identifier = identifier
+        self.expression = expression
     

@@ -190,7 +190,16 @@ class Manager():
                     
                     size = self.get_expression_size(expression.arguments[element_index], context, host) \
                             * percent
-                            
+                elif metric_type == "sum_ratio":
+                    ratios = metric_value.split(',')
+                    size = 0.0
+                    for ratio in ratios:
+                        rparts = ratio.strip().split(':')
+                        element_index = int(rparts[0])-1
+                        percent = float(rparts[1])
+
+                        size += self.get_expression_size(expression.arguments[element_index], context, host) \
+                                * percent
                 elif metric_type == "exact":
                     if metric_unit == 'B':
                         size = float(metric_value)
@@ -232,5 +241,5 @@ class Manager():
                     raise RuntimeException('Cannot get expression size: Unsupported size type.')
 
                 return size
-            
-        raise RuntimeException('Cannot get expression size: Unsupported expression type.')
+        raise RuntimeException('Cannot get expression size: Unsupported expression type. Expression: {0}.'
+                               .format(unicode(expression)))

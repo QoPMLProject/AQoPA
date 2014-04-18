@@ -3,6 +3,7 @@ Created on 14-05-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
+from wx.lib.agw.aui.aui_constants import right
 from aqopa.model import CallFunctionExpression, IdentifierExpression,\
     BooleanExpression
 from aqopa.simulator.error import EnvironmentDefinitionException
@@ -17,9 +18,9 @@ class Equation():
         
     def __unicode__(self):
         """ """
-        return u"eq %s = %s" % ( unicode(self.composite), unicode(self.simple) )
+        return u"eq %s = %s" % (unicode(self.composite), unicode(self.simple))
         
-    def _are_equal(self, left_expression, right_expression):
+    def _are_equal(self, left_expression, right_expression, predefined_functions_manager=None):
         """
         Method returns True, when expressions are equal.
         Equality covers: called function names, logic values, identifiers names.
@@ -34,17 +35,23 @@ class Equation():
             return left_expression.identifier == right_expression.identifier
         
         if isinstance(left_expression, CallFunctionExpression):
+
+            if predefined_functions_manager:
+                if predefined_functions_manager.is_function_predefined(left_expression.function_name):
+                    return predefined_functions_manager.are_equal_call_function_expressions(left_expression,
+                                                                                            right_expression)
+
             if left_expression.function_name != right_expression.function_name:
                 return False
             if len(left_expression.arguments) != len(right_expression.arguments):
                 return False
-            
             for i in range(0, len(left_expression.arguments)):
-                if not self._are_equal(left_expression.arguments[i], right_expression.arguments[i]):
+                if not self._are_equal(left_expression.arguments[i], right_expression.arguments[i],
+                                       predefined_functions_manager):
                     return False
             return True
         
-    def _can_reduce(self, reduced_expression, composite_expression, variables):
+    def can_reduce(self, reduced_expression, composite_expression, variables, predefined_functions_manager=None):
         """
         Method returns True if reduced_expression can be reduced with composite_expression.
         Recursive strategy.
@@ -59,18 +66,27 @@ class Equation():
         if isinstance(composite_expression, IdentifierExpression):
             if composite_expression.identifier not in variables:
                 variables[composite_expression.identifier] = reduced_expression
+                # print 'Found identifier ', composite_expression.identifier, ' - setting its value: ', \
+                #     unicode(reduced_expression), getattr(reduced_expression, '_host_name', 'None')
                 return True
             else:
                 current_val = variables[composite_expression.identifier]
-                if self._are_equal(current_val, reduced_expression):
+                # print 'Found identifier ', composite_expression.identifier, ' - checking variables'
+                # print 'Variables:'
+                # for n in variables:
+                #     print n, ' = ', unicode(variables[n]), getattr(variables[n], '_host_name', 'None')
+                # print 'Reduced value: ', unicode(reduced_expression), getattr(reduced_expression, '_host_name', 'None')
+                if self._are_equal(current_val, reduced_expression, predefined_functions_manager):
+                    # print 'They are equal!'
                     return True
                 
         if isinstance(composite_expression, BooleanExpression):
             if not isinstance(reduced_expression, BooleanExpression):
                 return False
-            return self._are_equal(composite_expression, reduced_expression)
+            return self._are_equal(composite_expression, reduced_expression, predefined_functions_manager)
         
         if isinstance(composite_expression, CallFunctionExpression):
+            # Predefined function cannot be used in equations.
             if not isinstance(reduced_expression, CallFunctionExpression):
                 return False
             if composite_expression.function_name != reduced_expression.function_name:
@@ -79,9 +95,8 @@ class Equation():
                 return False
         
             for i in range(0, len(composite_expression.arguments)):
-                if not self._can_reduce(reduced_expression.arguments[i], 
-                                        composite_expression.arguments[i], 
-                                        variables):
+                if not self.can_reduce(reduced_expression.arguments[i], composite_expression.arguments[i],
+                                       variables, predefined_functions_manager):
                     return False
             return True
         
@@ -114,7 +129,7 @@ class Validator():
                     self._validate_function_names(arg, functions)
         return True
     
-    def _are_expressions_the_same(self, left, right, check_variables=False, variables={}):
+    def _are_expressions_the_same(self, left, right, check_variables=False, variables=None):
         """
         Method checks if expressions are the same in aspect of equations, which means that
         both expressions could be used to reduce another expression.
@@ -126,7 +141,10 @@ class Validator():
         f(x,y,x,x) == f(a,b,a,a) - are the same
         f(x,y,x,x) == f(a,b,a,b) - are not the same, because second b should be a
         """
-        
+
+        if variables is None:
+            variables = {}
+
         if left.__class__ != right.__class__:
             return False
         
