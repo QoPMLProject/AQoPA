@@ -4,6 +4,13 @@
 
 Next release:
 
+v0.7 (2014-04-17)
+- Added comments (started with %).
+- Added packet filtering mechanisms.
+- Added communication structures: topology and algorithms.
+- Added routing.
+- Added communication time analysis.
+
 v0.6.4 (2014-03-13)
 - Fixed error with channels replacing.
 
