@@ -1,7 +1,7 @@
 functions {
-  fun post(id)[Reputation: rate] (adding a post);
+  fun post(poster_id)[Reputation: rate] (adding a post);
 
-  fun id() (creates id of a session);
+  fun sessionid() (creates id of a session);
   fun date() (creates a timestamp);
   fun Vlist() (TLS versions list);
   fun Clist() (creating ciphers list);
@@ -16,9 +16,9 @@ functions {
   fun FinServer();
   fun Done();
 
-  fun cert(pk,id,t,ca)[Time: bitlength, algorithm] (generate certificate);
-  fun sk(id)[Time: bitlength, algorithm] (generate secret key for id);
-  fun pk(sk)[Time: bitlength, algorithm] (generate public key for secret key);
+  fun cert(pk,server_id,t,ca)[Time: bitlength, algorithm] (generate certificate of server);
+  fun sk(server_id)[Time: bitlength, algorithm] (generate secret key for server);
+  fun pk(server_sk)[Time: bitlength, algorithm] (generate public key for secret key);
   fun nonce() [Time: bitlength, algorithm] (generate new nounce);
 
   fun skey()[Time: bitlength, algorithm] (generate symmetric key);
