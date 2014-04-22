@@ -478,7 +478,7 @@ class AlgorithmCalculator():
         """
         Returns the order of operator as number.
         """
-        orders = [['==', '!=', '<=', '>=', '>', '<', '&&', '||'], ['*', '/'], ['--', '-', '+']]
+        orders = [['==', '!=', '<=', '>=', '>', '<', '&&', '||'], ['--', '-', '+'], ['*', '/']]
         for i in range(0, len(orders)):
             if operator in orders[i]:
                 return i
@@ -704,6 +704,9 @@ class Router():
             out.append(closest)
             closest, closes_distance = find_closest_host(distances, out)
 
+        # for h in distances:
+        #     print h.name, distances[h]
+
         def update_paths(topology_name, receiver, distances):
             routing = self.routing[topology_name]
             # Start from receiver
@@ -736,9 +739,11 @@ class Router():
                         # Add host to path
                         hosts_path.insert(0, prev_host)
                         break
-#
-#        Printer().print_routing(self.routing[topology_name])
-#
+
+       # Printer().print_routing(self.routing[topology_name])
+
+        if receiver not in distances:
+            raise RuntimeException("The path between {0} and {1} undefined.".format(sender.name, receiver.name))
 
         update_paths(topology_name, receiver, distances)
         return self._find_existing_next_hop_host(topology_name, sender, receiver)
