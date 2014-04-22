@@ -168,6 +168,7 @@ class Manager():
             return size    
             
         if isinstance(expression, CallFunctionExpression) or isinstance(expression, CallFunctionInstruction):
+            expression = context.expression_reducer.reduce(expression)
             metric = self.find_primitive(host, expression)
             
             if not metric:
