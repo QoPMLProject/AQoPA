@@ -9,7 +9,7 @@ from aqopa.model import AssignmentInstruction,\
     CommunicationInstruction,\
     WhileInstruction, IfInstruction, ContinueInstruction, FinishInstruction,\
     CallFunctionInstruction, COMMUNICATION_TYPE_OUT, COMMUNICATION_TYPE_IN,\
-    HostSubprocess
+    HostSubprocess, CallFunctionExpression, IdentifierExpression
 
 
 class Builder():
@@ -158,8 +158,12 @@ class ModelParserExtension(LexYaccParserExtension):
         """
         instruction_in_filter : STAR
                         | expression_call_function
+                        | IDENTIFIER
         """
-        t[0] = t[1]
+        if (t[1] == '*') or isinstance(t[1], CallFunctionExpression):
+            t[0] = t[1]
+        else:
+            t[0] = IdentifierExpression(t[1])
 
     def instruction_while(self, t):
         """

@@ -1,4 +1,3 @@
-
 metrics {
 
 conf (TelosB) {
@@ -12,14 +11,12 @@ conf (PC) {
 data(TelosB) {
     primhead[function][size:exact(B)];
     primitive[nonce][4];
-    primitive[id_s][1];
-    primitive[id_n][1];
-    primitive[id_nn][1];
-    primitive[id_j][1];
+    primitive[id][1];
     primitive[gen_new_session_key][16];
     primitive[session_key][16];
     primitive[network_key][16];
     primitive[dh_key][16];
+    primitive[empty_list][0];
     #
     primhead[function][key_size][size:exact(b)];
     primitive[pk][128][256];
@@ -29,17 +26,24 @@ data(TelosB) {
     primitive[ecies_mac][128][160];
     primitive[ecies_mac][160][160];
     #
-    primhead[function][algorithm][key_size][time:block(ms,B)][size:ratio];
+    primhead[function][size:sum_ratio];
+    primitive[add_to_list][1:1,2:1];
+    #
+    primhead[function][size:ratio];
+    primitive[pop_list][1:1];
+    #
+    primhead[function][alg][key_size][time:block(ms,B)][size:ratio];
     primitive[s_enc][AES-CTR][128][1:312:16][1:1];
     #
-    primhead[function][algorithm][key_size][time:block(ms,B)][size:nested];
+    primhead[function][alg][key_size][time:block(ms,B)][size:nested];
     primitive[s_dec][AES-CTR][128][1:312:16][1:1];
+    primitive[s_dec][AES-CTR-optimized][128][1:34:16][1:1];
     #
     primhead[function][key_size][time:exact(ms)];
-    primitive[ecies_kdf_mac][128][6042.5];
-    primitive[ecies_kdf_mac][160][5887.65];
-    primitive[ecies_kdf][128][3743.50];
-    primitive[ecies_kdf][160][3961.75];
+    primitive[ecies_kdf_mac][128][6057.6];
+    primitive[ecies_kdf_mac][160][5892];
+    primitive[ecies_kdf][128][3615.6];
+    primitive[ecies_kdf][160][3967.1];
     #
     primhead[function][inside_algorithm][key_size][time:exact(ms)][size:ratio];
     primitive[ecies_enc][XOR][128][0][1:1];
@@ -61,26 +65,18 @@ data(TelosB) {
     primitive[ecies_dec][XOR][160][0][1:1];
     primitive[ecies_dec][XOR][192][0][1:1];
     #
-    primhead[function][time:exact(ms)][energy:current(mA)];
-    primitive[send_headers][9.14][22.8];
-    #
-    primhead[function][time:exact(mspB)][energy:current(mA)];
-    primitive[send_data][0.12:1][22.8];
+    primhead[function][channel_tag][time:algorithm(ms)][energy:current(mA)];
+    primitive[out][wsn][wsn_time][22.8];
+    primitive[in][wsn][wsn_time][22.8];
     #
     primhead[function][energy:current(mA)];
     primitive[cpu][2.4];
-    #
-    primhead[function][state][energy:current(mA)];
-    primitive[radio][listen][22.8];
 }
 
 data(PC) {
     primhead[function][size:exact(B)];
     primitive[nonce][4];
-    primitive[id_s][1];
-    primitive[id_n][1];
-    primitive[id_nn][1];
-    primitive[id_j][1];
+    primitive[id][1];
     primitive[network_key][16];
     primitive[dh_key][16];
     #
@@ -88,23 +84,18 @@ data(PC) {
     primitive[pk][128][256];
     primitive[pk][160][320];
     #
-    primhead[function][algorithm][key_size][time:exact(ms)][size:ratio];
+    primhead[function][alg][key_size][time:exact(ms)][size:ratio];
     primitive[s_enc][AES-CTR][128][0][1:1];
     #
-    primhead[function][algorithm][key_size][time:exact(ms)][size:nested];
+    primhead[function][alg][key_size][time:exact(ms)][size:nested];
     primitive[s_dec][AES-CTR][128][0][1:1];
     #
     primhead[function][time:exact(ms)][energy:current(mA)];
-    primitive[send_headers][0][0];
-    #
-    primhead[function][time:exact(ms)][energy:current(mA)];
-    primitive[send_data][0][0];
+    primitive[in][0][0];
+    primitive[out][0][0];
     #
     primhead[function][energy:current(mA)];
     primitive[cpu][0];
-    #
-    primhead[function][state][energy:current(mA)];
-    primitive[radio][listen][0];
 }
 
 }

@@ -33,7 +33,7 @@ class Populator():
 
         if isinstance(expression, IdentifierExpression):
             if expression.identifier not in variables:
-                raise RuntimeException("Variable {0} does not exist in expression '{1}'."\
+                raise RuntimeException("Variable {0} undefined in expression '{1}'."
                                        .format(expression.identifier, unicode(main_expression)))
             return variables[expression.identifier].clone()
             
@@ -312,7 +312,7 @@ class Reducer():
         # f(e, A(a=2)) - will not work, because e is reference to instance, but passed by value
         # When we pass wrapper, we can change its element (ie. expression)
         """
-        
+
         # Reduce until no reduction can be performed.
         # One reduction can give way for another reduction.
         while continue_reducing:
@@ -364,9 +364,7 @@ class Reducer():
                 
                 # Reduce and commit reduction
                 expression = reduction_point.reduce()
-                
+
                 continue_reducing = True
-             
-            return expression
-                
-                
+
+        return expression

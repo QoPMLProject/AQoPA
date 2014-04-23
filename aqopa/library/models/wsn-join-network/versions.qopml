@@ -7,94 +7,155 @@ version DirectJoinToSink_128b {
 	set host Sink(TelosB);
 	set host NewNode(TelosB);
 
-	run host Sink(*) {
-	  run Main(Init128b,InOnlyNewNode,HandleRequest_Original,CheckNode,MakeResponseToNewNodeDirectly_128b,OutOnlyNewNode)
-	}
+    run host Sink(*) {
+      run Main(Init128b,HandleRequest_Original,MakeResponseToNewNodeDirectly_128b)
+    }
 	run host NewNode(*) {
 	  run Main(Init128b,MakeRequestWithNewNodeIdOnly,DecryptResponse_128b,HandleResponse_Direct_Original)
 	}
+
+    communication
+    {
+        topology[wsn]
+        {
+            Sink <-> NewNode;
+        }
+    }
+
 }
 version DirectJoinToSink_160b {
 
 	set host Sink(TelosB);
 	set host NewNode(TelosB);
 
-	run host Sink(*) {
-	  run Main(Init160b,InOnlyNewNode,HandleRequest_Original,CheckNode,MakeResponseToNewNodeDirectly_160b,OutOnlyNewNode)
-	}
+    run host Sink(*) {
+      run Main(Init160b,HandleRequest_Original,MakeResponseToNewNodeDirectly_160b)
+    }
 	run host NewNode(*) {
 	  run Main(Init160b,MakeRequestWithNewNodeIdOnly,DecryptResponse_160b,HandleResponse_Direct_Original)
 	}
+
+    communication
+    {
+        topology[wsn]
+        {
+            Sink <-> NewNode;
+        }
+    }
 }
 
 
 
-version IndirectJoinToSink_Original_128b {
+version IndirectJoinToSink_Original_128b_10 {
 
 	set host Sink(TelosB);
 	set host Neighbour(TelosB);
 	set host NewNode(TelosB);
-	set host J_OriginalForwarder_1(TelosB);
+	set host J_OriginalForwarder(TelosB);
 
-	run host Sink(*) {
-		run Main(Init128b,InFromIntermediateNode,HandleRequest_Original,CheckNode,MakeResponseToNeighbour_Original,OutToIntermediateNode)
-	}
+    run host Sink(*) {
+      run Main(Init128b,HandleRequest_Original,MakeResponseToNeighbour_Original)
+    }
 	run host Neighbour(*) {run Main(Init128b,Forward_Original_To_NewNode,ECIESEncryptNRESP_128b)}
-	run host J_OriginalForwarder_1(*) {run Main(*)}
+	run host J_OriginalForwarder(*){1} {run Main(*)}
 	run host NewNode(*) {
 		run Main(Init128b,MakeRequestWithNewNodeIdOnly,DecryptResponse_128b,HandleResponse_Indirect_Original)
 	}
+
+    communication
+    {
+        topology[wsn]
+        {
+            NewNode <-> Neighbour;
+            Neighbour <-> J_OriginalForwarder[0];
+            J_OriginalForwarder <-> J_OriginalForwarder[i+1];
+            J_OriginalForwarder[0] <-> Sink ;
+        }
+    }
 }
-version IndirectJoinToSink_Original_160b {
+version IndirectJoinToSink_Original_160b_10 {
 
 	set host Sink(TelosB);
 	set host Neighbour(TelosB);
 	set host NewNode(TelosB);
-	set host J_OriginalForwarder_1(TelosB);
+	set host J_OriginalForwarder(TelosB);
 
 	run host Sink(*) {
-		run Main(Init160b,InFromIntermediateNode,HandleRequest_Original,CheckNode,MakeResponseToNeighbour_Original,OutToIntermediateNode)
+		run Main(Init160b,HandleRequest_Original,MakeResponseToNeighbour_Original)
 	}
 	run host Neighbour(*) {run Main(Init160b,Forward_Original_To_NewNode,ECIESEncryptNRESP_160b)}
-	run host J_OriginalForwarder_1(*) {run Main(*)}
+	run host J_OriginalForwarder(*){1} {run Main(*)}
 	run host NewNode(*) {
 		run Main(Init160b,MakeRequestWithNewNodeIdOnly,DecryptResponse_160b,HandleResponse_Indirect_Original)
 	}
+
+    communication
+    {
+        topology[wsn]
+        {
+            NewNode <-> Neighbour;
+            Neighbour <-> J_OriginalForwarder[0];
+            J_OriginalForwarder <-> J_OriginalForwarder[i+1];
+            J_OriginalForwarder[0] <-> Sink ;
+        }
+    }
 }
 
 
 
-version IndirectJoinToSink_NK_EncDec_128b {
+version IndirectJoinToSink_NK_EncDec_128b_10 {
 
 	set host Sink(TelosB);
 	set host Neighbour(TelosB);
 	set host NewNode(TelosB);
-	set host J_NK_EncDec_1(TelosB);
+	set host J_NK_EncDec(TelosB);
 
 	run host Sink(*) {
-		run Main(Init128b,InFromIntermediateNode,HandleRequest_NK_EncDec,CheckNode,MakeResponseToNeighbour_NK_EncDec,OutToIntermediateNode)
+		run Main(Init128b,HandleRequest_NK_EncDec,MakeResponseToNeighbour_NK_EncDec)
 	}
 	run host Neighbour(*) {run Main(Init128b,Forward_NK_EncDec_To_Sink,Forward_NK_EncDec_To_NewNode,ECIESEncryptNRESP_128b)}
-	run host J_NK_EncDec_1(*) {run Main(*)}
+	run host J_NK_EncDec(*){1} {run Main(*)}
 	run host NewNode(*) {
 		run Main(Init128b,MakeRequestWithNewNodeAndNeighbourId,DecryptResponse_128b,HandleResponse_Indirect_NK_EncDec)
 	}
+
+    communication
+    {
+        topology[wsn]
+        {
+            NewNode <-> Neighbour;
+            Neighbour <-> J_NK_EncDec[0];
+            J_NK_EncDec <-> J_NK_EncDec[i+1];
+            J_NK_EncDec[0] <-> Sink ;
+        }
+    }
 }
 version IndirectJoinToSink_NK_EncDec_160b {
 
 	set host Sink(TelosB);
 	set host Neighbour(TelosB);
 	set host NewNode(TelosB);
-	set host J_NK_EncDec_1(TelosB);
+	set host J_NK_EncDec(TelosB);
 
 	run host Sink(*) {
-		run Main(Init160b,InFromIntermediateNode,HandleRequest_NK_EncDec,CheckNode,MakeResponseToNeighbour_NK_EncDec,OutToIntermediateNode)
+		run Main(Init160b,HandleRequest_NK_EncDec,MakeResponseToNeighbour_NK_EncDec)
 	}
 	run host Neighbour(*) {run Main(Init160b,Forward_NK_EncDec_To_Sink,Forward_NK_EncDec_To_NewNode,ECIESEncryptNRESP_160b)}
-	run host J_NK_EncDec_1(*) {run Main(*)}
+	run host J_NK_EncDec(*){1} {run Main(*)}
 	run host NewNode(*) {
 		run Main(Init160b,MakeRequestWithNewNodeAndNeighbourId,DecryptResponse_160b,HandleResponse_Indirect_NK_EncDec)
 	}
+
+    communication
+    {
+        topology[wsn]
+        {
+            NewNode <-> Neighbour;
+            Neighbour <-> J_NK_EncDec[0];
+            J_NK_EncDec <-> J_NK_EncDec[i+1];
+            J_NK_EncDec[0] <-> Sink ;
+        }
+    }
 }
 
 
@@ -104,32 +165,54 @@ version IndirectJoinToSink_SessKey_EncDec_128b {
 	set host Sink(TelosB);
 	set host Neighbour(TelosB);
 	set host NewNode(TelosB);
-	set host J_SessKey_EncDec_1(TelosB);
+	set host J_SessKey_EncDec(TelosB);
 
 	run host Sink(*) {
-		run Main(Init128b,InFromIntermediateNode,HandleRequest_SessKey_EncDec,CheckNode,MakeResponseToNeighbour_SessionKey_EncDec,OutToIntermediateNode)
+		run Main(Init128b,HandleRequest_SessKey_EncDec,MakeResponseToNeighbour_SessKey_EncDec)
 	}
-	run host Neighbour(*) {run Main(Init128b,Forward_SessionKey_EncDec_To_Sink,Forward_SessionKey_EncDec_To_NewNode,ECIESEncryptNRESP_128b)}
-	run host J_SessKey_EncDec_1(*) {run Main(*)}
+	run host Neighbour(*) {run Main(Init128b,Forward_SessKey_EncDec_To_Sink,Forward_SessKey_EncDec_To_NewNode,ECIESEncryptNRESP_128b)}
+	run host J_SessKey_EncDec(*){1} {run Main(*)}
 	run host NewNode(*) {
-		run Main(Init128b,MakeRequestWithNewNode_NeighbourAndIntermediateNodeId,DecryptResponse_128b,HandleResponse_Indirect_SessKey_EncDec)
+		run Main(Init128b,MakeRequestWithNewNode_NeighbourAndIntermediateNodesIds,DecryptResponse_128b,HandleResponse_Indirect_SessKey_EncDec)
 	}
+
+    communication
+    {
+        topology[wsn]
+        {
+            NewNode <-> Neighbour;
+            Neighbour <-> J_SessKey_EncDec[0];
+            J_SessKey_EncDec <-> J_SessKey_EncDec[i+1];
+            J_SessKey_EncDec[0] <-> Sink ;
+        }
+    }
 }
 version IndirectJoinToSink_SessKey_EncDec_160b {
 
 	set host Sink(TelosB);
 	set host Neighbour(TelosB);
 	set host NewNode(TelosB);
-	set host J_SessKey_EncDec_1(TelosB);
+	set host J_SessKey_EncDec(TelosB);
 
 	run host Sink(*) {
-		run Main(Init160b,InFromIntermediateNode,HandleRequest_SessKey_EncDec,CheckNode,MakeResponseToNeighbour_SessionKey_EncDec,OutToIntermediateNode)
+		run Main(Init160b,HandleRequest_SessKey_EncDec,MakeResponseToNeighbour_SessKey_EncDec)
 	}
-	run host Neighbour(*) {run Main(Init160b,Forward_SessionKey_EncDec_To_Sink,Forward_SessionKey_EncDec_To_NewNode,ECIESEncryptNRESP_160b)}
-	run host J_SessKey_EncDec_1(*) {run Main(*)}
+	run host Neighbour(*) {run Main(Init160b,Forward_SessKey_EncDec_To_Sink,Forward_SessKey_EncDec_To_NewNode,ECIESEncryptNRESP_160b)}
+	run host J_SessKey_EncDec(*){1} {run Main(*)}
 	run host NewNode(*) {
-		run Main(Init160b,MakeRequestWithNewNode_NeighbourAndIntermediateNodeId,DecryptResponse_160b,HandleResponse_Indirect_SessKey_EncDec)
+		run Main(Init160b,MakeRequestWithNewNode_NeighbourAndIntermediateNodesIds,DecryptResponse_160b,HandleResponse_Indirect_SessKey_EncDec)
 	}
+
+    communication
+    {
+        topology[wsn]
+        {
+            NewNode <-> Neighbour;
+            Neighbour <-> J_SessKey_EncDec[0];
+            J_SessKey_EncDec <-> J_SessKey_EncDec[i+1];
+            J_SessKey_EncDec[0] <-> Sink ;
+        }
+    }
 }
 
 
@@ -139,32 +222,54 @@ version IndirectJoinToSink_Onion_128b {
 	set host Sink(PC);
 	set host Neighbour(TelosB);
 	set host NewNode(TelosB);
-	set host J_Onion_1(TelosB);
+	set host J_Onion(TelosB);
 
 	run host Sink(*) {
-		run Main(Init128b,InFromIntermediateNode,HandleRequest_Onion,CheckNode,MakeResponseToNeighbour_Onion,OutToIntermediateNode)
+		run Main(Init128b,HandleRequest_Onion,MakeResponseToNeighbour_Onion)
 	}
-	run host Neighbour(*) {run Main(Init128b,Forward_NK_EncDec_To_Sink,Forward_NK_EncDec_To_NewNode,ECIESEncryptNRESP_128b)}
-	run host J_Onion_1(*) {run Main(*)}
+	run host Neighbour(*) {run Main(Init128b,Forward_Onion_To_Sink,Forward_Onion_To_NewNode,ECIESEncryptNRESP_128b)}
+	run host J_Onion(*){1} {run Main(*)}
 	run host NewNode(*) {
 		run Main(Init128b,MakeRequestWithNewNodeAndNeighbourId,DecryptResponse_128b,HandleResponse_Indirect_Onion)
 	}
+
+    communication
+    {
+        topology[wsn]
+        {
+            NewNode <-> Neighbour;
+            Neighbour <-> J_Onion[0];
+            J_Onion <-> J_Onion[i+1];
+            J_Onion[0] <-> Sink ;
+        }
+    }
 }
 version IndirectJoinToSink_Onion_160b {
 
 	set host Sink(PC);
 	set host Neighbour(TelosB);
 	set host NewNode(TelosB);
-	set host J_Onion_1(TelosB);
+	set host J_Onion(TelosB);
 
 	run host Sink(*) {
 		run Main(Init160b,InFromIntermediateNode,HandleRequest_Onion,CheckNode,MakeResponseToNeighbour_Onion,OutToIntermediateNode)
 	}
-	run host Neighbour(*) {run Main(Init160b,Forward_NK_EncDec_To_Sink,Forward_NK_EncDec_To_NewNode,ECIESEncryptNRESP_160b)}
-	run host J_Onion_1(*) {run Main(*)}
+	run host Neighbour(*) {run Main(Init160b,Forward_Onion_To_Sink,Forward_Onion_To_NewNode,ECIESEncryptNRESP_160b)}
+	run host J_Onion(*){1} {run Main(*)}
 	run host NewNode(*) {
 		run Main(Init160b,MakeRequestWithNewNodeAndNeighbourId,DecryptResponse_160b,HandleResponse_Indirect_Onion)
 	}
+
+    communication
+    {
+        topology[wsn]
+        {
+            NewNode <-> Neighbour;
+            Neighbour <-> J_Onion[0];
+            J_Onion <-> J_Onion[i+1];
+            J_Onion[0] <-> Sink ;
+        }
+    }
 }
 
 

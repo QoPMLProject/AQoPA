@@ -42,9 +42,9 @@ class Block():
         self.metrics.append(metric)
         metric.block = self
         
-    def find_primitives(self, function_name, arguments):
+    def find_primitives(self, function_name, qop_arguments):
         """ """
-        if len(arguments) != len(self.params):
+        if len(qop_arguments) < len(self.params):
             return []
         
         found_metrics = []
@@ -53,15 +53,17 @@ class Block():
                 continue
             
             params_ok = True
-            for i in range(0, len(arguments)):
-                if arguments[i] != m.arguments[i]:
+            for i in range(0, len(m.arguments)):
+                if qop_arguments[i] != m.arguments[i]:
                     params_ok = False
-                    
+
             if not params_ok:
+                if function_name == 'post':
+                    print 'params not ok'
                 continue
-            
+
             found_metrics.append(m)
-            
+
         return found_metrics
 
 
@@ -106,24 +108,24 @@ class Manager():
 
         if len(found_host_metric.normal_blocks) > 0:
             for mb in found_host_metric.normal_blocks:
-                if len(mb.params) == len(call_function_expression.qop_arguments):
+                if len(mb.params) <= len(call_function_expression.qop_arguments):
                     normal_metrics.extend(mb.find_primitives(
-                                        call_function_expression.function_name,
-                                        call_function_expression.qop_arguments))
+                        call_function_expression.function_name,
+                        call_function_expression.qop_arguments))
         
         if len(found_host_metric.plus_blocks) > 0:
             for mb in found_host_metric.plus_blocks:
-                if len(mb.params) == len(call_function_expression.qop_arguments):
+                if len(mb.params) <= len(call_function_expression.qop_arguments):
                     plus_metrics.extend(mb.find_primitives(
-                                        call_function_expression.function_name,
-                                        call_function_expression.qop_arguments))
+                        call_function_expression.function_name,
+                        call_function_expression.qop_arguments))
         
         if len(found_host_metric.star_blocks) > 0:
             for mb in found_host_metric.star_blocks:
-                if len(mb.params) == len(call_function_expression.qop_arguments):
+                if len(mb.params) <= len(call_function_expression.qop_arguments):
                     star_metrics.extend(mb.find_primitives(
-                                        call_function_expression.function_name,
-                                        call_function_expression.qop_arguments))
+                        call_function_expression.function_name,
+                        call_function_expression.qop_arguments))
                 
         if len(normal_metrics) + len(plus_metrics) + len(star_metrics) > 1:
             raise RuntimeException("Found many metrics for function '%s' with qop arguments: %s." \
@@ -166,6 +168,7 @@ class Manager():
             return size    
             
         if isinstance(expression, CallFunctionExpression) or isinstance(expression, CallFunctionInstruction):
+            expression = context.expression_reducer.reduce(expression)
             metric = self.find_primitive(host, expression)
             
             if not metric:

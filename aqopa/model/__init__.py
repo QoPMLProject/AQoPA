@@ -155,7 +155,8 @@ class ComparisonExpression():
         self.comparison_type = comparison_type
         
     def __unicode__(self):
-        return "%s == %s" % (unicode(self.left), unicode(self.right))
+        return "%s %s %s" % (unicode(self.left), u'==' if self.is_equal_type() else '!=',
+                             unicode(self.right))
 
     def is_equal_type(self):
         return self.comparison_type == COMPARISON_TYPE_EQUAL

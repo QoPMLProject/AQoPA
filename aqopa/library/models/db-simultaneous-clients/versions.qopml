@@ -1,5 +1,6 @@
 versions {
-  
+
+  % Without encryption
   version scenario_1 {
   
     set host Server(Server);
@@ -11,11 +12,13 @@ versions {
     run host Server(*) {
       run Server1(get_db,select_rows_100,get_rows)
     }
-    run host Client(*){1}[ch1, ch2] {
+    run host Client(*){10}[ch_comm] {
       run Client1(*)
     }
   }
-  
+
+
+  % With encryption AES-128
   version scenario_2 {
   
     set host Server(Server);
@@ -27,11 +30,13 @@ versions {
     run host Server(*) {
       run Server1(get_db_key,decrypt_aes_128_sim_100,select_rows_100,get_rows)
     }
-    run host Client(*){1}[ch1, ch2] {
+    run host Client(*){10}[ch_comm] {
       run Client1(*)
     }
   }
-  
+
+
+  % With encryption AES-256
   version scenario_3 {
   
     set host Server(Server);
@@ -43,11 +48,13 @@ versions {
     run host Server(*) {
       run Server1(get_db_key,decrypt_aes_256_sim_100,select_rows_100,get_rows)
     }
-    run host Client(*){1}[ch1, ch2] {
+    run host Client(*){10}[ch_comm] {
       run Client1(*)
     }
   }
- 
+
+
+  % Without encryption, with integrity and authenticity
   version scenario_4 {
   
     set host Server(Server);
@@ -59,11 +66,13 @@ versions {
     run host Server(*) {
       run Server1(get_db,select_rows_100,get_rows_with_hash_and_signature_100)
     }
-    run host Client(*){1}[ch1, ch2] {
+    run host Client(*){10}[ch_comm] {
       run Client1(*)
     }
   }
- 
+
+
+  % With encryption AES-256, with integrity and authenticity
   version scenario_5 {
   
     set host Server(Server);
@@ -75,7 +84,7 @@ versions {
     run host Server(*) {
       run Server1(get_db_key,decrypt_aes_256_sim_100,select_rows_100,get_rows_with_hash_and_signature_100)
     }
-    run host Client(*){1}[ch1, ch2] {
+    run host Client(*){10}[ch_comm] {
       run Client1(*)
     }
   }
