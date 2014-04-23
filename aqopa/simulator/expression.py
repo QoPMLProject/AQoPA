@@ -70,8 +70,7 @@ class Populator():
                     "Cannot compute expression '{0}' in host {1}. Variable {2} is not a tuple. It is: {3}."
                     .format(unicode(main_expression), host.name, expression.variable_name, unicode(expr)))
             if len(expr.elements) <= expression.index:
-                print host.name
-                raise RuntimeException( 
+                raise RuntimeException(
                     "Cannot compute expression '{0}' in host {1}. "
                     "Variable {2} does not have index {3}. It has {4} elements: {5}."
                     .format(unicode(main_expression), host.name, expression.variable_name, expression.index,

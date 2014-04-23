@@ -58,8 +58,6 @@ class Block():
                     params_ok = False
 
             if not params_ok:
-                if function_name == 'post':
-                    print 'params not ok'
                 continue
 
             found_metrics.append(m)

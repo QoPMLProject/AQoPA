@@ -15,7 +15,7 @@ class PrintResultsHook(Hook):
         self.simulator = simulator
         self.output_file = output_file
         
-    def execute(self, context):
+    def execute(self, context, **kwargs):
         """ """
         self.output_file.write('-'*20)
         self.output_file.write('\n')

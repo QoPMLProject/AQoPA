@@ -35,7 +35,7 @@ class PreInstructionHook(Hook):
         for v in self.module.init_vars:
             self.module.reputation_vars[host][v] = self.module.init_vars[v]
         
-    def execute(self, context):
+    def execute(self, context, **kwargs):
         """
         """
         instruction = context.get_current_instruction()
