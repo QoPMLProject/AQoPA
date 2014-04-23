@@ -388,10 +388,10 @@ class PreInstructionHook(Hook):
             sender_time = self.module.get_current_time(self.simulator, sender)
             for msg in sent_messages:
                 # Get time of sending and update sender time
-                self.module.add_message_sent_time(self.simulator, msg, sender_time)
                 sending_time = self._get_time_of_sending(context, channel, msg)
-                sender_time += sending_time
-                self.module.set_current_time(self.simulator, sender, sender_time)
+                self.module.add_message_sent_time(self.simulator, msg, sender_time)
+                self.module.add_message_sending_time(self.simulator, msg, sending_time)
+                self.module.set_current_time(self.simulator, sender, sender_time + sending_time)
 
         else:
             # IN instruction
@@ -451,9 +451,14 @@ class PreInstructionHook(Hook):
                     receiver_time = message_time
                 # Add the time of receiving (usually equal to time of sending)
                 receiver_time += self._get_time_of_receiving(context, channel, msg, request)
+                # Get time when requester started waiting for the message
+                started_waiting_at = self.module.get_request_created_time(self.simulator, request)
+                # Get time of sending message
+                sending_time = self.module.get_message_sending_time(self.simulator, msg)
                 # Add timetrace to module
-                self.module.add_channel_message_trace(self.simulator, channel, msg, msg.sender,
-                                                      message_time, request.receiver, receiver_time)
+                self.module.add_channel_message_trace(self.simulator, channel, msg, 
+                                                      msg.sender, message_time, sending_time, 
+                                                      request.receiver, started_waiting_at, receiver_time)
             self.module.set_current_time(self.simulator, request.receiver, receiver_time)
 
         return ExecutionResult(result_kwargs=kwargs)
