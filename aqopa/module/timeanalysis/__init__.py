@@ -75,15 +75,17 @@ class Module(module.Module):
             return []
         return self.timetraces[simulator]
 
-    def add_channel_message_trace(self, simulator, channel, message_index, sender, sent_at, receiver, 
-                                  started_waiting_at, received_at):
+    def add_channel_message_trace(self, simulator, channel, message_index,
+                                  sender, sent_at, sending_time,
+                                  receiver, started_waiting_at, received_at):
         if simulator not in self.channel_message_traces:
             self.channel_message_traces[simulator] = {}
         if channel not in self.channel_message_traces[simulator]:
             self.channel_message_traces[simulator][channel] = []
         cmt = self.channel_message_traces[simulator][channel]
-        cmt.append(ChannelMessageTrace(channel, message_index, sender, sent_at, receiver, 
-                                       started_waiting_at, received_at))
+        cmt.append(ChannelMessageTrace(channel, message_index,
+                                       sender, sent_at, sending_time,
+                                       receiver, started_waiting_at, received_at))
 
     def get_channel_message_traces(self, simulator, channel):
         """ """

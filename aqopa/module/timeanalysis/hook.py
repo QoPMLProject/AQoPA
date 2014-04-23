@@ -24,7 +24,7 @@ class PreInstructionHook(Hook):
         self.module = module
         self.simulator = simulator
 
-    def execute(self, context, kwargs=None):
+    def execute(self, context, **kwargs):
         """
         """
         instruction = context.get_current_instruction()
@@ -34,7 +34,7 @@ class PreInstructionHook(Hook):
             return
         
         if isinstance(instruction, CommunicationInstruction):
-            return self._execute_communication_instruction(context, kwargs=kwargs)
+            return self._execute_communication_instruction(context, **kwargs)
         else:
             self._update_time(context)
             return ExecutionResult()
@@ -289,7 +289,7 @@ class PreInstructionHook(Hook):
             return 0
         return self._get_time_for_communication_step(context, channel, request.receiver, metric, message, request)
 
-    def _execute_communication_instruction(self, context, kwargs=None):
+    def _execute_communication_instruction(self, context, **kwargs):
         """ """
         channel = context.channels_manager.find_channel_for_current_instruction(context)
         if not channel:
@@ -407,7 +407,7 @@ class PreInstructionHook(Hook):
             # If waiting request has NOT been created and added before
             if not channel.is_waiting_on_instruction(request.receiver, request.instruction):
                 receiver = context.get_current_host()
-                self.module.add_request_created_time(self.simulator, receiver,
+                self.module.add_request_created_time(self.simulator, request,
                                                      self.module.get_current_time(self.simulator, receiver))
                 messages_request = request
 
