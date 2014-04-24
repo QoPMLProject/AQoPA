@@ -78,6 +78,7 @@ data(PC) {
     primitive[id][1];
     primitive[network_key][16];
     primitive[dh_key][16];
+    primitive[empty_list][0];
     #
     primhead[function][key_size][size:exact(b)];
     primitive[pk][128][256];
@@ -89,9 +90,15 @@ data(PC) {
     primhead[function][alg][key_size][time:exact(ms)][size:nested];
     primitive[s_dec][AES-CTR][128][0][1:1];
     #
-    primhead[function][time:exact(ms)][energy:current(mA)];
-    primitive[in][0][0];
-    primitive[out][0][0];
+    primhead[function][time:algorithm(ms)][energy:current(mA)];
+    primitive[in][wsn_time][0];
+    primitive[out][wsn_time][0];
+    #
+    primhead[function][size:sum_ratio];
+    primitive[add_to_list][1:1,2:1];
+    #
+    primhead[function][size:ratio];
+    primitive[pop_list][1:1];
     #
     primhead[function][energy:current(mA)];
     primitive[cpu][0];
