@@ -324,6 +324,7 @@ class PreInstructionHook(Hook):
             # If checked (in loop) host is in the past relative to the time of actual host
             if host_time < min_hosts_time[1]:
                 current_instruction = h.get_current_instructions_context().get_current_instruction()
+
                 if isinstance(current_instruction, CommunicationInstruction):
                     # If the checked host (the one in the past) want to send message
                     # it should be first
@@ -341,6 +342,19 @@ class PreInstructionHook(Hook):
                             if not host_channel.is_waiting_on_instruction(h, current_instruction):
                                 messages_request = context.channels_manager.build_message_request(
                                     h, current_instruction, context.expression_populator)
+
+                            # Now we can update the times of hosts depending on the fulfilled request
+                            fulfilled_requests = host_channel.get_fulfilled_requests(messages_request=messages_request,
+                                                                                     include_all_sent_messages=True)
+                            for request, messages in fulfilled_requests:
+                                request_time = self.module.get_request_created_time(self.simulator, request)
+                                # Traverse all messages needed to fulfill request
+                                for msg in messages:
+                                    # If sender time is smaller than time when received asked for message
+                                    # it would mean that sender wants to send message from the past
+                                    # to the  receiver who started to wait message later
+                                    if self.module.get_message_sent_time(self.simulator, msg) < request_time:
+                                        msg.use_by_host(request.receiver)
 
                             # Check if request of this host is fulfilled
                             # If yes, let it go first

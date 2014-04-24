@@ -707,9 +707,15 @@ class FinishInstructionExecutor(InstructionExecutor):
         """ Overriden """
         instruction = context.get_current_instruction()
         if instruction.command == "end":
-            context.get_current_host().finish_successfuly()
+            for h in context.hosts:
+                h.finish_successfuly()
         else:
-            context.get_current_host().finish_failed('Executed stop instruction')
+            msg = 'Executed stop instruction in host {0}'.format(context.get_current_host().name)
+            for h in context.hosts:
+                if h == context.get_current_host():
+                    h.finish_failed('Executed stop instruction')
+                else:
+                    h.finish_failed(msg)
             
         context.get_current_host().mark_changed()
         
