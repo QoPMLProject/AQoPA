@@ -189,7 +189,7 @@ class Channel():
         The result list may contain all sent messages - not only those from optional parameter.
         """
         # We have decided that one message can be assigined to one host ONLY ONCE
-        # and that the next request can be fulfilled when all previous have been fulfilled.
+        # and NOT ANYMORE - (that the next request can be fulfilled when all previous have been fulfilled).
         # TODO: Maybe it will be worth changing later.
 
         all_messages = []
@@ -209,13 +209,14 @@ class Channel():
             return None
 
         tuples = []
-        checked_hosts = []
         for request in all_requests:
-            # If receiver has been already checked in this function call
-            # omit his next requests (FIFO)
-            if request.receiver in checked_hosts:
-                continue
-            checked_hosts.append(request.receiver)
+#             NOT ANYMORE
+#            # If receiver has been already checked in this function call
+#            # omit his next requests (FIFO)
+#             NOT ANYMORE
+#            if request.receiver in checked_hosts:
+#                continue
+#            checked_hosts.append(request.receiver)
 
             needed_expressions_nb = len(request.instruction.variables_names)
             filters = request.get_populated_filters()
@@ -259,6 +260,7 @@ class Channel():
             needed_expressions_nb = len(request.instruction.variables_names)
             for i in range(0, needed_expressions_nb):
                 message = messages[i]
+                
                 # Set variable sent in message
                 request.receiver.set_variable(request.instruction.variables_names[i],
                                               message.expression.clone())
@@ -740,7 +742,7 @@ class Router():
                         hosts_path.insert(0, prev_host)
                         break
 
-       # Printer().print_routing(self.routing[topology_name])
+#        Printer().print_routing(self.routing[topology_name])
 
         if receiver not in distances:
             raise RuntimeException("The path between {0} and {1} undefined.".format(sender.name, receiver.name))

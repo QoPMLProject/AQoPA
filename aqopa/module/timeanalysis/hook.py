@@ -401,11 +401,17 @@ class PreInstructionHook(Hook):
 
             sender_time = self.module.get_current_time(self.simulator, sender)
             for msg in sent_messages:
+                
+                # DEBUG #
+                print 'sending from', sender.name, 'at', self.module.get_current_time(self.simulator, sender), 'message', unicode(msg.expression)
+                # DEBUG #
+                
                 # Get time of sending and update sender time
                 sending_time = self._get_time_of_sending(context, channel, msg)
                 self.module.add_message_sent_time(self.simulator, msg, sender_time)
                 self.module.add_message_sending_time(self.simulator, msg, sending_time)
-                self.module.set_current_time(self.simulator, sender, sender_time + sending_time)
+                sender_time += sending_time
+                self.module.set_current_time(self.simulator, sender, sender_time)
 
         else:
             # IN instruction
@@ -421,6 +427,11 @@ class PreInstructionHook(Hook):
             # If waiting request has NOT been created and added before
             if not channel.is_waiting_on_instruction(request.receiver, request.instruction):
                 receiver = context.get_current_host()
+                
+                # DEBUG #
+                print 'request in', receiver.name, 'at', self.module.get_current_time(self.simulator, receiver)
+                # DEBUG #
+
                 self.module.add_request_created_time(self.simulator, request,
                                                      self.module.get_current_time(self.simulator, receiver))
                 messages_request = request
@@ -456,6 +467,8 @@ class PreInstructionHook(Hook):
                     sorted_messages.append(msg)
 
             receiver_time = self.module.get_current_time(self.simulator, request.receiver)
+            
+            msg_index = 0
             for msg in sorted_messages:
                 # Msg time is greater or equal to request time
                 message_time = self.module.get_message_sent_time(self.simulator, msg)
@@ -469,6 +482,13 @@ class PreInstructionHook(Hook):
                 started_waiting_at = self.module.get_request_created_time(self.simulator, request)
                 # Get time of sending message
                 sending_time = self.module.get_message_sending_time(self.simulator, msg)
+                
+                # DEBUG
+                print 'binded in', request.receiver.name, 'var', request.instruction.variables_names[msg_index], \
+                    'assigned', unicode(msg.expression) , 'at', receiver_time 
+                msg_index += 1
+                # DEBUG
+                
                 # Add timetrace to module
                 self.module.add_channel_message_trace(self.simulator, channel, msg, 
                                                       msg.sender, message_time, sending_time, 

@@ -100,7 +100,7 @@ class ModelParserExtension(LexYaccParserExtension):
     def topology_rule(self, t):
         """
         topology_rule : IDENTIFIER topology_arrow IDENTIFIER SEMICOLON
-                    | IDENTIFIER topology_arrow IDENTIFIER COLON FLOAT SEMICOLON
+                    | IDENTIFIER topology_arrow IDENTIFIER COLON number SEMICOLON
         """
         quality = 1
         if len(t) == 7:
@@ -401,17 +401,17 @@ class ConfigParserExtension(LexYaccParserExtension):
     def version_topology_rule(self, t):
         """
         version_topology_rule : IDENTIFIER version_topology_arrow IDENTIFIER SEMICOLON
-                    | IDENTIFIER version_topology_arrow IDENTIFIER COLON FLOAT SEMICOLON
+                    | IDENTIFIER version_topology_arrow IDENTIFIER COLON number SEMICOLON
                     | version_topology_host_with_indicies version_topology_arrow IDENTIFIER SEMICOLON
-                    | version_topology_host_with_indicies version_topology_arrow IDENTIFIER COLON FLOAT SEMICOLON
+                    | version_topology_host_with_indicies version_topology_arrow IDENTIFIER COLON number SEMICOLON
                     | IDENTIFIER version_topology_arrow version_topology_host_with_indicies SEMICOLON
-                    | IDENTIFIER version_topology_arrow version_topology_host_with_indicies COLON FLOAT SEMICOLON
+                    | IDENTIFIER version_topology_arrow version_topology_host_with_indicies COLON number SEMICOLON
                     | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_indicies SEMICOLON
-                    | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_indicies COLON FLOAT SEMICOLON
+                    | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_indicies COLON number SEMICOLON
                     | IDENTIFIER version_topology_arrow version_topology_host_with_i_index SEMICOLON
-                    | IDENTIFIER version_topology_arrow version_topology_host_with_i_index COLON FLOAT SEMICOLON
+                    | IDENTIFIER version_topology_arrow version_topology_host_with_i_index COLON number SEMICOLON
                     | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_i_index SEMICOLON
-                    | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_i_index COLON FLOAT SEMICOLON
+                    | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_i_index COLON number SEMICOLON
         """
         if isinstance(t[1], basestring):
             t[1] = TopologyRuleHost(t[1])

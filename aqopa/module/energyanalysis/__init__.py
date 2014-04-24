@@ -175,7 +175,7 @@ class Module(module.Module):
                 # Calculate consumption
                 consumption = voltage * current * time_sec
                 
-            hosts_consumption[timetrace.host] += consumption
+            hosts_consumption[timetrace.host] += consumption / 1000000.0
             
         # Traverse channel traces
         # Look for times when host was waiting for message or sending a message
@@ -210,7 +210,6 @@ class Module(module.Module):
                 if host in host_channel_sending_time_tuples:
                     host_channel_sending_time_tuples[host].sort(key=lambda t: t[0])
                     time_tuples = host_channel_sending_time_tuples[host]
-                    print host.name, time_tuples
                     sending_tuples = []
                     if len(time_tuples) > 0:
                         current_t_from = 0
@@ -230,7 +229,6 @@ class Module(module.Module):
                 if host in host_channel_waiting_time_tuples:
                     host_channel_waiting_time_tuples[host].sort(key=lambda t: t[0])
                     time_tuples = host_channel_waiting_time_tuples[host]
-                    print host.name, time_tuples
                     waiting_tuples = []
                     if len(time_tuples) > 0:
                         current_t_from = 0
@@ -278,8 +276,8 @@ class Module(module.Module):
                 else:
                     sending_time -= overlapping_time
 
-                hosts_consumption[host] += voltage * current_sending * sending_time
-                hosts_consumption[host] += voltage * current_waiting * waiting_time
+                hosts_consumption[host] += (voltage * current_sending * sending_time) / 1000000.0
+                hosts_consumption[host] += (voltage * current_waiting * waiting_time) / 1000000.0
             
         return hosts_consumption
             
