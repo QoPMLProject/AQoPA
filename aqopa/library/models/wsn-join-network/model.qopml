@@ -1,489 +1,495 @@
+functions
+{
+    % List operations
+    fun empty_list();
+    fun add_to_list(list, element);
+    fun get_from_list(list);
+    fun pop_list(list);
 
-functions {
-  fun id_s() (ID of Sink);
-  fun id_nn() (ID of New node);
-  fun id_n() (ID of neighbour node);
-  fun id_j() (ID of intermediate node);
+    % Messages types
+    fun request_msg();
+    fun response_msg();
 
-  fun check_node(nodeID) (checks if node nodeID can join network);
-  
-  fun nonce() (generates nonce);
-  fun network_key() (returns the network key used by all nodes);
-  fun session_key() (returns the session key between two nodes - in this model it is simplified to the same form as the network key);
-  fun gen_new_session_key() (generates session key for new node);
+    fun is_enc_with(K, D);
 
-  fun sk(id) (secret key of id);
-  fun pk(sk)[Time: key_size] (public key for sk secret key);
-
-  fun ecies_kdf_mac()[Time: key_size] (ecies key derivation function and MAC calculation before encryption);
-  fun ecies_kdf()[Time: key_size] (ecies key derivation function before decryption);
-  fun ecies_enc(data, PK)[Time: inside_algorithm,key_size] (assymetric encryption using ECIES algorithm);
-  fun ecies_dec(data, SK)[Time: inside_algorithm,key_size] (assymetric decryption using ECIES algorithm);
-  fun ecies_temp_key()[Time: key_size] (generates temporary key for encryption);
-  fun ecies_mac() (generates MAC for encrypted message);
-
-  fun s_enc(data, K)[Time: algorithm,key_size] (symmetric encryption);
-  fun s_dec(data, K)[Time: algorithm,key_size] (symmetric decryption);
-  
-  fun dh_key(PK_ID1, SK_ID2) (generates Diffie-Hellman key between two nodes ID1 and ID2 using their public and secret keys);
-
-  fun send(X) (function simulates communication time for sending X as message);
+    fun check_node(nodeID) (checks if node nodeID can join network);
+    fun nonce() (generates nonce);
+    fun network_key() (returns the network key used by all nodes);
+    fun session_key() (returns the session key between two nodes - in this model it is simplified to the same form as the network key);
+    fun gen_new_session_key() (generates session key for new node);
+    fun sk(host_id) (secret key of id);
+    fun pk(sk)[Time: key_size] (public key for sk secret key);
+    fun ecies_kdf_mac()[Time: key_size] (ecies key derivation function and MAC calculation before encryption);
+    fun ecies_kdf()[Time: key_size] (ecies key derivation function before decryption);
+    fun ecies_enc(data, PK)[Time: inside_algorithm,key_size] (assymetric encryption using ECIES algorithm);
+    fun ecies_dec(data, SK)[Time: inside_algorithm,key_size] (assymetric decryption using ECIES algorithm);
+    fun ecies_temp_key()[Time: key_size] (generates temporary key for encryption);
+    fun ecies_mac() (generates MAC for encrypted message);
+    fun s_enc(data, K)[Time: algorithm,key_size] (symmetric encryption);
+    fun s_dec(data, K)[Time: algorithm,key_size] (symmetric decryption);
+    fun dh_key(PK_ID1, SK_ID2) (generates Diffie-Hellman key between two nodes ID1 and ID2 using their public and secret keys);
 }
+equations
+{
+    % List equations
+    eq pop_list(add_to_list(L, E)) = L;
+    eq get_from_list(add_to_list(L, E)) = E;
 
-equations {
-  eq ecies_enc(ecies_dec(data, SK), pk(SK)) = data;
-  eq ecies_dec(ecies_enc(data, pk(SK)), SK) = data;
-  eq s_enc(s_dec(data, K), K) = data;
-  eq s_dec(s_enc(data, K), K) = data;
-
-  eq s_dec(s_enc(data, dh_key(pk(sk(ID1)), sk(ID2))), dh_key(pk(sk(ID2)), sk(ID1))) = data;
-  eq s_enc(s_dec(data, dh_key(pk(sk(ID1)), sk(ID2))), dh_key(pk(sk(ID2)), sk(ID1))) = data;
+    % Cryptographic equations
+    eq is_enc_with(K, s_enc(data, K)) = true;
+    eq ecies_enc(ecies_dec(data, SK), pk(SK)) = data;
+    eq ecies_dec(ecies_enc(data, pk(SK)), SK) = data;
+    eq s_enc(s_dec(data, K), K) = data;
+    eq s_dec(s_enc(data, K), K) = data;
+    eq s_dec(s_enc(data, dh_key(pk(sk(ID1)), sk(ID2))), dh_key(pk(sk(ID2)), sk(ID1))) = data;
+    eq s_enc(s_dec(data, dh_key(pk(sk(ID1)), sk(ID2))), dh_key(pk(sk(ID2)), sk(ID1))) = data;
 }
-
-
-channels {
-  channel ch_out_NN, ch_in_NN, ch_out_N, ch_in_N, ch_out_S, ch_in_S (*);
-  channel ch_1_IN_1,ch_2_IN_1 (*);
+channels
+{
+    channel ch_WSN(*)[wsn];
 }
+hosts
+{
+    host NewNode(rr)(*)
+    {
+        #SK_NewNode = sk(id());
+        process Main(*)
+        {
+            nNN = nonce();            
+            
+            subprocess Init128b()
+            {
+                PK_S  = pk(sk(id(Sink)))[128];
+                PK_NewNode = pk(SK_NewNode)[128];
+                D_NN_S = dh_key(PK_S, SK_NewNode);
+            }
+            subprocess Init160b()
+            {
+                PK_S  = pk(sk(id(Sink)))[160];
+                PK_NewNode = pk(SK_NewNode)[160];
+                D_NN_S = dh_key(PK_S, SK_NewNode);
+            }
+            subprocess MakeRequestWithNewNodeIdOnly(*)
+            {
+                REQ = (nNN, add_to_list(empty_list(), id()));
+            }
+            subprocess MakeRequestWithNewNodeAndNeighbourId(*)
+            {
+                L = empty_list();
+                L = add_to_list(L, id());
+                L = add_to_list(L, routing_next(wsn, id(Sink)));
+                REQ = (nNN, L);
+            }
+            subprocess MakeRequestWithNewNode_NeighbourAndIntermediateNodesIds(*)
+            {
+                L = empty_list();
+                L = add_to_list(L, id());
+                NEXT_ID = routing_next(wsn, id(Sink));
+                while (NEXT_ID != id(Sink))
+                {
+                    L = add_to_list(L, NEXT_ID);
+                    NEXT_ID = routing_next(wsn, id(Sink), NEXT_ID);
+                }
+                L = add_to_list(L, id(Sink));
+                REQ = (nNN, L);
+            }
+            NEXT_ID = routing_next(wsn, id(Sink));
+            ENC_REQ = s_enc(REQ, D_NN_S)[AES-CTR,128];
+            ENC_REQ = (id(), NEXT_ID, request_msg(), ENC_REQ);
+            out(ch_WSN: ENC_REQ);
+            in(ch_WSN: NN_RESP_MSG: |*, id(), response_msg()|);
+            NN_RESP_PAYLOAD_WITH_MAC = NN_RESP_MSG[3];
+            NN_RESP_PAYLOAD = NN_RESP_PAYLOAD_WITH_MAC[0];
+            subprocess DecryptResponse_128b()
+            {
+                ecies_kdf()[128];
+                RESP = ecies_dec(NN_RESP_PAYLOAD, SK_NewNode)[AES,128];
+            }
+            subprocess DecryptResponse_160b()
+            {
+                ecies_kdf()[160];
+                RESP = ecies_dec(NN_RESP_PAYLOAD, SK_NewNode)[AES,160];
+            }
+            subprocess HandleResponse_Direct_Original(*)
+            {
+                nNN_from_response = RESP[0];
+                SymKey_NN_N = RESP[2];
+            }
+            subprocess HandleResponse_Indirect_Original(*)
+            {
+                nNN_from_response = RESP[0];
+                SymKey_NN_N = RESP[2];
+            }
+            subprocess HandleResponse_Indirect_NK_EncDec(*)
+            {
+                SymKey_NN_N = RESP[0];
+                E_DH_RESP = RESP[1];
+                DH_RESP = s_dec(E_DH_RESP, D_NN_S)[AES-CTR,128];
+                nNN_from_response = DH_RESP[0];
+            }
+            subprocess HandleResponse_Indirect_SessKey_EncDec(*)
+            {
+                SymKey_NN_N = RESP[0];
+                E_DH_RESP = RESP[1];
+                DH_RESP = s_dec(E_DH_RESP, D_NN_S)[AES-CTR,128];
+                nNN_from_response = DH_RESP[0];
+            }
+            subprocess HandleResponse_Indirect_Onion(*)
+            {
+                SymKey_NN_N = RESP[0];
+                E_DH_RESP = RESP[1];
+                DH_RESP = s_dec(E_DH_RESP, D_NN_S)[AES-CTR,128];
+                nNN_from_response = DH_RESP[0];
+            }
+            if (nNN == nNN_from_response)
+            {
+                end;
+            }
+            else
+            {
+                stop;
+            }
+        }
+    }
+    host Neighbour(rr)(*)
+    {
+	    #MY_ID = id();
+        #SK_Neighbour = sk(MY_ID);
+        #NK  = network_key();
+        #SessKey_J = session_key();
+        process Main(*)
+        {
+            in(ch_WSN: MSG: |*, id(), request_msg()|);
+            MSG_PAYLOAD = MSG[3];
+            subprocess Init128b()
+            {
+                PK_S = pk(sk(id(Sink)))[128];
+                PK_Neighbour = pk(SK_Neighbour)[128];
+            }
+            subprocess Init160b()
+            {
+                PK_S = pk(sk(id(Sink)))[160];
+                PK_Neighbour = pk(SK_Neighbour)[160];
+            }
+            DH_Neighbour_S = dh_key(PK_S, SK_Neighbour);
+            subprocess Forward_NK_EncDec_To_Sink(*)
+            {
+                NONCES_LIST = empty_list();
+                N = nonce();
+                NONCES_LIST = add_to_list(NONCES_LIST, N);
+                MSG_PAYLOAD_RAW = (NONCES_LIST, MSG_PAYLOAD);
+                MSG_PAYLOAD = s_enc(MSG_PAYLOAD_RAW, NK)[AES-CTR,128];
+            }
+            subprocess Forward_SessKey_EncDec_To_Sink(*)
+            {
+                NONCES_LIST = empty_list();
+                N = nonce();
+                NONCES_LIST = add_to_list(NONCES_LIST, N);
+                MSG_PAYLOAD_RAW = (NONCES_LIST, MSG_PAYLOAD);
+                MSG_PAYLOAD = s_enc(MSG_PAYLOAD_RAW, SessKey_J)[AES-CTR,128];
+            }
+            subprocess Forward_Onion_To_Sink(*)
+            {
+                N = nonce();
+                MSG_PAYLOAD_RAW = (N, MSG_PAYLOAD);
+                MSG_PAYLOAD = s_enc(MSG_PAYLOAD_RAW, NK)[AES-CTR,128];
+            }
+            NEXT_ID = routing_next(wsn, id(Sink));
+            M_WITH_HEADER = (id(), NEXT_ID, request_msg(), MSG_PAYLOAD);
+            out(ch_WSN: M_WITH_HEADER);
+            in(ch_WSN: MSG: |*, id(), response_msg()|);
+            MSG_PAYLOAD = MSG[3];
+            subprocess Forward_Original_To_NewNode(*)
+            {
+                MSG_PAYLOAD_RAW = s_dec(MSG_PAYLOAD, DH_Neighbour_S)[AES-CTR,128];
+                SessionKey_NN_N = gen_new_session_key();
+                PK_NewNode = MSG_PAYLOAD_RAW[2];
+                MSG_PAYLOAD_TO_ENCRYPT = (MSG_PAYLOAD_RAW[0], id(), SessionKey_NN_N);
+            }
+            subprocess Forward_NK_EncDec_To_NewNode(*)
+            {
+                MSG_PAYLOAD_RAW = s_dec(MSG_PAYLOAD, NK)[AES-CTR,128];
+                M2 = MSG_PAYLOAD_RAW[1];
+                SessionKey_NN_N = gen_new_session_key();
+                M2_RAW = s_dec(M2, DH_Neighbour_S)[AES-CTR,128];
+                PK_NewNode = M2_RAW[0];
+                MSG_PAYLOAD_TO_ENCRYPT = (SessionKey_NN_N, M2_RAW[1]);
+            }
+            subprocess Forward_SessKey_EncDec_To_NewNode(*)
+            {
+                MSG_PAYLOAD_RAW = s_dec(MSG_PAYLOAD, SessKey_J)[AES-CTR,128];
+                M2 = MSG_PAYLOAD_RAW[1];
+                SessionKey_NN_N = gen_new_session_key();
+                M2_RAW = s_dec(M2, DH_Neighbour_S)[AES-CTR,128];
+                PK_NewNode = M2_RAW[0];
+                MSG_PAYLOAD_TO_ENCRYPT = (SessionKey_NN_N, M2_RAW[1]);
+            }
+            subprocess Forward_Onion_To_NewNode(*)
+            {
+                MSG_PAYLOAD_RAW = s_dec(MSG_PAYLOAD, NK)[AES-CTR,128];
+                M2 = MSG_PAYLOAD_RAW[1];
+                SessionKey_NN_N = gen_new_session_key();
+                M2_RAW = s_dec(M2, DH_Neighbour_S)[AES-CTR,128];
+                PK_NewNode = M2_RAW[0];
+                MSG_PAYLOAD_TO_ENCRYPT = (SessionKey_NN_N, M2_RAW[1]);
+            }
+            subprocess ECIESEncryptNRESP_128b()
+            {
+                ecies_kdf_mac()[128];
+                M = ecies_enc(MSG_PAYLOAD_TO_ENCRYPT, PK_NewNode)[AES,128];
+                ECIES_RESP = (M, ecies_temp_key()[128], ecies_mac()[128]);
+                M_PAYLOAD = ECIES_RESP;
+            }
+            subprocess ECIESEncryptNRESP_160b()
+            {
+                ecies_kdf_mac()[160];
+                M = ecies_enc(MSG_PAYLOAD_TO_ENCRYPT, PK_NewNode)[AES,160];
+                ECIES_RESP = (M, ecies_temp_key()[160], ecies_mac()[160]);
+                M_PAYLOAD = ECIES_RESP;
+            }
+            NEXT_ID = routing_next(wsn, id(NewNode));
+            M_WITH_HEADER = (id(), NEXT_ID, response_msg(), M_PAYLOAD);
+            out(ch_WSN: M_WITH_HEADER);
+        }
+    }
+    host Sink(rr)(*)
+    {
+        #SK_S  = sk(id(Sink));
+        #NK = network_key();
+        #SessKey_J = session_key();
+        process Main(*)
+        {
+			PREV_ID = id();
+			NEXT_ID = routing_next(wsn, id(NewNode), PREV_ID);
+			while (NEXT_ID != id(NewNode)) {
+				PREV_ID = NEXT_ID;
+				NEXT_ID = routing_next(wsn, id(NewNode), PREV_ID);
+			}
 
-
-hosts {
-
-host NewNode(rr)(*) {
-  #SK_NewNode	= sk(id_nn());
-
-  process Main(*) {
-    nNN = nonce();
-
-    subprocess Init128b() {
-      PK_S 		= pk(sk(id_s()))[128];
-      PK_NewNode 	= pk(SK_NewNode)[128];
-      D_NN_S = dh_key(PK_S, SK_NewNode);
+            subprocess Init128b()
+            {
+                PK_NewNode = pk(sk(id(NewNode)))[128];
+                PK_Neighbour = pk(sk(PREV_ID))[128];
+            }
+            subprocess Init160b()
+            {
+                PK_NewNode = pk(sk(id(NewNode)))[160];
+                PK_Neighbour = pk(sk(PREV_ID))[160];
+            }
+            DH_S_Neighbour = dh_key(PK_Neighbour, SK_S);
+            DH_S_NewNode = dh_key(PK_NewNode, SK_S);
+            in(ch_WSN: M: |*, id(), request_msg()|);
+            M_PAYLOAD = M[3];
+            subprocess HandleRequest_Original(*)
+            {
+                REQ = s_dec(M_PAYLOAD, DH_S_NewNode)[AES-CTR,128];
+                NN_NONCE = REQ[0];
+                IDS_LIST = REQ[1];
+            }
+            subprocess HandleRequest_NK_EncDec(*)
+            {
+                M_PAYLOAD_RAW = s_dec(M_PAYLOAD, NK)[AES-CTR,128];
+                NONCES_LIST = M_PAYLOAD_RAW[0];
+                E_REQ = M_PAYLOAD_RAW[1];
+                REQ = s_dec(E_REQ, DH_S_NewNode)[AES-CTR,128];
+                NN_NONCE = REQ[0];
+                IDS_LIST = REQ[1];
+            }
+            subprocess HandleRequest_SessKey_EncDec(*)
+            {
+                M_PAYLOAD_RAW = s_dec(M_PAYLOAD, SessKey_J)[AES-CTR,128];
+                NONCES_LIST = M_PAYLOAD_RAW[0];
+                E_REQ = M_PAYLOAD_RAW[1];
+                REQ = s_dec(E_REQ, DH_S_NewNode)[AES-CTR,128];
+                NN_NONCE = REQ[0];
+                IDS_LIST = REQ[1];
+            }
+            subprocess HandleRequest_Onion(*)
+            {
+                TMP_NONCES_LIST = empty_list();
+                E_DATA = M_PAYLOAD;
+                while (is_enc_with(NK, E_DATA) == true)
+                {
+                    DATA = s_dec(E_DATA, NK)[AES-CTR,128];
+                    TMP_NONCES_LIST = add_to_list(TMP_NONCES_LIST, DATA[0]);
+                    E_DATA = DATA[1];
+                }
+                E_REQ = E_DATA;
+                REQ = s_dec(E_REQ, DH_S_NewNode)[AES-CTR,128];
+                NN_NONCE = REQ[0];
+                IDS_LIST = REQ[1];
+            }
+            check_node(newNodeId);
+            subprocess MakeResponseToNewNodeDirectly_128b(*)
+            {
+                SessionKey_NN_S = gen_new_session_key();
+                RESP = (NN_NONCE, id(), SessionKey_NN_S);
+                ecies_kdf_mac()[128];
+                E_RESP = ecies_enc(RESP, PK_NewNode)[AES,128];
+                ECIES_RESP = (E_RESP, ecies_temp_key()[128], ecies_mac()[128]);
+                M_PAYLOAD = ECIES_RESP;
+            }
+            subprocess MakeResponseToNewNodeDirectly_160b(*)
+            {
+                SessionKey_NN_S = gen_new_session_key();
+                RESP = (NN_NONCE, id(), SessionKey_NN_S);
+                ecies_kdf_mac()[160];
+                E_RESP = ecies_enc(RESP, PK_NewNode)[AES,160];
+                ECIES_RESP = (E_RESP, ecies_temp_key()[160], ecies_mac()[160]);
+                M_PAYLOAD = ECIES_RESP;
+            }
+            subprocess MakeResponseToNeighbour_Original(*)
+            {
+                RESP = (NN_NONCE, id(), PK_NewNode);
+                E_RESP = s_enc(RESP, DH_S_Neighbour)[AES-CTR,128];
+                M_PAYLOAD = E_RESP;
+            }
+            subprocess MakeResponseToNeighbour_NK_EncDec(*)
+            {
+                IDS_LIST = add_to_list(IDS_LIST, id());
+                RESP_TO_NN_RAW = (NN_NONCE, IDS_LIST);
+                RESP_TO_NN = s_enc(RESP_TO_NN_RAW, DH_S_NewNode)[AES-CTR,128];
+                M2 = (PK_NewNode, RESP_TO_NN);
+                E_M2 = s_enc(M2, DH_S_Neighbour)[AES-CTR,128];
+                RESP = (NONCES_LIST, E_M2);
+                E_RESP = s_enc(RESP, NK)[AES-CTR,128];
+                M_PAYLOAD = E_RESP;
+            }
+            subprocess MakeResponseToNeighbour_SessKey_EncDec(*)
+            {
+                IDS_LIST = add_to_list(IDS_LIST, id());
+                RESP_TO_NN_RAW = (NN_NONCE, IDS_LIST);
+                RESP_TO_NN = s_enc(RESP_TO_NN_RAW, DH_S_NewNode)[AES-CTR,128];
+                M2 = (PK_NewNode, RESP_TO_NN);
+                E_M2 = s_enc(M2, DH_S_Neighbour)[AES-CTR,128];
+                RESP = (NONCES_LIST, E_M2);
+                E_RESP = s_enc(RESP, SessKey_J)[AES-CTR,128];
+                M_PAYLOAD = E_RESP;
+            }
+            subprocess MakeResponseToNeighbour_Onion(*)
+            {
+                IDS_LIST = add_to_list(IDS_LIST, id());
+                RESP_TO_NN_RAW = (NN_NONCE, IDS_LIST);
+                RESP_TO_NN = s_enc(RESP_TO_NN_RAW, DH_S_NewNode)[AES-CTR,128];
+                M2 = (PK_NewNode, RESP_TO_NN);
+                E_M2 = s_enc(M2, DH_S_Neighbour)[AES-CTR,128];
+                M_PAYLOAD = E_M2;
+                while (TMP_NONCES_LIST != empty_list())
+                {
+                    N = get_from_list(TMP_NONCES_LIST);
+                    TMP_NONCES_LIST = pop_list(TMP_NONCES_LIST);
+                    M_PAYLOAD = (N, M_PAYLOAD);
+                    M_PAYLOAD = s_enc(M_PAYLOAD, NK)[AES-CTR,128];
+                }
+            }
+            NEXT_ID = routing_next(wsn, id(NewNode));
+            M = (id(), NEXT_ID, response_msg(), M_PAYLOAD);
+            out(ch_WSN: M);
+        }
     }
-
-    subprocess Init160b() {
-      PK_S 		= pk(sk(id_s()))[160];
-      PK_NewNode 	= pk(SK_NewNode)[160];
-      D_NN_S = dh_key(PK_S, SK_NewNode);
+    host J_OriginalForwarder(rr)(*)
+    {
+        process Main(*)
+        {
+            in(ch_WSN: M: |*, id(), request_msg()|);
+            M_PAYLOAD = M[3];
+            NEXT_ID = routing_next(wsn, id(Sink));
+            M = (id(), NEXT_ID, request_msg(), M_PAYLOAD);
+            out(ch_WSN:M);
+            in(ch_WSN: M: |*, id(), response_msg()|);
+            M_PAYLOAD = M[3];
+            NEXT_ID = routing_next(wsn, id(NewNode));
+            M = (id(), NEXT_ID, response_msg(), M_PAYLOAD);
+            out(ch_WSN:M);
+        }
     }
-    
-    subprocess MakeRequestWithNewNodeIdOnly(*) {
-      REQ = (nNN, id_nn());
+    host J_NK_EncDec(rr)(*)
+    {
+        #NK = network_key();
+        process Main(*)
+        {
+            in(ch_WSN: M: |*, id(), request_msg()|);
+            M_PAYLOAD = M[3];
+            M_PAYLOAD_RAW = s_dec(M_PAYLOAD, NK)[AES-CTR,128];
+            NONCES_LIST = M_PAYLOAD_RAW[0];
+            N = nonce();
+            NONCES_LIST = add_to_list(NONCES_LIST, N);
+            M_PAYLOAD_RAW = (NONCES_LIST, M_PAYLOAD_RAW[1]);
+            M_PAYLOAD = s_enc(M_PAYLOAD_RAW, NK)[AES-CTR,128];
+            NEXT_ID = routing_next(wsn, id(Sink));
+            M = (id(), NEXT_ID, request_msg(), M_PAYLOAD);
+            out(ch_WSN: M);
+            in(ch_WSN: M: |*, id(), response_msg()|);
+            M_PAYLOAD = M[3];
+            M_PAYLOAD_RAW = s_dec(M_PAYLOAD, NK)[AES-CTR,128];
+            NONCES_LIST = M_PAYLOAD_RAW[0];
+            NONCES_LIST = pop_list(NONCES_LIST);
+            M_PAYLOAD_RAW = (NONCES_LIST, M_PAYLOAD_RAW[1]);
+            M_PAYLOAD = s_enc(M_PAYLOAD_RAW, NK)[AES-CTR,128];
+            NEXT_ID = routing_next(wsn, id(NewNode));
+            M = (id(), NEXT_ID, response_msg(), M_PAYLOAD);
+            out(ch_WSN: M);
+        }
     }
-    
-    subprocess MakeRequestWithNewNodeAndNeighbourId(*) {
-      REQ = (nNN, id_nn(), id_n());
+    host J_SessKey_EncDec(rr)(*)
+    {
+        #SessKey_J = session_key();
+        process Main(*)
+        {
+            in(ch_WSN: M: |*, id(), request_msg()|);
+            M_PAYLOAD = M[3];
+            M_PAYLOAD_RAW = s_dec(M_PAYLOAD, SessKey_J)[AES-CTR,128];
+            NONCES_LIST = M_PAYLOAD_RAW[0];
+            N = nonce();
+            NONCES_LIST = add_to_list(NONCES_LIST, N);
+            M_PAYLOAD_RAW = (NONCES_LIST, M_PAYLOAD_RAW[1]);
+            M_PAYLOAD = s_enc(M_PAYLOAD_RAW, SessKey_J)[AES-CTR,128];
+            NEXT_ID = routing_next(wsn, id(Sink));
+            M = (id(), NEXT_ID, request_msg(), M_PAYLOAD);
+            out(ch_WSN: M);
+            in(ch_WSN: M: |*, id(), response_msg()|);
+            M_PAYLOAD = M[3];
+            M_PAYLOAD_RAW = s_dec(M_PAYLOAD, SessKey_J)[AES-CTR,128];
+            NONCES_LIST = M_PAYLOAD_RAW[0];
+            NONCES_LIST = pop_list(NONCES_LIST);
+            M_PAYLOAD_RAW = (NONCES_LIST, M_PAYLOAD_RAW[1]);
+            M_PAYLOAD = s_enc(M_PAYLOAD_RAW, SessKey_J)[AES-CTR,128];
+            NEXT_ID = routing_next(wsn, id(NewNode));
+            M = (id(), NEXT_ID, response_msg(), M_PAYLOAD);
+            out(ch_WSN: M);
+        }
     }
-    
-    subprocess MakeRequestWithNewNode_NeighbourAndIntermediateNodeId(*) {
-      REQ = (nNN, id_nn(), id_n(), id_j());
+    host J_Onion(rr)(*)
+    {
+        #NK = network_key();
+        process Main(*)
+        {
+            in(ch_WSN: M: |*, id(), request_msg()|);
+            M_PAYLOAD = M[3];
+            N = nonce();
+            M_PAYLOAD_RAW = (N, M_PAYLOAD);
+            M_PAYLOAD = s_enc(M_PAYLOAD_RAW, NK)[AES-CTR,128];
+            NEXT_ID = routing_next(wsn, id(Sink));
+            M = (id(), NEXT_ID, request_msg(), M_PAYLOAD);
+            out(ch_WSN: M);
+            in(ch_WSN: M: |*, id(), response_msg()|);
+            M_PAYLOAD = M[3];
+            M_PAYLOAD_RAW = s_dec(M_PAYLOAD, NK)[AES-CTR,128];
+            MY_N = M_PAYLOAD_RAW[0];
+            M_PAYLOAD = M_PAYLOAD_RAW[1];
+            NEXT_ID = routing_next(wsn, id(NewNode));
+            M = (id(), NEXT_ID, response_msg(), M_PAYLOAD);
+            out(ch_WSN: M);
+        }
     }
-    
-    ENC_REQ = s_enc(REQ, D_NN_S)[AES-CTR,128];
-
-    send_headers();
-    send_data(ENC_REQ);
-    out(ch_out_NN: ENC_REQ);
-    
-
-    in(ch_in_NN: NN_RESP);
-    E_RESP = NN_RESP[0];
-
-    subprocess DecryptResponse_128b() {
-      ecies_kdf()[128];
-      RESP = ecies_dec(E_RESP, SK_NewNode)[AES,128];
-    }
-
-    subprocess DecryptResponse_160b() {
-      ecies_kdf()[160];
-      RESP = ecies_dec(E_RESP, SK_NewNode)[AES,160];
-    }
-    
-    subprocess HandleResponse_Direct_Original(*) {
-      nNN_resp = RESP[0];
-      idS = RESP[1];
-      SymKey_NN_N = RESP[2];
-    }
-    
-    subprocess HandleResponse_Indirect_Original(*) {
-      nNN_resp = RESP[0];
-      idN = RESP[1];
-      SymKey_NN_N = RESP[2];
-    }
-    
-    subprocess HandleResponse_Indirect_NK_EncDec(*) {
-      SymKey_NN_N = RESP[0];
-      E_DH_RESP = RESP[1];
-      DH_RESP = s_dec(E_DH_RESP, D_NN_S)[AES-CTR,128];
-      nNN_resp = DH_RESP[0];
-    }
-    
-    subprocess HandleResponse_Indirect_SessKey_EncDec(*) {
-      SymKey_NN_N = RESP[0];
-      E_DH_RESP = RESP[1];
-      DH_RESP = s_dec(E_DH_RESP, D_NN_S)[AES-CTR,128];
-      nNN_resp = DH_RESP[0];
-    }
-    
-    subprocess HandleResponse_Indirect_Onion(*) {
-      SymKey_NN_N = RESP[0];
-      E_DH_RESP = RESP[1];
-      DH_RESP = s_dec(E_DH_RESP, D_NN_S)[AES-CTR,128];
-      nNN_resp = DH_RESP[0];
-    }
-    
-    if (nNN == nNN_resp) {
-      end;
-    } else {
-      stop;
-    }
-
-  }
 }
-
-host Neighbour(rr)(*) {
-  #SK_Neighbour 	= sk(id_n());
-  #NK 			= network_key();
-  #SessKey_J	= session_key();
-
-  process Main(*) {
-	    in(ch_out_NN:M);
-
-	    subprocess Init128b() {
-	      PK_S = pk(sk(id_s()))[128];
-	      PK_Neighbour = pk(SK_Neighbour)[128];
-	    }
-
-	    subprocess Init160b() {
-	      PK_S = pk(sk(id_s()))[160];
-	      PK_Neighbour = pk(SK_Neighbour)[160];
-	    }
-
-	    DH_Neighbour_S = dh_key(PK_S, SK_Neighbour);
-	    
-	    subprocess Forward_NK_EncDec_To_Sink(*) {
-	      N = nonce();
-	      TMP_M = (N, M);
-	      M = s_enc(TMP_M, NK)[AES-CTR,128];
-	    }
-	    
-	    subprocess Forward_SessionKey_EncDec_To_Sink(*) {
-	      N = nonce();
-	      TMP_M = (N, M);
-	      M = s_enc(TMP_M, SessKey_J)[AES-CTR,128];
-	    }
-	
-	    send_headers();
-	    send_data(M);
-	    out(ch_out_N:M);
-	
-	    in(ch_in_N:M);
-	    
-	    subprocess Forward_Original_To_NewNode(*) {
-	      RESP = s_dec(M, DH_Neighbour_S)[AES-CTR,128];
-	      SessionKey_NN_N = gen_new_session_key(); 
-	      PK_NewNode = RESP[2];
-	      N_RESP = (RESP[0], id_n(), SessionKey_NN_N);
-	    }
-	    
-	    subprocess Forward_NK_EncDec_To_NewNode(*) {
-	      SINK_RAW_RESP = s_dec(M, NK)[AES-CTR,128];
-	      M2 = SINK_RAW_RESP[1];
-	      
-	      M2_RAW = s_dec(M2, DH_Neighbour_S)[AES-CTR,128];
-	      PK_NewNode = M2_RAW[0];
-	      SessionKey_NN_N = gen_new_session_key(); 
-	      N_RESP = (SessionKey_NN_N, M2_RAW[1]);
-	    }
-	    
-	    subprocess Forward_SessionKey_EncDec_To_NewNode(*) {
-	      SINK_RAW_RESP = s_dec(M, SessKey_J)[AES-CTR,128];
-	      M2 = SINK_RAW_RESP[1];
-	      
-	      M2_RAW = s_dec(M2, DH_Neighbour_S)[AES-CTR,128];
-	      PK_NewNode = M2_RAW[0];
-	      SessionKey_NN_N = gen_new_session_key();
-	      N_RESP = (SessionKey_NN_N, M2_RAW[1]);
-	    }
-
-	    subprocess ECIESEncryptNRESP_128b() {
-	      ecies_kdf_mac()[128];
-	      M = ecies_enc(N_RESP, PK_NewNode)[AES,128];
-	
-	      ECIES_RESP = (M, ecies_temp_key()[128], ecies_mac()[128]);
-	      M = ECIES_RESP;
-	    }
-
-	    subprocess ECIESEncryptNRESP_160b() {
-	      ecies_kdf_mac()[160];
-	      M = ecies_enc(N_RESP, PK_NewNode)[AES,160];
-	
-	      ECIES_RESP = (M, ecies_temp_key()[160], ecies_mac()[160]);
-	      M = ECIES_RESP;
-	    }
-	
-	    send_headers();
-	    send_data(M);
-            out(ch_in_NN:M);
-  }
-}
-
-
-host Sink(rr)(*) {
-  #SK_S 		= sk(id_s());
-  #NK 			= network_key();
-  #SessKey_J		= session_key();
-
-  process Main(*) {
-
-	    subprocess Init128b() {
-	      PK_NewNode = pk(sk(id_nn()))[128];
-	      PK_Neighbour = pk(sk(id_n()))[128];
-	    }
-
-	    subprocess Init160b() {
-	      PK_NewNode = pk(sk(id_nn()))[160];
-	      PK_Neighbour = pk(sk(id_n()))[160];
-	    }
-
-	    DH_S_Neighbour = dh_key(PK_Neighbour, SK_S);
-	    DH_S_NewNode = dh_key(PK_NewNode, SK_S);
-
-	    subprocess InOnlyNewNode(*) {in(ch_out_NN:ER);}
-	    subprocess InFromIntermediateNode(*) {in(ch_in_S:ER);}
-	    
-	    subprocess HandleRequest_Original(*) {
-	      REQ = s_dec(ER, DH_S_NewNode)[AES-CTR,128];
-	      
-	      newNodeId = REQ[1];
-	    }
-	    
-	    subprocess HandleRequest_NK_EncDec(*) {
-	      EREQ = s_dec(ER, NK)[AES-CTR,128];
-	      
-	      
-	Nonce_1 = EREQ[0];
-	EREQ = EREQ[1];
-
-	
-	      Nonce_N = EREQ[0];
-	      REQ = s_dec(EREQ[1], DH_S_NewNode)[AES-CTR,128];
-	      
-	      newNodeId = REQ[1];
-	    }
-	    
-	    subprocess HandleRequest_SessKey_EncDec(*) {
-	      EREQ = s_dec(ER, SessKey_J)[AES-CTR,128];
-	
-	      
-	Nonce_1 = EREQ[0];
-	EREQ = EREQ[1];
-
-	
-	      Nonce_N = EREQ[0];
-	      REQ = s_dec(EREQ[1], DH_S_NewNode)[AES-CTR,128];
-	      
-	      newNodeId = REQ[1];
-	    }
-	    
-	    subprocess HandleRequest_Onion(*) {
-	      EREQ = s_dec(ER, NK)[AES-CTR,128];
-	      
-	      
-	Nonce_1 = EREQ[0];
-	EREQ = s_dec(EREQ[1], NK)[AES-CTR,128];
-
-	      
-	      Nonce_N = EREQ[0];
-	
-	      REQ = s_dec(EREQ[1], DH_S_NewNode)[AES-CTR,128];
-	      
-	      newNodeId = REQ[1];
-	    }
-	    
-	    subprocess CheckNode(*) {
-	      check_node(newNodeId);
-	    }
-	
-	    subprocess MakeResponseToNewNodeDirectly_128b(*) {
-	      SessionKey_NN_S = gen_new_session_key();
-	      RESP = (REQ[0], id_s(), SessionKey_NN_S);
-	      ecies_kdf_mac()[128];
-	      E_RESP = ecies_enc(RESP, PK_NewNode)[AES,128];
-	
-	      ECIES_RESP = (E_RESP, ecies_temp_key()[128], ecies_mac()[128]);
-	      RESP_MSG = ECIES_RESP;
-	    }
-	
-	    subprocess MakeResponseToNewNodeDirectly_160b(*) {
-	      SessionKey_NN_S = gen_new_session_key();
-	      RESP = (REQ[0], id_s(), SessionKey_NN_S);
-	      ecies_kdf_mac()[160];
-	      E_RESP = ecies_enc(RESP, PK_NewNode)[AES,160];
-	
-	      ECIES_RESP = (E_RESP, ecies_temp_key()[160], ecies_mac()[160]);
-	      RESP_MSG = ECIES_RESP;
-	    }
-	
-	    subprocess MakeResponseToNeighbour_Original(*) {
-	      RESP = (REQ[0], id_s(), PK_NewNode);
-	      E_RESP = s_enc(RESP, DH_S_Neighbour)[AES-CTR,128];
-	      
-	      RESP_MSG = E_RESP;	
-	    }
-	
-	    subprocess MakeResponseToNeighbour_NK_EncDec(*) {
-	      IN_RESP = (REQ[0], REQ[1], REQ[2], id_s());
-	      E_IN_RESP = s_enc(IN_RESP, DH_S_NewNode)[AES-CTR,128];
-	      
-	      M2 = (PK_NewNode, E_IN_RESP);
-	      E_M2 = s_enc(M2, DH_S_Neighbour)[AES-CTR,128];
-	      
-	      RESP = (Nonce_N, E_M2);
-
-	      
-	RESP = (Nonce_1, RESP);
-
-
-	      E_RESP = s_enc(RESP, NK)[AES-CTR,128];
-	      
-	      RESP_MSG = E_RESP;	
-	    }
-	
-	    subprocess MakeResponseToNeighbour_SessionKey_EncDec(*) {
-	      IN_RESP = (REQ[0], REQ[1], REQ[2], REQ[3], id_s());
-	      E_IN_RESP = s_enc(IN_RESP, DH_S_NewNode)[AES-CTR,128];
-	      
-	      M2 = (PK_NewNode, E_IN_RESP);
-	      E_M2 = s_enc(M2, DH_S_Neighbour)[AES-CTR,128];
-	      
-	      RESP = (Nonce_N, E_M2);
-
-	      
-	RESP = (Nonce_1, RESP);
-
-	      
-	      E_RESP = s_enc(RESP, SessKey_J)[AES-CTR,128];
-	      
-	      RESP_MSG = E_RESP;	
-	    }
-	
-	    subprocess MakeResponseToNeighbour_Onion(*) {
-	      IN_RESP = (REQ[0], REQ[1], REQ[2], id_s());
-	      E_IN_RESP = s_enc(IN_RESP, DH_S_NewNode)[AES-CTR,128];
-	      
-	      M2 = (PK_NewNode, E_IN_RESP);
-	      E_M2 = s_enc(M2, DH_S_Neighbour)[AES-CTR,128];
-	      
-	      RESP = (Nonce_N, E_M2);
-	      RESP = s_enc(RESP, NK)[AES-CTR,128];
-	      
-	      
-	RESP = (Nonce_1, RESP);
-	RESP = s_enc(RESP, NK)[AES-CTR,128];
-
-	      
-	      RESP_MSG = RESP;	
-	    }
-	
-	    subprocess OutOnlyNewNode(*) {
-	        send_headers();
-	        send_data(RESP_MSG);
-	        out(ch_in_NN:RESP_MSG);
-	    }
-	    subprocess OutToIntermediateNode(*) {
-	        send_headers();
-	        send_data(RESP_MSG);
-	        out(ch_out_S:RESP_MSG);
-	    }
-  }
-}
-
-
-
-host J_OriginalForwarder_1(rr)(*) {
-  process Main(*) {
-	    in(ch_out_N:M);
-	    send_headers();
-	    send_data(M);
-	    out(ch_in_S:M);
-	
-	    in(ch_out_S:M);
-	    send_headers();
-	    send_data(M);
-	    out(ch_in_N:M);
-  }
-}
-
-host J_NK_EncDec_1(rr)(*) {
-  #NK = network_key();
-
-  process Main(*) {
-	    in(ch_out_N:EM);
-	    TMP_M = s_dec(EM, NK)[AES-CTR,128];
-	    N = nonce();
-	    M = (N, TMP_M);
-	    EM = s_enc(M, NK)[AES-CTR,128];
-	    send_headers();
-	    send_data(EM);
-	    out(ch_in_S:EM);
-	    
-	    
-	    in(ch_out_S:EM);
-	    TMP_M = s_dec(EM, NK)[AES-CTR,128];
-	    M = TMP_M[1];
-	    EM = s_enc(M, NK)[AES-CTR,128];
-	    send_headers();
-	    send_data(EM);
-	    out(ch_in_N:EM);
-  }
-}
-
-host J_SessKey_EncDec_1(rr)(*) {
-  #SessKey_J = session_key();
-
-  process Main(*) {
-	    in(ch_out_N:EM);
-	    TMP_M = s_dec(EM, SessKey_J)[AES-CTR,128];
-	    N = nonce();
-	    M = (N, TMP_M);
-	    EM = s_enc(M, SessKey_J)[AES-CTR,128];
-	    send_headers();
-	    send_data(EM);
-	    out(ch_in_S:EM);
-	    
-	    in(ch_out_S:EM);
-	    TMP_M = s_dec(EM, SessKey_J)[AES-CTR,128];
-	    M = TMP_M[1];
-	    EM = s_enc(M, SessKey_J)[AES-CTR,128];
-	    send_headers();
-	    send_data(EM);
-	    out(ch_in_N:EM);
-  }
-}
-
-host J_Onion_1(rr)(*) {
-  #NK = network_key();
-  
-  process Main(*) {
-	    in(ch_out_N:EM);
-	    N = nonce();
-	    M = (N, EM);
-	    EM = s_enc(M, NK)[AES-CTR,128];
-	    send_headers();
-	    send_data(EM);
-	    out(ch_in_S:EM);
-	    
-	    in(ch_out_S:EM);
-	    TMP_M = s_dec(EM, NK)[AES-CTR,128];
-	    M = TMP_M[1];
-	    send_headers();
-	    send_data(M);
-	    out(ch_in_N:M);
-  }
-}
-
-
-
-
+communication
+{
+    algorithms {
+        alg wsn_time(msg) {
+            sending_headers = 18.28;
+            sending_data = size(msg[3]) * 0.12;
+            return sending_headers + sending_data;
+        }
+    }
 }

@@ -6,19 +6,19 @@ metrics {
   }
 
   data(Server) {
-    primhead[function][input_size][algorithm][key_bitlength][simultaneous_operations][time:exact(ms)];
+    primhead[function][input_size][alg][key_bitlength][simultaneous_operations][time:exact(ms)];
     primitive[sign][20B][RSA][2048][100][0.2839];
     #
     primhead[function][simultaneous_operations][time:exact(ms)];
     primitive[select_rows][100][2235.5903];
     #
-    primhead[function][algorithm][key_bitlength][mode][input_size][simultaneous_operations][time:exact(ms)];
+    primhead[function][alg][key_bitlength][mode][input_size][simultaneous_operations][time:exact(ms)];
     primitive[s_dec][AES][128][CBC][300MB][100][12132.5026];
     primitive[s_dec][AES][256][CBC][300MB][100][12239.8706];
     primitive[s_enc][AES][256][CBC][32B][1][8.5378];
     primitive[s_dec][AES][256][CBC][32B][1][8.3022];
     #
-    primhead[function][algorithm][input_size][simultaneous_operations][time:exact(ms)];
+    primhead[function][alg][input_size][simultaneous_operations][time:exact(ms)];
     primitive[hash][SHA1][1MB][100][0.1797];    
     
   }

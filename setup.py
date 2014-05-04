@@ -29,8 +29,6 @@ def find_library_data():
                 data_files.append((dir_path, dir_data_files))
     return data_files
     
-print find_library_data()
-
 setup(name='AQoPA',
       
       version=aqopa.VERSION,

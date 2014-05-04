@@ -122,7 +122,7 @@ class Hook():
     Hooks can be added by modules.
     """
     
-    def execute(self, context):
+    def execute(self, context, **kwargs):
         """
         Method changes the context. 
         
@@ -418,7 +418,7 @@ class InstructionExecutor():
         """
         raise NotImplementedError()
     
-    def execute_instruction(self, context, kwargs=None):
+    def execute_instruction(self, context, **kwargs):
         """
         Changes the context according to the execution of current instruction.
         The second parameter `kwargs` keeps variables created be previous executors.
@@ -462,14 +462,15 @@ class HookExecutor(InstructionExecutor):
         return self
     
     
-    def execute_instruction(self, context, kwargs=None):
+    def execute_instruction(self, context, **kwargs):
         """ Overriden """
         consumes_cpu = False 
         custom_index_management = False 
         finish_instruction_execution = False
-        
+
+        exec_kwargs = kwargs
         for h in self._hooks:
-            result = h.execute(context)
+            result = h.execute(context, **exec_kwargs)
             if result:
                 if result.consumes_cpu:
                     consumes_cpu = True
@@ -477,9 +478,13 @@ class HookExecutor(InstructionExecutor):
                     custom_index_management = True
                 if result.finish_instruction_execution:
                     finish_instruction_execution = True
+                if result.result_kwargs is not None:
+                    exec_kwargs.update(result.result_kwargs)
+
                     
         return ExecutionResult(consumes_cpu, custom_index_management, 
-                               finish_instruction_execution)
+                               finish_instruction_execution,
+                               result_kwargs=exec_kwargs)
         
     def can_execute_instruction(self, instruction):
         """ Overriden """
@@ -495,7 +500,7 @@ class PrintExecutor(InstructionExecutor):
         
         self.result = ExecutionResult()
         
-    def execute_instruction(self, context, kwargs=None):
+    def execute_instruction(self, context, **kwargs):
         """ Overriden """
         self.file.write("Host: %s \t" % context.get_current_host().name)
         instruction = context.get_current_instruction()
@@ -545,7 +550,7 @@ class AssignmentInstructionExecutor(InstructionExecutor):
 
         raise RuntimeException("Expression '%s' cannot be a value of variable.")
 
-    def execute_instruction(self, context, kwargs=None):
+    def execute_instruction(self, context, **kwargs):
         """ Overriden """
         instruction = context.get_current_instruction()
         expression = self._compute_current_expression(instruction.expression, context)
@@ -577,7 +582,7 @@ class CallFunctionInstructionExecutor(InstructionExecutor):
     consumes cpu and changes host.
     """
     
-    def execute_instruction(self, context, kwargs=None):
+    def execute_instruction(self, context, **kwargs):
         """ Overriden """
         context.get_current_host().mark_changed()
         
@@ -592,7 +597,7 @@ class ProcessInstructionExecutor(InstructionExecutor):
     Executes process insructions.
     """
 
-    def execute_instruction(self, context, kwargs=None):
+    def execute_instruction(self, context, **kwargs):
         """ Overriden """
         process_instruction = context.get_current_instruction()
         current_process = context.get_current_host().get_current_process()
@@ -618,7 +623,7 @@ class SubprocessInstructionExecutor(InstructionExecutor):
     Executes subprocess insructions.
     """
 
-    def execute_instruction(self, context, kwargs=None):
+    def execute_instruction(self, context, **kwargs):
         """ Overriden """
         subprocess_instruction = context.get_current_instruction()
         current_process = context.get_current_host().get_current_process()
@@ -643,7 +648,7 @@ class CommunicationInstructionExecutor(InstructionExecutor):
     Executes communication in-out insructions.
     """
     
-    def execute_instruction(self, context, kwargs=None):
+    def execute_instruction(self, context, **kwargs):
         """ Overriden """
         instruction = context.get_current_instruction()
         channel = context.channels_manager.find_channel_for_current_instruction(context)
@@ -698,13 +703,19 @@ class FinishInstructionExecutor(InstructionExecutor):
     Executes finish (end, stop) insructions.
     """
     
-    def execute_instruction(self, context, kwargs=None):
+    def execute_instruction(self, context, **kwargs):
         """ Overriden """
         instruction = context.get_current_instruction()
         if instruction.command == "end":
-            context.get_current_host().finish_successfuly()
+            for h in context.hosts:
+                h.finish_successfuly()
         else:
-            context.get_current_host().finish_failed('Executed stop instruction')
+            msg = 'Executed stop instruction in host {0}'.format(context.get_current_host().name)
+            for h in context.hosts:
+                if h == context.get_current_host():
+                    h.finish_failed('Executed stop instruction')
+                else:
+                    h.finish_failed(msg)
             
         context.get_current_host().mark_changed()
         
@@ -719,7 +730,7 @@ class ContinueInstructionExecutor(InstructionExecutor):
     Executes continue insructions.
     """
     
-    def execute_instruction(self, context, kwargs=None):
+    def execute_instruction(self, context, **kwargs):
         """ Overriden """
         instructions_context = context.get_current_host().get_current_instructions_context()
         instructions_context.stack.pop()
@@ -739,7 +750,7 @@ class IfInstructionExecutor(InstructionExecutor):
     Executes if-clause insructions.
     """
     
-    def execute_instruction(self, context, kwargs=None):
+    def execute_instruction(self, context, **kwargs):
         """ Overriden """
         instruction = context.get_current_instruction()
         current_process = context.get_current_host().get_current_process()
@@ -774,7 +785,7 @@ class WhileInstructionExecutor(InstructionExecutor):
     Executes while-clause insructions.
     """
     
-    def execute_instruction(self, context, kwargs=None):
+    def execute_instruction(self, context, **kwargs):
         """ Overriden """
         instruction = context.get_current_instruction()
         current_process = context.get_current_host().get_current_process()
@@ -847,7 +858,7 @@ class Executor():
                     
                     # Execute current instruction by current executor. 
                     # Executor can change index.
-                    execution_result = e.execute_instruction(context, kwargs=exec_kwargs)
+                    execution_result = e.execute_instruction(context, **exec_kwargs)
                     
                     # If executor does not return result
                     # create a default one
@@ -863,7 +874,7 @@ class Executor():
 
                     if execution_result.result_kwargs is not None:
                         exec_kwargs.update(execution_result.result_kwargs)
-                        
+
                 # Omit other executors if the result says that
                 if execution_result.finish_instruction_execution:
                     break
