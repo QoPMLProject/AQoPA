@@ -57,10 +57,20 @@ class ChannelMessageRequest():
     Representation of hosts' requests for messages.
     """
     
-    def __init__(self, receiver, communication_instruction):
+    def __init__(self, receiver, communication_instruction, expression_populator):
         """ """
         self.receiver = receiver
         self.instruction = communication_instruction
+        self.expression_populator = expression_populator  # populator used to populate current version of filters
+
+    def get_populated_filters(self):
+        filters = []
+        for f in self.instruction.filters:
+            if f == '*':
+                filters.append(f)
+            else:
+                filters.append(self.expression_populator.populate(f, self.receiver))
+        return filters
 
 
 class Channel():
@@ -179,7 +189,7 @@ class Channel():
         The result list may contain all sent messages - not only those from optional parameter.
         """
         # We have decided that one message can be assigined to one host ONLY ONCE
-        # and that the next request can be fulfilled when all previous have been fulfilled.
+        # and NOT ANYMORE - (that the next request can be fulfilled when all previous have been fulfilled).
         # TODO: Maybe it will be worth changing later.
 
         all_messages = []
@@ -199,16 +209,17 @@ class Channel():
             return None
 
         tuples = []
-        checked_hosts = []
         for request in all_requests:
-            # If receiver has been already checked in this function call
-            # omit his next requests (FIFO)
-            if request.receiver in checked_hosts:
-                continue
-            checked_hosts.append(request.receiver)
+#             NOT ANYMORE
+#            # If receiver has been already checked in this function call
+#            # omit his next requests (FIFO)
+#             NOT ANYMORE
+#            if request.receiver in checked_hosts:
+#                continue
+#            checked_hosts.append(request.receiver)
 
             needed_expressions_nb = len(request.instruction.variables_names)
-            filters = request.instruction.filters
+            filters = request.get_populated_filters()
 
             found_msgs = []
             for message in all_messages:
@@ -249,6 +260,7 @@ class Channel():
             needed_expressions_nb = len(request.instruction.variables_names)
             for i in range(0, needed_expressions_nb):
                 message = messages[i]
+                
                 # Set variable sent in message
                 request.receiver.set_variable(request.instruction.variables_names[i],
                                               message.expression.clone())
@@ -348,13 +360,7 @@ class Manager():
         """
         Creates a request for message when host executes instruction IN
         """
-        filters = []
-        for f in communication_instruction.filters:
-            if isinstance(f, CallFunctionExpression):
-                filters.append(expression_populator.populate(f, receiver))
-            else:
-                filters.append(f)
-        return ChannelMessageRequest(receiver, communication_instruction)
+        return ChannelMessageRequest(receiver, communication_instruction, expression_populator)
 
 
 #TODO: Move to timeanalysis module
@@ -474,7 +480,7 @@ class AlgorithmCalculator():
         """
         Returns the order of operator as number.
         """
-        orders = [['==', '!=', '<=', '>=', '>', '<', '&&', '||'], ['*', '/'], ['--', '-', '+']]
+        orders = [['==', '!=', '<=', '>=', '>', '<', '&&', '||'], ['--', '-', '+'], ['*', '/']]
         for i in range(0, len(orders)):
             if operator in orders[i]:
                 return i
@@ -700,6 +706,9 @@ class Router():
             out.append(closest)
             closest, closes_distance = find_closest_host(distances, out)
 
+        # for h in distances:
+        #     print h.name, distances[h]
+
         def update_paths(topology_name, receiver, distances):
             routing = self.routing[topology_name]
             # Start from receiver
@@ -732,9 +741,11 @@ class Router():
                         # Add host to path
                         hosts_path.insert(0, prev_host)
                         break
-#
+
 #        Printer().print_routing(self.routing[topology_name])
-#
+
+        if receiver not in distances:
+            raise RuntimeException("The path between {0} and {1} undefined.".format(sender.name, receiver.name))
 
         update_paths(topology_name, receiver, distances)
         return self._find_existing_next_hop_host(topology_name, sender, receiver)

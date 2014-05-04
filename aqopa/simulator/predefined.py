@@ -79,7 +79,10 @@ def _predefined_routing_next_function__populate(call_function_expression, host, 
         if next_host is None:
             raise RuntimeException("The route from host '%s' to host '%s' cannot be found."
                                    % (sender_name, receiver_name))
+    # DEBUG
     # print host.name, ': ', unicode(call_function_expression), ' -> ', next_host.name
+    # DEBUG
+            
     id_function = CallFunctionExpression('id', arguments=[IdentifierExpression(next_host.name)])
     setattr(id_function, '_host_name', next_host.name)
     return id_function

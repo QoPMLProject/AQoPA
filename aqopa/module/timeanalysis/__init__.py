@@ -23,6 +23,8 @@ class Module(module.Module):
                                          # (divided by simulators - the reason for dict)
         self.channel_message_times = {}  # Times when a message has been sent
                                          # (divided by simulators - the reason for dict)
+        self.channel_message_sending_times = {}  # The time of sending a message
+                                         # (divided by simulators - the reason for dict)
         self.channel_message_traces = {}  # Time traces for communication steps
                                           # (divided by simulators - the reason for dict)
 
@@ -73,13 +75,17 @@ class Module(module.Module):
             return []
         return self.timetraces[simulator]
 
-    def add_channel_message_trace(self, simulator, channel, message_index, sender, sent_at, receiver, received_at):
+    def add_channel_message_trace(self, simulator, channel, message_index,
+                                  sender, sent_at, sending_time,
+                                  receiver, started_waiting_at, received_at):
         if simulator not in self.channel_message_traces:
             self.channel_message_traces[simulator] = {}
         if channel not in self.channel_message_traces[simulator]:
             self.channel_message_traces[simulator][channel] = []
         cmt = self.channel_message_traces[simulator][channel]
-        cmt.append(ChannelMessageTrace(channel, message_index, sender, sent_at, receiver, received_at))
+        cmt.append(ChannelMessageTrace(channel, message_index,
+                                       sender, sent_at, sending_time,
+                                       receiver, started_waiting_at, received_at))
 
     def get_channel_message_traces(self, simulator, channel):
         """ """
@@ -121,6 +127,19 @@ class Module(module.Module):
         if message not in self.channel_message_times[simulator]:
             return None
         return self.channel_message_times[simulator][message]
+
+    def add_message_sending_time(self, simulator, message, time):
+        """ """
+        if simulator not in self.channel_message_sending_times:
+            self.channel_message_sending_times[simulator] = {}
+        self.channel_message_sending_times[simulator][message] = time
+
+    def get_message_sending_time(self, simulator, message):
+        if simulator not in self.channel_message_sending_times:
+            return None
+        if message not in self.channel_message_sending_times[simulator]:
+            return None
+        return self.channel_message_sending_times[simulator][message]
 
     def add_request_created_time(self, simulator, request, time):
         """ """
