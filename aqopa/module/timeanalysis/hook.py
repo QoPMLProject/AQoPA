@@ -343,18 +343,20 @@ class PreInstructionHook(Hook):
                                 messages_request = context.channels_manager.build_message_request(
                                     h, current_instruction, context.expression_populator)
 
-                            # Now we can update the times of hosts depending on the fulfilled request
-                            fulfilled_requests = host_channel.get_fulfilled_requests(messages_request=messages_request,
-                                                                                     include_all_sent_messages=True)
-                            for request, messages in fulfilled_requests:
-                                request_time = self.module.get_request_created_time(self.simulator, request)
-                                # Traverse all messages needed to fulfill request
-                                for msg in messages:
-                                    # If sender time is smaller than time when received asked for message
-                                    # it would mean that sender wants to send message from the past
-                                    # to the  receiver who started to wait message later
-                                    if self.module.get_message_sent_time(self.simulator, msg) < request_time:
-                                        msg.use_by_host(request.receiver)
+                            # !! Cancelled setting msg as used, because messages are buffered
+                            #
+                            # # Now we can update the times of hosts depending on the fulfilled request
+                            # fulfilled_requests = host_channel.get_fulfilled_requests(messages_request=messages_request,
+                            #                                                          include_all_sent_messages=True)
+                            # for request, messages in fulfilled_requests:
+                            #     request_time = self.module.get_request_created_time(self.simulator, request)
+                            #     # Traverse all messages needed to fulfill request
+                            #     for msg in messages:
+                            #         # If sender time is smaller than time when received asked for message
+                            #         # it would mean that sender wants to send message from the past
+                            #         # to the  receiver who started to wait message later
+                            #         if self.module.get_message_sent_time(self.simulator, msg) < request_time:
+                            #             msg.use_by_host(request.receiver)
 
                             # Check if request of this host is fulfilled
                             # If yes, let it go first
@@ -403,7 +405,7 @@ class PreInstructionHook(Hook):
             for msg in sent_messages:
                 
                 # DEBUG #
-                print 'sending from', sender.name, 'at', self.module.get_current_time(self.simulator, sender), 'message', unicode(msg.expression)
+                # print 'sending from', sender.name, 'at', self.module.get_current_time(self.simulator, sender), 'message', unicode(msg.expression)
                 # DEBUG #
                 
                 # Get time of sending and update sender time
@@ -429,25 +431,28 @@ class PreInstructionHook(Hook):
                 receiver = context.get_current_host()
                 
                 # DEBUG #
-                print 'request in', receiver.name, 'at', self.module.get_current_time(self.simulator, receiver)
+                # print 'request in', receiver.name, 'at', self.module.get_current_time(self.simulator, receiver)
                 # DEBUG #
 
                 self.module.add_request_created_time(self.simulator, request,
                                                      self.module.get_current_time(self.simulator, receiver))
                 messages_request = request
 
-        # Now we can update the times of hosts depending on the fulfilled request
-        fulfilled_requests = channel.get_fulfilled_requests(messages=sent_messages, messages_request=messages_request,
-                                                            include_all_sent_messages=True)
-        for request, messages in fulfilled_requests:
-            request_time = self.module.get_request_created_time(self.simulator, request)
-            # Traverse all messages needed to fulfill request
-            for msg in messages:
-                # If sender time is smaller than time when received asked for message
-                # it would mean that sender wants to send message from the past
-                # to the  receiver who started to wait message later
-                if self.module.get_message_sent_time(self.simulator, msg) < request_time:
-                    msg.use_by_host(request.receiver)
+        # !! Cancelled setting msg as used, because messages are buffered
+        #
+        # # Now we can update the times of hosts depending on the fulfilled request
+        # fulfilled_requests = channel.get_fulfilled_requests(messages=sent_messages, messages_request=messages_request,
+        #                                                     include_all_sent_messages=True)
+        # for request, messages in fulfilled_requests:
+        #     request_time = self.module.get_request_created_time(self.simulator, request)
+        #     # Traverse all messages needed to fulfill request
+        #     for msg in messages:
+        #         # If sender time is smaller than time when received asked for message
+        #         # it would mean that sender wants to send message from the past
+        #         # to the  receiver who started to wait message later
+        #         print self.module.get_message_sent_time(self.simulator, msg) ,request_time
+        #         if self.module.get_message_sent_time(self.simulator, msg) < request_time:
+        #             msg.use_by_host(request.receiver)
 
         # The messages from the past to the future are removed
         # Now lets try again to fulfill requests and update the times
@@ -484,9 +489,9 @@ class PreInstructionHook(Hook):
                 sending_time = self.module.get_message_sending_time(self.simulator, msg)
                 
                 # DEBUG
-                print 'binded in', request.receiver.name, 'var', request.instruction.variables_names[msg_index], \
-                    'assigned', unicode(msg.expression) , 'at', receiver_time 
-                msg_index += 1
+                # print 'binded in', request.receiver.name, 'var', request.instruction.variables_names[msg_index], \
+                #     'assigned', unicode(msg.expression) , 'at', receiver_time
+                # msg_index += 1
                 # DEBUG
                 
                 # Add timetrace to module
