@@ -4,6 +4,15 @@
 
 Next release:
 
+v0.7.1 (2014-05-04)
+- Updated models in library.
+- Changed end/stop instructions. Now they end whole protocol.
+- Added communication time calculation in energy analysis.
+- Added the waiting started at time in channel message traces.
+- Fixed reducing - now it reduced as long as it can. The call function is reduced before the metric is searched.
+- Fixed unicode method of comparison expression.
+- Fixed finding metrics for functions with additional qop parameters - reputation.
+
 v0.7 (2014-04-17)
 - Added comments (started with %).
 - Added packet filtering mechanisms.
