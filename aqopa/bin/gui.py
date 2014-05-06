@@ -21,6 +21,10 @@ from aqopa.model.parser import MetricsParserException,\
 from aqopa.simulator.error import EnvironmentDefinitionException,\
     RuntimeException
 
+# gui imports
+from aqopa.gui.models_lib_gui import LibraryFrame
+from aqopa.gui.models_lib_gui import EVT_MODEL_SELECTED as EVT_MODEL_SELECTED
+
 ModelParsedEvent, EVT_MODEL_PARSED = wx.lib.newevent.NewEvent()
 ModelParseErrorEvent, EVT_MODEL_PARSE_ERROR = wx.lib.newevent.NewEvent()
 ModulesChangedEvent, EVT_MODULES_CHANGED = wx.lib.newevent.NewEvent()
@@ -756,206 +760,6 @@ class MainNotebook(wx.Notebook):
     def OnModuleSimulationFinished(self, event):
         """ """
         self.runTab.parseButton.Enable(True)
-
-######################################
-#            LIBRARY
-######################################
-
-ModelSelectedEvent, EVT_MODEL_SELECTED = wx.lib.newevent.NewEvent()
-        
-class LibraryTree(wx.TreeCtrl):
-    """ """
-    def __init__(self, *args, **kwargs):
-        wx.TreeCtrl.__init__(self, *args, **kwargs)
-
-        models_item = self.AddRoot(text="Models")
-        models_dir = os.path.join(os.path.dirname(__file__),
-                                  os.pardir,
-                                  'library', 
-                                  'models')
-        
-        import xml.etree.ElementTree as ET
-        
-        for dir_root, dirs, files in os.walk(models_dir):
-            if 'meta.xml' in files:
-                item_key = os.path.basename(dir_root)
-                
-                tree = ET.parse(os.path.join(dir_root, 'meta.xml'))
-                root = tree.getroot()
-                
-                name_child = root.find('name')
-                if name_child is not None: 
-                    item = self.AppendItem(models_item, text=name_child.text)
-                    
-                    author = root.find('author').text if root.find('author') is not None else ''
-                    author_email = root.find('author_email').text if root.find('author_email') is not None else ''
-                    description = root.find('description').text if root.find('description') is not None else ''
-                    
-                    model_file = ''
-                    metrics_file = ''
-                    versions_file = ''
-                    files = root.find('files')
-                    if files is not None:
-                        model_file = files.find('model').text if files.find('model') is not None else ''
-                        metrics_file = files.find('metrics').text if files.find('metrics') is not None else ''
-                        versions_file = files.find('versions').text if files.find('versions') is not None else '' 
-                    
-                    model_data = {
-                        'root':         dir_root,
-                        'name':         name_child.text,
-                        'author':       author,
-                        'author_email': author_email,
-                        'description':  description,
-                        
-                        'files': {
-                            'model':    model_file,
-                            'metrics':  metrics_file,
-                            'versions': versions_file,
-                        }
-                    }
-                    self.SetPyData(item, model_data)
-        self.ExpandAll()
-        
-    def GetModelData(self, item):
-        """ """
-        if item in self.items_data:
-            return self.items_data[item]
-        return None
-                    
-class ModelDescriptionPanel(wx.Panel):
-    """ """
-    def __init__(self, *args, **kwargs):
-        wx.Panel.__init__(self, *args, **kwargs)
-        
-        self.model_data = None
-        
-        self.modelDescriptionBox = wx.StaticBox(self, label="Model Description")
-        modelDescriptionBoxSizer = wx.StaticBoxSizer(self.modelDescriptionBox, wx.VERTICAL)
-        
-        self.nameText = wx.StaticText(self, label="Module name")
-        nameFont = wx.Font(14, wx.MODERN, wx.NORMAL, wx.NORMAL)
-        self.nameText.SetFont(nameFont)
-        modelDescriptionBoxSizer.Add(self.nameText, 0, wx.ALIGN_CENTER)
-        
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        authorLabelText = wx.StaticText(self, label="Author:")
-        sizer.Add(authorLabelText, 0, wx.ALL, 5)
-        self.authorText = wx.StaticText(self)
-        sizer.Add(self.authorText, 0, wx.ALL, 5)
-        modelDescriptionBoxSizer.Add(sizer, 0, wx.ALIGN_CENTER)
-        
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        authorEmailLabelText = wx.StaticText(self, label="Author e-mail:")
-        sizer.Add(authorEmailLabelText, 0, wx.ALL, 5)
-        self.authorEmailText = wx.StaticText(self)
-        sizer.Add(self.authorEmailText, 0, wx.ALL, 5)
-        modelDescriptionBoxSizer.Add(sizer, 0, wx.ALIGN_CENTER)
-        
-        self.descriptionText = wx.TextCtrl(self, style = wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_AUTO_URL)
-        self.descriptionText.Hide()
-        modelDescriptionBoxSizer.Add(self.descriptionText, 1, wx.EXPAND)
-        
-        self.loadModelBtn = wx.Button(self, label="Load model")
-        self.loadModelBtn.Bind(wx.EVT_LEFT_UP, self.OnLoadModelClicked)
-        self.loadModelBtn.Hide()
-        modelDescriptionBoxSizer.Add(self.loadModelBtn, 0, wx.EXPAND)
-        
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(modelDescriptionBoxSizer, 1, wx.EXPAND)
-        self.SetSizer(sizer)
-        self.Layout()
-        
-    def ShowModel(self, model_data):
-        """ """
-        self.model_data = model_data
-        self.nameText.SetLabel(model_data['name'])
-        self.authorText.SetLabel(model_data['author'])
-        self.authorEmailText.SetLabel(model_data['author_email'])
-        self.descriptionText.SetValue(model_data['description'])
-        self.descriptionText.Show()
-        self.loadModelBtn.Show()
-        self.Layout()
-        
-    def OnLoadModelClicked(self, event=None):
-        """ """
-        f = open(os.path.join(self.model_data['root'], self.model_data['files']['model']))
-        model_data = f.read()
-        f.close()
-        
-        f = open(os.path.join(self.model_data['root'], self.model_data['files']['metrics']))
-        metrics_data = f.read()
-        f.close()
-        
-        f = open(os.path.join(self.model_data['root'], self.model_data['files']['versions']))
-        versions_data = f.read()
-        f.close() 
-        
-        evt = ModelSelectedEvent(model_data=model_data,
-                                 metrics_data=metrics_data,
-                                 versions_data=versions_data)
-        wx.PostEvent(self, evt)
-        
-class LibraryFrame(wx.Frame):
-    """ """
-    def __init__(self, *args, **kwargs):
-        wx.Frame.__init__(self, *args, **kwargs)
-        
-        ###################
-        # SIZERS & EVENTS
-        ###################
-        
-        self.modelsTree = LibraryTree(self)
-        self.modelDescriptionPanel = ModelDescriptionPanel(self)
-        self.modelDescriptionPanel.Bind(EVT_MODEL_SELECTED, self.OnLoadModelSelected)
-        
-        self.modelsTree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnModelSelected)
-        self.modelsTree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnModelDoubleClicked)
-        
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.modelsTree, 1, wx.EXPAND)
-        sizer.Add(self.modelDescriptionPanel, 4, wx.EXPAND)
-        self.SetSizer(sizer)
-        
-        self.Layout()
-        
-    def OnModelSelected(self, event=None):
-        """ """
-        itemID = event.GetItem()
-        if not itemID.IsOk():
-            itemID = self.tree.GetSelection()
-        model_data = self.modelsTree.GetPyData(itemID)
-        if model_data:
-            self.modelDescriptionPanel.ShowModel(model_data)
-
-    def OnModelDoubleClicked(self, event=None):
-        """ """
-        itemID = event.GetItem()
-        if not itemID.IsOk():
-            itemID = self.tree.GetSelection()
-        model_info = self.modelsTree.GetPyData(itemID)
-        if model_info:
-            f = open(os.path.join(model_info['root'], model_info['files']['model']))
-            model_data = f.read()
-            f.close()
-
-            f = open(os.path.join(model_info['root'], model_info['files']['metrics']))
-            metrics_data = f.read()
-            f.close()
-
-            f = open(os.path.join(model_info['root'], model_info['files']['versions']))
-            versions_data = f.read()
-            f.close()
-
-            evt = ModelSelectedEvent(model_data=model_data,
-                                     metrics_data=metrics_data,
-                                     versions_data=versions_data)
-            wx.PostEvent(self, evt)
-            self.Close()
-
-    def OnLoadModelSelected(self, event=None):
-        """ """
-        wx.PostEvent(self, event)
-        self.Close()
         
 class MainFrame(wx.Frame):
     """ """
@@ -1011,7 +815,8 @@ class MainFrame(wx.Frame):
         """ Show frame with library """
         libraryFrame = LibraryFrame(self, title="Models Library")
         libraryFrame.Show(True)
-        libraryFrame.Maximize(True)
+        libraryFrame.Centre()
+      #  libraryFrame.Maximize(True)
         
         libraryFrame.Bind(EVT_MODEL_SELECTED, self.OnLibraryModelSelected)
         
@@ -1054,16 +859,17 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         info.AddTranslator('Damian Rusinek')
         
         wx.AboutBox(info)
-        
-        
+
+
 class AqopaApp(wx.App):
-    
+
     def OnInit(self):
-        self.mainFrame = MainFrame(None, 
+        self.mainFrame = MainFrame(None,
                                    title="Automated Quality of Protection Analysis Tool")
         self.mainFrame.Show(True)
         self.mainFrame.Maximize(True)
         self.SetTopWindow(self.mainFrame)
-        
+
         return True
     
+
