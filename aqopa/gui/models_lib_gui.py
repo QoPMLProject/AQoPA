@@ -194,7 +194,9 @@ class ModelDescriptionPanel(wx.Panel):
         self.Layout()
 
     def OnCancelClicked(self, event) :
-        # close panel's parent = frame = models lib window
+        """
+	 @brief closes the frame (as well as the panel)
+	"""
         frame = self.GetParent()
         frame.Close()
 
