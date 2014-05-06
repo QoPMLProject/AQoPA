@@ -80,29 +80,29 @@ class LibraryTree(wx.TreeCtrl):
 
 class ModelDescriptionPanel(wx.Panel):
     """
-     @brief Create panel for displaying information about the chosen model
+     @brief Creates panel for displaying information about the chosen model
     """
 
     def __init__(self, *args, **kwargs):
         """
-         @brief Initialize and align gui elements, init model's data
+         @brief Initializes and aligns gui elements, inits model's data
         """
         wx.Panel.__init__(self, *args, **kwargs)
 
         # class' data
         self.model_data = None
 
-        # text area (text edit, disabled, not editable) to show model's description
+        # create text area (text edit, disabled, not editable) to show model's description
         __txtStyle = wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_AUTO_URL
         self.modelsDescriptionText = wx.TextCtrl(self, style=__txtStyle)
 
-        # group boxes aka static boxes
+        # create group boxes aka static boxes
         self.modelAboutBox = wx.StaticBox(self, label="About the model ...")
         self.modelsGeneralInfoBox = wx.StaticBox(self, label="General information")
         self.modelsDescriptionBox = wx.StaticBox(self, label="Description")
         self.modelsTreeBox = wx.StaticBox(self, label="Models library")
 
-        # sizers = some kind of layout management
+        # create sizers = some kind of layout management
         modelAboutBoxSizer = wx.StaticBoxSizer(self.modelAboutBox, wx.VERTICAL)
         modelGeneralInfoBoxSizer = wx.StaticBoxSizer(self.modelsGeneralInfoBox, wx.VERTICAL)
         modelDescriptionBoxSizer = wx.StaticBoxSizer(self.modelsDescriptionBox, wx.VERTICAL)
@@ -113,24 +113,24 @@ class ModelDescriptionPanel(wx.Panel):
         self.loadModelButton.Hide()
         cancelButton = wx.Button(self, label="Close")
 
-        # static texts aka labels
+        # create static texts aka labels
         moduleNameLabel = wx.StaticText(self, label="Name:  ")
         moduleAuthorsNameLabel = wx.StaticText(self, label="Author: ")
         moduleAuthorsEmailLabel = wx.StaticText(self, label="E-mail:  ")
 
-        # font for static texts = same as default panel font, just bold
+        # create font for static texts = same as default panel font, just bold
         defSysFont = self.GetFont()
         boldFont = wx.Font(pointSize=defSysFont.GetPointSize(),
                            family=defSysFont.GetFamily(),
                            style=defSysFont.GetStyle(),
                            weight=wx.FONTWEIGHT_BOLD)
 
-        # static texts will we displayed in bold
+        # create static texts will we displayed in bold
         moduleNameLabel.SetFont(boldFont)
         moduleAuthorsNameLabel.SetFont(boldFont)
         moduleAuthorsEmailLabel.SetFont(boldFont)
 
-        # editable static texts (labels) - will be modified
+        # create editable static texts (labels) - will be modified
         self.moduleNameText = wx.StaticText(self)
         self.moduleAuthorsNameText = wx.StaticText(self)
         self.moduleAuthorsEmailText = wx.StaticText(self)
@@ -192,6 +192,7 @@ class ModelDescriptionPanel(wx.Panel):
         sizer.Add(modelsTreeBoxSizer, 1, wx.ALL | wx.EXPAND)  # or simply sizer.Add(modelsTreeBoxSizer, 0, wx.EXPAND)
         sizer.Add(modelAboutBoxSizer, 1, wx.EXPAND)
 
+        # do the final alignment
         self.SetSizer(sizer)
         self.Layout()
 

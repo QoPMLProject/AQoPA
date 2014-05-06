@@ -23,14 +23,26 @@ class ModelPartDataPanel(wx.Panel):
         """ """
         wx.Panel.__init__(self, *args, **kwargs)
 
-        # group box text = empty on start
-        self.openedFileName = ""
+        # create group boxes aka static boxes
+        self.tabBox = wx.StaticBox(self, label="File: ")
 
-         # group boxes aka static boxes
-        self.tabBox = wx.StaticBox(self, label=self.openedFileName)
-
-        # sizers = some kind of layout management
+        # create sizers = some kind of layout management
         self.tabBoxSizer = wx.StaticBoxSizer(self.tabBox, wx.HORIZONTAL)
+
+        # create text area; here we display model, metric or version content
+        self.dataTextArea = wx.richtext.RichTextCtrl(self, style=wx.TE_MULTILINE | wx.TE_NO_VSCROLL)
+
+        # create buttons - simple 'Load' and 'Save' will be enough
+
+
+        # add text area to the fancy group box with a filename above the displayed file content
+        self.tabBoxSizer.Add(self.dataTextArea, 1, wx.EXPAND | wx.ALL, 5)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(self.tabBoxSizer, 1, wx.EXPAND | wx.ALL, 5)
+
+        self.SetSizer(sizer)
+        self.Layout()
 
         """bPanel = wx.Panel(self)
         bSizer = wx.BoxSizer(wx.VERTICAL)
@@ -76,6 +88,9 @@ class ModelPartDataPanel(wx.Panel):
         w, h = self.GetSize()
         dc.GradientFillLinear((x, y, w, h), '#606060', '#E0E0E0', nDirection=wx.NORTH)
 
+    def SetOpenedFilename(self, filename):
+        self.tabBox.SetLabel(filename)
+
     def attachButtons(self, loadButton, saveButton):
         """ """
         loadButton.Bind(wx.EVT_BUTTON, self.onLoad)
@@ -90,6 +105,7 @@ class ModelPartDataPanel(wx.Panel):
             wildcard, types = wx.richtext.RichTextBuffer.GetExtWildcard(save=False)
             fileType = types[ofdlg.GetFilterIndex()]
             self.dataTextArea.LoadFile(ofdlg.GetPath(), fileType)
+        self.SetOpenedFilename(ofdlg.GetFilename())
         ofdlg.Destroy()
 
     def onSave(self, event):
