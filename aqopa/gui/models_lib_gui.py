@@ -93,7 +93,7 @@ class ModelDescriptionPanel(wx.Panel):
 
         # text area (text edit, disabled, not editable) to show model's description
         __txtStyle = wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_AUTO_URL
-        self.modelsDescriptionText = wx.TextCtrl(self, style = txtStyle)
+        self.modelsDescriptionText = wx.TextCtrl(self, style = __txtStyle)
 
         # group boxes aka static boxes
         self.modelAboutBox = wx.StaticBox(self, label="About the model ...")
@@ -110,6 +110,7 @@ class ModelDescriptionPanel(wx.Panel):
         # create buttons
         self.loadModelButton = wx.Button(self, label="Load model")
         self.loadModelButton.Hide()
+        cancelButton = wx.Button(self, label="Close")
 
         # static texts aka labels
         moduleNameLabel = wx.StaticText(self, label="Name:  ")
@@ -136,6 +137,8 @@ class ModelDescriptionPanel(wx.Panel):
         # do some bindings -
         # loadModelButton loads the chosen model to the text area
         self.loadModelButton.Bind(wx.EVT_LEFT_UP, self.OnLoadModelClicked)
+        # cancelButton simply closes the model's lib window (frame)
+        cancelButton.Bind(wx.EVT_BUTTON, self.OnCancelClicked)
 
         # create'n'align models lib tree
         self.modelsTree = LibraryTree(self)
@@ -179,6 +182,7 @@ class ModelDescriptionPanel(wx.Panel):
         # align buttons
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.loadModelButton, 0, wx.LEFT | wx.BOTTOM, 5)
+        sizer.Add(cancelButton, 0, wx.LEFT | wx.BOTTOM, 5)
         # add buttons to 'about the model' group box
         modelAboutBoxSizer.Add(sizer, 0, wx.ALIGN_RIGHT | wx.RIGHT, 10)
 
@@ -188,6 +192,11 @@ class ModelDescriptionPanel(wx.Panel):
         sizer.Add(modelAboutBoxSizer, 1, wx.EXPAND)
         self.SetSizer(sizer)
         self.Layout()
+
+    def OnCancelClicked(self, event) :
+        # close panel's parent = frame = models lib window
+        frame = self.GetParent()
+        frame.Close()
 
     def ShowModel(self, model_data):
         """ """
