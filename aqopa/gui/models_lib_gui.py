@@ -113,7 +113,7 @@ class ModelDescriptionPanel(wx.Panel):
         cancelButton = wx.Button(self, label="Close")
 
         # static texts aka labels
-        moduleNameLabel = wx.StaticText(self, label="Name:  ")
+        moduleNameLabel = wx.StaticText(self, label="Name:   ")
         moduleAuthorsNameLabel = wx.StaticText(self, label="Author: ")
         moduleAuthorsEmailLabel = wx.StaticText(self, label="E-mail:  ")
 
@@ -190,13 +190,14 @@ class ModelDescriptionPanel(wx.Panel):
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(modelsTreeBoxSizer, 1, wx.ALL | wx.EXPAND) # or simply sizer.Add(modelsTreeBoxSizer, 0, wx.EXPAND)
         sizer.Add(modelAboutBoxSizer, 1, wx.EXPAND)
+
         self.SetSizer(sizer)
         self.Layout()
 
     def OnCancelClicked(self, event) :
         """
-	 @brief closes the frame (as well as the panel)
-	"""
+	     @brief closes the frame (as well as the panel)
+	    """
         frame = self.GetParent()
         frame.Close()
 
