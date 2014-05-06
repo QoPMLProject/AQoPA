@@ -6,7 +6,7 @@
 @author     Damian Rusinek
 @author     Katarzyna Mazur (visual improvements)
 @date       created on 05-09-2013 by Damian Rusinek
-@date       edited on 30-04-2014 by Katarzyna Mazur
+@date       edited on 05-05-2014 by Katarzyna Mazur
 """
 
 import os
