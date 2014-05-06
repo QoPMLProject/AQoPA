@@ -19,6 +19,7 @@ ModelSelectedEvent, EVT_MODEL_SELECTED = wx.lib.newevent.NewEvent()
 
 class LibraryTree(wx.TreeCtrl):
     """ """
+
     def __init__(self, *args, **kwargs):
         wx.TreeCtrl.__init__(self, *args, **kwargs)
 
@@ -55,15 +56,15 @@ class LibraryTree(wx.TreeCtrl):
                         versions_file = files.find('versions').text if files.find('versions') is not None else ''
 
                     model_data = {
-                        'root':         dir_root,
-                        'name':         name_child.text,
-                        'author':       author,
+                        'root': dir_root,
+                        'name': name_child.text,
+                        'author': author,
                         'author_email': author_email,
-                        'description':  description,
+                        'description': description,
 
                         'files': {
-                            'model':    model_file,
-                            'metrics':  metrics_file,
+                            'model': model_file,
+                            'metrics': metrics_file,
                             'versions': versions_file,
                         }
                     }
@@ -93,7 +94,7 @@ class ModelDescriptionPanel(wx.Panel):
 
         # text area (text edit, disabled, not editable) to show model's description
         __txtStyle = wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_AUTO_URL
-        self.modelsDescriptionText = wx.TextCtrl(self, style = __txtStyle)
+        self.modelsDescriptionText = wx.TextCtrl(self, style=__txtStyle)
 
         # group boxes aka static boxes
         self.modelAboutBox = wx.StaticBox(self, label="About the model ...")
@@ -113,7 +114,7 @@ class ModelDescriptionPanel(wx.Panel):
         cancelButton = wx.Button(self, label="Close")
 
         # static texts aka labels
-        moduleNameLabel = wx.StaticText(self, label="Name:   ")
+        moduleNameLabel = wx.StaticText(self, label="Name:  ")
         moduleAuthorsNameLabel = wx.StaticText(self, label="Author: ")
         moduleAuthorsEmailLabel = wx.StaticText(self, label="E-mail:  ")
 
@@ -188,13 +189,13 @@ class ModelDescriptionPanel(wx.Panel):
 
         # align all the gui elements together on the panel
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(modelsTreeBoxSizer, 1, wx.ALL | wx.EXPAND) # or simply sizer.Add(modelsTreeBoxSizer, 0, wx.EXPAND)
+        sizer.Add(modelsTreeBoxSizer, 1, wx.ALL | wx.EXPAND)  # or simply sizer.Add(modelsTreeBoxSizer, 0, wx.EXPAND)
         sizer.Add(modelAboutBoxSizer, 1, wx.EXPAND)
 
         self.SetSizer(sizer)
         self.Layout()
 
-    def OnCancelClicked(self, event) :
+    def OnCancelClicked(self, event):
         """
 	     @brief closes the frame (as well as the panel)
 	    """
@@ -231,8 +232,10 @@ class ModelDescriptionPanel(wx.Panel):
                                  versions_data=versions_data)
         wx.PostEvent(self, evt)
 
+
 class LibraryFrame(wx.Frame):
     """ """
+
     def __init__(self, *args, **kwargs):
         wx.Frame.__init__(self, *args, **kwargs)
 
@@ -266,7 +269,7 @@ class LibraryFrame(wx.Frame):
         x = 0
         y = 0
         w, h = self.GetSize()
-        dc.GradientFillLinear((x, y, w, h), '#606060', '#E0E0E0',  nDirection=wx.NORTH)
+        dc.GradientFillLinear((x, y, w, h), '#606060', '#E0E0E0', nDirection=wx.NORTH)
 
     def OnModelSelected(self, event=None):
         """ """

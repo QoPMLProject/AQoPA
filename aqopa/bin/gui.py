@@ -24,6 +24,7 @@ from aqopa.simulator.error import EnvironmentDefinitionException,\
 # gui imports
 from aqopa.gui.models_lib_gui import LibraryFrame
 from aqopa.gui.models_lib_gui import EVT_MODEL_SELECTED as EVT_MODEL_SELECTED
+from aqopa.gui.part_data_panel_gui import ModelPartDataPanel
 
 ModelParsedEvent, EVT_MODEL_PARSED = wx.lib.newevent.NewEvent()
 ModelParseErrorEvent, EVT_MODEL_PARSE_ERROR = wx.lib.newevent.NewEvent()
@@ -34,86 +35,6 @@ ModuleSimulationRequestEvent, EVT_MODULE_SIMULATION_REQUEST = wx.lib.newevent.Ne
 ModuleSimulationAllowedEvent, EVT_MODULE_SIMULATION_ALLOWED = wx.lib.newevent.NewEvent() # Parameters: interpreter
 ModuleSimulationFinishedEvent, EVT_MODULE_SIMULATION_FINISHED = wx.lib.newevent.NewEvent()
 
-
-class ModelPartDataPanel(wx.Panel):
-    """ 
-    Panel containing text area for one of model parts: 
-    model, metrics, configuration.
-    """
-    
-    def __init__(self, *args, **kwargs):
-        """ """
-        wx.Panel.__init__(self, *args, **kwargs)
-
-        bPanel = wx.Panel(self)
-        bSizer = wx.BoxSizer(wx.VERTICAL)
-        bPanel.SetSizer(bSizer)
-
-        self.loadButton = wx.Button(bPanel)
-        self.saveButton = wx.Button(bPanel)
-        
-        self.attachButtons(self.loadButton, self.saveButton)
-        
-        bSizer.Add(self.loadButton, 0, wx.ALL, 5)
-        bSizer.Add(self.saveButton, 0, wx.ALL, 5)
-
-        rightPanel = wx.Panel(self)
-        rightPanelSizer = wx.BoxSizer(wx.VERTICAL)
-        rightPanel.SetSizer(rightPanelSizer)
-
-        self.dataTextArea = wx.richtext.RichTextCtrl(rightPanel, style=wx.TE_MULTILINE | wx.TE_NO_VSCROLL)
-        self.dataTextArea.Bind(wx.EVT_KEY_UP, self.printCursorInfo)
-        self.dataTextArea.Bind(wx.EVT_LEFT_UP, self.printCursorInfo)
-        
-        self.cursorInfoLabel = wx.StaticText(rightPanel, label="")
-        
-        rightPanelSizer.Add(self.dataTextArea, 1, wx.EXPAND)
-        rightPanelSizer.Add(self.cursorInfoLabel, 0, wx.ALIGN_RIGHT)
-
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(bPanel, 0, wx.ALL, 5)
-        sizer.Add(rightPanel, 1, wx.ALL | wx.EXPAND, 5)
-        
-        self.SetSizer(sizer)
-        
-        self.Layout()
-        
-    def attachButtons(self, loadButton, saveButton):
-        """ """
-        loadButton.Bind(wx.EVT_BUTTON, self.onLoad)
-        saveButton.Bind(wx.EVT_BUTTON, self.onSave)
-        
-    def onLoad(self, event):
-        """ Load file to text area """
-        ofdlg = wx.FileDialog(self, "Load file", "", "", "QoP-ML Files (*.qopml)|*.qopml", 
-                              wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-        ofdlg.ShowModal()
-        if ofdlg.GetPath():
-            wildcard, types = wx.richtext.RichTextBuffer.GetExtWildcard(save=False)
-            fileType = types[ofdlg.GetFilterIndex()]
-            self.dataTextArea.LoadFile(ofdlg.GetPath(), fileType)
-        ofdlg.Destroy()
-        
-    def onSave(self, event):
-        """ Save text area value to file """
-        ofdlg = wx.FileDialog(self, "Save file", "", "", "QoP-ML Files (*.qopml)|*.qopml", 
-                              wx.FD_SAVE)
-        ofdlg.ShowModal()
-        if ofdlg.GetPath():
-            f = open(ofdlg.GetPath(), "w")
-            f.write(self.dataTextArea.GetValue())
-            f.close()
-        ofdlg.Destroy()
-        
-    def printCursorInfo(self, event):
-        """ """
-        pos = self.dataTextArea.GetInsertionPoint()
-        xy = self.dataTextArea.PositionToXY(pos)
-        self.cursorInfoLabel.SetLabel("Line: %d, %d" 
-                                      % (xy[1]+1, xy[0]+1))
-        self.Layout()
-        event.Skip()
-        
 class ModulesPanel(wx.Panel):
     """ 
     Panel used for selecting modules and configuring them.
@@ -671,24 +592,24 @@ class MainNotebook(wx.Notebook):
         ###########
 
         self.modelTab = ModelPartDataPanel(self)
-        self.modelTab.loadButton.SetLabel("Load Model")
-        self.modelTab.saveButton.SetLabel("Save Model")
+       # self.modelTab.loadButton.SetLabel("Load Model")
+       # self.modelTab.saveButton.SetLabel("Save Model")
         self.modelTab.Layout()
-        self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.modelTab.dataTextArea)
+       # self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.modelTab.dataTextArea)
         self.AddPage(self.modelTab, "Model")
         
         self.metricsTab = ModelPartDataPanel(self)
-        self.metricsTab.loadButton.SetLabel("Load Metrics")
-        self.metricsTab.saveButton.SetLabel("Save Metrics")
+     #   self.metricsTab.loadButton.SetLabel("Load Metrics")
+     #   self.metricsTab.saveButton.SetLabel("Save Metrics")
         self.metricsTab.Layout()
-        self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.metricsTab.dataTextArea)
+     #   self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.metricsTab.dataTextArea)
         self.AddPage(self.metricsTab, "Metrics")
         
         self.configurationTab = ModelPartDataPanel(self)
-        self.configurationTab.loadButton.SetLabel("Load Versions")
-        self.configurationTab.saveButton.SetLabel("Save Versions")
+      #  self.configurationTab.loadButton.SetLabel("Load Versions")
+      #  self.configurationTab.saveButton.SetLabel("Save Versions")
         self.configurationTab.Layout()
-        self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.configurationTab.dataTextArea)
+      #  self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.configurationTab.dataTextArea)
         self.configurationTab.Layout()
         self.AddPage(self.configurationTab, "Versions")
         
