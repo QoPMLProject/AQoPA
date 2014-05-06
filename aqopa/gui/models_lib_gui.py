@@ -123,12 +123,12 @@ class ModelDescriptionPanel(wx.Panel):
                            style=defSysFont.GetStyle(),
                            weight=wx.FONTWEIGHT_BOLD)
 
-         # static texts will we displayed in bold
+        # static texts will we displayed in bold
         moduleNameLabel.SetFont(boldFont)
         moduleAuthorsNameLabel.SetFont(boldFont)
         moduleAuthorsEmailLabel.SetFont(boldFont)
 
-        # editable static texts (labels) - we be modified
+        # editable static texts (labels) - will be modified
         self.moduleNameText = wx.StaticText(self)
         self.moduleAuthorsNameText = wx.StaticText(self)
         self.moduleAuthorsEmailText = wx.StaticText(self)
