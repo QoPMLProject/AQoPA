@@ -90,7 +90,7 @@ class ModelDescriptionPanel(wx.Panel):
 
         # class' data
         self.model_data = None
-
+        
         # text area (text edit, disabled, not editable) to show model's description
         self.modelsDescriptionText = wx.TextCtrl(self, style = wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_AUTO_URL)
 
