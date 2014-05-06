@@ -90,9 +90,10 @@ class ModelDescriptionPanel(wx.Panel):
 
         # class' data
         self.model_data = None
-        
+
         # text area (text edit, disabled, not editable) to show model's description
-        self.modelsDescriptionText = wx.TextCtrl(self, style = wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_AUTO_URL)
+        __txtStyle = wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_AUTO_URL
+        self.modelsDescriptionText = wx.TextCtrl(self, style = txtStyle)
 
         # group boxes aka static boxes
         self.modelAboutBox = wx.StaticBox(self, label="About the model ...")
@@ -117,7 +118,10 @@ class ModelDescriptionPanel(wx.Panel):
 
         # font for static texts = same as default panel font, just bold
         defSysFont = self.GetFont()
-        boldFont = wx.Font(pointSize=defSysFont.GetPointSize(), family=defSysFont.GetFamily(), style=defSysFont.GetStyle(), weight=wx.FONTWEIGHT_BOLD)
+        boldFont = wx.Font(pointSize=defSysFont.GetPointSize(),
+                           family=defSysFont.GetFamily(),
+                           style=defSysFont.GetStyle(),
+                           weight=wx.FONTWEIGHT_BOLD)
 
          # static texts will we displayed in bold
         moduleNameLabel.SetFont(boldFont)
