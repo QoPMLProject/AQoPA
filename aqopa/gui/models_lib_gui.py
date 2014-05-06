@@ -91,20 +91,14 @@ class ModelDescriptionPanel(wx.Panel):
         # class' data
         self.model_data = None
 
-        # titles of group boxes
-        modelsTreeGroupBoxTitle = "Models library"
-        modelsGeneralInfoGroupBoxTitle = "General information"
-        modelsAboutGroupBoxTitle = "About the model ..."
-        modelsDescriptionBoxTitle = "Description"
-
         # text area (text edit, disabled, not editable) to show model's description
         self.modelsDescriptionText = wx.TextCtrl(self, style = wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_AUTO_URL)
 
         # group boxes aka static boxes
-        self.modelAboutBox = wx.StaticBox(self, label=modelsAboutGroupBoxTitle)
-        self.modelsGeneralInfoBox = wx.StaticBox(self, label=modelsGeneralInfoGroupBoxTitle)
-        self.modelsDescriptionBox = wx.StaticBox(self, label=modelsDescriptionBoxTitle)
-        self.modelsTreeBox = wx.StaticBox(self, label=modelsTreeGroupBoxTitle)
+        self.modelAboutBox = wx.StaticBox(self, label="About the model ...")
+        self.modelsGeneralInfoBox = wx.StaticBox(self, label="General information")
+        self.modelsDescriptionBox = wx.StaticBox(self, label="Description")
+        self.modelsTreeBox = wx.StaticBox(self, label="Models library")
 
         # sizers = some kind of layout management
         modelAboutBoxSizer = wx.StaticBoxSizer(self.modelAboutBox, wx.VERTICAL)
@@ -241,7 +235,6 @@ class LibraryFrame(wx.Frame):
         self.modelsTree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnModelDoubleClicked)
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-      #  sizer.Add(self.modelsTree, 1, wx.EXPAND)
         sizer.Add(self.modelDescriptionPanel, 4, wx.EXPAND)
         self.SetSizer(sizer)
 
