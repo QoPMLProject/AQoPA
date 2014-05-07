@@ -24,7 +24,7 @@ from aqopa.simulator.error import EnvironmentDefinitionException,\
 # gui imports
 from aqopa.gui.models_lib_gui import LibraryFrame
 from aqopa.gui.models_lib_gui import EVT_MODEL_SELECTED as EVT_MODEL_SELECTED
-from aqopa.gui.part_data_panel_gui import ModelPartDataPanel
+from aqopa.gui.mmv_tab_panel_gui import MMVTabPanel
 
 ModelParsedEvent, EVT_MODEL_PARSED = wx.lib.newevent.NewEvent()
 ModelParseErrorEvent, EVT_MODEL_PARSE_ERROR = wx.lib.newevent.NewEvent()
@@ -34,6 +34,10 @@ ModulesChangedEvent, EVT_MODULES_CHANGED = wx.lib.newevent.NewEvent()
 ModuleSimulationRequestEvent, EVT_MODULE_SIMULATION_REQUEST = wx.lib.newevent.NewEvent() # Parameters: module 
 ModuleSimulationAllowedEvent, EVT_MODULE_SIMULATION_ALLOWED = wx.lib.newevent.NewEvent() # Parameters: interpreter
 ModuleSimulationFinishedEvent, EVT_MODULE_SIMULATION_FINISHED = wx.lib.newevent.NewEvent()
+
+"""
+TODO : do the 'gui.py' code clean-up -> now its just the fast'n'dirty code
+"""
 
 class ModulesPanel(wx.Panel):
     """ 
@@ -216,7 +220,6 @@ class RunPanel(wx.Panel):
         statusStaticBoxSizer.Add(self.statusLabel, 0, wx.ALL|wx.ALIGN_CENTER, 5)
         statusStaticBoxSizer.Add(self.percentLabel, 0, wx.ALL|wx.ALIGN_CENTER, 5)
         statusStaticBoxSizer.Add(self.dotsLabel, 0, wx.ALL|wx.ALIGN_CENTER, 5)
-        
         
         timeStaticBox = wx.StaticBox(panel, label="Analysis Time")
         timeStaticBoxSizer = wx.StaticBoxSizer(timeStaticBox, wx.VERTICAL)
@@ -587,31 +590,47 @@ class MainNotebook(wx.Notebook):
         from aqopa.module import reputation
         self.availableModules.append(reputation.Module())
 
+        #list containing notebook images:
+        # .ico seem to be more OS portable
+        il = wx.ImageList(16, 16) #the (16, 16) is the size in pixels of the images
+        modelsTabImg = il.Add(wx.Bitmap(os.path.join(os.path.dirname(__file__),
+                                     'assets',
+                                     'models_lib.png'), wx.BITMAP_TYPE_PNG))
+        metricsTabImg = il.Add(wx.Bitmap(os.path.join(os.path.dirname(__file__),
+                                     'assets',
+                                     'metrics.png'), wx.BITMAP_TYPE_PNG))
+        versionsTabImg = il.Add(wx.Bitmap(os.path.join(os.path.dirname(__file__),
+                                     'assets',
+                                     'versions.png'), wx.BITMAP_TYPE_PNG))
+        runTabImg = il.Add(wx.Bitmap(os.path.join(os.path.dirname(__file__),
+                                     'assets',
+                                     'run.png'), wx.BITMAP_TYPE_PNG))
+
+        self.AssignImageList(il)
+
+
         ###########
         # TABS
         ###########
 
-        self.modelTab = ModelPartDataPanel(self)
-       # self.modelTab.loadButton.SetLabel("Load Model")
-       # self.modelTab.saveButton.SetLabel("Save Model")
+        self.modelTab = MMVTabPanel(self)
         self.modelTab.Layout()
-       # self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.modelTab.dataTextArea)
+        self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.modelTab.dataTextArea)
         self.AddPage(self.modelTab, "Model")
+        self.SetPageImage(0, modelsTabImg)
         
-        self.metricsTab = ModelPartDataPanel(self)
-     #   self.metricsTab.loadButton.SetLabel("Load Metrics")
-     #   self.metricsTab.saveButton.SetLabel("Save Metrics")
+        self.metricsTab = MMVTabPanel(self)
         self.metricsTab.Layout()
-     #   self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.metricsTab.dataTextArea)
+        self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.metricsTab.dataTextArea)
         self.AddPage(self.metricsTab, "Metrics")
+        self.SetPageImage(1, metricsTabImg)
         
-        self.configurationTab = ModelPartDataPanel(self)
-      #  self.configurationTab.loadButton.SetLabel("Load Versions")
-      #  self.configurationTab.saveButton.SetLabel("Save Versions")
+        self.configurationTab = MMVTabPanel(self)
         self.configurationTab.Layout()
-      #  self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.configurationTab.dataTextArea)
+        self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.configurationTab.dataTextArea)
         self.configurationTab.Layout()
         self.AddPage(self.configurationTab, "Versions")
+        self.SetPageImage(2, versionsTabImg)
         
         self.modulesTab = ModulesPanel(self, modules=self.availableModules)
         self.modulesTab.Bind(EVT_MODULES_CHANGED, self.OnModulesChange)
@@ -623,11 +642,11 @@ class MainNotebook(wx.Notebook):
         self.runTab.Layout()
         self.runTab.Bind(EVT_MODEL_PARSED, self.OnModelParsed)
         self.AddPage(self.runTab, "Run")
+        self.SetPageImage(4, runTabImg)
         
         self.resultsTab = ResultsPanel(self)
         self.resultsTab.Layout()
         self.AddPage(self.resultsTab, "Results")
-        
         
     def LoadModelFile(self, filePath):
         self.modelTab.dataTextArea.LoadFile(filePath)
@@ -699,8 +718,11 @@ class MainFrame(wx.Frame):
         fileMenu.AppendSeparator()
         item = fileMenu.Append(wx.ID_EXIT, text="&Quit")
         self.Bind(wx.EVT_MENU, self.OnQuit, item)
-        menuBar.Append(fileMenu, "&File")
-        
+        # calling this menu entry 'File' might be misleading
+        # for a random user, simply call it 'Menu' instead
+        # ==> or break it into 2 menu entries later!
+        menuBar.Append(fileMenu, "&Menu")
+
         libraryMenu = wx.Menu()
         item = libraryMenu.Append(-1, text="Browse models")
         self.Bind(wx.EVT_MENU, self.OnBrowseModels, item)
@@ -721,12 +743,22 @@ class MainFrame(wx.Frame):
         pic = wx.StaticBitmap(logoPanel)
         pic.SetBitmap(wx.Bitmap(logo_filepath))
         
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(logoPanel, 0, wx.CENTER|wx.ALL, 5)
-        sizer.Add(self.mainNotebook, 1, wx.ALL|wx.EXPAND, 5)
-        self.SetSizer(sizer)
-        
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
+        sizer.Add(logoPanel, 0, wx.RIGHT| wx.ALL|wx.EXPAND, 5)
+        s2 = wx.BoxSizer(wx.VERTICAL)
+        s2.Add(sizer, 0, wx.LEFT| wx.ALL|wx.EXPAND, 5)
+        s2.Add(self.mainNotebook, 1, wx.ALL|wx.EXPAND, 5)
+        self.SetSizer(s2)
+
+        self.SetMinSize(wx.Size(600, 450))
+        self.Centre()
         self.Layout()
+
+    def __CreatePath4Resource(self, resourceName):
+        return os.path.join(os.path.dirname(__file__),
+                                     'assets',
+                                     resourceName)
         
     def OnQuit(self, event=None):
         """ Close app """
@@ -762,9 +794,7 @@ AQoPA is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of 
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         
-        logo_filepath = os.path.join(os.path.dirname(__file__), 
-                                     'assets', 
-                                     'logo.png')
+        logo_filepath = self.__CreatePath4Resource('logo.png')
         
         info = wx.AboutDialogInfo()
         info.SetIcon(wx.Icon(logo_filepath, wx.BITMAP_TYPE_PNG))

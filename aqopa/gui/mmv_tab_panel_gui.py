@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-@file       part_data_panel_gui.py
+@file       mmv_tab_panel_gui.py
 @brief      panel for model, metrics and versions tabs on AQoPA's main window
 @author     Damian Rusinek
 @author     Katarzyna Mazur (visual improvements mainly)
@@ -12,17 +12,17 @@
 import wx
 import wx.richtext
 
-class ModelPartDataPanel(wx.Panel):
+class MMVTabPanel(wx.Panel):
     """
-    @brief panel containing text area (and buttons 2) for one of model parts:
-           model, metrics, configuration, used for creating tabs on AQoPA's
-           main window
+    @brief      panel containing text area (and buttons 2) for one of model parts:
+                model, metrics, configuration, used for creating tabs on AQoPA's
+                main window
     """
 
     def __init__(self, *args, **kwargs):
         """
-         @brief Initializes and aligns all the gui elements for
-         tabs: model, metrics and versions
+         @brief         Initializes and aligns all the gui elements for
+                        tabs: model, metrics and versions
         """
         wx.Panel.__init__(self, *args, **kwargs)
 
@@ -62,15 +62,12 @@ class ModelPartDataPanel(wx.Panel):
         # pretend that we clicked the check box, so it's event gets called
         wx.PostEvent(self.editable, wx.CommandEvent(wx.wxEVT_COMMAND_CHECKBOX_CLICKED))
 
-        # create empty static box (label) in order to make a horizontal
-        # gap between the checkbox and the buttons
-        __gap = wx.StaticText(self)
-
         # align buttons and the checkbox
         bottomSizer = wx.BoxSizer(wx.HORIZONTAL)
         bottomSizer.Add(self.editable, 0, wx.EXPAND | wx.ALIGN_LEFT, 5)
-        # stretchable horizontal space - simple and working
-        bottomSizer.Add(__gap, 1, wx.EXPAND, 5)
+        # create empty static box (label) in order to make a horizontal
+        # gap between the checkbox and the buttons
+        bottomSizer.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
         bottomSizer.Add(self.loadButton, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
         bottomSizer.Add(self.saveButton, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
 
