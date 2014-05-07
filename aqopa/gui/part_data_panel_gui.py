@@ -69,6 +69,7 @@ class ModelPartDataPanel(wx.Panel):
         # align buttons and the checkbox
         bottomSizer = wx.BoxSizer(wx.HORIZONTAL)
         bottomSizer.Add(self.editable, 0, wx.EXPAND | wx.ALIGN_LEFT, 5)
+        # stretchable horizontal space - simple and working
         bottomSizer.Add(__gap, 1, wx.EXPAND, 5)
         bottomSizer.Add(self.loadButton, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
         bottomSizer.Add(self.saveButton, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
@@ -80,7 +81,7 @@ class ModelPartDataPanel(wx.Panel):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.tabBoxSizer, 1, wx.EXPAND | wx.ALL, 5)
         sizer.Add(self.cursorInfoLabel, 0, wx.EXPAND | wx.ALL, 5)
-        sizer.Add(bottomSizer, 0, wx.ALIGN_RIGHT | wx.RIGHT, 5)
+        sizer.Add(bottomSizer, 0, wx.EXPAND, 5)
         self.SetSizer(sizer)
         self.Layout()
 
