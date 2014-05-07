@@ -100,7 +100,7 @@ class ModelDescriptionPanel(wx.Panel):
         self.modelAboutBox = wx.StaticBox(self, label="About the model ...")
         self.modelsGeneralInfoBox = wx.StaticBox(self, label="General information")
         self.modelsDescriptionBox = wx.StaticBox(self, label="Description")
-        self.modelsTreeBox = wx.StaticBox(self, label="Models library")
+        self.modelsTreeBox = wx.StaticBox(self, label="Models library", style=wx.SUNKEN_BORDER)
 
         # create sizers = some kind of layout management
         modelAboutBoxSizer = wx.StaticBoxSizer(self.modelAboutBox, wx.VERTICAL)
