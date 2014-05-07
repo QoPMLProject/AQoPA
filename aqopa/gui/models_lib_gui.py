@@ -248,8 +248,8 @@ class LibraryFrame(wx.Frame):
         self.modelsTree = self.modelDescriptionPanel.modelsTree
         self.modelDescriptionPanel.Bind(EVT_MODEL_SELECTED, self.OnLoadModelSelected)
 
-        # fill panel with linear gradient to make it look fancy
-        self.modelDescriptionPanel.Bind(wx.EVT_PAINT, self.OnPaintPrettyPanel)
+        # fill panel with linear gradient to make it look fancy = NOT NOW!
+        #self.modelDescriptionPanel.Bind(wx.EVT_PAINT, self.OnPaintPrettyPanel)
 
         self.modelsTree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnModelSelected)
         self.modelsTree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnModelDoubleClicked)
