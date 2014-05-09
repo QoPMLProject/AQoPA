@@ -2,7 +2,7 @@
 
 """
 @file       mmv_tab_panel_gui.py
-@brief      panel for model, metrics and versions tabs on AQoPA's main window
+@brief      GUI for model, metrics and versions tabs on AQoPA's main window (panel)
 @author     Damian Rusinek
 @author     Katarzyna Mazur (visual improvements mainly)
 @date       created on 05-09-2013 by Damian Rusinek
@@ -38,6 +38,9 @@ class MMVTabPanel(wx.Panel):
         # create buttons - simple 'Load' and 'Save' will be enough
         self.loadButton = wx.Button(self, label="Load")
         self.saveButton = wx.Button(self, label="Save")
+        # or add the 3rd button maybe? clears the
+        # content of model/metric/version if clicked
+        self.cleanButton = wx.Button(self, label="Clear")
 
         # create label 4 displaying information about the cursor
         # position in the opened file
@@ -53,6 +56,7 @@ class MMVTabPanel(wx.Panel):
         # bind buttons to appropriate actions
         self.loadButton.Bind(wx.EVT_BUTTON, self.OnLoadClicked)
         self.saveButton.Bind(wx.EVT_BUTTON, self.OnSaveClicked)
+        self.cleanButton.Bind(wx.EVT_BUTTON, self.OnCleanClicked)
         # bind checkbox state with the appropriate action - simply
         # allow / do not allow to edit opened model/metric/version
         self.editable.Bind(wx.EVT_CHECKBOX, self.OnCheckBoxClicked)
@@ -64,12 +68,18 @@ class MMVTabPanel(wx.Panel):
 
         # align buttons and the checkbox
         bottomSizer = wx.BoxSizer(wx.HORIZONTAL)
-        bottomSizer.Add(self.editable, 0, wx.EXPAND | wx.ALIGN_LEFT, 5)
+        bottomSizer.Add(self.editable, 0, wx.EXPAND | wx.ALL, 5)
         # create empty static box (label) in order to make a horizontal
         # gap between the checkbox and the buttons
         bottomSizer.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
-        bottomSizer.Add(self.loadButton, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
-        bottomSizer.Add(self.saveButton, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+        bottomSizer.Add(self.loadButton, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+        bottomSizer.Add(self.saveButton, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+        bottomSizer.Add(self.cleanButton, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+
+        # add some 'useful' tooltips
+        self.loadButton.SetToolTip(wx.ToolTip("Load from HDD"))
+        self.saveButton.SetToolTip(wx.ToolTip("Save to HDD"))
+        self.cleanButton.SetToolTip(wx.ToolTip("Clear all"))
 
         # add text area to the fancy group box with a filename above the displayed file content
         self.tabBoxSizer.Add(self.dataTextArea, 1, wx.EXPAND | wx.ALL, 5)
@@ -105,9 +115,13 @@ class MMVTabPanel(wx.Panel):
             f = open(validated, "w")
             f.write(self.dataTextArea.GetValue())
             f.close()
-        # save on gui name of the saved file (with *.qopml) extension
-        self.SetFilenameOnGUI(validated)
+            # save on gui name of the saved file (with *.qopml) extension
+            self.SetFilenameOnGUI(validated)
         ofdlg.Destroy()
+
+    def OnCleanClicked(self, event):
+        self.dataTextArea.SetValue("")
+        self.SetFilenameOnGUI("")
 
     def printCursorInfo(self, event):
         """ """

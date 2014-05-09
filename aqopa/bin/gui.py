@@ -22,111 +22,21 @@ from aqopa.simulator.error import EnvironmentDefinitionException,\
     RuntimeException
 
 # gui imports
-from aqopa.gui.models_lib_gui import LibraryFrame
-from aqopa.gui.models_lib_gui import EVT_MODEL_SELECTED as EVT_MODEL_SELECTED
+from aqopa.gui.models_lib_gui import LibraryFrame, EVT_MODEL_SELECTED
+from aqopa.gui.modules_panel_gui import ModulesPanel, EVT_MODULES_CHANGED
 from aqopa.gui.mmv_tab_panel_gui import MMVTabPanel
 
 ModelParsedEvent, EVT_MODEL_PARSED = wx.lib.newevent.NewEvent()
 ModelParseErrorEvent, EVT_MODEL_PARSE_ERROR = wx.lib.newevent.NewEvent()
-ModulesChangedEvent, EVT_MODULES_CHANGED = wx.lib.newevent.NewEvent()
 
 # Modules communication events
-ModuleSimulationRequestEvent, EVT_MODULE_SIMULATION_REQUEST = wx.lib.newevent.NewEvent() # Parameters: module 
+ModuleSimulationRequestEvent, EVT_MODULE_SIMULATION_REQUEST = wx.lib.newevent.NewEvent() # Parameters: module
 ModuleSimulationAllowedEvent, EVT_MODULE_SIMULATION_ALLOWED = wx.lib.newevent.NewEvent() # Parameters: interpreter
 ModuleSimulationFinishedEvent, EVT_MODULE_SIMULATION_FINISHED = wx.lib.newevent.NewEvent()
 
 """
-TODO : do the 'gui.py' code clean-up -> now its just the fast'n'dirty code
+TODO : do the 'gui.py' code clean-up -> now its just the fast'n'dirty code [I mean, my edits]
 """
-
-class ModulesPanel(wx.Panel):
-    """ 
-    Panel used for selecting modules and configuring them.
-    """
-    
-    def __init__(self, *args, **kwargs):
-        self.allModules = kwargs['modules']
-        del kwargs['modules']
-        
-        wx.Panel.__init__(self, *args, **kwargs)
-        
-        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
-
-        modulesBox = wx.StaticBox(self, label="Modules", size=(100, 100))
-        modulesBoxSizer = wx.StaticBoxSizer(modulesBox, wx.VERTICAL)
-        
-        self.configurationBox = wx.StaticBox(self, label="Configuration", size=(100, 100))
-        configurationBoxSizer = wx.StaticBoxSizer(self.configurationBox, wx.VERTICAL)
-        
-        self.checkBoxesMap = {}
-        self.buttonsPanelMap = {}
-        self.buttonsModuleGui = {}
-        self.modulesPanels = []
-        
-        emptyPanel = wx.Panel(self, size=(200,20))
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        text = wx.StaticText(emptyPanel, label="Click 'Configure' button to configure selected module.") 
-        sizer.Add(text, 0, wx.ALL | wx.EXPAND, 5)
-        emptyPanel.SetSizer(sizer)
-        configurationBoxSizer.Add(emptyPanel, 1, wx.ALL | wx.EXPAND, 5)
-        self.modulesPanels.append(emptyPanel)
-
-        for m in self.allModules:
-            gui = m.get_gui()
-            
-            modulePanel = wx.Panel(self)
-            modulePanelSizer = wx.BoxSizer(wx.HORIZONTAL)
-            
-            ch = wx.CheckBox(modulePanel, label=gui.get_name())
-            ch.Bind(wx.EVT_CHECKBOX, self.OnCheckBoxChange)
-            self.checkBoxesMap[m] = ch
-            
-            btn = wx.Button(modulePanel, label="Configure")
-            btn.Bind(wx.EVT_BUTTON, self.OnConfigureButtonClicked)
-            
-            modulePanelSizer.Add(ch, 0, wx.ALL)
-            modulePanelSizer.Add(btn, 0, wx.ALL)
-            modulePanel.SetSizer(modulePanelSizer)
-            
-            modulesBoxSizer.Add(modulePanel, 0, wx.ALL | wx.EXPAND, 5)
-            
-            moduleConfigurationPanel = gui.get_configuration_panel(self)
-            configurationBoxSizer.Add(moduleConfigurationPanel, 1, wx.ALL | wx.EXPAND, 5)
-            moduleConfigurationPanel.Hide()
-
-            self.modulesPanels.append(moduleConfigurationPanel)
-            self.buttonsPanelMap[btn] = moduleConfigurationPanel
-            self.buttonsModuleGui[btn] = gui
-            
-        mainSizer.Add(modulesBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
-        mainSizer.Add(configurationBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
-        
-        self.SetSizer(mainSizer)
-        
-    def ShowModuleConfigurationPanel(self, panel):
-        """ """
-        for p in self.modulesPanels:
-            p.Hide()
-        panel.Show()
-        self.Layout()
-        
-    def OnCheckBoxChange(self, event):
-        """ """
-        modules = []
-        for m in self.allModules:
-            ch = self.checkBoxesMap[m]
-            if ch.IsChecked():
-                modules.append(m)
-        
-        wx.PostEvent(self, ModulesChangedEvent(modules=modules, all_modules=self.allModules))
-
-    def OnConfigureButtonClicked(self, event):
-        """ """
-        btn = event.EventObject
-        moduleGui = self.buttonsModuleGui[btn]
-        
-        self.configurationBox.SetLabel("%s - Configuration" % moduleGui.get_name())
-        self.ShowModuleConfigurationPanel(self.buttonsPanelMap[btn])
         
 class RunPanel(wx.Panel):
     """ """
@@ -562,19 +472,19 @@ class ResultsPanel(wx.Panel):
         m = self.buttonsModule[btn]
         self.moduleResultPanel[m].Show()
         self.Layout()
-        
+
 class MainNotebook(wx.Notebook):
     """ """
-    
+
     def __init__(self, parent):
         wx.Notebook.__init__(self, parent)
-        
+
         ###########
-        # MODULES 
+        # MODULES
         ###########
-        
+
         self.availableModules = []
-        
+
         from aqopa.module import timeanalysis
         timeanalysis_module = timeanalysis.Module()
         timeanalysis_module.get_gui().Bind(EVT_MODULE_SIMULATION_REQUEST,
@@ -582,7 +492,7 @@ class MainNotebook(wx.Notebook):
         timeanalysis_module.get_gui().Bind(EVT_MODULE_SIMULATION_FINISHED,
                                            self.OnModuleSimulationFinished)
         self.availableModules.append(timeanalysis_module)
-        
+
         from aqopa.module import energyanalysis
         m = energyanalysis.Module(timeanalysis_module)
         self.availableModules.append(m)
@@ -606,6 +516,14 @@ class MainNotebook(wx.Notebook):
                                      'assets',
                                      'run.png'), wx.BITMAP_TYPE_PNG))
 
+        modulesTabImg = il.Add(wx.Bitmap(os.path.join(os.path.dirname(__file__),
+                                     'assets',
+                                     'modules.png'), wx.BITMAP_TYPE_PNG))
+
+        resultsTabImg = il.Add(wx.Bitmap(os.path.join(os.path.dirname(__file__),
+                                     'assets',
+                                     'results.png'), wx.BITMAP_TYPE_PNG))
+
         self.AssignImageList(il)
 
 
@@ -614,135 +532,152 @@ class MainNotebook(wx.Notebook):
         ###########
 
         self.modelTab = MMVTabPanel(self)
+
         self.modelTab.Layout()
         self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.modelTab.dataTextArea)
         self.AddPage(self.modelTab, "Model")
         self.SetPageImage(0, modelsTabImg)
-        
+
         self.metricsTab = MMVTabPanel(self)
         self.metricsTab.Layout()
         self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.metricsTab.dataTextArea)
         self.AddPage(self.metricsTab, "Metrics")
         self.SetPageImage(1, metricsTabImg)
-        
-        self.configurationTab = MMVTabPanel(self)
-        self.configurationTab.Layout()
-        self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.configurationTab.dataTextArea)
-        self.configurationTab.Layout()
-        self.AddPage(self.configurationTab, "Versions")
+
+        self.versionsTab = MMVTabPanel(self)
+        self.versionsTab.Layout()
+        self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.versionsTab.dataTextArea)
+        self.versionsTab.Layout()
+        self.AddPage(self.versionsTab, "Versions")
         self.SetPageImage(2, versionsTabImg)
-        
+
         self.modulesTab = ModulesPanel(self, modules=self.availableModules)
         self.modulesTab.Bind(EVT_MODULES_CHANGED, self.OnModulesChange)
         self.modulesTab.Layout()
         self.AddPage(self.modulesTab, "Modules")
-        
+        self.SetPageImage(3, modulesTabImg)
+
         self.runTab = RunPanel(self)
         self.runTab.SetAllModules(self.availableModules)
         self.runTab.Layout()
         self.runTab.Bind(EVT_MODEL_PARSED, self.OnModelParsed)
         self.AddPage(self.runTab, "Run")
         self.SetPageImage(4, runTabImg)
-        
+
         self.resultsTab = ResultsPanel(self)
         self.resultsTab.Layout()
         self.AddPage(self.resultsTab, "Results")
-        
+        self.SetPageImage(5, resultsTabImg)
+
     def LoadModelFile(self, filePath):
         self.modelTab.dataTextArea.LoadFile(filePath)
-        
+
     def LoadMetricsFile(self, filePath):
         self.metricsTab.dataTextArea.LoadFile(filePath)
-        
+
     def LoadVersionsFile(self, filePath):
-        self.configurationTab.dataTextArea.LoadFile(filePath)
-        
+        self.versionsTab.dataTextArea.LoadFile(filePath)
+
     def SetModelData(self, data):
         self.modelTab.dataTextArea.SetValue(data)
-        
+
     def SetMetricsData(self, data):
         self.metricsTab.dataTextArea.SetValue(data)
-        
+
     def SetVersionsData(self, data):
-        self.configurationTab.dataTextArea.SetValue(data)
-        
+        self.versionsTab.dataTextArea.SetValue(data)
+
     def GetModelData(self):
         return self.modelTab.dataTextArea.GetValue().strip()
-        
+
     def GetMetricsData(self):
         return self.metricsTab.dataTextArea.GetValue().strip()
-        
+
     def GetVersionsData(self):
-        return self.configurationTab.dataTextArea.GetValue().strip()
-        
+        return self.versionsTab.dataTextArea.GetValue().strip()
+
     def OnModelTextChange(self, event):
-        self.runTab.SetModel(self.GetModelData(), 
+        self.runTab.SetModel(self.GetModelData(),
                              self.GetMetricsData(),
                              self.GetVersionsData())
         event.Skip()
-        
+
     def OnModulesChange(self, event):
         self.runTab.SetSelectedModules(event.modules)
         self.resultsTab.SetSelectedModules(event.modules)
-        
+
     def OnModelParsed(self, event):
         self.resultsTab.ClearResults()
         event.Skip()
-        
+
     def OnModuleSimulationRequest(self, event):
         """ """
         gui = event.module.get_gui()
         self.runTab.runButton.Enable(False)
         self.runTab.parseButton.Enable(False)
-        
+
         wx.PostEvent(gui, ModuleSimulationAllowedEvent(interpreter=self.runTab.interpreter))
 
     def OnModuleSimulationFinished(self, event):
         """ """
         self.runTab.parseButton.Enable(True)
-        
+
 class MainFrame(wx.Frame):
     """ """
     def __init__(self, *args, **kwargs):
         wx.Frame.__init__(self, *args, **kwargs)
 
         ###########
-        # MENUBAR 
-        ###########        
-        
+        # MENUBAR
+        ###########
+
+        # create menubar
         menuBar = wx.MenuBar()
 
+        #create main menu, lets call it 'file' menu
         fileMenu = wx.Menu()
-        item = fileMenu.Append(wx.ID_ABOUT, text="About AQoPA")
+        # create menu item = about AQoPA
+        item = wx.MenuItem(fileMenu, wx.NewId(), u"&About AQoPA\tCTRL+I")
+        item.SetBitmap(wx.Bitmap(self.CreatePath4Resource('about.png')))
+        fileMenu.AppendItem(item)
         self.Bind(wx.EVT_MENU, self.OnAbout, item)
         fileMenu.AppendSeparator()
-        item = fileMenu.Append(wx.ID_EXIT, text="&Quit")
+        # create menu item = quit AQoPa
+        item = wx.MenuItem(fileMenu, wx.NewId(), u"&Quit\tCTRL+Q")
+        item.SetBitmap(wx.Bitmap(self.CreatePath4Resource('exit.png')))
+        fileMenu.AppendItem(item)
         self.Bind(wx.EVT_MENU, self.OnQuit, item)
-        # calling this menu entry 'File' might be misleading
-        # for a random user, simply call it 'Menu' instead
-        # ==> or break it into 2 menu entries later!
+        # add 'file' menu to the menubar
         menuBar.Append(fileMenu, "&Menu")
 
+        # create library menu, here u can find modules library
         libraryMenu = wx.Menu()
-        item = libraryMenu.Append(-1, text="Browse models")
+        # create models menu item
+        item = wx.MenuItem(libraryMenu, wx.NewId(), u"&Browse models\tCTRL+M")
+        item.SetBitmap(wx.Bitmap(self.CreatePath4Resource('models_lib.png')))
+        libraryMenu.AppendItem(item)
         self.Bind(wx.EVT_MENU, self.OnBrowseModels, item)
+
+        # create metric menu item
+        item = wx.MenuItem(libraryMenu, wx.NewId(), u"&Browse metrics\tCTRL+F")
+        item.SetBitmap(wx.Bitmap(self.CreatePath4Resource('metrics.png')))
+        libraryMenu.AppendItem(item)
+
+        # add 'library' menu to the menubar
         menuBar.Append(libraryMenu, "&Library")
-        
+
         self.SetMenuBar(menuBar)
-        
+
         ###################
         # SIZERS & EVENTS
         ###################
-        
+
         self.mainNotebook = MainNotebook(self)
-        
-        logo_filepath = os.path.join(os.path.dirname(__file__), 
-                                     'assets', 
-                                     'logo.png')
+
         logoPanel = wx.Panel(self)
         pic = wx.StaticBitmap(logoPanel)
-        pic.SetBitmap(wx.Bitmap(logo_filepath))
-        
+        pic.SetBitmap(wx.Bitmap(self.CreatePath4Resource('logo.png')))
+
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
         sizer.Add(logoPanel, 0, wx.RIGHT| wx.ALL|wx.EXPAND, 5)
@@ -751,51 +686,65 @@ class MainFrame(wx.Frame):
         s2.Add(self.mainNotebook, 1, wx.ALL|wx.EXPAND, 5)
         self.SetSizer(s2)
 
-        self.SetMinSize(wx.Size(600, 450))
-        self.Centre()
+        self.SetIcon(wx.Icon(self.CreatePath4Resource('app_logo.png'), wx.BITMAP_TYPE_PNG))
+        self.SetMinSize(wx.Size(900, 700))
+        self.CenterOnScreen()
         self.Layout()
 
-    def __CreatePath4Resource(self, resourceName):
+    def CreatePath4Resource(self, resourceName):
+        """
+        @brief      creates and returns path to the
+                    given file in the resource
+                    ('assets') dir
+        @return     path to the resource
+        """
         return os.path.join(os.path.dirname(__file__),
                                      'assets',
                                      resourceName)
-        
+
     def OnQuit(self, event=None):
-        """ Close app """
+        """
+        @brief  closes the application
+        """
         self.Close()
-        
+
     def OnBrowseModels(self, event=None):
-        """ Show frame with library """
+        """
+        @brief  shows the library frame (models library window)
+        """
         libraryFrame = LibraryFrame(self, title="Models Library")
         libraryFrame.Show(True)
-        libraryFrame.Centre()
-      #  libraryFrame.Maximize(True)
-        
+        libraryFrame.CentreOnParent()
+        #libraryFrame.Maximize(True)
         libraryFrame.Bind(EVT_MODEL_SELECTED, self.OnLibraryModelSelected)
-        
+
     def OnLibraryModelSelected(self, event):
         """ """
         self.mainNotebook.SetModelData(event.model_data)
         self.mainNotebook.SetMetricsData(event.metrics_data)
-        self.mainNotebook.SetVersionsData(event.versions_data) 
-        
+        self.mainNotebook.SetVersionsData(event.versions_data)
+        # set filenames on GUI
+        self.mainNotebook.modelTab.SetFilenameOnGUI(event.filenames['model'])
+        self.mainNotebook.metricsTab.SetFilenameOnGUI(event.filenames['metrics'])
+        self.mainNotebook.versionsTab.SetFilenameOnGUI(event.filenames['versions'])
+
     def OnAbout(self, event=None):
         """ Show about info """
-        
-        description = """AQoPA stands for Automated Quality of Protection Analysis Tool 
+
+        description = """AQoPA stands for Automated Quality of Protection Analysis Tool
         for QoPML models."""
 
-        licence = """AQoPA is free software; you can redistribute 
-it and/or modify it under the terms of the GNU General Public License as 
-published by the Free Software Foundation; either version 2 of the License, 
+        licence = """AQoPA is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the License,
 or (at your option) any later version.
 
-AQoPA is distributed in the hope that it will be useful, 
-but WITHOUT ANY WARRANTY; without even the implied warranty of 
+AQoPA is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
-        
-        logo_filepath = self.__CreatePath4Resource('logo.png')
-        
+
+        logo_filepath = self.CreatePath4Resource('logo.png')
+
         info = wx.AboutDialogInfo()
         info.SetIcon(wx.Icon(logo_filepath, wx.BITMAP_TYPE_PNG))
         info.SetName('AQoPA')
@@ -808,7 +757,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         info.AddDocWriter('Damian Rusinek')
         info.AddArtist('QoPML Project')
         info.AddTranslator('Damian Rusinek')
-        
+
         wx.AboutBox(info)
 
 
@@ -818,7 +767,8 @@ class AqopaApp(wx.App):
         self.mainFrame = MainFrame(None,
                                    title="Automated Quality of Protection Analysis Tool")
         self.mainFrame.Show(True)
-        self.mainFrame.Maximize(True)
+        self.mainFrame.CenterOnScreen()
+       # self.mainFrame.Maximize(True)
         self.SetTopWindow(self.mainFrame)
 
         return True

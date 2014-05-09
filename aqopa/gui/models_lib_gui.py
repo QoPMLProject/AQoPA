@@ -16,7 +16,6 @@ import wx.lib.newevent
 
 ModelSelectedEvent, EVT_MODEL_SELECTED = wx.lib.newevent.NewEvent()
 
-
 class LibraryTree(wx.TreeCtrl):
     """ """
 
@@ -91,6 +90,10 @@ class ModelDescriptionPanel(wx.Panel):
 
         # class' data
         self.model_data = None
+
+        # create dicts for opened files [only for
+        # those from models library]
+        self.filenames = {}
 
         # create text area (text edit, disabled, not editable) to show model's description
         __txtStyle = wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_AUTO_URL
@@ -198,10 +201,27 @@ class ModelDescriptionPanel(wx.Panel):
 
     def OnCancelClicked(self, event):
         """
-	     @brief closes the frame (as well as the panel)
+	     @brief     closes the frame (as well as the panel)
 	    """
         frame = self.GetParent()
         frame.Close()
+
+    def __CreateLibraryPath(self, filename):
+        """
+        @brief      creates a filepath displayed on GUI,
+                    the filepath is the path of the
+                    model/metric/version chosen from
+                    AQoPA's model library
+        """
+        __mainPath = os.path.split(self.model_data['root'])[0]
+        for i in range (0,4):
+            __mainPath = os.path.split(__mainPath)[0]
+        __mainPath += "/library/models/"
+        __chosenModelPath = os.path.split(self.model_data['root'])[1]
+        __mainPath += __chosenModelPath
+        __mainPath += "/"
+        __mainPath += filename
+        return __mainPath
 
     def ShowModel(self, model_data):
         """ """
@@ -210,6 +230,9 @@ class ModelDescriptionPanel(wx.Panel):
         self.moduleAuthorsNameText.SetLabel(model_data['author'])
         self.moduleAuthorsEmailText.SetLabel(model_data['author_email'])
         self.modelsDescriptionText.SetValue(model_data['description'])
+        self.filenames['model'] = self.__CreateLibraryPath(os.path.split(self.model_data['files']['model'])[1])
+        self.filenames['metrics'] = self.__CreateLibraryPath(os.path.split(self.model_data['files']['metrics'])[1])
+        self.filenames['versions'] = self.__CreateLibraryPath(os.path.split(self.model_data['files']['versions'])[1])
         self.modelsDescriptionText.Show()
         self.loadModelButton.Show()
         self.Layout()
@@ -230,7 +253,8 @@ class ModelDescriptionPanel(wx.Panel):
 
         evt = ModelSelectedEvent(model_data=model_data,
                                  metrics_data=metrics_data,
-                                 versions_data=versions_data)
+                                 versions_data=versions_data,
+                                 filenames=self.filenames)
         wx.PostEvent(self, evt)
 
 
@@ -254,15 +278,31 @@ class LibraryFrame(wx.Frame):
         self.modelsTree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnModelSelected)
         self.modelsTree.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnModelDoubleClicked)
 
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.modelDescriptionPanel, 4, wx.EXPAND)
-        self.SetSizer(sizer)
+        # set window's icon
+        self.SetIcon(wx.Icon(self.CreatePath4Resource('models_lib.ico'), wx.BITMAP_TYPE_ICO))
 
         # set minimum windows' size - you can make it bigger, but not smaller!
         self.SetMinSize(wx.Size(1000, 500))
+        # do the final alignment
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(self.modelDescriptionPanel, 4, wx.EXPAND)
+        self.SetSizer(sizer)
         # center model's lib window on a screen
-        self.Centre()
+        self.CentreOnParent()
         self.Layout()
+
+    def CreatePath4Resource(self, resourceName):
+        """
+        @brief      creates and returns path to the
+                    given file in the resource
+                    ('assets') dir
+        @return     path to the resource
+        """
+        tmp = os.path.split(os.path.dirname(__file__))
+        return os.path.join(tmp[0], 'bin', 'assets', resourceName)
+
+    def GetFilenames(self):
+        return self.modelDescriptionPanel.filenames
 
     def OnPaintPrettyPanel(self, event):
         # establish the painting canvas
@@ -302,7 +342,8 @@ class LibraryFrame(wx.Frame):
 
             evt = ModelSelectedEvent(model_data=model_data,
                                      metrics_data=metrics_data,
-                                     versions_data=versions_data)
+                                     versions_data=versions_data,
+                                     filenames=self.GetFilenames())
             wx.PostEvent(self, evt)
             self.Close()
 
