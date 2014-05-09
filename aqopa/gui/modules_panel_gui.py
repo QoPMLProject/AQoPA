@@ -2,11 +2,10 @@
 
 """
 @file       modules_panel_gui.py
-@brief      GUI for modules tab on AQoPA's main window (panel)
+@brief      GUI for the 'Modules' tab on AQoPA's main window (panel)
 @author     Damian Rusinek
-@author     Katarzyna Mazur (visual improvements mainly)
 @date       created on 05-09-2013 by Damian Rusinek
-@date       edited on 07-05-2014 by Katarzyna Mazur
+@date       edited on 07-05-2014 by Katarzyna Mazur (visual improvements mainly)
 """
 
 import wx
@@ -36,7 +35,7 @@ class ModulesPanel(wx.Panel):
         self.checkBoxesMap = {}
         self.buttonsPanelMap = {}
         self.buttonsModuleGui = {}
-        self.modulesPanels = []
+        self.ModulesPanels = []
 
         emptyPanel = wx.Panel(self, size=(200,20))
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -44,7 +43,7 @@ class ModulesPanel(wx.Panel):
         sizer.Add(text, 0, wx.ALL | wx.EXPAND, 5)
         emptyPanel.SetSizer(sizer)
         configurationBoxSizer.Add(emptyPanel, 1, wx.ALL | wx.EXPAND, 5)
-        self.modulesPanels.append(emptyPanel)
+        self.ModulesPanels.append(emptyPanel)
 
         for m in self.allModules:
             gui = m.get_gui()
@@ -69,7 +68,7 @@ class ModulesPanel(wx.Panel):
             configurationBoxSizer.Add(moduleConfigurationPanel, 1, wx.ALL | wx.EXPAND, 5)
             moduleConfigurationPanel.Hide()
 
-            self.modulesPanels.append(moduleConfigurationPanel)
+            self.ModulesPanels.append(moduleConfigurationPanel)
             self.buttonsPanelMap[btn] = moduleConfigurationPanel
             self.buttonsModuleGui[btn] = gui
 
@@ -80,7 +79,7 @@ class ModulesPanel(wx.Panel):
 
     def ShowModuleConfigurationPanel(self, panel):
         """ """
-        for p in self.modulesPanels:
+        for p in self.ModulesPanels:
             p.Hide()
         panel.Show()
         self.Layout()

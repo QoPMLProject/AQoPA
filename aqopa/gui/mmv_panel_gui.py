@@ -1,18 +1,17 @@
 #!/usr/bin/env python
 
 """
-@file       mmv_tab_panel_gui.py
-@brief      GUI for model, metrics and versions tabs on AQoPA's main window (panel)
+@file       mmv_panel_gui.py
+@brief      GUI for the 'Model', 'Metrics' and 'Versions' tabs on AQoPA's main window (panel)
 @author     Damian Rusinek
-@author     Katarzyna Mazur (visual improvements mainly)
 @date       created on 05-09-2013 by Damian Rusinek
-@date       edited on 06-05-2014 by Katarzyna Mazur
+@date       edited on 06-05-2014 by Katarzyna Mazur (visual improvements mainly)
 """
 
 import wx
 import wx.richtext
 
-class MMVTabPanel(wx.Panel):
+class MMVPanel(wx.Panel):
     """
     @brief      panel containing text area (and buttons 2) for one of model parts:
                 model, metrics, configuration, used for creating tabs on AQoPA's

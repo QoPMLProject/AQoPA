@@ -2,11 +2,10 @@
 
 """
 @file       models_lib_gui.py
-@brief      GUI for models library window (in python's nomenclature it's a wx frame)
+@brief      GUI for the  models library window (in python's nomenclature it's a wx frame)
 @author     Damian Rusinek
-@author     Katarzyna Mazur (visual improvements)
 @date       created on 05-09-2013 by Damian Rusinek
-@date       edited on 05-05-2014 by Katarzyna Mazur
+@date       edited on 05-05-2014 by Katarzyna Mazur (visual improvements)
 """
 
 import os
@@ -185,8 +184,8 @@ class ModelDescriptionPanel(wx.Panel):
 
         # align buttons
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.loadModelButton, 0, wx.LEFT | wx.BOTTOM, 5)
-        sizer.Add(cancelButton, 0, wx.LEFT | wx.BOTTOM, 5)
+        sizer.Add(self.loadModelButton, 0, wx.LEFT | wx.ALL, 5)
+        sizer.Add(cancelButton, 0, wx.LEFT | wx.ALL, 5)
         # add buttons to 'about the model' group box
         modelAboutBoxSizer.Add(sizer, 0, wx.ALIGN_RIGHT | wx.RIGHT, 10)
 
