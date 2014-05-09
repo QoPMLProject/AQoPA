@@ -121,7 +121,6 @@ class MMVTabPanel(wx.Panel):
 
     def OnCleanClicked(self, event):
         self.dataTextArea.SetValue("")
-        self.SetFilenameOnGUI("")
 
     def printCursorInfo(self, event):
         """ """
