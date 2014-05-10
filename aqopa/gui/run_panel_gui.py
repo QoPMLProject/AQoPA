@@ -89,7 +89,7 @@ class RunPanel(wx.Panel):
         panelSizer.Add(self.parseButton, 0, wx.LEFT | wx.ALL, 5)
         panelSizer.Add(self.runButton, 0, wx.LEFT | wx.ALL, 5)
         bottomPanel.SetSizer(panelSizer)
-        sizer.Add(bottomPanel, 0, wx.ALIGN_RIGHT | wx.RIGHT, 10)
+        sizer.Add(bottomPanel, 0, wx.ALIGN_RIGHT | wx.RIGHT, 5)
 
         self.SetSizer(sizer)
 
@@ -139,12 +139,13 @@ class RunPanel(wx.Panel):
         # create group boxes aka static boxes
         statusStaticBox = wx.StaticBox(panel, label="Status")
         timeStaticBox = wx.StaticBox(panel, label="Analysis Time")
-        runInfoBox = wx.StaticBox(panel, label="Run information")
+        runInfoBox = wx.StaticBox(panel, label="Model run information")
 
         # create sizers = some kind of layout management
         statusStaticBoxSizer = wx.StaticBoxSizer(statusStaticBox, wx.VERTICAL)
         timeStaticBoxSizer = wx.StaticBoxSizer(timeStaticBox, wx.VERTICAL)
         runInfoBoxSizer = wx.StaticBoxSizer(runInfoBox, wx.VERTICAL)
+        progressSizer = wx.BoxSizer(wx.HORIZONTAL)
 
         # create labels
         self.statusLabel = wx.StaticText(panel, label="Running")
@@ -156,16 +157,17 @@ class RunPanel(wx.Panel):
         self.runResult = wx.TextCtrl(panel, style=wx.TE_MULTILINE | wx.TE_READONLY)
 
         # add content to sizers
+        progressSizer.Add(self.dotsLabel, 0, wx.ALIGN_LEFT, 5)
+        progressSizer.Add(self.percentLabel, 0, wx.ALIGN_LEFT, 5)
         statusStaticBoxSizer.Add(self.statusLabel, 0, wx.ALL | wx.ALIGN_CENTER, 5)
-        statusStaticBoxSizer.Add(self.percentLabel, 0, wx.ALL | wx.ALIGN_CENTER, 5)
-        statusStaticBoxSizer.Add(self.dotsLabel, 0, wx.ALL | wx.ALIGN_CENTER, 5)
+        statusStaticBoxSizer.Add(progressSizer, 0, wx.ALL | wx.ALIGN_CENTER, 5)
         timeStaticBoxSizer.Add(self.analysisTime, 0, wx.ALL | wx.ALIGN_CENTER, 5)
         runInfoBoxSizer.Add(self.runResult, 1, wx.ALL | wx.EXPAND, 5)
-
-        # do the final alignment
         sizer.Add(statusStaticBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
         sizer.Add(timeStaticBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
         sizer.Add(runInfoBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
+
+        # do the final alignment
         panel.SetSizer(sizer)
 
         return panel

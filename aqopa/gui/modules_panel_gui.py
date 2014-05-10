@@ -24,13 +24,13 @@ class ModulesPanel(wx.Panel):
 
         wx.Panel.__init__(self, *args, **kwargs)
 
-        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
 
-        modulesBox = wx.StaticBox(self, label="Modules", size=(100, 100))
+        modulesBox = wx.StaticBox(self, label="Modules")
         modulesBoxSizer = wx.StaticBoxSizer(modulesBox, wx.VERTICAL)
 
-        self.configurationBox = wx.StaticBox(self, label="Configuration", size=(100, 100))
-        configurationBoxSizer = wx.StaticBoxSizer(self.configurationBox, wx.VERTICAL)
+        self.configurationBox = wx.StaticBox(self, label="Configuration")
+        configurationBoxSizer = wx.StaticBoxSizer(self.configurationBox, wx.HORIZONTAL)
 
         self.checkBoxesMap = {}
         self.buttonsPanelMap = {}
@@ -59,6 +59,8 @@ class ModulesPanel(wx.Panel):
             btn.Bind(wx.EVT_BUTTON, self.OnConfigureButtonClicked)
 
             modulePanelSizer.Add(ch, 0, wx.ALL)
+            # ordnung must sein
+            modulePanelSizer.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
             modulePanelSizer.Add(btn, 0, wx.ALL)
             modulePanel.SetSizer(modulePanelSizer)
 

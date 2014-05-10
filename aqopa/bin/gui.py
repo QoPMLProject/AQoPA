@@ -4,125 +4,25 @@ Created on 05-09-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
-
 import os
 import wx
+import wx.richtext
+import wx.lib.newevent
+import wx.lib.delayedresult
 
-# AQoPA imports
 import aqopa
 
-# gui imports
+# AQoPA gui imports
 from aqopa.gui.models_lib_gui import LibraryFrame, EVT_MODEL_SELECTED
 from aqopa.gui.modules_panel_gui import ModulesPanel, EVT_MODULES_CHANGED
 from aqopa.gui.mmv_panel_gui import MMVPanel
 from aqopa.gui.run_panel_gui import RunPanel, EVT_MODEL_PARSED
+from aqopa.gui.results_panel_gui import ResultsPanel
 
-# Modules communication events
+# modules communication events
 ModuleSimulationRequestEvent, EVT_MODULE_SIMULATION_REQUEST = wx.lib.newevent.NewEvent() # Parameters: module
 ModuleSimulationAllowedEvent, EVT_MODULE_SIMULATION_ALLOWED = wx.lib.newevent.NewEvent() # Parameters: interpreter
 ModuleSimulationFinishedEvent, EVT_MODULE_SIMULATION_FINISHED = wx.lib.newevent.NewEvent()
-
-"""
-TODO : do the 'gui.py' code clean-up -> now its just the fast'n'dirty code [I mean, my edits]
-"""
-
-class ResultsPanel(wx.Panel):
-    """ """
-    def __init__(self, *args, **kwargs):
-        wx.Panel.__init__(self, *args, **kwargs)
-
-        self.selectedModules = []
-        self.moduleResultPanel = {}
-        self.buttonsModule = {}
-
-        self._BuildMainLayout()
-
-    def _BuildMainLayout(self):
-
-        mainSizer = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.modulesBox = wx.StaticBox(self, label="Modules", size=(100, 100))
-        self.modulesBox.Hide()
-        self.modulesBoxSizer = wx.StaticBoxSizer(self.modulesBox, wx.VERTICAL)
-
-        self.resultsBox = wx.StaticBox(self, label="Results", size=(100, 100))
-        self.resultsBox.Hide()
-        self.resultsBoxSizer = wx.StaticBoxSizer(self.resultsBox, wx.VERTICAL)
-
-        mainSizer.Add(self.modulesBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
-        mainSizer.Add(self.resultsBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
-
-        self.SetSizer(mainSizer)
-        self.Layout()
-
-    def _BuildModulesLayout(self):
-        """ """
-
-        for m in self.selectedModules:
-            if m in self.moduleResultPanel:
-                continue
-
-            gui = m.get_gui()
-
-            btn = wx.Button(self, label=gui.get_name())
-            btn.Bind(wx.EVT_BUTTON, self.OnModuleButtonClicked)
-            self.modulesBoxSizer.Add(btn, 0, wx.ALL | wx.EXPAND)
-            self.buttonsModule[btn] = m
-
-            resultPanel = gui.get_results_panel(self)
-            self.resultsBoxSizer.Add(resultPanel, 1, wx.ALL | wx.EXPAND)
-            self.moduleResultPanel[m] = resultPanel
-
-            self.Layout()
-            resultPanel.Hide()
-
-        uncheckedModules = []
-        for m in self.moduleResultPanel:
-            if m not in self.selectedModules:
-                uncheckedModules.append(m)
-
-        buttonsToRemove = []
-        for m in uncheckedModules:
-            self.moduleResultPanel[m].Destroy()
-            del self.moduleResultPanel[m]
-
-            for btn in self.buttonsModule:
-                if self.buttonsModule[btn] == m:
-                    buttonsToRemove.append(btn)
-
-        for btn in buttonsToRemove:
-            btn.Destroy()
-            del self.buttonsModule[btn]
-
-        self.Layout()
-
-    def SetSelectedModules(self, modules):
-        """ """
-        self.selectedModules = modules
-
-        if len(self.selectedModules) > 0:
-            self.modulesBox.Show()
-            self.resultsBox.Show()
-        else:
-            self.modulesBox.Hide()
-            self.resultsBox.Hide()
-
-        self._BuildModulesLayout()
-
-    def ClearResults(self):
-        """ """
-        for m in self.selectedModules:
-            gui = m.get_gui()
-            gui.on_parsed_model()
-
-    def OnModuleButtonClicked(self, event):
-        """ """
-        btn = event.EventObject
-        for m in self.moduleResultPanel:
-            self.moduleResultPanel[m].Hide()
-        m = self.buttonsModule[btn]
-        self.moduleResultPanel[m].Show()
-        self.Layout()
 
 class MainNotebook(wx.Notebook):
     """ """
@@ -151,39 +51,23 @@ class MainNotebook(wx.Notebook):
         from aqopa.module import reputation
         self.availableModules.append(reputation.Module())
 
-        #list containing notebook images:
-        # .ico seem to be more OS portable
-        il = wx.ImageList(16, 16) #the (16, 16) is the size in pixels of the images
-        modelsTabImg = il.Add(wx.Bitmap(os.path.join(os.path.dirname(__file__),
-                                     'assets',
-                                     'models_lib.png'), wx.BITMAP_TYPE_PNG))
-        metricsTabImg = il.Add(wx.Bitmap(os.path.join(os.path.dirname(__file__),
-                                     'assets',
-                                     'metrics.png'), wx.BITMAP_TYPE_PNG))
-        versionsTabImg = il.Add(wx.Bitmap(os.path.join(os.path.dirname(__file__),
-                                     'assets',
-                                     'versions.png'), wx.BITMAP_TYPE_PNG))
-        runTabImg = il.Add(wx.Bitmap(os.path.join(os.path.dirname(__file__),
-                                     'assets',
-                                     'run.png'), wx.BITMAP_TYPE_PNG))
-
-        modulesTabImg = il.Add(wx.Bitmap(os.path.join(os.path.dirname(__file__),
-                                     'assets',
-                                     'modules.png'), wx.BITMAP_TYPE_PNG))
-
-        resultsTabImg = il.Add(wx.Bitmap(os.path.join(os.path.dirname(__file__),
-                                     'assets',
-                                     'results.png'), wx.BITMAP_TYPE_PNG))
-
+        # list containing notebook images:
+        # .ico seem to be more OS portable, although we use .png here
+        # the (16, 16) is the size in pixels of the images
+        il = wx.ImageList(16, 16)
+        modelsTabImg = il.Add(wx.Bitmap(self.CreatePath4Resource('models_lib.png'), wx.BITMAP_TYPE_PNG))
+        metricsTabImg = il.Add(wx.Bitmap(self.CreatePath4Resource('metrics.png'), wx.BITMAP_TYPE_PNG))
+        versionsTabImg = il.Add(wx.Bitmap(self.CreatePath4Resource('versions.png'), wx.BITMAP_TYPE_PNG))
+        runTabImg = il.Add(wx.Bitmap(self.CreatePath4Resource('run.png'), wx.BITMAP_TYPE_PNG))
+        modulesTabImg = il.Add(wx.Bitmap(self.CreatePath4Resource('modules.png'), wx.BITMAP_TYPE_PNG))
+        resultsTabImg = il.Add(wx.Bitmap(self.CreatePath4Resource('results.png'), wx.BITMAP_TYPE_PNG))
         self.AssignImageList(il)
-
 
         ###########
         # TABS
         ###########
 
         self.modelTab = MMVPanel(self)
-
         self.modelTab.Layout()
         self.Bind(wx.EVT_TEXT, self.OnModelTextChange, self.modelTab.dataTextArea)
         self.AddPage(self.modelTab, "Model")
@@ -219,6 +103,16 @@ class MainNotebook(wx.Notebook):
         self.resultsTab.Layout()
         self.AddPage(self.resultsTab, "Results")
         self.SetPageImage(5, resultsTabImg)
+
+    def CreatePath4Resource(self, resourceName):
+        """
+        @brief      creates and returns path to the
+                    given file in the resource
+                    ('assets') dir
+        @return     path to the resource
+        """
+        tmp = os.path.split(os.path.dirname(__file__))
+        return os.path.join(tmp[0], 'bin', 'assets', resourceName)
 
     def LoadModelFile(self, filePath):
         self.modelTab.dataTextArea.LoadFile(filePath)
@@ -349,9 +243,8 @@ class MainFrame(wx.Frame):
                     ('assets') dir
         @return     path to the resource
         """
-        return os.path.join(os.path.dirname(__file__),
-                                     'assets',
-                                     resourceName)
+        tmp = os.path.split(os.path.dirname(__file__))
+        return os.path.join(tmp[0], 'bin', 'assets', resourceName)
 
     def OnQuit(self, event=None):
         """
@@ -410,7 +303,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         info.AddTranslator('Damian Rusinek')
 
         wx.AboutBox(info)
-
 
 class AqopaApp(wx.App):
 
