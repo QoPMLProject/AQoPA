@@ -1000,6 +1000,13 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.checkBoxes = []
         self.checkBoxToSimulator = {}
         self.optimizationResults = {}
+
+        # create font for static texts = same as default panel font, just bold
+        defSysFont = self.GetFont()
+        boldFont = wx.Font(pointSize=defSysFont.GetPointSize(),
+                           family=defSysFont.GetFamily(),
+                           style=defSysFont.GetStyle(),
+                           weight=wx.FONTWEIGHT_BOLD)
         
         # OPTIMIZATION CONFIGURATION
         
@@ -1085,27 +1092,31 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         
         hs = wx.BoxSizer(wx.HORIZONTAL)
         self.versionsLabel = wx.StaticText(self, label="Version:")
+        self.versionsLabel.SetFont(boldFont)
+        hs.Add(self.versionsLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
         hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
-        hs.Add(self.versionsLabel, 0)
         self.maximumVersionText = wx.StaticText(self, label="")
-        hs.Add(self.maximumVersionText, 0, wx.ALIGN_LEFT)
-        maximumBoxSizer.Add(hs, 0)
+        hs.Add(self.maximumVersionText, 0, wx.ALIGN_LEFT, 5)
+        maximumBoxSizer.Add(hs, 0, wx.EXPAND, 5)
         
         hs = wx.BoxSizer(wx.HORIZONTAL)
+
         self.timeLabel = wx.StaticText(self, label="Time:")
+        self.timeLabel.SetFont(boldFont)
+        hs.Add(self.timeLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
         hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
-        hs.Add(self.timeLabel, 0)
         self.maximumTimeText = wx.StaticText(self, label="")
-        hs.Add(self.maximumTimeText, 0, wx.ALIGN_LEFT)
-        maximumBoxSizer.Add(hs, 0)
+        hs.Add(self.maximumTimeText, 0, wx.ALIGN_LEFT, 5)
+        maximumBoxSizer.Add(hs, 0, wx.EXPAND, 5)
         
         hs = wx.BoxSizer(wx.HORIZONTAL)
-        self.hostsNumberLabel = wx.StaticText(self, label="Number of simultaneous clients:")
+        self.hostsNumberLabel = wx.StaticText(self, label="Number of\nsimultaneous clients:")
+        self.hostsNumberLabel.SetFont(boldFont)
+        hs.Add(self.hostsNumberLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
         hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
-        hs.Add(self.hostsNumberLabel, 0)
         self.maximumRepetitionText = wx.StaticText(self, label="")
-        hs.Add(self.maximumRepetitionText, 0, wx.ALIGN_LEFT)
-        maximumBoxSizer.Add(hs, 0)
+        hs.Add(self.maximumRepetitionText, 0, wx.ALIGN_LEFT, 5)
+        maximumBoxSizer.Add(hs, 0, wx.EXPAND, 5)
         
         self.resultsBox = wx.StaticBox(self, label="Optimization results")
         self.resultsBoxSizer = wx.StaticBoxSizer(self.resultsBox, wx.VERTICAL)

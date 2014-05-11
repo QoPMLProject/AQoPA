@@ -58,8 +58,8 @@ class ModulesPanel(wx.Panel):
             btn = wx.Button(modulePanel, label="Configure")
             btn.Bind(wx.EVT_BUTTON, self.OnConfigureButtonClicked)
 
+            # ordnung muss sein
             modulePanelSizer.Add(ch, 0, wx.ALL)
-            # ordnung must sein
             modulePanelSizer.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
             modulePanelSizer.Add(btn, 0, wx.ALL)
             modulePanel.SetSizer(modulePanelSizer)

@@ -51,8 +51,8 @@ class MainNotebook(wx.Notebook):
 
         # list containing notebook images:
         # .ico seem to be more OS portable, although we use .png here
-        # the (16, 16) is the size in pixels of the images
-        il = wx.ImageList(16, 16)
+        # the (20, 20) is the size in pixels of the images
+        il = wx.ImageList(20, 20)
         modelsTabImg = il.Add(wx.Bitmap(self.CreatePath4Resource('models_lib.png'), wx.BITMAP_TYPE_PNG))
         metricsTabImg = il.Add(wx.Bitmap(self.CreatePath4Resource('metrics.png'), wx.BITMAP_TYPE_PNG))
         versionsTabImg = il.Add(wx.Bitmap(self.CreatePath4Resource('versions.png'), wx.BITMAP_TYPE_PNG))

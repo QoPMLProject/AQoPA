@@ -12,6 +12,11 @@ import wx.lib.delayedresult
 
 import aqopa
 
+"""
+from aqopa.gui.main_notebook_gui import MainNotebook, EVT_MODULE_SIMULATION_REQUEST, EVT_MODULE_SIMULATION_ALLOWED, EVT_MODULE_SIMULATION_FINISHED
+from aqopa.gui.main_frame_gui import LibraryFrame, EVT_MODEL_SELECTED
+
+"""
 # AQoPA gui imports
 from aqopa.gui.models_lib_gui import LibraryFrame, EVT_MODEL_SELECTED
 from aqopa.gui.modules_panel_gui import ModulesPanel, EVT_MODULES_CHANGED
@@ -53,8 +58,8 @@ class MainNotebook(wx.Notebook):
 
         # list containing notebook images:
         # .ico seem to be more OS portable, although we use .png here
-        # the (16, 16) is the size in pixels of the images
-        il = wx.ImageList(16, 16)
+        # the (20, 20) is the size in pixels of the images
+        il = wx.ImageList(20, 20)
         modelsTabImg = il.Add(wx.Bitmap(self.CreatePath4Resource('models_lib.png'), wx.BITMAP_TYPE_PNG))
         metricsTabImg = il.Add(wx.Bitmap(self.CreatePath4Resource('metrics.png'), wx.BITMAP_TYPE_PNG))
         versionsTabImg = il.Add(wx.Bitmap(self.CreatePath4Resource('versions.png'), wx.BITMAP_TYPE_PNG))
