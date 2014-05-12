@@ -137,18 +137,17 @@ class RunPanel(wx.Panel):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # create group boxes aka static boxes
-        statusStaticBox = wx.StaticBox(panel, label="Status")
+        self.statusStaticBox = wx.StaticBox(panel, label="Status: ")
         timeStaticBox = wx.StaticBox(panel, label="Analysis Time")
         runInfoBox = wx.StaticBox(panel, label="Model run information")
 
         # create sizers = some kind of layout management
-        statusStaticBoxSizer = wx.StaticBoxSizer(statusStaticBox, wx.VERTICAL)
+        self.statusStaticBoxSizer = wx.StaticBoxSizer(self.statusStaticBox, wx.VERTICAL)
         timeStaticBoxSizer = wx.StaticBoxSizer(timeStaticBox, wx.VERTICAL)
         runInfoBoxSizer = wx.StaticBoxSizer(runInfoBox, wx.VERTICAL)
         progressSizer = wx.BoxSizer(wx.HORIZONTAL)
 
         # create labels
-        self.statusLabel = wx.StaticText(panel, label="Running")
         self.percentLabel = wx.StaticText(panel, label="0%")
         self.dotsLabel = wx.StaticText(panel, label=".")
         self.analysisTime = wx.StaticText(panel, label='---')
@@ -159,11 +158,10 @@ class RunPanel(wx.Panel):
         # add content to sizers
         progressSizer.Add(self.dotsLabel, 0, wx.ALIGN_LEFT, 5)
         progressSizer.Add(self.percentLabel, 0, wx.ALIGN_LEFT, 5)
-        statusStaticBoxSizer.Add(self.statusLabel, 0, wx.ALL | wx.ALIGN_CENTER, 5)
-        statusStaticBoxSizer.Add(progressSizer, 0, wx.ALL | wx.ALIGN_CENTER, 5)
+        self.statusStaticBoxSizer.Add(progressSizer, 0, wx.ALL | wx.ALIGN_CENTER, 5)
         timeStaticBoxSizer.Add(self.analysisTime, 0, wx.ALL | wx.ALIGN_CENTER, 5)
         runInfoBoxSizer.Add(self.runResult, 1, wx.ALL | wx.EXPAND, 5)
-        sizer.Add(statusStaticBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(self.statusStaticBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
         sizer.Add(timeStaticBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
         sizer.Add(runInfoBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
 
@@ -244,7 +242,7 @@ class RunPanel(wx.Panel):
     def OnRunClicked(self, event):
         """ """
         try:
-            self.statusLabel.SetLabel("Running")
+            self.statusStaticBox.SetLabel("Status: running")
             self.analysisTime.SetLabel("---")
             self.percentLabel.SetLabel("0%")
             self.runResult.SetValue("")
@@ -268,7 +266,7 @@ class RunPanel(wx.Panel):
 
 
         except EnvironmentDefinitionException, e:
-            self.statusLabel.SetLabel("Error")
+            self.statusStaticBox.SetLabel("Status: error")
             self.runButton.Enable(True)
             errorMessage = "Error on creating environment: %s\n" % e
             if len(e.errors) > 0:
@@ -278,7 +276,7 @@ class RunPanel(wx.Panel):
             self.progressTimer.Stop()
 
         except Exception, e:
-            self.statusLabel.SetLabel("Error")
+            self.statusStaticBox.SetLabel("Error")
             self.runButton.Enable(True)
             sys.stderr.write(traceback.format_exc())
             errorMessage = "Unknown error\n"
@@ -382,7 +380,7 @@ class RunPanel(wx.Panel):
         self.runPanel.Layout()
 
         if progress == 1:
-            self.statusLabel.SetLabel('Finished')
+            self.statusStaticBox.SetLabel("Status: finished")
             self.runPanel.Layout()
             self.dotsLabel.SetLabel('')
             self.runPanel.Layout()

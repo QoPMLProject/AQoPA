@@ -281,7 +281,7 @@ class LibraryFrame(wx.Frame):
         self.SetIcon(wx.Icon(self.CreatePath4Resource('models_lib.ico'), wx.BITMAP_TYPE_ICO))
 
         # set minimum windows' size - you can make it bigger, but not smaller!
-        self.SetMinSize(wx.Size(1000, 500))
+        self.SetMinSize(wx.Size(750, 300))
         # do the final alignment
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.modelDescriptionPanel, 4, wx.EXPAND)
