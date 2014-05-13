@@ -1,13 +1,5 @@
 #!/usr/bin/env python
 
-"""
-@file       main_notebook_gui.py
-@brief      GUI for the main notebook, where we attach our AQoPA tabs
-@author     Damian Rusinek
-@date       created on 05-09-2013 by Damian Rusinek
-@date       edited on 07-05-2014 by Katarzyna Mazur (visual improvements mainly)
-"""
-
 import wx
 import os
 
@@ -16,6 +8,14 @@ from aqopa.gui.modules_panel_gui import ModulesPanel, EVT_MODULES_CHANGED
 from aqopa.gui.mmv_panel_gui import MMVPanel
 from aqopa.gui.run_panel_gui import RunPanel, EVT_MODEL_PARSED
 from aqopa.gui.results_panel_gui import ResultsPanel
+
+"""
+@file       main_notebook_gui.py
+@brief      GUI for the main notebook, where we attach our AQoPA tabs
+@author     Damian Rusinek
+@date       created on 05-09-2013 by Damian Rusinek
+@date       edited on 07-05-2014 by Katarzyna Mazur (visual improvements mainly)
+"""
 
 # modules communication events
 ModuleSimulationRequestEvent, EVT_MODULE_SIMULATION_REQUEST = wx.lib.newevent.NewEvent() # Parameters: module

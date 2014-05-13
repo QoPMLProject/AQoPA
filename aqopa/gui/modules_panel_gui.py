@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+import wx
+import wx.lib.newevent
+from aqopa.gui.combo_check_box import ComboCheckBox
+
 """
 @file       modules_panel_gui.py
 @brief      GUI for the 'Modules' tab on AQoPA's main window (panel)
@@ -7,10 +11,6 @@
 @date       created on 05-09-2013 by Damian Rusinek
 @date       edited on 07-05-2014 by Katarzyna Mazur (visual improvements mainly)
 """
-
-import wx
-import wx.lib.newevent
-from aqopa.gui.combo_check_box import ComboCheckBox
 
 ModulesChangedEvent, EVT_MODULES_CHANGED = wx.lib.newevent.NewEvent()
 
@@ -30,6 +30,8 @@ class ModulesPanel(wx.Panel):
 
         # 'Select' button = select chosen modules
         selectButton = wx.Button(self, label="Select")
+        # 'Configure' button = configure selected module, clicking the button should bring a new window where the configuration of the chosen module will be possible
+        configureButton = wx.Button(self, label="Configure")
 
         # create group boxes, aka static boxes
         modulesSelectionBox = wx.StaticBox(self, label="Select modules")
@@ -43,11 +45,16 @@ class ModulesPanel(wx.Panel):
 
         # create labels, aka static texts
         selectModulesLabel = wx.StaticText(self, label="Choose modules for analysis and click the 'Select'\nbutton to add them to the configuration panel.")
+        configureModulesLabel = wx.StaticText(self, label="Choose module from selected modules and\nconfigure them one by one.")
 
-        # create combocheckbox, empty at first [need 2 change this]
+        # create combocheckbox, empty at first
         self.comboCheckBox = wx.combo.ComboCtrl(self)
         self.tcp = ComboCheckBox()
         self.comboCheckBox.SetPopupControl(self.tcp)
+        self.comboCheckBox.SetText('...')
+
+        # create ordinary combobox for module configuration
+        self.modulesConfComboBox = wx.ComboBox(self)
 
         # add tooltipz = make user's life easier
         modulesSelectionBox.SetToolTip(wx.ToolTip("Select modules for analysis"))
@@ -57,6 +64,11 @@ class ModulesPanel(wx.Panel):
         modulesSelectionBoxSizer.Add(selectModulesLabel, 1, wx.ALL | wx.EXPAND, 5)
         modulesSelectionBoxSizer.Add(self.comboCheckBox, 1, wx.ALL | wx.EXPAND, 5)
         modulesSelectionBoxSizer.Add(selectButton, 0, wx.ALL | wx.EXPAND, 5)
+
+        # align 'configure modules' group box
+        modulesConfigurationBoxSier.Add(configureModulesLabel, 1, wx.ALL | wx.EXPAND, 5)
+        modulesConfigurationBoxSier.Add(self.modulesConfComboBox, 1, wx.ALL | wx.EXPAND, 5)
+        modulesConfigurationBoxSier.Add(configureButton, 0, wx.ALL | wx.EXPAND, 5)
 
         # do some bindings:
         selectButton.Bind(wx.EVT_BUTTON, self.OnSelectButtonClicked)
@@ -77,6 +89,8 @@ class ModulesPanel(wx.Panel):
         configurationBoxSizer.Add(emptyPanel, 1, wx.ALL | wx.EXPAND, 5)
         self.ModulesPanels.append(emptyPanel)
 
+        modulesNames4Combo = []
+
         for m in self.allModules:
             gui = m.get_gui()
 
@@ -84,6 +98,7 @@ class ModulesPanel(wx.Panel):
             modulePanelSizer = wx.BoxSizer(wx.HORIZONTAL)
 
             ch = wx.CheckBox(modulePanel, label=gui.get_name())
+            modulesNames4Combo.append(gui.get_name())
             ch.Bind(wx.EVT_CHECKBOX, self.OnCheckBoxChange)
             self.checkBoxesMap[m] = ch
 
@@ -106,8 +121,11 @@ class ModulesPanel(wx.Panel):
             self.buttonsPanelMap[btn] = moduleConfigurationPanel
             self.buttonsModuleGui[btn] = gui
 
+        # fill combocheckbox with modules names
+        self.tcp.SetChoices(modulesNames4Combo)
+
         mainSizer.Add(modulesSelectionBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
-        mainSizer.Add(modulesConfigurationBox, 0, wx.ALL | wx.EXPAND, 5)
+        mainSizer.Add(modulesConfigurationBoxSier, 0, wx.ALL | wx.EXPAND, 5)
         mainSizer.Add(modulesBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
         mainSizer.Add(configurationBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
 
@@ -118,7 +136,8 @@ class ModulesPanel(wx.Panel):
         @brief grabs selected modules from
         combocheckbox widget
         """
-        pass
+        # temp solution
+        print self.tcp.GetSelectedItems()
 
     def ShowModuleConfigurationPanel(self, panel):
         """ """

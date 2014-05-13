@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+import os
+import wx
+import wx.richtext
+import wx.lib.newevent
+
 """
 @file       models_lib_gui.py
 @brief      GUI for the  models library window (in python's nomenclature it's a wx frame)
@@ -7,11 +12,6 @@
 @date       created on 05-09-2013 by Damian Rusinek
 @date       edited on 05-05-2014 by Katarzyna Mazur (visual improvements)
 """
-
-import os
-import wx
-import wx.richtext
-import wx.lib.newevent
 
 ModelSelectedEvent, EVT_MODEL_SELECTED = wx.lib.newevent.NewEvent()
 

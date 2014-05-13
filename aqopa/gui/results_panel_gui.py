@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import wx
+
 """
 @file       main_notebook_gui.py
 @brief      GUI for the main notebook, where we attach our AQoPA tabs
@@ -7,8 +9,6 @@
 @date       created on 05-09-2013 by Damian Rusinek
 @date       edited on 09-05-2014 by Katarzyna Mazur (visual improvements)
 """
-
-import wx
 
 class ResultsPanel(wx.Panel):
     """ """

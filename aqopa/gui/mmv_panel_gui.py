@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+import wx
+import wx.richtext
+
 """
 @file       mmv_panel_gui.py
 @brief      GUI for the 'Model', 'Metrics' and 'Versions' tabs on AQoPA's main window (panel)
@@ -7,9 +10,6 @@
 @date       created on 05-09-2013 by Damian Rusinek
 @date       edited on 06-05-2014 by Katarzyna Mazur (visual improvements mainly)
 """
-
-import wx
-import wx.richtext
 
 class MMVPanel(wx.Panel):
     """

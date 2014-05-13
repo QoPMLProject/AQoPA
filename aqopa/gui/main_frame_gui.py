@@ -1,13 +1,5 @@
 #!/usr/bin/env python
 
-"""
-@file       main_frame_gui.py
-@brief      GUI for the main frame (the one with the tabs on it)
-@author     Damian Rusinek
-@date       created on 05-09-2013 by Damian Rusinek
-@date       edited on 07-05-2014 by Katarzyna Mazur (visual improvements)
-"""
-
 import wx
 import os
 
@@ -17,6 +9,14 @@ import aqopa
 # AQoPA gui imports
 from aqopa.gui.models_lib_gui import LibraryFrame, EVT_MODEL_SELECTED
 from aqopa.gui.main_notebook_gui import MainNotebook
+
+"""
+@file       main_frame_gui.py
+@brief      GUI for the main frame (the one with the tabs on it)
+@author     Damian Rusinek
+@date       created on 05-09-2013 by Damian Rusinek
+@date       edited on 07-05-2014 by Katarzyna Mazur (visual improvements)
+"""
 
 class MainFrame(wx.Frame):
     """ """

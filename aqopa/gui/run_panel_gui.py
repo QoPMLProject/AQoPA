@@ -1,13 +1,5 @@
 #!/usr/bin/env python
 
-"""
-@file       run_panel_gui.py
-@brief      GUI for the 'Run' tab on AQoPA's main window (panel)
-@author     Damian Rusinek
-@date       created on 05-09-2013 by Damian Rusinek
-@date       edited on 08-05-2014 by Katarzyna Mazur (visual improvements)
-"""
-
 import wx
 import sys
 import time
@@ -19,6 +11,14 @@ from aqopa.model.parser import MetricsParserException,\
     ConfigurationParserException, ModelParserException
 from aqopa.simulator.error import EnvironmentDefinitionException,\
     RuntimeException
+
+"""
+@file       run_panel_gui.py
+@brief      GUI for the 'Run' tab on AQoPA's main window (panel)
+@author     Damian Rusinek
+@date       created on 05-09-2013 by Damian Rusinek
+@date       edited on 08-05-2014 by Katarzyna Mazur (visual improvements)
+"""
 
 # model parsing events
 ModelParsedEvent, EVT_MODEL_PARSED = wx.lib.newevent.NewEvent()
