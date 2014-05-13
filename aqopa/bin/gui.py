@@ -237,7 +237,7 @@ class MainFrame(wx.Frame):
         self.SetSizer(s2)
 
         self.SetIcon(wx.Icon(self.CreatePath4Resource('app_logo.png'), wx.BITMAP_TYPE_PNG))
-        self.SetMinSize(wx.Size(900, 700))
+        self.SetMinSize(wx.Size(800, 500))
         self.CenterOnScreen()
         self.Layout()
 

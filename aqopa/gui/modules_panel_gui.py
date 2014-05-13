@@ -10,6 +10,7 @@
 
 import wx
 import wx.lib.newevent
+from aqopa.gui.combo_check_box import ComboCheckBox
 
 ModulesChangedEvent, EVT_MODULES_CHANGED = wx.lib.newevent.NewEvent()
 
@@ -24,10 +25,41 @@ class ModulesPanel(wx.Panel):
 
         wx.Panel.__init__(self, *args, **kwargs)
 
+        # our main sizer
         mainSizer = wx.BoxSizer(wx.VERTICAL)
 
+        # 'Select' button = select chosen modules
+        selectButton = wx.Button(self, label="Select")
+
+        # create group boxes, aka static boxes
+        modulesSelectionBox = wx.StaticBox(self, label="Select modules")
+        modulesConfigurationBox = wx.StaticBox(self, label="Configure modules")
         modulesBox = wx.StaticBox(self, label="Modules")
+
+        # create sizers = some kind of layout management
+        modulesSelectionBoxSizer = wx.StaticBoxSizer(modulesSelectionBox, wx.HORIZONTAL)
+        modulesConfigurationBoxSier = wx.StaticBoxSizer(modulesConfigurationBox, wx.HORIZONTAL)
         modulesBoxSizer = wx.StaticBoxSizer(modulesBox, wx.VERTICAL)
+
+        # create labels, aka static texts
+        selectModulesLabel = wx.StaticText(self, label="Choose modules for analysis and click the 'Select'\nbutton to add them to the configuration panel.")
+
+        # create combocheckbox, empty at first [need 2 change this]
+        self.comboCheckBox = wx.combo.ComboCtrl(self)
+        self.tcp = ComboCheckBox()
+        self.comboCheckBox.SetPopupControl(self.tcp)
+
+        # add tooltipz = make user's life easier
+        modulesSelectionBox.SetToolTip(wx.ToolTip("Select modules for analysis"))
+        modulesConfigurationBox.SetToolTip(wx.ToolTip("Configure chosen modules"))
+
+        # align 'select modules' group box
+        modulesSelectionBoxSizer.Add(selectModulesLabel, 1, wx.ALL | wx.EXPAND, 5)
+        modulesSelectionBoxSizer.Add(self.comboCheckBox, 1, wx.ALL | wx.EXPAND, 5)
+        modulesSelectionBoxSizer.Add(selectButton, 0, wx.ALL | wx.EXPAND, 5)
+
+        # do some bindings:
+        selectButton.Bind(wx.EVT_BUTTON, self.OnSelectButtonClicked)
 
         self.configurationBox = wx.StaticBox(self, label="Configuration")
         configurationBoxSizer = wx.StaticBoxSizer(self.configurationBox, wx.HORIZONTAL)
@@ -74,10 +106,19 @@ class ModulesPanel(wx.Panel):
             self.buttonsPanelMap[btn] = moduleConfigurationPanel
             self.buttonsModuleGui[btn] = gui
 
+        mainSizer.Add(modulesSelectionBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
+        mainSizer.Add(modulesConfigurationBox, 0, wx.ALL | wx.EXPAND, 5)
         mainSizer.Add(modulesBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
         mainSizer.Add(configurationBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
 
         self.SetSizer(mainSizer)
+
+    def OnSelectButtonClicked(self, event):
+        """
+        @brief grabs selected modules from
+        combocheckbox widget
+        """
+        pass
 
     def ShowModuleConfigurationPanel(self, panel):
         """ """
