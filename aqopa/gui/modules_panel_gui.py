@@ -75,21 +75,21 @@ class ModulesPanel(wx.Panel):
         selectButton.Bind(wx.EVT_BUTTON, self.OnSelectButtonClicked)
         self.configureButton.Bind(wx.EVT_BUTTON, self.OnConfigureButtonClicked)
 
-        self.configurationBox = wx.StaticBox(self, label="Configuration")
-        configurationBoxSizer = wx.StaticBoxSizer(self.configurationBox, wx.HORIZONTAL)
+        #self.configurationBox = wx.StaticBox(self, label="")
+        configurationBoxSizer = wx.StaticBoxSizer(wx.StaticBox(None), wx.HORIZONTAL)
 
         self.checkBoxesMap = {}
         self.buttonsPanelMap = {}
         self.buttonsModuleGui = {}
         self.ModulesPanels = []
 
-        emptyPanel = wx.Panel(self, size=(200,20))
-        sizer = wx.BoxSizer(wx.VERTICAL)
+        #emptyPanel = wx.Panel(self, size=(200,20))
+        #sizer = wx.BoxSizer(wx.VERTICAL)
         #text = wx.StaticText(emptyPanel, label="Click 'Configure' button to configure selected module.")
         #sizer.Add(text, 0, wx.ALL | wx.EXPAND, 5)
-        emptyPanel.SetSizer(sizer)
-        configurationBoxSizer.Add(emptyPanel, 1, wx.ALL | wx.EXPAND, 5)
-        self.ModulesPanels.append(emptyPanel)
+        #emptyPanel.SetSizer(sizer)
+        #configurationBoxSizer.Add(emptyPanel, 1, wx.ALL | wx.EXPAND, 5)
+        #self.ModulesPanels.append(emptyPanel)
 
         modulesNames4Combo = []
 
