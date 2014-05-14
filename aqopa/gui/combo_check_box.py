@@ -46,9 +46,8 @@ class ComboCheckBox(wx.combo.ComboPopup):
 
         # clear current content from combobox
         self.checkBoxList.Clear()
-        # add all the elements from the list to the combo
-        if not choices :
-            self.checkBoxList.AppendItems(choices)
+        # add all the elements from the list to the combo -
+        self.checkBoxList.AppendItems(choices)
 
     def GetControl(self):
         """
