@@ -4,12 +4,13 @@ import wx
 import wx.combo
 
 """
-@file       ComboCheckBox.py
-@brief      mixed combo-check-box widget, used for, [for instance]
-            modules and versions choosing [and probably sth more]
+@file       combo_check_box.py
+@brief      mixed combo-check-box widget, needed for modules configuration
+            and versions choosing [and probably some more GUI stuff]
 @author     Katarzyna Mazur
 @date       created on 12-05-2014 by Katarzyna Mazur
 """
+
 
 class ComboCheckBox(wx.combo.ComboPopup):
 
@@ -45,10 +46,9 @@ class ComboCheckBox(wx.combo.ComboPopup):
 
         # clear current content from combobox
         self.checkBoxList.Clear()
-        # add all the elements from the list to the combo -
-        # simply append checkboxes with given labels
-        for choice in choices:
-            self.checkBoxList.Append(choice)
+        # add all the elements from the list to the combo
+        if not choices :
+            self.checkBoxList.AppendItems(choices)
 
     def GetControl(self):
         """
@@ -78,9 +78,11 @@ class ComboCheckBox(wx.combo.ComboPopup):
 
     def GetAdjustedSize(self, minWidth, prefHeight, maxHeight):
         """
-        @brief returns final size of popup
+        @brief returns final size of popup - set prefHeight to 100
+        in order to drop-down the popup and add vertical scrollbar
+        if needed
         """
-        return wx.combo.ComboPopup.GetAdjustedSize(self, minWidth, prefHeight, maxHeight)
+        return wx.combo.ComboPopup.GetAdjustedSize(self, minWidth, 100, maxHeight)
 
 """
 @brief  Simple testing, should be removed or commented
