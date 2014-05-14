@@ -180,7 +180,7 @@ class ModulesPanel(wx.Panel):
             ch = self.checkBoxesMap[m]
             if ch.IsChecked():
                 modules.append(m)
-
+        print modules
         wx.PostEvent(self, ModulesChangedEvent(modules=modules, all_modules=self.allModules))
 
     def OldConfigButtonz(self, event):

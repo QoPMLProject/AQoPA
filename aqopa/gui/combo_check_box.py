@@ -11,7 +11,6 @@ import wx.combo
 @date       created on 12-05-2014 by Katarzyna Mazur
 """
 
-
 class ComboCheckBox(wx.combo.ComboPopup):
 
     def Init(self):

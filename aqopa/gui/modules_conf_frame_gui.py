@@ -11,7 +11,7 @@ import wx
 
 class ConfigFrame(wx.Frame):
     """
-    @brief frame (window) for modules configuration
+    @brief frame (simply: window) for configuring chosen modules
     """
 
     def __init__(self, *args, **kwargs):
