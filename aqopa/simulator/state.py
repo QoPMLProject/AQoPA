@@ -244,9 +244,15 @@ class Host():
         
     def get_current_instructions_context(self):
         """ 
-        Returns the currnt instructions context retrived from scheduler.
+        Returns the current instructions context retrived from scheduler.
         """
         return self._scheduler.get_current_context()
+
+    def get_all_instructions_contexts(self):
+        """
+        Returns all instructions context retrived from scheduler.
+        """
+        return self._scheduler.get_all_contexts()
 
     def get_instructions_context_of_instruction(self, instruction):
         """

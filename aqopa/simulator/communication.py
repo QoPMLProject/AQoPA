@@ -59,11 +59,16 @@ class ChannelMessageRequest():
     
     def __init__(self, receiver, communication_instruction, expression_populator):
         """ """
+        self.is_waiting = True
         self.receiver = receiver
         self.instruction = communication_instruction
         self.expression_populator = expression_populator  # populator used to populate current version of filters
+        self.assigned_messages = []
 
     def get_populated_filters(self):
+        """
+        Get list of filters with populated expressions - ready for comparison.
+        """
         filters = []
         for f in self.instruction.filters:
             if f == '*':
@@ -71,6 +76,60 @@ class ChannelMessageRequest():
             else:
                 filters.append(self.expression_populator.populate(f, self.receiver))
         return filters
+
+    def clean(self):
+        self.is_waiting = False
+        self.assigned_messages = []
+
+    def start_waiting(self):
+        self.is_waiting = True
+
+    def get_messages_from_buffer(self, buffer):
+        """
+        Adds messages from the given list and returns number of added messages.
+        The return value may be equal to:
+         - the number of messages need to fulfill the request, if the request is active
+            (the receiver is actually waiting on IN instruction connected with this request)
+         - the number of messages in buffer, if the buffer contains less messages that are needed
+         - zero, when the receiver is not waiting on the IN instruction connected with this request
+            (request stays in asynchronous channels only to save the messages in the buffers)
+        """
+        # Get messages only if receiver is actually waiting
+        if self.is_waiting:
+            needed_messages_nb = len(self.instruction.variables_names) - len(self.assigned_messages)
+            assigned_cnt = 0
+            for i in range(0, needed_messages_nb):
+                if len(buffer) == 0:
+                    break
+                self.assigned_messages.append(buffer.pop(0))
+                assigned_cnt += 1
+            return assigned_cnt
+        return 0
+
+    def ready_to_fulfill(self):
+        """
+        Return True when request has as many messages as he is waiting for.
+        """
+        return len(self.instruction.variables_names) == len(self.assigned_messages)
+
+    def fulfill(self):
+        """
+        Assigns requested variables with received messages.
+        """
+        if not self.ready_to_fulfill():
+            raise RuntimeException("Request of host {0} in instruction {1} is not ready to fulfill."
+                                   .format(self.receiver.name, unicode(self.instruction)))
+        for i in range(0, len(self.assigned_messages)):
+            variable_name = self.instruction.variables_names[i]
+            message = self.assigned_messages[i]
+
+            # Set variable sent in message
+            self.receiver.set_variable(variable_name, message.expression.clone())
+
+        # Move instructions context to the next instruction
+        self.receiver.get_instructions_context_of_instruction(self.instruction)\
+            .goto_next_instruction()
+        self.receiver.mark_changed()
 
 
 class Channel():
@@ -80,14 +139,14 @@ class Channel():
     
     def __init__(self, name, buffer_size, tag_name=None):
         self.name = name
-        self._buffer_size = buffer_size   # Size of buffer, negative means that buffer is unlimited,
-                                                    # zero means that channel is asynhronous 
         self.tag_name = tag_name
+        self._buffer_size = buffer_size   # Size of buffer, negative means that buffer is unlimited,
+                                          # zero means that channel is asynhronous
         self._connected_hosts = []  # List of hosts that can use this channel
         self._connected_processes = []  # List of processes that can use this channel
+        self._buffers = {}  # Hosts' buffers - the host is the key, the list of sent messages is the value
 
         self._waiting_requests = []
-        self._sent_messages = []
         self._dropped_messages_cnt = 0
         
     def connect_with_host(self, host):
@@ -136,24 +195,23 @@ class Channel():
         """
         return self._dropped_messages_cnt
 
-    def get_unused_messages_nb(self):
+    def get_existing_request_for_instruction(self, receiver, instruction):
         """
-        Return number of sent messages that has not been binded with any host.
+        Returns True if channel is waiting for message.
         """
-        nb = 0
-        for message in self._sent_messages:
-            if not message.is_used():
-                nb += 1
-        return nb
+        for i in range(0, len(self._waiting_requests)):
+            request = self._waiting_requests[i]
+            if request.instruction == instruction and request.receiver == receiver:
+                return request
+        return None
 
     def is_waiting_on_instruction(self, receiver, instruction):
         """
         Returns True if channel is waiting for message.
         """
-        for i in range(0, len(self._waiting_requests)):
-            waiting_request = self._waiting_requests[i]
-            if waiting_request.instruction == instruction and waiting_request.receiver == receiver:
-                return True
+        request = self.get_existing_request_for_instruction(receiver, instruction)
+        if request:
+            return request.is_waiting
         return False
 
     def wait_for_message(self, request):
@@ -163,12 +221,21 @@ class Channel():
         """
         if not self.is_connected_with_host(request.receiver):
             raise RuntimeException("Channel '%s' is not connected with host '%s'." % (self.name, request.receiver.name))
-        
-        if not self.is_waiting_on_instruction(request.receiver, request.instruction):
+
+        # Check if this request already exists
+        existing_request = self.get_existing_request_for_instruction(request.receiver, request.instruction)
+
+        # If it does not exist add
+        if not existing_request:
             self._waiting_requests.append(request)
-            
+        else:
+            # If request exists, check if it is waiting on IN instruction now
+            if not existing_request.is_waiting:
+                # If it is now (request stays in channel only to fill the buffer) start waiting on this request
+                existing_request.start_waiting()
+
         # Check if request can be bound with expressions
-        self._bind_sent_expressions_with_receivers()
+        self._bind_messages_with_receivers()
     
     def send_messages(self, sender_host, messages):
         """
@@ -176,118 +243,56 @@ class Channel():
         """
         if not self.is_connected_with_host(sender_host):
             raise RuntimeException("Channel '%s' is not connected with host '%s'." % (self.name, sender_host.name))
-            
-        for msg in messages:
-            self._sent_messages.append(msg)
-        
-        # Check if request can be bound with expressions
-        self._bind_sent_expressions_with_receivers()
 
-    def get_fulfilled_requests(self, messages=None, messages_request=None, include_all_sent_messages=False):
-        """
-        Returns list of tuples (request, [messages that will be binded to this request]).
-        The result list may contain all sent messages - not only those from optional parameter.
-        """
-        # We have decided that one message can be assigined to one host ONLY ONCE
-        # and NOT ANYMORE - (that the next request can be fulfilled when all previous have been fulfilled).
-        # TODO: Maybe it will be worth changing later.
-
-        all_messages = []
-        all_messages.extend(self._sent_messages)
-        if messages is not None:
-            all_messages.extend(messages)
-
-        all_requests = []
-        all_requests.extend(self._waiting_requests)
-        if messages_request is not None:
-            all_requests.append(messages_request)
-
-        def find_request_tuple(tuples, request):
-            for t in tuples:
-                if t[0] == request:
-                    return t
-            return None
-
-        tuples = []
-        for request in all_requests:
-#             NOT ANYMORE
-#            # If receiver has been already checked in this function call
-#            # omit his next requests (FIFO)
-#             NOT ANYMORE
-#            if request.receiver in checked_hosts:
-#                continue
-#            checked_hosts.append(request.receiver)
-
-            needed_expressions_nb = len(request.instruction.variables_names)
-            filters = request.get_populated_filters()
-
-            found_msgs = []
-            for message in all_messages:
-                # Omit messages that has been used by host
-                if message.is_used_by_host(request.receiver):
-                    continue
-
+        # Put sent messages in the buffers of receivers
+        # Receivers are retrieved from the requests present in the channel
+        # When the channel is synchronous the buffers are cleaned after the binding try
+        # and requests are removed after they are fulfilled
+        for message in messages:
+            for request in self._waiting_requests:
                 # Check if message passes the filters
+                filters = request.get_populated_filters()
                 if not message.pass_filters(filters):
                     continue
+                if request.receiver not in self._buffers:
+                    self._buffers[request.receiver] = []
+                self._buffers[request.receiver].append(message)
 
-                found_msgs.append(message)
+        # Check if request can be bound with expressions
+        self._bind_messages_with_receivers()
 
-                # Stop loop if all needed expressions are found
-                if not include_all_sent_messages and (len(found_msgs) >= needed_expressions_nb):
-                    break
-
-            # If, after loop, all needed expressions are found
-            # assign receiver to all messages
-            if len(found_msgs) >= needed_expressions_nb:
-                for i in range(0, len(found_msgs)):
-                    message = found_msgs[i]
-                    t = find_request_tuple(tuples, request)
-                    if t is None:
-                        t = (request, [message])
-                        tuples.append(t)
-                    else:
-                        t[1].append(message)
-        return tuples
-
-    def _bind_sent_expressions_with_receivers(self):
+    def _bind_messages_with_receivers(self):
         """
         Checks if have any messages and requests and if yes, bind them.
         """
-        # Handle all fulfilled requests (those for which all required messages are found)
-        for request, messages in self.get_fulfilled_requests(messages=None):
-            # For each required expression
-            needed_expressions_nb = len(request.instruction.variables_names)
-            for i in range(0, needed_expressions_nb):
-                message = messages[i]
-                
-                # Set variable sent in message
-                request.receiver.set_variable(request.instruction.variables_names[i],
-                                              message.expression.clone())
-                # Set message as used by host
-                message.use_by_host(request.receiver)
+        # Update all requests
+        for request in self._waiting_requests:
+            # Add messages from buffer to request
+            # Add not more that request wants (usually it is one message)
+            if request.receiver not in self._buffers:
+                self._buffers[request.receiver] = []
+            request.get_messages_from_buffer(self._buffers[request.receiver])
 
-            # Move instructions context to the next instruction
-            request.receiver.get_instructions_context_of_instruction(request.instruction)\
-                .goto_next_instruction()
-            request.receiver.mark_changed()
+            # Here the request is filled with all requested messages
+            # or there was not enough messages in the buffer
 
-            # Remove request from list of waiting requests
-            self._waiting_requests.remove(request)
+            # If the request is filled with all requested messages = ready to fulfill
+            if request.ready_to_fulfill():
+                # Fulfill it
+                request.fulfill()
 
-        # Update sent messages list according to buffer size
-        removed_messages = []
+                # If channel is synchronous, delete the request - a new one will be created
+                # when the intruction is executed again
+                if self.is_synchronous():
+                    self._waiting_requests.remove(request)
+                else:
+                    # If channel is asynchronous, clean the request - still accept messages to the buffer
+                    request.clean()
+
+        # Clean buffers if channel is synchronous
         if self.is_synchronous():
-            removed_messages = self._sent_messages
-            self._sent_messages = []
-        elif not self.has_unlimited_buffer():
-            for i in range(0, len(self._sent_messages) - self._buffer_size):
-                removed_messages.append(self._sent_messages.pop(0))
-
-        for message in removed_messages:
-            if not message.is_used():
-                self._dropped_messages_cnt += 1
-
+            for i in self._buffers:
+                self._buffers[i] = []
 
 class Manager():
     """ Channels manager class """
