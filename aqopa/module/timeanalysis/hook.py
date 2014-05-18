@@ -331,50 +331,28 @@ class PreInstructionHook(Hook):
             host_time = self.module.get_current_time(self.simulator, h)
             # If checked (in loop) host is in the past relative to the time of actual host
             if host_time < min_hosts_time[1]:
-                current_instruction = h.get_current_instructions_context().get_current_instruction()
 
+                # In general, the instruction in host with smaller time
+                # should be executer earlier
+                delay_communication_execution = True
+
+                # The only exception is when the host in the past is waiting on IN instruction
+                # and the request cannot be fulfilled
+                current_instruction = h.get_current_instructions_context().get_current_instruction()
                 if isinstance(current_instruction, CommunicationInstruction):
-                    # If the checked host (the one in the past) want to send message
-                    # it should be first
-                    if current_instruction.is_out():
-                        delay_communication_execution = True
-                    else:
+                    if not current_instruction.is_out():
                         # The checked host (the one in the past) is waiting for the message
                         # Lets check if the messages for the host are in the channel
-                        # If there are, it should be executed first so wait for it
                         host_channel = context.channels_manager.find_channel_for_host_instruction(
                             context, h, current_instruction)
                         if host_channel:
-                            messages_request = None
-                            if not host_channel.is_waiting_on_instruction(h, current_instruction):
-                                messages_request = context.channels_manager.build_message_request(
-                                    h, current_instruction, context.expression_populator)
-                            # Check if channel is synchronous and if it is,
-                            # block messages sent from the past to to the future because the channels has no buffer
-                            if host_channel.is_synchronous():
-                                fulfilled_requests = host_channel.get_fulfilled_requests(
-                                    messages_request=messages_request, include_all_sent_messages=True)
-                                for request, messages in fulfilled_requests:
-                                    request_time = self.module.get_request_created_time(self.simulator, request)
-                                    # Traverse all messages needed to fulfill request
-                                    for msg in messages:
-                                        # If sender time is smaller than time when received asked for message
-                                        # it would mean that sender wants to send message from the past
-                                        # to the  receiver who started to wait message later
-                                        if self.module.get_message_sent_time(self.simulator, msg) < request_time:
-                                            msg.use_by_host(request.receiver)
 
-                                # Check if request of this host is fulfilled
-                                # If yes, let it go first
-                                fulfilled_requests = host_channel.get_fulfilled_requests(messages_request=messages_request)
-                                for request, messages in fulfilled_requests:
-                                    if request.receiver == h and request.instruction == current_instruction:
-                                        delay_communication_execution = True
-                                        break
-                else:
-                    # If the checked host (the one in the past) executes some non-communication operation
-                    # it should be done first
-                    delay_communication_execution = True
+                            # If host is not waiting on IN instruction - let it go first
+                            # If host is waiting - check if it is fulfilled
+                            if host_channel.is_waiting_on_instruction(h, current_instruction):
+                                request = host_channel.get_existing_request_for_instruction(h, current_instruction)
+                                if not request.ready_to_fulfill():
+                                    delay_communication_execution = False
 
         ## Delay execution of this instruction
         ## if needed according to previous check
