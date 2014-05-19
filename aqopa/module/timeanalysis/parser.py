@@ -62,6 +62,8 @@ class MetricsParserExtension(LexYaccParserExtension):
         metrics_services_time_unit : MS
                                 | MSPBIT
                                 | MSPBYTE
+                                | KBYTEPS
+                                | MBYTEPS
         """
         t[0] = t[1]
 
@@ -89,6 +91,8 @@ class MetricsParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('ms', 'MS', state='metricsprimhead', case_sensitive=True)
         self.parser.add_reserved_word('mspb', 'MSPBIT', state='metricsprimhead', case_sensitive=True)
         self.parser.add_reserved_word('mspB', 'MSPBYTE', state='metricsprimhead', case_sensitive=True)
+        self.parser.add_reserved_word('kbps', 'KBYTEPS', state='metricsprimhead', case_sensitive=True)
+        self.parser.add_reserved_word('mbps', 'MBYTEPS', state='metricsprimhead', case_sensitive=True)
         self.parser.add_reserved_word('algorithm', 'ALGORITHM', state='metricsprimhead', case_sensitive=True)
 
         self.parser.add_reserved_word('block', 'BLOCK', state='metricsprimhead', case_sensitive=False)

@@ -263,7 +263,7 @@ class Channel():
 
     def _bind_messages_with_receivers(self):
         """
-        Checks if have any messages and requests and if yes, bind them.
+        Assign messages from buffers to requests.
         """
         # Update all requests
         for request in self._waiting_requests:

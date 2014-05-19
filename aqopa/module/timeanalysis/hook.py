@@ -107,6 +107,97 @@ class PreInstructionHook(Hook):
 
         return total_time, time_details
     
+    def _get_time_for_exact_range_metric(self, metric_type, metric_unit, metric_value, expression, host, context):
+        """
+        Returns execution time of expression which has exact or range metric assigned.
+        """
+
+        if metric_unit in ["ms", "s"]:
+            # Get time
+            if metric_type == "exact":
+                time_value = float(metric_value)
+            else:  # range
+                mvalues = metric_value.split('..')
+                val_from = float(mvalues[0])
+                val_to = float(mvalues[1])
+                time_value = val_from + (val_to-val_from)*random.random()
+
+            # Update time according to the time unit
+            if metric_unit == "ms":
+                return time_value
+            else:  # metric_unit == "s":
+                return time_value * 1000
+
+        elif metric_unit in ["mspb", "mspB", "kbps", "mbps"]:
+
+            mparts = metric_value.split(':')
+            time_metric = mparts[0]
+            indexes = None 
+            if len(mparts) == 2:
+                indexes = [int(i) for i in mparts[1].split(',')]
+
+            # Get time
+            if metric_type == "exact":
+                time_value = float(time_metric)
+            else:  # range
+                mvalues = time_metric.split('..')
+                val_from = float(mvalues[0])
+                val_to = float(mvalues[1])
+                time_value = val_from + (val_to-val_from)*random.random()
+
+            size = 0
+            if indexes is None:
+                populated_expression = context.expression_populator.populate(expression, 
+                                                                             context.get_current_host())
+                size = context.metrics_manager.get_expression_size(populated_expression, 
+                                                                   context, context.get_current_host())
+            else:
+                for index in indexes:
+                    populated_expression = context.expression_populator.populate(
+                        expression.arguments[index-1], context.get_current_host())
+
+                    size += context.metrics_manager.get_expression_size(
+                        populated_expression, context, context.get_current_host())
+
+            if metric_unit in ["mspb", "mspB"]:
+                msperbyte = float(time_value)
+                if metric_unit == "mspb":
+                    msperbyte /= 8.0
+            elif metric_unit == "kbps":
+                msperbyte = 8000.0 / 1024.0 / time_value
+            else: # mbps
+                msperbyte = 8000.0 / 1024.0 / 1024.0 / time_value
+
+            return msperbyte * size
+    
+    def _get_time_for_block_metric(self, metric_type, metric_unit, metric_value, expression, host, context):
+        """
+        Returns execution time of expression which has block metric assigned.
+        """
+        mparts = metric_value.split(':')
+        element_index = None
+        if len(mparts) == 3:
+            element_index = int(mparts[0])-1
+            unit_time = float(mparts[1])
+            unit_size = int(mparts[2])
+        else:
+            unit_time = float(mparts[0])
+            unit_size = int(mparts[1])
+
+        #time_unit = metric_unit[0]
+        size_unit = metric_unit[1]
+
+        expression_to_populate = expression if element_index is None else expression.arguments[element_index]
+        populated_expression = context.expression_populator.populate(expression_to_populate, host)
+        argument_size = context.metrics_manager.get_expression_size(populated_expression,
+                                                                    context, host)
+        units = ceil(argument_size / float(unit_size))
+
+        time = units * unit_time
+        if size_unit == 'b':
+            time *= 8.0
+        return time
+    
     def _get_time_details_for_simple_expression(self, context, expression):
         """
         Calculate time for expression.
@@ -132,73 +223,13 @@ class PreInstructionHook(Hook):
 
                 if metric_type in ["exact", "range"]:
 
-                    if metric_unit in ["ms", "s"]:
-                        # Get time
-                        if metric_type == "exact":
-                            time_value = float(metric_value)
-                        else:  # range
-                            mvalues = metric_value.split('..')
-                            val_from = float(mvalues[0])
-                            val_to = float(mvalues[1])
-                            time_value = val_from + (val_to-val_from)*random.random()
-
-                        # Update time according to the time unit
-                        if metric_unit == "ms":
-                            time = time_value
-                        else:  # metric_unit == "s":
-                            time = time_value * 1000
-
-                    elif metric_unit == "mspb" or metric_unit == "mspB":
-
-                        mparts = metric_value.split(':')
-                        if len(mparts) != 2:
-                            raise RuntimeException(
-                                'Metric unit is set as %s, but the indexes of call arguments to get size are not set.'
-                                % metric_unit)
-
-                        # Get time
-                        if metric_type == "exact":
-                            time_value = float(metric_value)
-                        else:  # range
-                            mvalues = metric_value.split('..')
-                            val_from = float(mvalues[0])
-                            val_to = float(mvalues[1])
-                            time_value = val_from + (val_to-val_from)*random.random()
-
-                        size = 0
-                        call_params_indexes = mparts[1].split(',')
-                        for index in call_params_indexes:
-                            index = int(index)
-                            populated_expression = context.expression_populator.populate(
-                                expression.arguments[index-1], context.get_current_host())
-
-                            size += context.metrics_manager.get_expression_size(
-                                populated_expression, context, context.get_current_host())
-
-                        msperbyte = float(time_value)
-                        if metric_unit == "mspb":
-                            msperbyte /= 8.0
-
-                        time = msperbyte * size
+                    time = self._get_time_for_exact_range_metric(metric_type, metric_unit, metric_value, 
+                                                                 expression, context.get_current_host(), context)
 
                 elif metric_type == "block":
 
-                    mparts = metric_value.split(':')
-                    element_index = int(mparts[0])-1
-                    unit_time = float(mparts[1])
-                    unit_size = int(mparts[2])
-
-                    #time_unit = metric_unit[0]
-                    size_unit = metric_unit[1]
-
-                    argument_size = context.metrics_manager.get_expression_size(expression.arguments[element_index],
-                                                                                context,
-                                                                                context.get_current_host())
-                    units = ceil(argument_size / float(unit_size))
-
-                    time = units * unit_time
-                    if size_unit == 'b':
-                        time *= 8.0
+                    time = self._get_time_for_exact_range_metric(metric_type, metric_unit, metric_value, 
+                                                                 expression, context.get_current_host(), context)
 
             if time > 0:
                 time_details.append((expression, time))
@@ -220,7 +251,7 @@ class PreInstructionHook(Hook):
         expression = CallFunctionExpression(comm_instruction, qop_arguments=qop_args)
         return context.metrics_manager.find_primitive(host, expression)
 
-    def _get_time_for_communication_step(self, context, channel, host, metric, message, request=None):
+    def _get_time_for_communication_step(self, context, channel, host, metric, message, request):
         """ Returns time of sending/receiving message """
         time = 0
         block = metric.block
@@ -233,26 +264,9 @@ class PreInstructionHook(Hook):
             metric_unit = sparam.unit
             metric_value = metric.service_arguments[i].strip()
 
-            if metric_type == "exact":
-
-                if metric_unit == "ms":
-                    time = float(metric_value)
-
-                elif metric_unit == "s":
-                    time = float(metric_value) * 1000
-
-                elif metric_unit == "mspb" or metric_unit == "mspB":
-
-                    populated_expression = context.expression_populator.populate(
-                                                message.expression, host)
-                    size = context.metrics_manager.get_expression_size(
-                                                        populated_expression,
-                                                        context, host)
-                    msperbyte = float(metric_value)
-                    if metric_unit == "mspb":
-                        msperbyte = msperbyte / 8.0
-
-                    time = msperbyte * size
+            if metric_type in ["exact", "range"]:
+                
+                time = self._get_time_for_exact_range_metric(metric_type, metric_unit, metric_value, message.expression, host, context)
 
             elif metric_type == "algorithm":
 
@@ -268,27 +282,16 @@ class PreInstructionHook(Hook):
                     .get_time(context, host, metric_value, message.expression, link_quality=link_quality)
 
             elif metric_type == "block":
-
-                mparts = metric_value.split(':')
-                unit_time = float(mparts[0])
-                unit_size = int(mparts[1])
-                size_unit = metric_unit[1]  # how big unit is
-                populated_expression = context.expression_populator.populate(
-                    message.expression, host)
-                size = context.metrics_manager.get_expression_size(
-                    populated_expression, context, host)
-                units = ceil(size / float(unit_size))
-                time = units * unit_time
-                if size_unit == 'b':
-                    time *= 8.0
+                
+                time = self._get_time_for_block_metric(metric_type, metric_unit, metric_value, message.expression, host, context)
         return time
 
-    def _get_time_of_sending(self, context, channel, message):
+    def _get_time_of_sending(self, context, channel, message, request):
         """ Returns time of message sending process """
         metric = self._find_communication_metric(context, channel, message.sender, COMMUNICATION_TYPE_OUT)
         if metric is None:
             return 0
-        return self._get_time_for_communication_step(context, channel, message.sender, metric, message)
+        return self._get_time_for_communication_step(context, channel, message.sender, metric, message, request)
 
     def _get_time_of_receiving(self, context, channel, message, request):
         """ Returns time of message receiving process """
@@ -333,7 +336,7 @@ class PreInstructionHook(Hook):
             if host_time < min_hosts_time[1]:
 
                 # In general, the instruction in host with smaller time
-                # should be executer earlier
+                # should be executed earlier
                 delay_communication_execution = True
 
                 # The only exception is when the host in the past is waiting on IN instruction
