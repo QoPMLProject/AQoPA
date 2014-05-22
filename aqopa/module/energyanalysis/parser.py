@@ -61,8 +61,8 @@ class MetricsParserExtension(LexYaccParserExtension):
         """ """
 
         self.parser.add_reserved_word('energy', 'ENERGY', state='metricsprimhead', case_sensitive=False)
-        self.parser.add_reserved_word('exact', 'EXACT', state='metricsprimhead', case_sensitive=False)
         self.parser.add_reserved_word('listening', 'LISTENING', state='metricsprimhead', case_sensitive=False)
+        self.parser.add_reserved_word('exact', 'EXACT', state='metricsprimhead', case_sensitive=False)
         self.parser.add_reserved_word('algorithm', 'ALGORITHM', state='metricsprimhead', case_sensitive=False)
         self.parser.add_reserved_word('mA', 'MA', state='metricsprimhead', case_sensitive=True)
 
