@@ -14,15 +14,6 @@ class Builder():
     Builder for store objects
     """
     
-    def build_version_communication(self, token):
-        """
-        version_communication : COMMUNICATION_SPECIFICATION BLOCKOPEN version_comm_specifications BLOCKCLOSE
-        """
-        topologies = {}
-        for item in token[3]:
-            if item['type'] == 'topology':
-                topologies[item['name']] = item
-        return {'topologies': topologies}
 
 
 class ModelParserExtension(LexYaccParserExtension):
@@ -77,14 +68,46 @@ class ModelParserExtension(LexYaccParserExtension):
         """
         pass
 
-    #   Topology
-    
-    def topology_specification(self, t):
+    #  Medium
+
+    def medium_specification(self, t):
         """
-        comm_specification : TOPOLOGY_SPECIFICATION SQLPARAN IDENTIFIER SQRPARAN BLOCKOPEN topology_rules_list BLOCKCLOSE
+        comm_specification : MEDIUM_SPECIFICATION SQLPARAN IDENTIFIER SQRPARAN BLOCKOPEN medium_elements BLOCKCLOSE
         """
-        self.parser.store.topologies[t[3]] = {'rules': t[6]}
+        self.parser.store.mediums[t[3]] = t[6]
+
+    def medium_elements(self, t):
+        """
+        medium_elements : medium_default_parameters medium_topology
+        """
+        t[0] = {
+            'topology': t[2],
+            'default_parameters': t[1],
+        }
+
+    def medium_default_parameters(self, t):
+        """
+        medium_default_parameters : medium_default_parameter SEMICOLON
+                                | medium_default_parameters medium_default_parameter SEMICOLON
+        """
+        t[0] = t[1]
+        if len(t) == 3:
+            t[0].update(t[2])
+
+    def quality_default_parameter(self, t):
+        """
+        medium_default_parameter : QUALITY_DEFAULT_PARAMETER EQUAL number
+        """
+        t[0] = {'default_q': t[3]}
+
+    #  Topology
     
+    def medium_topology(self, t):
+        """
+        medium_topology : TOPOLOGY_SPECIFICATION BLOCKOPEN topology_rules_list BLOCKCLOSE
+        """
+        t[0] = {'rules': t[3]}
+
     def topology_rules_list(self, t):
         """
         topology_rules_list : topology_rule
@@ -97,15 +120,43 @@ class ModelParserExtension(LexYaccParserExtension):
             t[0] = []
             t[0].append(t[1])
 
-    def topology_rule(self, t):
+    def topology_rule_point_to_point(self, t):
         """
         topology_rule : IDENTIFIER topology_arrow IDENTIFIER SEMICOLON
-                    | IDENTIFIER topology_arrow IDENTIFIER COLON number SEMICOLON
+                    | IDENTIFIER topology_arrow IDENTIFIER COLON topology_rule_parameters SEMICOLON
         """
-        quality = 1
+        parameters = {}
         if len(t) == 7:
-            quality = t[5]
-        t[0] = TopologyRule(TopologyRuleHost(t[1]), t[2], TopologyRuleHost(t[3]), quality=quality)
+            parameters = t[5]
+        l = TopologyRuleHost(t[1])
+        r = TopologyRuleHost(t[3])
+        t[0] = TopologyRule(l, t[2], r, parameters=parameters)
+
+    def topology_rule_broadcast(self, t):
+        """
+        topology_rule : IDENTIFIER ARROWRIGHT STAR COLON topology_rule_parameters SEMICOLON
+        """
+        parameters = {}
+        if len(t) == 7:
+            parameters = t[5]
+        l = TopologyRuleHost(t[1])
+        r = TopologyRuleHost(t[3])
+        t[0] = TopologyRule(l, t[2], r, parameters=parameters)
+
+    def topology_rule_parameters(self, t):
+        """
+        topology_rule_parameters : topology_rule_parameter
+                            | topology_rule_parameters COMMA topology_rule_parameter
+        """
+        t[0] = t[1]
+        if len(t) == 4:
+            t[0].update(t[3])
+
+    def topology_rule_quality_parameter(self, t):
+        """
+        topology_rule_parameter : Q_PARAMETER EQUAL number
+        """
+        t[0] = {'q': t[3]}
 
     def topology_arrow(self, t):
         """
@@ -268,6 +319,9 @@ class ModelParserExtension(LexYaccParserExtension):
 
         self.parser.add_reserved_word('communication', 'COMMUNICATION_SPECIFICATION',
                                       func=self.word_communication_specification)
+        self.parser.add_reserved_word('medium', 'MEDIUM_SPECIFICATION', state='communication',)
+        self.parser.add_reserved_word('default_q', 'QUALITY_DEFAULT_PARAMETER', state='communication',)
+        self.parser.add_reserved_word('q', 'Q_PARAMETER', state='communication',)
         self.parser.add_reserved_word('topology', 'TOPOLOGY_SPECIFICATION', state='communication',)
         self.parser.add_reserved_word('algorithms', 'ALGORITHMS_SPECIFICATION', state='communication')
         self.parser.add_reserved_word('alg', 'ALGORITHM', state='communication')
@@ -297,9 +351,16 @@ class ModelParserExtension(LexYaccParserExtension):
 
         self.parser.add_rule(self.communication_specification)
         self.parser.add_rule(self.comm_specifications)
-        self.parser.add_rule(self.topology_specification)
+        self.parser.add_rule(self.medium_specification)
+        self.parser.add_rule(self.medium_elements)
+        self.parser.add_rule(self.medium_default_parameters)
+        self.parser.add_rule(self.quality_default_parameter)
+        self.parser.add_rule(self.medium_topology)
         self.parser.add_rule(self.topology_rules_list)
-        self.parser.add_rule(self.topology_rule)
+        self.parser.add_rule(self.topology_rule_point_to_point)
+        self.parser.add_rule(self.topology_rule_broadcast)
+        self.parser.add_rule(self.topology_rule_parameters)
+        self.parser.add_rule(self.topology_rule_quality_parameter)
         self.parser.add_rule(self.topology_arrow)
         self.parser.add_rule(self.algoriths_specification)
         self.parser.add_rule(self.comm_algorithms_list)
@@ -365,7 +426,9 @@ class ConfigParserExtension(LexYaccParserExtension):
         """
         version_communication : COMMUNICATION_SPECIFICATION BLOCKOPEN version_comm_specifications BLOCKCLOSE
         """
-        t[0] = self.builder.build_version_communication(t)
+        t[0] = {
+            'mediums': t[3]
+        }
     
     
     def version_comm_specifications(self, t):
@@ -373,19 +436,50 @@ class ConfigParserExtension(LexYaccParserExtension):
         version_comm_specifications : version_comm_specification
                     | version_comm_specifications version_comm_specification
         """
+        t[0] = t[1]
         if len(t) == 3:
-            t[0] = t[1]
-            t[0].append(t[2])
-        else:
-            t[0] = []
-            t[0].append(t[1])
-    
-    def version_topology_specification(self, t):
-        """
-        version_comm_specification : TOPOLOGY_SPECIFICATION SQLPARAN IDENTIFIER SQRPARAN BLOCKOPEN version_topology_rules_list BLOCKCLOSE
-        """
-        t[0] = {'type': 'topology', 'name': t[3], 'rules': t[6]}
+            t[0].update(t[2])
 
+    #  Medium
+
+    def version_medium_specification(self, t):
+        """
+        version_comm_specification : MEDIUM_SPECIFICATION SQLPARAN IDENTIFIER SQRPARAN BLOCKOPEN version_medium_elements BLOCKCLOSE
+        """
+        t[0] = {
+            t[3]: t[6]
+        }
+
+    def version_medium_elements(self, t):
+        """
+        version_medium_elements : version_medium_default_parameters version_medium_topology
+        """
+        t[0] = {
+            'topology': t[2],
+            'default_parameters': t[1]
+        }
+
+    def version_medium_default_parameters(self, t):
+        """
+        version_medium_default_parameters : version_medium_default_parameter SEMICOLON
+                                | version_medium_default_parameters version_medium_default_parameter SEMICOLON
+        """
+        t[0] = t[1]
+        if len(t) == 4:
+            t[0].update(t[2])
+
+    def version_quality_default_parameter(self, t):
+        """
+        version_medium_default_parameter : QUALITY_DEFAULT_PARAMETER EQUAL number
+        """
+        t[0] = {'default_q': t[3]}
+
+    def version_medium_topology(self, t):
+        """
+        version_medium_topology : TOPOLOGY_SPECIFICATION BLOCKOPEN version_topology_rules_list BLOCKCLOSE
+        """
+        t[0] = {'rules': t[3]}
+    
     def version_topology_rules_list(self, t):
         """
         version_topology_rules_list : version_topology_rule
@@ -398,30 +492,50 @@ class ConfigParserExtension(LexYaccParserExtension):
             t[0] = []
             t[0].append(t[1])
 
-    def version_topology_rule(self, t):
+    def version_topology_rule_point_to_point(self, t):
         """
-        version_topology_rule : IDENTIFIER version_topology_arrow IDENTIFIER SEMICOLON
-                    | IDENTIFIER version_topology_arrow IDENTIFIER COLON number SEMICOLON
-                    | version_topology_host_with_indicies version_topology_arrow IDENTIFIER SEMICOLON
-                    | version_topology_host_with_indicies version_topology_arrow IDENTIFIER COLON number SEMICOLON
-                    | IDENTIFIER version_topology_arrow version_topology_host_with_indicies SEMICOLON
-                    | IDENTIFIER version_topology_arrow version_topology_host_with_indicies COLON number SEMICOLON
-                    | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_indicies SEMICOLON
-                    | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_indicies COLON number SEMICOLON
-                    | IDENTIFIER version_topology_arrow version_topology_host_with_i_index SEMICOLON
-                    | IDENTIFIER version_topology_arrow version_topology_host_with_i_index COLON number SEMICOLON
-                    | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_i_index SEMICOLON
-                    | version_topology_host_with_indicies version_topology_arrow version_topology_host_with_i_index COLON number SEMICOLON
+        version_topology_rule : version_topology_rule_left_hosts version_topology_arrow version_topology_rule_right_hosts SEMICOLON
+                    | version_topology_rule_left_hosts version_topology_arrow version_topology_rule_right_hosts COLON version_topology_rule_parameters SEMICOLON
+        """
+        parameters = {}
+        if len(t) == 7:
+            parameters = t[5]
+        t[0] = TopologyRule(t[1], t[2], t[3], parameters=parameters)
+
+    def version_topology_rule_boradcast(self, t):
+        """
+        version_topology_rule : version_topology_rule_left_hosts ARROWRIGHT STAR COLON version_topology_rule_parameters SEMICOLON
+        """
+        parameters = {}
+        if len(t) == 7:
+            parameters = t[5]
+        t[0] = TopologyRule(t[1], t[2], None, parameters=parameters)
+
+    def version_topology_rule_left_hosts(self, t):
+        """
+        version_topology_rule_left_hosts : IDENTIFIER
+                        | version_topology_host_with_indicies
         """
         if isinstance(t[1], basestring):
-            t[1] = TopologyRuleHost(t[1])
-        if isinstance(t[3], basestring):
-            t[3] = TopologyRuleHost(t[3])
-        quality = 1
-        if len(t) > 5:
-            quality = t[5]
-        t[0] = TopologyRule(t[1], t[2], t[3], quality=quality)
-    
+            t[0] = TopologyRuleHost(t[1])
+        else:
+            t[0] = t[1]
+
+    def version_topology_rule_right_hosts(self, t):
+        """
+        version_topology_rule_right_hosts : IDENTIFIER
+                        | STAR
+                        | version_topology_host_with_indicies
+                        | version_topology_host_with_i_index
+        """
+        if isinstance(t[1], basestring):
+            if t[1] == u"*":
+                t[0] = None
+            else:
+                t[0] = TopologyRuleHost(t[1])
+        else:
+            t[0] = t[1]
+
     def version_topology_host_with_indicies(self, t):
         """
         version_topology_host_with_indicies : IDENTIFIER SQLPARAN INTEGER SQRPARAN
@@ -458,6 +572,21 @@ class ConfigParserExtension(LexYaccParserExtension):
                 i_shift = t[5]
         t[0] = TopologyRuleHost(t[1], i_shift=i_shift)
 
+    def version_topology_rule_parameters(self, t):
+        """
+        version_topology_rule_parameters : version_topology_rule_parameter
+                            | version_topology_rule_parameters COMMA version_topology_rule_parameter
+        """
+        t[0] = t[1]
+        if len(t) == 4:
+            t[0].update(t[3])
+
+    def version_topology_rule_quality_parameter(self, t):
+        """
+        version_topology_rule_parameter : Q_PARAMETER EQUAL number
+        """
+        t[0] = {'q': t[3]}
+
     def version_topology_arrow(self, t):
         """
         version_topology_arrow : ARROWRIGHT
@@ -473,8 +602,11 @@ class ConfigParserExtension(LexYaccParserExtension):
 
         self.parser.add_reserved_word('communication', 'COMMUNICATION_SPECIFICATION',
                                       func=self.word_communication_specification)
+        self.parser.add_reserved_word('medium', 'MEDIUM_SPECIFICATION', state='versioncommunication',)
+        self.parser.add_reserved_word('default_q', 'QUALITY_DEFAULT_PARAMETER', state='versioncommunication',)
         self.parser.add_reserved_word('topology', 'TOPOLOGY_SPECIFICATION', state='versioncommunication',)
         self.parser.add_reserved_word('i', 'I_INDEX', state='versioncommunication')
+        self.parser.add_reserved_word('q', 'Q_PARAMETER', state='versioncommunication',)
 
         self.parser.add_token('BLOCKOPEN', func=self.token_block_open, states=['versioncommunication'])
         self.parser.add_token('BLOCKCLOSE', func=self.token_block_close, states=['versioncommunication'])
@@ -488,9 +620,18 @@ class ConfigParserExtension(LexYaccParserExtension):
 
         self.parser.add_rule(self.version_communication)
         self.parser.add_rule(self.version_comm_specifications)
-        self.parser.add_rule(self.version_topology_specification)
+        self.parser.add_rule(self.version_medium_specification)
+        self.parser.add_rule(self.version_medium_elements)
+        self.parser.add_rule(self.version_medium_default_parameters)
+        self.parser.add_rule(self.version_quality_default_parameter)
+        self.parser.add_rule(self.version_medium_topology)
         self.parser.add_rule(self.version_topology_rules_list)
-        self.parser.add_rule(self.version_topology_rule)
+        self.parser.add_rule(self.version_topology_rule_point_to_point)
+        self.parser.add_rule(self.version_topology_rule_boradcast)
+        self.parser.add_rule(self.version_topology_rule_left_hosts)
+        self.parser.add_rule(self.version_topology_rule_right_hosts)
+        self.parser.add_rule(self.version_topology_rule_parameters)
+        self.parser.add_rule(self.version_topology_rule_quality_parameter)
         self.parser.add_rule(self.version_topology_host_with_indicies)
         self.parser.add_rule(self.version_topology_host_with_i_index)
         self.parser.add_rule(self.version_topology_arrow)

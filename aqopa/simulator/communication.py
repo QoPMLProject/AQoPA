@@ -302,11 +302,11 @@ class Manager():
         self.router = Router()
         self.algorithm_resolver = AlgorithmResolver()
         
-    def add_topology(self, name, topology):
-        self.router.add_topology(name, topology)
+    def add_medium(self, name, topology, default_parameters):
+        self.router.add_medium(name, topology, default_parameters)
         
-    def has_topology(self, name):
-        return self.router.has_topology(name)
+    def has_medium(self, name):
+        return self.router.has_medium(name)
 
     def add_algorithm(self, name, algorithm):
         self.algorithm_resolver.add_algorithm(name, algorithm)
@@ -368,7 +368,7 @@ class Manager():
         return ChannelMessageRequest(receiver, communication_instruction, expression_populator)
 
 
-#TODO: Move to timeanalysis module
+#TODO: Move to timeanalysis module (should we ?)
 
 class AlgorithmResolver():
 
@@ -616,35 +616,103 @@ class AlgorithmCalculator():
 class Router():
     
     def __init__(self):
-        self.topologies = {}  # { TOPOLOGY_NAME ->
+
+        self.mediums = {}     # { MEDIUM_NAME -> {
+                              #  'default_q' -> ...,
+                              #  'default_...' -> ...,
+                              #  'default_...' -> ...,
+
+                              #  'topology' ->
                               #     { SENDER -> {
                               #         'hosts': [HOST, HOST, ...]
-                              #         'quality': { HOST -> QUALITY, HOST -> QUALITY, ... }
+                              #         'q': { HOST -> QUALITY, HOST -> QUALITY, ... },
+                              #         PARAMETER: { HOST -> QUALITY, HOST -> QUALITY, ... },
+                              #         ...
                               #     } }
+                              #  }
                               # }
-        self.routing = {}  # { TOPOLOGY_NAME ->
+
+        self.routing = {}  # { MEDIUM_NAME ->
                            #    SENDER -> {
                            #        NEXT -> [RECEIVER1, RECEIVER2, ...),
                            #        ...
                            #    }
                            # }
         
-    def add_topology(self, name, topology):
-        self.topologies[name] = topology  # { SENDER -> {
-                                          #         'hosts': [HOST, HOST, ...]
-                                          #         'quality': { HOST -> QUALITY, HOST -> QUALITY, ... }
-                                          #     }
+    def add_medium(self, name, topology, default_parameters):
+        self.mediums[name] = {
+            'topology': topology,
+            'default_parameters': default_parameters}
+                                      # { MEDIUM_NAME -> {
+                                      #  'default_parameters' -> {
+                                      #   'default_q' -> ...,
+                                      #   'default_...' -> ...,
+                                      #   'default_...' -> ...,
+                                      #  }
+                                      #
+                                      #  'topology' ->
+                                      #     { SENDER -> {
+                                      #         'hosts': [HOST, HOST, ...]
+                                      #         'q': { HOST -> QUALITY, HOST -> QUALITY, ... }
+                                      #         PARAMETER: { HOST -> QUALITY, HOST -> QUALITY, ... },
+                                      #         ...
+                                      #     } }
+                                      #  }
+                                      # }
         self.routing[name] = {}  # SENDER -> {
                                  #     NEXT -> [RECEIVER1, RECEIVER2, ...),
                                  #     ...
                                  # }
         
-    def has_topology(self, name):
-        return name in self.topologies
+    def has_medium(self, name):
+        return name in self.mediums
 
-    def get_link_quality(self, topology_name, sender, receiver):
+    def get_link_parameter_value(self, parameter, medium_name, sender, receiver=None, default=None):
+        """
+        Returns value of parameter between sender and receiver in medium.
+        When receiver is None the parameter is get for situation when sender is broadcasting.
+        """
+        def return_default():
+            defaults = self.mediums[medium_name]['default_parameters']
+            default_parameter_name = 'default_'+parameter
+            if default_parameter_name in defaults:
+                return defaults[default_parameter_name]
+            return default
+        medium = self.mediums[medium_name]
+        if sender not in medium['topology']:
+            return return_default()
+        sender_topology = medium['topology'][sender]
+        if parameter not in sender_topology:
+            return return_default()
+        sender_parameters = sender_topology[parameter]
+        if receiver not in sender_parameters:
+            return return_default()
+        return sender_parameters[receiver]
+
+    def get_link_quality(self, medium_name, sender, receiver, default=None):
         """ """
-        return self.topologies[topology_name][sender]['quality'][receiver]
+        return self.get_link_parameter_value('q', medium_name, sender, receiver, default=default)
+
+    def get_sender_links_qualities(self, medium_name, sender, exclude_broadcast=False):
+        """ """
+        medium = self.mediums[medium_name]
+        if sender not in medium['topology']:
+            return {}
+        default_quality = 1
+        defaults = medium['default_parameters']
+        if 'default_q' in defaults:
+            default_quality = defaults['default_q']
+        sender_topology = medium['topology'][sender]
+        sender_qualities = sender_topology['q'] if 'q' in sender_topology else {}
+        qualities = {}
+        for h in sender_topology['hosts']:
+            if h is None and exclude_broadcast:
+                continue
+            if h in sender_qualities:
+                qualities[h] = sender_qualities[h]
+            else:
+                qualities[h] = default_quality
+        return qualities
 
     def _find_existing_next_hop_host(self, topology_name, sender, receiver):
         """
@@ -660,32 +728,34 @@ class Router():
                 return next_hop
         return None
 
-    def get_hosts_sending_to_receiver(self, topology_name, receiver):
+    def get_hosts_sending_to_receiver(self, medium_name, receiver):
         """
         Returns ditictionary:
          host -> quality
         containing hosts that can send message to receiver.
         """
-        if not self.has_topology(topology_name):
+        if not self.has_medium(medium_name):
             return {}
         hosts = {}
-        for sender in self.topologies[topology_name]:
-            sender_topology = self.topologies[topology_name][sender]
-            if receiver in sender_topology['quality']:
-                hosts[sender] = sender_topology['quality'][receiver]
+        for sender in self.mediums[medium_name]['topology']:
+
+            q = self.get_link_quality(medium_name, sender, receiver, default=None)
+            if q is not None:
+                hosts[sender] = q
         return hosts
 
-    def get_next_hop_host(self, topology_name, sender, receiver):
+    def get_next_hop_host(self, medium_name, sender, receiver):
         """
         Returns the next host which is in the path between sender and receiver.
         If path does not exist, None is returned.
         """
         # Check if path already exists
-        existing_next_hop = self._find_existing_next_hop_host(topology_name, sender, receiver)
+        existing_next_hop = self._find_existing_next_hop_host(medium_name, sender, receiver)
         if existing_next_hop is not None:
             return existing_next_hop
+
         # Build path using Dijsktra algorithm
-        topology = self.topologies[topology_name]
+        topology = self.mediums[medium_name]['topology']
 
         def find_closest_host(distances, out):
             closest_host = None
@@ -703,7 +773,7 @@ class Router():
         closest, closes_distance = find_closest_host(distances, out)
         while (closest is not None) and (closest != receiver):
             if closest in topology:
-                qualities = topology[closest]['quality']
+                qualities = self.get_sender_links_qualities(medium_name, closest, exclude_broadcast=True)
                 for next_host in qualities:
                     if (next_host not in distances) \
                             or ((closes_distance + qualities[next_host]) < distances[next_host]):
@@ -714,8 +784,8 @@ class Router():
         # for h in distances:
         #     print h.name, distances[h]
 
-        def update_paths(topology_name, receiver, distances):
-            routing = self.routing[topology_name]
+        def update_paths(medium_name, receiver, distances):
+            routing = self.routing[medium_name]
             # Start from receiver
             current_host = receiver
             distance = distances[receiver]
@@ -724,7 +794,7 @@ class Router():
             # Repeat until we finish handling sender
             while distance > 0:
                 # Find all hosts that are connected with current host
-                previous_hosts = self.get_hosts_sending_to_receiver(topology_name, current_host)
+                previous_hosts = self.get_hosts_sending_to_receiver(medium_name, current_host)
                 for prev_host in previous_hosts:
                     # If prev host has not calculated distance, omit him
                     if prev_host not in distances:
@@ -752,8 +822,8 @@ class Router():
         if receiver not in distances:
             raise RuntimeException("The path between {0} and {1} undefined.".format(sender.name, receiver.name))
 
-        update_paths(topology_name, receiver, distances)
-        return self._find_existing_next_hop_host(topology_name, sender, receiver)
+        update_paths(medium_name, receiver, distances)
+        return self._find_existing_next_hop_host(medium_name, sender, receiver)
 
 
 class Printer():

@@ -403,7 +403,7 @@ class Version():
         self.name = name
         self.run_hosts = []
         self.metrics_sets = []
-        self.communication = {'topologies': {}} 
+        self.communication = {'mediums': {}}
         
     def __unicode__(self):
         return u"version %d" % self.name
@@ -593,14 +593,23 @@ class TopologyRuleHost():
 
 class TopologyRule():
     
-    def __init__(self, left_host, arrow, right_host, quality=1):
+    def __init__(self, left_host, arrow, right_host, parameters=None):
         self.left_host = left_host
         self.right_host = right_host
         self.arrow = arrow
-        self.quality = quality
+        self.parameters = parameters if parameters is not None else {}
 
     def __unicode__(self):
-        return u"%s %s %s : %s" % (unicode(self.left_host), self.arrow, unicode(self.right_host), str(self.quality))
+        params_list = []
+        for p in self.parameters:
+            params_list.append(u"{0}={1}".format(p, self.parameters[p]))
+        params_str = u""
+        if len(params_list) > 0:
+            params_str = u" : " + u", ".join(params_list)
+        right_host_str = u"*"
+        if self.right_host is not None:
+            right_host_str = unicode(self.right_host)
+        return u"{0} {1} {2}{3};".format(unicode(self.left_host), self.arrow, right_host_str, params_str)
       
 ################################
 #       Algorithms
