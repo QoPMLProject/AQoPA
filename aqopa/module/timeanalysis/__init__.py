@@ -1,4 +1,5 @@
 from aqopa import module
+from aqopa.module.timeanalysis.parser import ConfigParserExtension, ModelParserExtension
 from aqopa.simulator.state import HOOK_TYPE_PRE_INSTRUCTION_EXECUTION,\
     HOOK_TYPE_SIMULATION_FINISHED
 from .parser import MetricsParserExtension
@@ -33,11 +34,25 @@ class Module(module.Module):
             setattr(self, '__gui', ModuleGui(self))
         return getattr(self, '__gui', None)
     
+    def extend_model_parser(self, parser):
+        """
+        Overriden
+        """
+        parser.add_extension(ModelParserExtension())
+        return parser
+
     def extend_metrics_parser(self, parser):
         """
         Overriden
         """
         parser.add_extension(MetricsParserExtension())
+        return parser
+
+    def extend_config_parser(self, parser):
+        """
+        Overriden
+        """
+        parser.add_extension(ConfigParserExtension())
         return parser
     
     def _install(self, simulator):

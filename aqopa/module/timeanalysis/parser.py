@@ -21,9 +21,152 @@ class Builder():
             return MetricsServiceParam(token[2], token[4], (token[6], token[8]))
 
 
+class ModelParserExtension(LexYaccParserExtension):
+    """
+    Extension for timeanalysis module communications time
+    """
+
+    #######################
+    #  Communication Time
+    #######################
+
+    def time_default_parameter(self, t):
+        """
+        medium_default_parameter : TIME_DEFAULT_PARAMETER EQUAL comm_time_value
+        """
+        t[0] = {'default_t': t[3]}
+
+    def comm_time_value(self, t):
+        """
+        comm_time_value : comm_time_metric
+                            | comm_time_algorithm
+        """
+        t[0] = t[1]
+
+    def comm_time_metric(self, t):
+        """
+        comm_time_metric : number comm_time_metric_unit
+        """
+        t[0] = {
+            'type': 'metric',
+            'value': t[1],
+            'unit': t[2]
+        }
+
+    def comm_time_metric_unit(self, t):
+        """
+        comm_time_metric_unit : MS
+                                | MSPBIT
+                                | MSPBYTE
+                                | KBYTEPS
+                                | MBYTEPS
+        """
+        t[0] = t[1]
+
+    def comm_time_algorithm(self, t):
+        """
+        comm_time_algorithm : IDENTIFIER
+        """
+        t[0] = {
+            'type': 'algorithm',
+            'name': t[1],
+        }
+
+    def _extend(self):
+        """ """
+
+        self.parser.add_reserved_word('ms', 'MS', state='communication', case_sensitive=True)
+        self.parser.add_reserved_word('mspb', 'MSPBIT', state='communication', case_sensitive=True)
+        self.parser.add_reserved_word('mspB', 'MSPBYTE', state='communication', case_sensitive=True)
+        self.parser.add_reserved_word('kbps', 'KBYTEPS', state='communication', case_sensitive=True)
+        self.parser.add_reserved_word('mbps', 'MBYTEPS', state='communication', case_sensitive=True)
+        self.parser.add_reserved_word('default_t', 'TIME_DEFAULT_PARAMETER', state='communication',)
+
+        self.parser.add_rule(self.time_default_parameter)
+        self.parser.add_rule(self.comm_time_value)
+        self.parser.add_rule(self.comm_time_metric)
+        self.parser.add_rule(self.comm_time_metric_unit)
+        self.parser.add_rule(self.comm_time_algorithm)
+
+
+class ConfigParserExtension(LexYaccParserExtension):
+    """
+    Extension for timeanalysis module communications time
+    """
+
+    #######################
+    #  Communication Time
+    #######################
+
+    def version_time_default_parameter(self, t):
+        """
+        version_medium_default_parameter : TIME_DEFAULT_PARAMETER EQUAL version_comm_time_value
+        """
+        t[0] = {'default_t': t[3]}
+
+    def version_topology_rule_time_parameter(self, t):
+        """
+        version_topology_rule_parameter : TIME_PARAMETER EQUAL version_comm_time_value
+        """
+        t[0] = {'t': t[3]}
+
+    def version_comm_time_value(self, t):
+        """
+        version_comm_time_value : version_comm_time_metric
+                            | version_comm_time_algorithm
+        """
+        t[0] = t[1]
+
+    def version_comm_time_metric(self, t):
+        """
+        version_comm_time_metric : number version_comm_time_metric_unit
+        """
+        t[0] = {
+            'type': 'metric',
+            'value': t[1],
+            'unit': t[2]
+        }
+
+    def version_comm_time_metric_unit(self, t):
+        """
+        version_comm_time_metric_unit : MS
+                                | MSPBIT
+                                | MSPBYTE
+                                | KBYTEPS
+                                | MBYTEPS
+        """
+        t[0] = t[1]
+
+    def version_comm_time_algorithm(self, t):
+        """
+        version_comm_time_algorithm : IDENTIFIER
+        """
+        t[0] = {
+            'type': 'algorithm',
+            'name': t[1],
+        }
+
+    def _extend(self):
+        """ """
+
+        self.parser.add_reserved_word('ms', 'MS', state='versioncommunication', case_sensitive=True)
+        self.parser.add_reserved_word('mspb', 'MSPBIT', state='versioncommunication', case_sensitive=True)
+        self.parser.add_reserved_word('mspB', 'MSPBYTE', state='versioncommunication', case_sensitive=True)
+        self.parser.add_reserved_word('kbps', 'KBYTEPS', state='versioncommunication', case_sensitive=True)
+        self.parser.add_reserved_word('mbps', 'MBYTEPS', state='versioncommunication', case_sensitive=True)
+        self.parser.add_reserved_word('default_t', 'TIME_DEFAULT_PARAMETER', state='versioncommunication',)
+        self.parser.add_reserved_word('t', 'TIME_PARAMETER', state='versioncommunication',)
+
+        self.parser.add_rule(self.version_time_default_parameter)
+        self.parser.add_rule(self.version_topology_rule_time_parameter)
+        self.parser.add_rule(self.version_comm_time_value)
+        self.parser.add_rule(self.version_comm_time_metric)
+        self.parser.add_rule(self.version_comm_time_metric_unit)
+        self.parser.add_rule(self.version_comm_time_algorithm)
+
 class MetricsParserExtension(LexYaccParserExtension):
     """
-    Extension for parsing timeanalysis module's metrics
+    Extension for parsing timeanalysis module metrics
     """
     
     def __init__(self):
