@@ -243,10 +243,10 @@ class AssignmentInstruction():
 
 class CommunicationInstruction():
     
-    def __init__(self, communication_type, channel_name, variables_names, filters):
+    def __init__(self, communication_type, channel_name, variable_name, filters):
         self.communication_type = communication_type
         self.channel_name = channel_name
-        self.variables_names = variables_names
+        self.variable_name = variable_name
         self.filters = filters
         
     def clone(self):
@@ -258,7 +258,7 @@ class CommunicationInstruction():
                 filters.append(f.clone())
         return CommunicationInstruction(copy.copy(self.communication_type),
                                         copy.copy(self.channel_name), 
-                                        copy.deepcopy(self.variables_names),
+                                        copy.copy(self.variable_name),
                                         filters)
         
     def is_out(self):
@@ -271,10 +271,10 @@ class CommunicationInstruction():
                 filters_str = u", ".join([unicode(f) for f in self.filters])
                 filters_str = u": |%s|" % filters_str
             return u"in (%s: %s%s);" % (unicode(self.channel_name),
-                                        unicode(', '.join(self.variables_names)),
+                                        unicode(self.variable_name),
                                         filters_str)
         else:
-            return u"out (%s: %s);" % (unicode(self.channel_name), unicode(', '.join(self.variables_names)))
+            return u"out (%s: %s);" % (unicode(self.channel_name), unicode(self.variable_name))
 
 
 class IfInstruction():

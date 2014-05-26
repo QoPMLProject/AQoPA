@@ -19,16 +19,16 @@ class ChannelMessage():
         self.expression = expression  # The sent expression
         self.expression_checker = expression_checker  # checker used to check if message passes given filters
 
-        self.given_to_hosts = []  # List of hosts that this expression has been given to
+        self.not_for_hosts = []  # List of hosts that this expression has been given to or should not been used by
 
-    def use_by_host(self, host):
-        self.given_to_hosts.append(host)
+    def cancel_for_host(self, host):
+        self.not_for_hosts.append(host)
 
-    def is_used_by_host(self, host):
-        return host in self.given_to_hosts
+    def is_for_host(self, host):
+        return host not in self.not_for_hosts
 
     def is_used(self):
-        return len(self.given_to_hosts)
+        return len(self.not_for_hosts)
 
     def pass_filters(self, filters):
         """
@@ -63,7 +63,7 @@ class ChannelMessageRequest():
         self.receiver = receiver
         self.instruction = communication_instruction
         self.expression_populator = expression_populator  # populator used to populate current version of filters
-        self.assigned_messages = []
+        self.assigned_message = None
 
     def get_populated_filters(self):
         """
@@ -79,38 +79,27 @@ class ChannelMessageRequest():
 
     def clean(self):
         self.is_waiting = False
-        self.assigned_messages = []
+        self.assigned_message = None
 
     def start_waiting(self):
         self.is_waiting = True
 
-    def get_messages_from_buffer(self, buffer):
+    def get_message_from_buffer(self, buffer):
         """
         Adds messages from the given list and returns number of added messages.
-        The return value may be equal to:
-         - the number of messages need to fulfill the request, if the request is active
-            (the receiver is actually waiting on IN instruction connected with this request)
-         - the number of messages in buffer, if the buffer contains less messages that are needed
-         - zero, when the receiver is not waiting on the IN instruction connected with this request
-            (request stays in asynchronous channels only to save the messages in the buffers)
         """
         # Get messages only if receiver is actually waiting
         if self.is_waiting:
-            needed_messages_nb = len(self.instruction.variables_names) - len(self.assigned_messages)
-            assigned_cnt = 0
-            for i in range(0, needed_messages_nb):
-                if len(buffer) == 0:
-                    break
-                self.assigned_messages.append(buffer.pop(0))
-                assigned_cnt += 1
-            return assigned_cnt
-        return 0
+            if self.assigned_message is None and len(buffer) > 0:
+                self.assigned_message = buffer.pop(0)
+                return True
+        return False
 
     def ready_to_fulfill(self):
         """
         Return True when request has as many messages as he is waiting for.
         """
-        return len(self.instruction.variables_names) == len(self.assigned_messages)
+        return self.assigned_message is not None
 
     def fulfill(self):
         """
@@ -119,12 +108,9 @@ class ChannelMessageRequest():
         if not self.ready_to_fulfill():
             raise RuntimeException("Request of host {0} in instruction {1} is not ready to fulfill."
                                    .format(self.receiver.name, unicode(self.instruction)))
-        for i in range(0, len(self.assigned_messages)):
-            variable_name = self.instruction.variables_names[i]
-            message = self.assigned_messages[i]
 
-            # Set variable sent in message
-            self.receiver.set_variable(variable_name, message.expression.clone())
+        # Set variable sent in message
+        self.receiver.set_variable(self.instruction.variable_name, self.assigned_message.expression.clone())
 
         # Move instructions context to the next instruction
         self.receiver.get_instructions_context_of_instruction(self.instruction)\
@@ -195,9 +181,17 @@ class Channel():
         """
         return self._dropped_messages_cnt
 
+    def get_buffer_for_host(self, host):
+        """
+        Returns the content of buffer assigned to host.
+        """
+        if host not in self._buffers:
+            self._buffers[host] = []
+        return self._buffers[host]
+
     def get_existing_request_for_instruction(self, receiver, instruction):
         """
-        Returns True if channel is waiting for message.
+        Returns request on which channel is waiting for message or None if it is not waiting.
         """
         for i in range(0, len(self._waiting_requests)):
             request = self._waiting_requests[i]
@@ -236,27 +230,38 @@ class Channel():
 
         # Check if request can be bound with expressions
         self._bind_messages_with_receivers()
+
+    def get_filtered_requests(self, message):
+        """
+        Returns list of requests that can accept the message
+        """
+        requests = []
+        for request in self._waiting_requests:
+            # Check if message has not been declined for waiting host
+            if not message.is_for_host(request.receiver):
+                continue
+            # Check if message passes the filters
+            filters = request.get_populated_filters()
+            if not message.pass_filters(filters):
+                continue
+            requests.append(request)
+        return requests
     
-    def send_messages(self, sender_host, messages):
+    def send_message(self, sender_host, message):
         """
         Accept message with expressions.
         """
         if not self.is_connected_with_host(sender_host):
             raise RuntimeException("Channel '%s' is not connected with host '%s'." % (self.name, sender_host.name))
 
-        # Put sent messages in the buffers of receivers
+        # Put sent message in the buffers of receivers
         # Receivers are retrieved from the requests present in the channel
         # When the channel is synchronous the buffers are cleaned after the binding try
         # and requests are removed after they are fulfilled
-        for message in messages:
-            for request in self._waiting_requests:
-                # Check if message passes the filters
-                filters = request.get_populated_filters()
-                if not message.pass_filters(filters):
-                    continue
-                if request.receiver not in self._buffers:
-                    self._buffers[request.receiver] = []
-                self._buffers[request.receiver].append(message)
+        for request in self.get_filtered_requests(message):
+            if request.receiver not in self._buffers:
+                self._buffers[request.receiver] = []
+            self._buffers[request.receiver].append(message)
 
         # Check if request can be bound with expressions
         self._bind_messages_with_receivers()
@@ -268,10 +273,10 @@ class Channel():
         # Update all requests
         for request in self._waiting_requests:
             # Add messages from buffer to request
-            # Add not more that request wants (usually it is one message)
+            # Add not more that request wants (it is one message)
             if request.receiver not in self._buffers:
                 self._buffers[request.receiver] = []
-            request.get_messages_from_buffer(self._buffers[request.receiver])
+            request.get_message_from_buffer(self._buffers[request.receiver])
 
             # Here the request is filled with all requested messages
             # or there was not enough messages in the buffer
@@ -654,7 +659,7 @@ class Router():
                                       #     { SENDER -> {
                                       #         'hosts': [HOST, HOST, ...]
                                       #         'q': { HOST -> QUALITY, HOST -> QUALITY, ... }
-                                      #         PARAMETER: { HOST -> QUALITY, HOST -> QUALITY, ... },
+                                      #         PARAMETER: { HOST -> VALUE, HOST -> VALUE, ... },
                                       #         ...
                                       #     } }
                                       #  }

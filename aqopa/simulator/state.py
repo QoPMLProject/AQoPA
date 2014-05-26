@@ -669,18 +669,15 @@ class CommunicationInstructionExecutor(InstructionExecutor):
                                    custom_index_management=True)
         
         if instruction.communication_type == COMMUNICATION_TYPE_OUT:
-            if kwargs is not None and 'sent_messages' in kwargs:
-                messages = kwargs['sent_messages']
+            if kwargs is not None and 'sent_message' in kwargs:
+                message = kwargs['sent_message']
             else:
-                messages = []
-                for p in instruction.variables_names:
-                    # Expressions as variables values are already populated
-                    messages.append(context.channels_manager.build_message(
-                        context.get_current_host(),
-                        context.get_current_host().get_variable(p).clone(),
-                        context.expression_checker))
-                kwargs['sent_messages'] = messages
-            channel.send_messages(context.get_current_host(), messages)
+                message = context.channels_manager.build_message(
+                    context.get_current_host(),
+                    context.get_current_host().get_variable(instruction.variable_name).clone(),
+                    context.expression_checker)
+                kwargs['sent_message'] = message
+            channel.send_message(context.get_current_host(), message)
 
             # Go to next instruction
             context.get_current_host().get_current_instructions_context().goto_next_instruction()
