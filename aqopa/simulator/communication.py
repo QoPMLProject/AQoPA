@@ -19,13 +19,13 @@ class ChannelMessage():
         self.expression = expression  # The sent expression
         self.expression_checker = expression_checker  # checker used to check if message passes given filters
 
-        self.not_for_hosts = []  # List of hosts that this expression has been given to or should not been used by
+        self.not_for_requests = []  # List of requests that this expression should not been used by
 
-    def cancel_for_host(self, host):
-        self.not_for_hosts.append(host)
+    def cancel_for_request(self, request):
+        self.not_for_requests.append(request)
 
-    def is_for_host(self, host):
-        return host not in self.not_for_hosts
+    def is_for_request(self, request):
+        return request not in self.not_for_requests
 
     def is_used(self):
         return len(self.not_for_hosts)
@@ -238,7 +238,7 @@ class Channel():
         requests = []
         for request in self._waiting_requests:
             # Check if message has not been declined for waiting host
-            if not message.is_for_host(request.receiver):
+            if not message.is_for_request(request):
                 continue
             # Check if message passes the filters
             filters = request.get_populated_filters()

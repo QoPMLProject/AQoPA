@@ -91,7 +91,7 @@ class ModelParserExtension(LexYaccParserExtension):
                                 | medium_default_parameters medium_default_parameter SEMICOLON
         """
         t[0] = t[1]
-        if len(t) == 3:
+        if len(t) == 4:
             t[0].update(t[2])
 
     def quality_default_parameter(self, t):

@@ -240,44 +240,45 @@ class PreInstructionHook(Hook):
 
         return time, time_details
 
-    def _get_time_for_communication_step(self, context, channel, metric, message):
+    def _get_time_for_communication_step(self, context, channel, metric, message, receiver=None):
         """ Returns time of sending/receiving message """
 
-        print metric
-        return 1000
+        if metric['type'] == 'metric':
+            unit = metric['unit']
+            if unit == 'ms':
+                # exact time
+                return metric['value']
+            else:
+                # time depending on the size
+                populated_expression = context.expression_populator.populate(message.expression, message.sender)
+                # size in bytes
+                size = context.metrics_manager.get_expression_size(populated_expression, context, message.sender)
 
-        # time = 0
-        # block = metric.block
-        # for i in range(0, len(block.service_params)):
-        #     sparam = block.service_params[i]
-        #     if sparam.service_name.lower().strip() != "time":
-        #         continue
-        #
-        #     metric_type = sparam.param_name.lower().strip()
-        #     metric_unit = sparam.unit
-        #     metric_value = metric.service_arguments[i].strip()
-        #
-        #     if metric_type in ["exact", "range"]:
-        #
-        #         time = self._get_time_for_exact_range_metric(metric_type, metric_unit, metric_value, message.expression, sender, context)
-        #
-        #     elif metric_type == "algorithm":
-        #
-        #         if not context.channels_manager.has_algorithm(metric_value):
-        #             raise RuntimeException("Communication algorithm {0} undeclared.".format(metric_value))
-        #
-        #         link_quality = None
-        #         if request is not None:
-        #             link_quality = context.channels_manager.get_router().get_link_quality(channel.tag_name,
-        #                                                                                   message.sender,
-        #                                                                                   request.receiver)
-        #         return context.channels_manager.get_algorithm_resolver()\
-        #             .get_time(context, sender, metric_value, message.expression, link_quality=link_quality)
-        #
-        #     elif metric_type == "block":
-        #
-        #         time = self._get_time_for_block_metric(metric_type, metric_unit, metric_value, message.expression, sender, context)
-        # return time
+                mspB = 0
+                if unit == 'mspB':
+                    mspB = float(metric['value'])
+                elif unit == 'mspb':
+                    mspB = float(metric['value']) * 8.0
+                elif unit == 'kbps':
+                    mspB = 1.0 / (float(metric['value']) * 0.128)
+                elif unit == 'mbps':
+                    mspB = 1.0 / (float(metric['value']) * 0.000128)
+
+                return mspB * size
+
+        elif metric['type'] == 'algorithm':
+            algorithm_name = metric['name']
+            if not context.channels_manager.has_algorithm(algorithm_name):
+                raise RuntimeException("Communication algorithm {0} undeclared.".format(algorithm_name))
+
+            link_quality = context.channels_manager.get_router().get_link_quality(channel.tag_name,
+                                                                                  message.sender,
+                                                                                  receiver)
+            return context.channels_manager.get_algorithm_resolver()\
+                .get_time(context, message.sender, algorithm_name, message.expression, link_quality=link_quality)
+
+        else:
+            return 0
 
     def _find_communication_metric(self, context, channel, sender, receiver=None):
         """
@@ -290,21 +291,21 @@ class PreInstructionHook(Hook):
         metric = self._find_communication_metric(context, channel, message.sender, receiver=request.receiver)
         if metric is None:
             return 0
-        return self._get_time_for_communication_step(context, channel, metric, message)
+        return self._get_time_for_communication_step(context, channel, metric, message, receiver=request.receiver)
 
     def _get_time_of_sending_boradcast(self, context, channel, message):
         """ Returns time of message sending process """
         metric = self._find_communication_metric(context, channel, message.sender, receiver=None)
         if metric is None:
             return 0
-        return self._get_time_for_communication_step(context, channel, metric, message)
+        return self._get_time_for_communication_step(context, channel, metric, message, receiver=None)
 
     def _get_time_of_receiving(self, context, channel, message, request):
         """ Returns time of message receiving process """
         metric = self._find_communication_metric(context, channel, message.sender, receiver=request.receiver)
         if metric is None:
             return 0
-        return self._get_time_for_communication_step(context, channel, metric, message)
+        return self._get_time_for_communication_step(context, channel, metric, message, receiver=request.receiver)
 
     def _execute_communication_instruction(self, context, **kwargs):
         """ """
@@ -340,6 +341,7 @@ class PreInstructionHook(Hook):
             host_time = self.module.get_current_time(self.simulator, h)
 
             # If hosts have the same time - the IN instruction should be executed before OUT execution
+            # and other instructions (non-communication) should be executed before as well
             if host_time == min_hosts_time[1]:
                 host_current_instruction = h.get_current_instructions_context().get_current_instruction()
                 if isinstance(host_current_instruction, CommunicationInstruction):
@@ -349,6 +351,8 @@ class PreInstructionHook(Hook):
                         if host_channel:
                             if not host_channel.is_waiting_on_instruction(h, host_current_instruction):
                                 delay_communication_execution = True
+                else:
+                    delay_communication_execution = True
 
             # If checked (in loop) host is in the past relative to the time of actual host
             if host_time < min_hosts_time[1]:
@@ -386,11 +390,6 @@ class PreInstructionHook(Hook):
         # Now the host with minimal time is executed
         ##############################################
 
-        sent_message = None
-        message_request = None
-
-        #TODO: Cancel should be for request?
-
         if instruction.is_out():
             # OUT instruction
             sender = context.get_current_host()
@@ -405,12 +404,15 @@ class PreInstructionHook(Hook):
                 kwargs['sent_message'] = sent_message
 
             sender_time = self.module.get_current_time(self.simulator, sender)
+            # DEBUG #
+            print 'sending message from ', sender.name, 'at', sender_time
+            # DEBUG #
 
             all_requests = channel.get_filtered_requests(sent_message)
             accepted_requests = []
             for request in all_requests:
                 if self.module.get_request_created_time(self.simulator, request) > sender_time:
-                    sent_message.cancel_for_host(request.receiver)
+                    sent_message.cancel_for_request(request)
                 else:
                     accepted_requests.append(request)
 
@@ -428,10 +430,16 @@ class PreInstructionHook(Hook):
                         receiving_time = self._get_time_of_receiving(context, channel, sent_message, request)
                         receiving_time = max(receiving_time, broadcast_time)
 
+                        started_waiting_at = self.module.get_request_created_time(self.simulator, request)
                         receiver_time = self.module.get_current_time(self.simulator, request.receiver)
+                        receiver_time = max(receiver_time, sender_time)
                         self.module.set_current_time(self.simulator, request.receiver,
                                                      receiver_time + receiving_time)
-
+                        # Add timetrace to module
+                        self.module.add_channel_message_trace(self.simulator, channel, sent_message,
+                                                              sent_message.sender, sender_time, broadcast_time,
+                                                              request.receiver, started_waiting_at,
+                                                              receiver_time, receiving_time)
             elif len(accepted_requests) == 1:
                 # point to point
                 # Send message with link metric, update sender's time and fill in the sending time in message
@@ -447,8 +455,21 @@ class PreInstructionHook(Hook):
                 receiving_time = max(receiving_time, sending_time)
 
                 receiver_time = self.module.get_current_time(self.simulator, request.receiver)
+                receiver_time = max(receiver_time, sender_time)
                 self.module.set_current_time(self.simulator, request.receiver,
                                              receiver_time + receiving_time)
+
+                started_waiting_at = self.module.get_request_created_time(self.simulator, request)
+                # Add timetrace to module
+                self.module.add_channel_message_trace(self.simulator, channel, sent_message,
+                                                      sent_message.sender, sender_time, sending_time,
+                                                      request.receiver, started_waiting_at,
+                                                      receiver_time, receiving_time)
+                # DEBUG #
+                print 'msg from', sent_message.sender.name, 'to', request.receiver.name, \
+                    'at', sender_time, '(', sending_time, 'ms ) ', 'and started receiving at', \
+                    receiver_time, '(t:', receiving_time, 'ms, wait since:', started_waiting_at, 'ms)'
+                # DEBUG #
 
             else:  # zero receivers
                 # Send message with broadcast metric and update sender's time - no receivers
@@ -471,32 +492,40 @@ class PreInstructionHook(Hook):
             # If waiting request has NOT been created and added before
             if not channel.is_waiting_on_instruction(request.receiver, request.instruction):
                 receiver = context.get_current_host()
-                # DEBUG #
-                # print 'request in', receiver.name, 'at', self.module.get_current_time(self.simulator, receiver)
-                # DEBUG #
                 self.module.add_request_created_time(self.simulator, request,
                                                      self.module.get_current_time(self.simulator, receiver))
 
             if request.assigned_message is None:
-                # TODO: check time of sent
-                buffer = channel.get_buffer_for_host(request.receiver)
-                if len(buffer) > 0:
-                    sending_time = self.module.get_message_sending_time(self.simulator, buffer[0])
-                    receiving_time = self._get_time_of_receiving(context, channel, buffer[0], request)
+                # Set messages from the past as cancelled for this request
+                full_buffer = channel.get_buffer_for_host(request.receiver)
+                accepted_buffer = []
+                for message in full_buffer:
+                    if self.module.get_request_created_time(self.simulator, request) > \
+                            self.module.get_message_sent_time(self.simulator, message):
+                        message.cancel_for_request(request)
+                    else:
+                        accepted_buffer.append(message)
+
+                if len(accepted_buffer) > 0:
+                    message = accepted_buffer[0]
+                    sending_time = self.module.get_message_sending_time(self.simulator, message)
+                    receiving_time = self._get_time_of_receiving(context, channel, message, request)
                     receiving_time = max(receiving_time, sending_time)
 
                     receiver_time = self.module.get_current_time(self.simulator, request.receiver)
                     self.module.set_current_time(self.simulator, request.receiver,
                                                  receiver_time + receiving_time)
 
+                    # Add timetrace to module
+                    message_sent_time = self.module.get_message_sent_time(self.simulator, message)
+                    started_waiting_at = self.module.get_request_created_time(self.simulator, request)
+                    self.module.add_channel_message_trace(self.simulator, channel, message,
+                                                          message.sender, message_sent_time, sending_time,
+                                                          request.receiver, started_waiting_at,
+                                                          receiver_time, receiving_time)
 
 
-        # TODO: Add timetrace
-        #         # Add timetrace to module
-        #         self.module.add_channel_message_trace(self.simulator, channel, msg,
-        #                                               msg.sender, message_time, sending_time,
-        #                                               request.receiver, started_waiting_at,
-        #                                               started_receiving_at, receiving_time)
+
 
 
         # # Check if channel is synchronous and if it is,
