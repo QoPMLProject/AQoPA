@@ -18,7 +18,7 @@ version DirectJoinToSink_128b {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = 256kbps;
+            default_t = wsn_time;
 
             topology
             {
@@ -44,7 +44,7 @@ version DirectJoinToSink_160b {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = 256kbps;
+            default_t = wsn_time;
 
             topology
             {
@@ -76,12 +76,12 @@ version IndirectJoinToSink_Original_128b_10 {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = 256kbps;
+            default_t = wsn_time;
 
             topology
             {
-                NewNode <-> Neighbour : q=1, t=10mspb;
-                Neighbour <-> J_OriginalForwarder[0] : q=1, t=wsn_time;
+                NewNode <-> Neighbour;
+                Neighbour <-> J_OriginalForwarder[0];
                 J_OriginalForwarder <-> J_OriginalForwarder[i+1];
                 J_OriginalForwarder[9] <-> Sink ;
             }
@@ -108,7 +108,7 @@ version IndirectJoinToSink_Original_160b_10 {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = 256kbps;
+            default_t = wsn_time;
 
             topology
             {
@@ -143,7 +143,7 @@ version IndirectJoinToSink_NK_EncDec_128b_10 {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = 256kbps;
+            default_t = wsn_time;
 
             topology
             {
@@ -175,7 +175,7 @@ version IndirectJoinToSink_NK_EncDec_160b {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = 256kbps;
+            default_t = wsn_time;
 
             topology
             {
@@ -210,7 +210,7 @@ version IndirectJoinToSink_SessKey_EncDec_128b {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = 256kbps;
+            default_t = wsn_time;
 
             topology
             {
@@ -242,7 +242,7 @@ version IndirectJoinToSink_SessKey_EncDec_160b {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = 256kbps;
+            default_t = wsn_time;
 
             topology
             {
@@ -277,7 +277,7 @@ version IndirectJoinToSink_Onion_128b {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = 256kbps;
+            default_t = wsn_time;
 
             topology
             {
@@ -309,7 +309,7 @@ version IndirectJoinToSink_Onion_160b {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = 256kbps;
+            default_t = wsn_time;
 
             topology
             {
