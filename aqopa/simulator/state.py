@@ -561,17 +561,6 @@ class AssignmentInstructionExecutor(InstructionExecutor):
         instruction = context.get_current_instruction()
         expression = self._compute_current_expression(instruction.expression, context)
         
-#        h = context.get_current_host()
-#        v = instruction.variable_name
-#        e = unicode(expression)
-#        print "%s: %s = %s" % (h.name, v, e)
-
-#        print "%s - %s: %s <- %s" % (id(context.get_current_host()), 
-#                                     context.get_current_host().name, 
-#                                     instruction.variable_name, unicode(expression))
-
-        # print 'Host ', context.get_current_host().name, ' setting variable ', \
-        #     instruction.variable_name, ' = ', unicode(expression), ' (', getattr(expression, '_host_name', 'None'), ')'
         context.get_current_host().set_variable(instruction.variable_name, expression)
         context.get_current_host().mark_changed()
         
