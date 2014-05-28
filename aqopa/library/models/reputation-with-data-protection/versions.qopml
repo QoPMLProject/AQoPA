@@ -6,7 +6,7 @@ version Secure {
 	set host Server(Poster);
 
 	run host Client(*) {
-	  run CSecure(){100}[ch1, ch2, ch3, ch4, ch5]
+	  run CSecure(){100}
 	}
 	run host Server(*){
 	  run SSecure()
@@ -19,7 +19,7 @@ version Unsecure {
 	set host Server(Poster);
 
 	run host Client(*) {
-	  run CUnsecure(){100}[ch6]
+	  run CUnsecure(){100}
 	}
 	run host Server(*){
 	  run SUnsecure()
@@ -32,8 +32,8 @@ version Mixed {
 	set host Server(Poster);
 
 	run host Client(*) {
-	  run CSecure(){50}[ch1, ch2, ch3, ch4, ch5]
-	  run CUnsecure(){50}[ch6]
+	  run CSecure(){50}
+	  run CUnsecure(){50}
 	}
 	run host Server(*){
 	  run SSecure()
