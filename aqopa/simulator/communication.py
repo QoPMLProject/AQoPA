@@ -89,10 +89,16 @@ class ChannelMessageRequest():
         Adds messages from the given list and returns number of added messages.
         """
         # Get messages only if receiver is actually waiting
+        filters = self.get_populated_filters()
         if self.is_waiting:
             if self.assigned_message is None and len(buffer) > 0:
-                self.assigned_message = buffer.pop(0)
-                return True
+                for message in buffer:
+                    # Check if message passes the filters
+                    if not message.pass_filters(filters):
+                        continue
+                    self.assigned_message = message
+                    buffer.remove(message)
+                    return True
         return False
 
     def ready_to_fulfill(self):
@@ -246,7 +252,21 @@ class Channel():
                 continue
             requests.append(request)
         return requests
-    
+
+    def get_filtered_messages(self, request):
+        """
+        Returns list of messages from buffer that can be assigned to request
+        """
+        messages = []
+        buffer = self.get_buffer_for_host(request.receiver)
+        filters = request.get_populated_filters()
+        for message in buffer:
+            # Check if message passes the filters
+            if not message.pass_filters(filters):
+                continue
+            messages.append(message)
+        return messages
+
     def send_message(self, sender_host, message):
         """
         Accept message with expressions.

@@ -468,7 +468,8 @@ class PreInstructionHook(Hook):
                 # DEBUG #
                 # print 'msg from', sent_message.sender.name, 'to', request.receiver.name, \
                 #     'at', sender_time, '(', sending_time, 'ms ) ', 'and started receiving at', \
-                #     receiver_time, '(t:', receiving_time, 'ms, wait since:', started_waiting_at, 'ms)'
+                #     receiver_time, '(t:', receiving_time, 'ms, wait since:', started_waiting_at, 'ms)', \
+                #     'message', unicode(sent_message.expression)
                 # DEBUG #
 
             else:  # zero receivers
@@ -497,17 +498,17 @@ class PreInstructionHook(Hook):
 
             if request.assigned_message is None:
                 # Set messages from the past as cancelled for this request
-                full_buffer = channel.get_buffer_for_host(request.receiver)
-                accepted_buffer = []
-                for message in full_buffer:
+                all_messages = channel.get_filtered_messages(request)
+                accepted_messages = []
+                for message in all_messages:
                     if self.module.get_request_created_time(self.simulator, request) > \
                             self.module.get_message_sent_time(self.simulator, message):
                         message.cancel_for_request(request)
                     else:
-                        accepted_buffer.append(message)
+                        accepted_messages.append(message)
 
-                if len(accepted_buffer) > 0:
-                    message = accepted_buffer[0]
+                if len(accepted_messages) > 0:
+                    message = accepted_messages[0]
                     sending_time = self.module.get_message_sending_time(self.simulator, message)
                     receiving_time = self._get_time_of_receiving(context, channel, message, request)
                     receiving_time = max(receiving_time, sending_time)
