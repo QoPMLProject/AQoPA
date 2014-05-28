@@ -1,0 +1,17 @@
+versions {
+
+    version Test1 {
+
+        set host Client(m1);
+        set host Server(m1);
+
+        run host Client(*) {
+            run Main()
+        }
+
+        run host Server(*) {
+            run Main()
+        }
+    }
+
+}

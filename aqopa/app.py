@@ -196,6 +196,7 @@ class Builder():
                         
                 # Get channels assigned to process and its follower (if needed)
                 process_channels = get_channels_assigned_to_process(run_process, parsed_process, channels)
+                follower_channels = []
                 if run_process.follower:
                     follower_parsed_process = find_process(parsed_host.instructions_list, run_process.follower.process_name)
                     follower_channels = get_channels_assigned_to_process(run_process.follower, follower_parsed_process, channels)
@@ -356,6 +357,8 @@ class Builder():
             return found_hosts
         
         def find_right_hosts(topology_host, hosts, current_host):
+            if topology_host is None:
+                return []
             found_hosts = []
             for host in hosts:
                 # If host has the same identifier
@@ -381,12 +384,15 @@ class Builder():
                             found_hosts.append(host)
             return found_hosts
         
-        def add_connection(topology, from_host, to_host, quality):
+        def add_connection(topology, from_host, to_host, parameters):
             if from_host not in topology:
-                topology[from_host] = {'hosts': [], 'quality': {}}
+                topology[from_host] = {'hosts': [], 'parameters': {}}
             if to_host not in topology[from_host]['hosts']:
                 topology[from_host]['hosts'].append(to_host)
-                topology[from_host]['quality'][to_host] = quality
+                for parameter in parameters:
+                    if parameter not in topology[from_host]['parameters']:
+                        topology[from_host]['parameters'][parameter] = {}
+                    topology[from_host]['parameters'][parameter][to_host] = parameters[parameter]
             return topology
 
         topology = {}
@@ -394,9 +400,9 @@ class Builder():
             for left_host in find_left_hosts(rule.left_host, hosts):
                 for right_host in find_right_hosts(rule.right_host, hosts, left_host):
                     if rule.arrow == '->' or rule.arrow == '<->':
-                        topology = add_connection(topology, left_host, right_host, rule.quality)
+                        topology = add_connection(topology, left_host, right_host, rule.parameters)
                     if rule.arrow == '<-' or rule.arrow == '<->':
-                        topology = add_connection(topology, right_host, left_host, rule.quality)
+                        topology = add_connection(topology, right_host, left_host, rule.parameters)
         return topology
         
     
@@ -405,13 +411,15 @@ class Builder():
         Build channels manager
         """
         mgr = communication.Manager(channels)
-        for n in version.communication['topologies']:
-            topology_rules = version.communication['topologies'][n]['rules']
-            mgr.add_topology(n, self._build_topology(topology_rules, built_hosts))
-        for n in store.topologies:
-            if not mgr.has_topology(n):
-                topology_rules = store.topologies[n]['rules']
-                mgr.add_topology(n, self._build_topology(topology_rules, built_hosts))
+        for name in version.communication['mediums']:
+            topology_rules = version.communication['mediums'][name]['topology']['rules']
+            default_params = version.communication['mediums'][name]['default_parameters']
+            mgr.add_medium(name, self._build_topology(topology_rules, built_hosts), default_params)
+        for name in store.mediums:
+            if not mgr.has_medium(name):
+                topology_rules = store.mediums[name]['topology']['rules']
+                default_params = store.mediums[name]['default_parameters']
+                mgr.add_medium(name, self._build_topology(topology_rules, built_hosts), default_params)
         for alg_name in store.communication_algorithms:
             mgr.add_algorithm(alg_name, store.communication_algorithms[alg_name])
         return mgr

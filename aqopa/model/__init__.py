@@ -243,10 +243,10 @@ class AssignmentInstruction():
 
 class CommunicationInstruction():
     
-    def __init__(self, communication_type, channel_name, variables_names, filters):
+    def __init__(self, communication_type, channel_name, variable_name, filters):
         self.communication_type = communication_type
         self.channel_name = channel_name
-        self.variables_names = variables_names
+        self.variable_name = variable_name
         self.filters = filters
         
     def clone(self):
@@ -258,7 +258,7 @@ class CommunicationInstruction():
                 filters.append(f.clone())
         return CommunicationInstruction(copy.copy(self.communication_type),
                                         copy.copy(self.channel_name), 
-                                        copy.deepcopy(self.variables_names),
+                                        copy.copy(self.variable_name),
                                         filters)
         
     def is_out(self):
@@ -271,10 +271,10 @@ class CommunicationInstruction():
                 filters_str = u", ".join([unicode(f) for f in self.filters])
                 filters_str = u": |%s|" % filters_str
             return u"in (%s: %s%s);" % (unicode(self.channel_name),
-                                        unicode(', '.join(self.variables_names)),
+                                        unicode(self.variable_name),
                                         filters_str)
         else:
-            return u"out (%s: %s);" % (unicode(self.channel_name), unicode(', '.join(self.variables_names)))
+            return u"out (%s: %s);" % (unicode(self.channel_name), unicode(self.variable_name))
 
 
 class IfInstruction():
@@ -403,7 +403,7 @@ class Version():
         self.name = name
         self.run_hosts = []
         self.metrics_sets = []
-        self.communication = {'topologies': {}} 
+        self.communication = {'mediums': {}}
         
     def __unicode__(self):
         return u"version %d" % self.name
@@ -593,14 +593,23 @@ class TopologyRuleHost():
 
 class TopologyRule():
     
-    def __init__(self, left_host, arrow, right_host, quality=1):
+    def __init__(self, left_host, arrow, right_host, parameters=None):
         self.left_host = left_host
         self.right_host = right_host
         self.arrow = arrow
-        self.quality = quality
+        self.parameters = parameters if parameters is not None else {}
 
     def __unicode__(self):
-        return u"%s %s %s : %s" % (unicode(self.left_host), self.arrow, unicode(self.right_host), str(self.quality))
+        params_list = []
+        for p in self.parameters:
+            params_list.append(u"{0}={1}".format(p, self.parameters[p]))
+        params_str = u""
+        if len(params_list) > 0:
+            params_str = u" : " + u", ".join(params_list)
+        right_host_str = u"*"
+        if self.right_host is not None:
+            right_host_str = unicode(self.right_host)
+        return u"{0} {1} {2}{3};".format(unicode(self.left_host), self.arrow, right_host_str, params_str)
       
 ################################
 #       Algorithms

@@ -1,0 +1,16 @@
+metrics {
+
+    conf (m1) {
+        CPU = 16-bit 8MHz TI MSP430;
+    }
+
+    data(m1) {
+        primhead[function][t][time:exact(ms)];
+        primitive[cpu_time][100][100];
+        #
+        primhead[function][size:exact(B)];
+        primitive[id][1];
+        primitive[blank][1];
+    }
+
+}

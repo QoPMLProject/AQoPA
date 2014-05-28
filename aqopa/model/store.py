@@ -17,7 +17,7 @@ class QoPMLModelStore():
         self.metrics_datas           = []
         self.init_version_number     = []
         
-        self.topologies = {}
+        self.mediums = {}
         self.communication_algorithms = {}
     
     

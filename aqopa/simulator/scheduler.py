@@ -23,6 +23,12 @@ class Scheduler():
         """
         raise NotImplementedError()
 
+    def get_all_contexts(self):
+        """
+        Return all contexts in this scheduler.
+        """
+        raise NotImplementedError()
+
     def get_instructions_context_of_instruction(self, instruction):
         """
         Returns instruction context with the instruction from parameter
@@ -69,6 +75,10 @@ class FifoScheduler(Scheduler):
     def get_current_context(self):
         """ """
         return self.context
+
+    def get_all_contexts(self):
+        """ """
+        return [self.context]
 
     def get_instructions_context_of_instruction(self, instruction):
         """
@@ -143,6 +153,10 @@ class RoundRobinScheduler(Scheduler):
     def get_current_context(self):
         """ """
         return self.contexts[self._current_context_index]
+
+    def get_all_contexts(self):
+        """ """
+        return self.contexts
 
     def get_instructions_context_of_instruction(self, instruction):
         """

@@ -16,9 +16,14 @@ version DirectJoinToSink_128b {
 
     communication
     {
-        topology[wsn]
-        {
-            Sink <-> NewNode;
+        medium[wsn] {
+            default_q = 1;
+            default_t = wsn_time;
+
+            topology
+            {
+                Sink <-> NewNode;
+            }
         }
     }
 
@@ -37,9 +42,14 @@ version DirectJoinToSink_160b {
 
     communication
     {
-        topology[wsn]
-        {
-            Sink <-> NewNode;
+        medium[wsn] {
+            default_q = 1;
+            default_t = wsn_time;
+
+            topology
+            {
+                Sink <-> NewNode;
+            }
         }
     }
 }
@@ -64,12 +74,17 @@ version IndirectJoinToSink_Original_128b_10 {
 
     communication
     {
-        topology[wsn]
-        {
-            NewNode <-> Neighbour;
-            Neighbour <-> J_OriginalForwarder[0];
-            J_OriginalForwarder <-> J_OriginalForwarder[i+1];
-            J_OriginalForwarder[9] <-> Sink ;
+        medium[wsn] {
+            default_q = 1;
+            default_t = wsn_time;
+
+            topology
+            {
+                NewNode <-> Neighbour;
+                Neighbour <-> J_OriginalForwarder[0];
+                J_OriginalForwarder <-> J_OriginalForwarder[i+1];
+                J_OriginalForwarder[9] <-> Sink ;
+            }
         }
     }
 }
@@ -91,12 +106,17 @@ version IndirectJoinToSink_Original_160b_10 {
 
     communication
     {
-        topology[wsn]
-        {
-            NewNode <-> Neighbour;
-            Neighbour <-> J_OriginalForwarder[0];
-            J_OriginalForwarder <-> J_OriginalForwarder[i+1];
-            J_OriginalForwarder[9] <-> Sink ;
+        medium[wsn] {
+            default_q = 1;
+            default_t = wsn_time;
+
+            topology
+            {
+                NewNode <-> Neighbour;
+                Neighbour <-> J_OriginalForwarder[0];
+                J_OriginalForwarder <-> J_OriginalForwarder[i+1];
+                J_OriginalForwarder[9] <-> Sink ;
+            }
         }
     }
 }
@@ -121,12 +141,17 @@ version IndirectJoinToSink_NK_EncDec_128b_10 {
 
     communication
     {
-        topology[wsn]
-        {
-            NewNode <-> Neighbour;
-            Neighbour <-> J_NK_EncDec[0];
-            J_NK_EncDec <-> J_NK_EncDec[i+1];
-            J_NK_EncDec[9] <-> Sink ;
+        medium[wsn] {
+            default_q = 1;
+            default_t = wsn_time;
+
+            topology
+            {
+                NewNode <-> Neighbour;
+                Neighbour <-> J_NK_EncDec[0];
+                J_NK_EncDec <-> J_NK_EncDec[i+1];
+                J_NK_EncDec[9] <-> Sink ;
+            }
         }
     }
 }
@@ -148,12 +173,17 @@ version IndirectJoinToSink_NK_EncDec_160b {
 
     communication
     {
-        topology[wsn]
-        {
-            NewNode <-> Neighbour;
-            Neighbour <-> J_NK_EncDec[0];
-            J_NK_EncDec <-> J_NK_EncDec[i+1];
-            J_NK_EncDec[9] <-> Sink ;
+        medium[wsn] {
+            default_q = 1;
+            default_t = wsn_time;
+
+            topology
+            {
+                NewNode <-> Neighbour;
+                Neighbour <-> J_NK_EncDec[0];
+                J_NK_EncDec <-> J_NK_EncDec[i+1];
+                J_NK_EncDec[9] <-> Sink ;
+            }
         }
     }
 }
@@ -178,12 +208,17 @@ version IndirectJoinToSink_SessKey_EncDec_128b {
 
     communication
     {
-        topology[wsn]
-        {
-            NewNode <-> Neighbour;
-            Neighbour <-> J_SessKey_EncDec[0];
-            J_SessKey_EncDec <-> J_SessKey_EncDec[i+1];
-            J_SessKey_EncDec[9] <-> Sink ;
+        medium[wsn] {
+            default_q = 1;
+            default_t = wsn_time;
+
+            topology
+            {
+                NewNode <-> Neighbour;
+                Neighbour <-> J_SessKey_EncDec[0];
+                J_SessKey_EncDec <-> J_SessKey_EncDec[i+1];
+                J_SessKey_EncDec[9] <-> Sink ;
+            }
         }
     }
 }
@@ -205,12 +240,17 @@ version IndirectJoinToSink_SessKey_EncDec_160b {
 
     communication
     {
-        topology[wsn]
-        {
-            NewNode <-> Neighbour;
-            Neighbour <-> J_SessKey_EncDec[0];
-            J_SessKey_EncDec <-> J_SessKey_EncDec[i+1];
-            J_SessKey_EncDec[9] <-> Sink ;
+        medium[wsn] {
+            default_q = 1;
+            default_t = wsn_time;
+
+            topology
+            {
+                NewNode <-> Neighbour;
+                Neighbour <-> J_SessKey_EncDec[0];
+                J_SessKey_EncDec <-> J_SessKey_EncDec[i+1];
+                J_SessKey_EncDec[9] <-> Sink ;
+            }
         }
     }
 }
@@ -235,12 +275,17 @@ version IndirectJoinToSink_Onion_128b {
 
     communication
     {
-        topology[wsn]
-        {
-            NewNode <-> Neighbour;
-            Neighbour <-> J_Onion[0];
-            J_Onion <-> J_Onion[i+1];
-            J_Onion[9] <-> Sink ;
+        medium[wsn] {
+            default_q = 1;
+            default_t = wsn_time;
+
+            topology
+            {
+                NewNode <-> Neighbour;
+                Neighbour <-> J_Onion[0];
+                J_Onion <-> J_Onion[i+1];
+                J_Onion[9] <-> Sink ;
+            }
         }
     }
 }
@@ -262,12 +307,17 @@ version IndirectJoinToSink_Onion_160b {
 
     communication
     {
-        topology[wsn]
-        {
-            NewNode <-> Neighbour;
-            Neighbour <-> J_Onion[0];
-            J_Onion <-> J_Onion[i+1];
-            J_Onion[9] <-> Sink ;
+        medium[wsn] {
+            default_q = 1;
+            default_t = wsn_time;
+
+            topology
+            {
+                NewNode <-> Neighbour;
+                Neighbour <-> J_Onion[0];
+                J_Onion <-> J_Onion[i+1];
+                J_Onion[9] <-> Sink ;
+            }
         }
     }
 }

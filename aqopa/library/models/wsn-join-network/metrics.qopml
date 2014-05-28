@@ -64,11 +64,11 @@ data(TelosB) {
     primitive[ecies_dec][XOR][160][0][1:1];
     primitive[ecies_dec][XOR][192][0][1:1];
     #
-    primhead[function][channel_tag][time:algorithm(ms)][energy:current(mA)];
+    primhead[function][channel_tag][time:algorithm(ms)][energy:exact(mA)];
     primitive[out][wsn][wsn_time][22.8];
     primitive[in][wsn][wsn_time][22.8];
     #
-    primhead[function][energy:current(mA)];
+    primhead[function][energy:exact(mA)];
     primitive[cpu][2.4];
 }
 
@@ -90,7 +90,7 @@ data(PC) {
     primhead[function][alg][key_size][time:exact(ms)][size:nested];
     primitive[s_dec][AES-CTR][128][0][1:1];
     #
-    primhead[function][time:algorithm(ms)][energy:current(mA)];
+    primhead[function][time:algorithm(ms)][energy:exact(mA)];
     primitive[in][wsn_time][0];
     primitive[out][wsn_time][0];
     #
@@ -100,7 +100,7 @@ data(PC) {
     primhead[function][size:ratio];
     primitive[pop_list][1:1];
     #
-    primhead[function][energy:current(mA)];
+    primhead[function][energy:exact(mA)];
     primitive[cpu][0];
 }
 

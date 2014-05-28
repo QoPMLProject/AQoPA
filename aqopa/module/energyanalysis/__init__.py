@@ -63,7 +63,7 @@ class Module(module.Module):
 
                 metric_type = sparam.param_name.lower()
                 
-                if metric_type != "current":
+                if metric_type != "exact":
                     continue
                 
                 # metric_unit = sparam.unit - mA
@@ -85,7 +85,7 @@ class Module(module.Module):
     
                     metric_type = sparam.param_name.lower()
                     
-                    if metric_type != "current":
+                    if metric_type != "exact":
                         continue
                     
                     # metric_unit = sparam.unit - mA
@@ -106,7 +106,7 @@ class Module(module.Module):
             if sparam.service_name.lower() != "energy":
                 continue
             metric_type = sparam.param_name.lower()
-            if metric_type != "current":
+            if metric_type != "exact":
                 continue
             # metric_unit = sparam.unit - mA
             return float(metric.service_arguments[i])
