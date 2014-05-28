@@ -71,7 +71,7 @@ class Simulator():
                     # Throw runtime error if any channel has message to be binded with receiver
                     # or if any channel has dropped a message
                     for ch in self.context.channels_manager.channels:
-                        if ch.get_unused_messages_nb() > 0 or ch.get_dropped_messages_nb() > 0:
+                        if ch.get_dropped_messages_nb() > 0:
                             raise InfiniteLoopException()
                         
                     for h in self.context.hosts:

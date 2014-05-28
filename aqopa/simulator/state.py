@@ -244,9 +244,15 @@ class Host():
         
     def get_current_instructions_context(self):
         """ 
-        Returns the currnt instructions context retrived from scheduler.
+        Returns the current instructions context retrived from scheduler.
         """
         return self._scheduler.get_current_context()
+
+    def get_all_instructions_contexts(self):
+        """
+        Returns all instructions context retrived from scheduler.
+        """
+        return self._scheduler.get_all_contexts()
 
     def get_instructions_context_of_instruction(self, instruction):
         """
@@ -555,17 +561,6 @@ class AssignmentInstructionExecutor(InstructionExecutor):
         instruction = context.get_current_instruction()
         expression = self._compute_current_expression(instruction.expression, context)
         
-#        h = context.get_current_host()
-#        v = instruction.variable_name
-#        e = unicode(expression)
-#        print "%s: %s = %s" % (h.name, v, e)
-
-#        print "%s - %s: %s <- %s" % (id(context.get_current_host()), 
-#                                     context.get_current_host().name, 
-#                                     instruction.variable_name, unicode(expression))
-
-        # print 'Host ', context.get_current_host().name, ' setting variable ', \
-        #     instruction.variable_name, ' = ', unicode(expression), ' (', getattr(expression, '_host_name', 'None'), ')'
         context.get_current_host().set_variable(instruction.variable_name, expression)
         context.get_current_host().mark_changed()
         
@@ -663,18 +658,15 @@ class CommunicationInstructionExecutor(InstructionExecutor):
                                    custom_index_management=True)
         
         if instruction.communication_type == COMMUNICATION_TYPE_OUT:
-            if kwargs is not None and 'sent_messages' in kwargs:
-                messages = kwargs['sent_messages']
+            if kwargs is not None and 'sent_message' in kwargs:
+                message = kwargs['sent_message']
             else:
-                messages = []
-                for p in instruction.variables_names:
-                    # Expressions as variables values are already populated
-                    messages.append(context.channels_manager.build_message(
-                        context.get_current_host(),
-                        context.get_current_host().get_variable(p).clone(),
-                        context.expression_checker))
-                kwargs['sent_messages'] = messages
-            channel.send_messages(context.get_current_host(), messages)
+                message = context.channels_manager.build_message(
+                    context.get_current_host(),
+                    context.get_current_host().get_variable(instruction.variable_name).clone(),
+                    context.expression_checker)
+                kwargs['sent_message'] = message
+            channel.send_message(context.get_current_host(), message)
 
             # Go to next instruction
             context.get_current_host().get_current_instructions_context().goto_next_instruction()

@@ -19,16 +19,18 @@ class TimeTrace():
 
 class ChannelMessageTrace():
     
-    def __init__(self, channel, message_index,
+    def __init__(self, channel, message,
                  sender, sent_at, sending_time,
-                 receiver, started_waiting_at, received_at):
+                 receiver, started_waiting_at,
+                 started_receiving_at, receiving_time):
         """ """
         self.channel = channel
-        self.message_index = message_index
+        self.message = message
         self.sender = sender
         self.sent_at = sent_at
         self.sending_time = sending_time
         self.receiver = receiver
         self.started_waiting_at = started_waiting_at
-        self.received_at = received_at
+        self.received_at = started_receiving_at
+        self.receiving_time = receiving_time
         

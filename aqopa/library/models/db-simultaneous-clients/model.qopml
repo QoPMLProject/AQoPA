@@ -24,7 +24,7 @@ equations {
     
 }
 channels {
-    channel ch_comm (*);
+    channel ch_comm (*)[ch];
     
 }
 hosts {
@@ -103,4 +103,16 @@ hosts {
         }
     }
     
+}
+
+communication {
+    medium[ch] {
+        default_q = 1;
+        default_t = 0ms;
+
+        topology {
+            Client <-> Server;
+            Server <-> KeysStore;
+        }
+    }
 }

@@ -1,0 +1,69 @@
+functions {
+    fun cpu_time();
+    fun blank();
+}
+
+equations {
+    eq cpu_time() = true;
+}
+
+channels {
+    channel WSN(0)[wsn];
+}
+
+hosts {
+
+    host Client(rr)(*) {
+        process Main(*) {
+            x = blank();
+            msg = (id(), id(Server), x);
+            blank();
+            blank();
+            blank();
+            blank();
+            blank();
+            out(WSN: msg);
+            x = cpu_time()[100];
+            cpu_time()[100];
+        }
+    }
+
+    host Server(rr)(*) {
+        process Main(*) {
+            blank();
+            blank();
+            blank();
+            blank();
+            blank();
+            blank();
+            blank();
+            blank();
+            blank();
+            blank();
+            blank();
+            blank();
+            in(WSN: msg: |*, id()|);
+            y = cpu_time()[100];
+        }
+    }
+}
+
+communication {
+    medium[wsn] {
+        default_q = 1;
+        default_t = wsn_time;
+
+        topology {
+            Client <-> Server;
+        }
+    }
+
+    algorithms {
+        alg wsn_time(msg) {
+            sending_headers = 18.28;
+            s = size(msg) - size(msg[0]) - size(msg[1]);
+            sending_data = s * 0.12;
+            return sending_headers + sending_data;
+        }
+    }
+}
