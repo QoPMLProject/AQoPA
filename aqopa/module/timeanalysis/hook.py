@@ -343,16 +343,19 @@ class PreInstructionHook(Hook):
             # If hosts have the same time - the IN instruction should be executed before OUT execution
             # and other instructions (non-communication) should be executed before as well
             if host_time == min_hosts_time[1]:
-                host_current_instruction = h.get_current_instructions_context().get_current_instruction()
-                if isinstance(host_current_instruction, CommunicationInstruction):
-                    if instruction.is_out() and not host_current_instruction.is_out():
-                        host_channel = context.channels_manager.find_channel_for_host_instruction(
-                            context, h, host_current_instruction)
-                        if host_channel:
-                            if not host_channel.is_waiting_on_instruction(h, host_current_instruction):
-                                delay_communication_execution = True
-                else:
-                    delay_communication_execution = True
+                for instructions_context in h.get_all_instructions_contexts():
+                    if instructions_context.finished():
+                        continue
+                    host_current_instruction = instructions_context.get_current_instruction()
+                    if isinstance(host_current_instruction, CommunicationInstruction):
+                        if instruction.is_out() and not host_current_instruction.is_out():
+                            host_channel = context.channels_manager.find_channel_for_host_instruction(
+                                context, h, host_current_instruction)
+                            if host_channel:
+                                if not host_channel.is_waiting_on_instruction(h, host_current_instruction):
+                                    delay_communication_execution = True
+                    else:
+                        delay_communication_execution = True
 
             # If checked (in loop) host is in the past relative to the time of actual host
             if host_time < min_hosts_time[1]:
