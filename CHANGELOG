@@ -4,6 +4,12 @@
 
 Next release:
 
+v0.7.2 (2014-05-28)
+- Added time check in messages sent through synchronous channel. Added waiting and receiving time.
+- Changed asynchronous channel characteristics. Messages cannot be sent from the past.
+- Created new communication model.
+- Updated models for new communication.
+
 v0.7.1 (2014-05-04)
 - Updated models in library.
 - Changed end/stop instructions. Now they end whole protocol.
