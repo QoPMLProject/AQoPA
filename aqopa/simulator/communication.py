@@ -698,11 +698,14 @@ class Router():
         When receiver is None the parameter is get for situation when sender is broadcasting.
         """
         def return_default():
-            defaults = self.mediums[medium_name]['default_parameters']
-            default_parameter_name = 'default_'+parameter
-            if default_parameter_name in defaults:
-                return defaults[default_parameter_name]
+            if medium_name in self.mediums:
+                defaults = self.mediums[medium_name]['default_parameters']
+                default_parameter_name = 'default_'+parameter
+                if default_parameter_name in defaults:
+                    return defaults[default_parameter_name]
             return default
+        if medium_name not in self.mediums:
+            return return_default()
         medium = self.mediums[medium_name]
         if sender not in medium['topology']:
             return return_default()
