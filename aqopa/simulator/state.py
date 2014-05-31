@@ -666,7 +666,7 @@ class CommunicationInstructionExecutor(InstructionExecutor):
                     context.get_current_host().get_variable(instruction.variable_name).clone(),
                     context.expression_checker)
                 kwargs['sent_message'] = message
-            channel.send_message(context.get_current_host(), message)
+            channel.send_message(context.get_current_host(), message, context.channels_manager.get_router())
 
             # Go to next instruction
             context.get_current_host().get_current_instructions_context().goto_next_instruction()

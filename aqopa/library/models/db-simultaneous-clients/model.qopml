@@ -108,7 +108,6 @@ hosts {
 communication {
     medium[ch] {
         default_q = 1;
-        default_t = 0ms;
 
         topology {
             Client <-> Server;

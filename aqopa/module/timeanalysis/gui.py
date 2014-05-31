@@ -105,7 +105,7 @@ class SingleVersionPanel(wx.Panel):
         simulator = self.versionSimulator[versionName]
         
         totalTime = self.GetTotalTime(simulator)
-        self.totalTimeLabel.SetLabel("%.2f ms" % totalTime)
+        self.totalTimeLabel.SetLabel("%.6f s" % totalTime)
         
         self._BuildHostsChoosePanel(simulator)
         
@@ -304,7 +304,7 @@ class SingleVersionPanel(wx.Panel):
         sizer = wx.BoxSizer(wx.VERTICAL)
         for h in hosts:
             
-            lblText = "%s: %.2f ms" % (h.name,self.module.get_current_time(simulator, h))
+            lblText = "%s: %.6f s" % (h.name,self.module.get_current_time(simulator, h))
             
             error = h.get_finish_error()
             if error is not None:
@@ -333,7 +333,7 @@ class SingleVersionPanel(wx.Panel):
         self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
         avg = GetVal(simulator, hosts)
-        lblText = "Average: %.2f ms" % avg
+        lblText = "Average: %.6f s" % avg
         lbl = wx.StaticText(self.timeResultsPanel, label=lblText)        
     
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -359,7 +359,7 @@ class SingleVersionPanel(wx.Panel):
         self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
         val = GetVal(simulator, hosts)
-        lblText = "Minimum: %.2f ms" % val
+        lblText = "Minimum: %.6f s" % val
         lbl = wx.StaticText(self.timeResultsPanel, label=lblText)        
     
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -385,7 +385,7 @@ class SingleVersionPanel(wx.Panel):
         self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
         val = GetVal(simulator, hosts)
-        lblText = "Maximum: %.2f ms" % val
+        lblText = "Maximum: %.6f s" % val
         lbl = wx.StaticText(self.timeResultsPanel, label=lblText)     
     
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -1209,7 +1209,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.optimizationResults[simulator] = (self.currentTime, self.currentRepetition)
         
         if self.currentTime is not None:
-            timeText = "%.2f ms" % self.currentTime
+            timeText = "%.6f s" % self.currentTime
             repetitionText = "%d" % self.currentRepetition
             
         hS = wx.BoxSizer(wx.HORIZONTAL)
