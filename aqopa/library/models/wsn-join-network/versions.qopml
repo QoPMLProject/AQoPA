@@ -18,7 +18,9 @@ version DirectJoinToSink_128b {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = wsn_time;
+            default_time = wsn_time [ms];
+            default_transmission_current = 22.8 mA;
+            default_listening_current = 22.8 mA;
 
             topology
             {
@@ -44,7 +46,9 @@ version DirectJoinToSink_160b {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = wsn_time;
+            default_time = wsn_time [ms];
+            default_transmission_current = 22.8 mA;
+            default_listening_current = 22.8 mA;
 
             topology
             {
@@ -76,7 +80,9 @@ version IndirectJoinToSink_Original_128b_10 {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = wsn_time;
+            default_time = wsn_time [ms];
+            default_transmission_current = 22.8 mA;
+            default_listening_current = 22.8 mA;
 
             topology
             {
@@ -108,7 +114,9 @@ version IndirectJoinToSink_Original_160b_10 {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = wsn_time;
+            default_time = wsn_time [ms];
+            default_transmission_current = 22.8 mA;
+            default_listening_current = 22.8 mA;
 
             topology
             {
@@ -143,7 +151,9 @@ version IndirectJoinToSink_NK_EncDec_128b_10 {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = wsn_time;
+            default_time = wsn_time [ms];
+            default_transmission_current = 22.8 mA;
+            default_listening_current = 22.8 mA;
 
             topology
             {
@@ -175,7 +185,9 @@ version IndirectJoinToSink_NK_EncDec_160b {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = wsn_time;
+            default_time = wsn_time [ms];
+            default_transmission_current = 22.8 mA;
+            default_listening_current = 22.8 mA;
 
             topology
             {
@@ -210,7 +222,9 @@ version IndirectJoinToSink_SessKey_EncDec_128b {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = wsn_time;
+            default_time = wsn_time [ms];
+            default_transmission_current = 22.8 mA;
+            default_listening_current = 22.8 mA;
 
             topology
             {
@@ -242,7 +256,9 @@ version IndirectJoinToSink_SessKey_EncDec_160b {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = wsn_time;
+            default_time = wsn_time [ms];
+            default_transmission_current = 22.8 mA;
+            default_listening_current = 22.8 mA;
 
             topology
             {
@@ -277,7 +293,9 @@ version IndirectJoinToSink_Onion_128b {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = wsn_time;
+            default_time = wsn_time [ms];
+            default_transmission_current = 22.8 mA;
+            default_listening_current = 22.8 mA;
 
             topology
             {
@@ -309,7 +327,9 @@ version IndirectJoinToSink_Onion_160b {
     {
         medium[wsn] {
             default_q = 1;
-            default_t = wsn_time;
+            default_time = wsn_time [ms];
+            default_transmission_current = 22.8 mA;
+            default_listening_current = 22.8 mA;
 
             topology
             {
