@@ -20,7 +20,7 @@ class PrintResultsHook(Hook):
 
         self.output_file.write('-'*20)
         self.output_file.write('\n')
-        self.output_file.write('Module\tTime Analysis')
+        self.output_file.write('Module\tTime Analysis (time in s)')
         self.output_file.write('\n')
         self.output_file.write('Version\t%s\n' % self.simulator.context.version.name)
         

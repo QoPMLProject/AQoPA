@@ -1,8 +1,9 @@
 from aqopa import module
 from aqopa.module.energyanalysis.console import PrintResultsHook
+from aqopa.simulator.error import RuntimeException
 from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED
 from .gui import ModuleGui
-from aqopa.module.energyanalysis.parser import MetricsParserExtension
+from aqopa.module.energyanalysis.parser import MetricsParserExtension, ConfigParserExtension, ModelParserExtension
 from aqopa.model import WhileInstruction, AssignmentInstruction,\
     CallFunctionInstruction, CallFunctionExpression, IfInstruction
 
@@ -26,7 +27,21 @@ class Module(module.Module):
         """
         parser.add_extension(MetricsParserExtension())
         return parser
-    
+
+    def extend_model_parser(self, parser):
+        """
+        Overriden
+        """
+        parser.add_extension(ModelParserExtension())
+        return parser
+
+    def extend_config_parser(self, parser):
+        """
+        Overriden
+        """
+        parser.add_extension(ConfigParserExtension())
+        return parser
+
     def _install(self, simulator):
         """
         """
@@ -44,109 +59,216 @@ class Module(module.Module):
         self._install(simulator)
         return simulator
 
+    def _get_current_from_metric(self, metric, default=None):
+        """
+        Returns current in A
+        """
+        block = metric.block
+        for i in range(0, len(block.service_params)):
+            sparam = block.service_params[i]
+            if sparam.service_name.lower() != "current":
+                continue
+            metric_type = sparam.param_name.lower()
+            if metric_type != "exact":
+                continue
+            # metric_unit = sparam.unit - mA
+            return float(metric.service_arguments[i]) / 1000.0
+        return default
+
     def _get_current_for_expression(self, metrics_manager, host, expression):
         """
-        Returns current from metric for cpu.
+        Returns current (in A) from metric for cpu.
         """
         current = None
         
         # Get current metric for expression
         metric = metrics_manager.find_primitive(host, expression)
         if metric:
-            block = metric.block
-            
-            for i in range(0, len(block.service_params)):
-                sparam = block.service_params[i]
-                
-                if sparam.service_name.lower() != "energy":
-                    continue
+            current = self._get_current_from_metric(metric, default=None)
 
-                metric_type = sparam.param_name.lower()
-                
-                if metric_type != "exact":
-                    continue
-                
-                # metric_unit = sparam.unit - mA
-                
-                current = float(metric.service_arguments[i])
-            
         # If metric not found, find default value    
         if current is None:
             expression = CallFunctionExpression('cpu')
             metric = metrics_manager.find_primitive(host, expression)
             if metric:
-                block = metric.block
-                
-                for i in range(0, len(block.service_params)):
-                    sparam = block.service_params[i]
-                    
-                    if sparam.service_name.lower() != "energy":
-                        continue
-    
-                    metric_type = sparam.param_name.lower()
-                    
-                    if metric_type != "exact":
-                        continue
-                    
-                    # metric_unit = sparam.unit - mA
-                    
-                    current = float(metric.service_arguments[i])
-        
+                current = self._get_current_from_metric(metric, default=None)
+
         if current is None:
-            current = 0
+            current = 0.0
 
         return current
 
-    def _get_current_from_metric(self, metric):
+    def _get_current_for_communication(self, context, host, channel, metric, message, receiver=None):
         """
+        Returns current (in A) of sending/receiving'listening for a message
         """
-        block = metric.block
-        for i in range(0, len(block.service_params)):
-            sparam = block.service_params[i]
-            if sparam.service_name.lower() != "energy":
-                continue
-            metric_type = sparam.param_name.lower()
-            if metric_type != "exact":
-                continue
-            # metric_unit = sparam.unit - mA
-            return float(metric.service_arguments[i])
-        return 0.0
 
-    def _get_current_sending_for_host(self, metrics_manager, host, channel):
-        """
-        Returns current from metric for radion in listening state.
-        """
-        metric = None
-        if channel.tag_name is not None:
-            expression = CallFunctionExpression('out', [], [channel.tag_name])
-            metric = metrics_manager.find_primitive(host, expression)
-        if not metric:
-            expression = CallFunctionExpression('out', [], [])
-            metric = metrics_manager.find_primitive(host, expression)
-        if metric:
-            return self._get_current_from_metric(metric)
-        return 0.0
+        if metric['type'] == 'metric':
+            metric_value = metric['value']
+        elif metric['type'] == 'algorithm':
+            algorithm_name = metric['name']
+            if not context.channels_manager.has_algorithm(algorithm_name):
+                raise RuntimeException("Communication algorithm {0} undeclared.".format(algorithm_name))
 
-    def _get_current_waiting_for_host(self, metrics_manager, host, channel):
+            link_quality = context.channels_manager.get_router().get_link_quality(channel.tag_name,
+                                                                                  message.sender,
+                                                                                  receiver)
+            alg = context.channels_manager.get_algorithm(algorithm_name)
+            variables = {
+                'link_quality': link_quality,
+                alg['parameter']: message.expression,
+            }
+            metric_value = context.channels_manager.get_algorithm_resolver().calculate(context, host, algorithm_name,
+                                                                                       variables)
+        else:
+            return 0
+        # unit = metric['unit']
+        # exact current (only mA)
+        return metric_value / 1000.0
+
+    def _get_current_transmission_for_link(self, context, channel, sender, message, receiver):
         """
-        Returns current from metric for radion in listening state.
+        Returns current (in A) of sending between sender and receiver.
         """
-        metric = None
-        if channel.tag_name is not None:
-            expression = CallFunctionExpression('in', [], [channel.tag_name])
-            metric = metrics_manager.find_primitive(host, expression)
-        if not metric:
-            expression = CallFunctionExpression('in', [], [])
-            metric = metrics_manager.find_primitive(host, expression)
-        if metric:
-            return self._get_current_from_metric(metric)
-        return 0.0
+        metric = context.channels_manager.get_router().get_link_parameter_value('transmission_current',
+                                                                                channel.tag_name, sender, receiver)
+        if metric is None:
+            return 0.0
+        return self._get_current_for_communication(context, sender, channel, metric, message, receiver)
+
+    def _get_current_waiting_for_link(self, context, channel, sender, message, receiver):
+        """
+        Returns current (in A) of sending between sender and receiver.
+        """
+        metric = context.channels_manager.get_router().get_link_parameter_value('listening_current',
+                                                                                channel.tag_name, sender, receiver)
+        if metric is None:
+            return 0.0
+        return self._get_current_for_communication(context, sender, channel, metric, message, receiver)
 
     def get_hosts_consumptions(self, simulator, hosts, voltage):
         """
+        Calculates energy consumption of hosts.
+        The unit of voltage is V (Volt).
         """
-        metrics_manager = simulator.context.metrics_manager
 
+        def combine_waiting_time_tuples(unsorted_time_tuples):
+            """
+            Returns list of sorted time tuples (from, to) without overlapping.
+            """
+            unsorted_time_tuples.sort(key=lambda tt: tt[0])
+            t_tuples = []
+            if len(unsorted_time_tuples) > 0:
+                current_time_from = unsorted_time_tuples[0][0]
+                current_time_to = unsorted_time_tuples[0][1]
+                current_current = unsorted_time_tuples[0][2]
+                i = 0
+                while i < len(unsorted_time_tuples):
+                    t = unsorted_time_tuples[i]
+
+                    # inside
+                    # |---10---|
+                    #   |-X--|
+                    if t[0] >= current_time_from and t[1] <= current_time_to:
+                        # if inside is more energy consuming
+                        # |---10---|
+                        #   |-15-|
+                        if t[2] > current_current:
+                            if t[0] > current_time_from:
+                                t_tuples.append((current_time_from, t[0], current_current))
+                            if current_time_to > t[1]:
+                                new_tuple = (t[1], current_time_to, current_current)
+                                added = False
+                                j = i
+                                while j < len(unsorted_time_tuples):
+                                    tt = unsorted_time_tuples[j]
+                                    if tt[0] > t[1]:
+                                        unsorted_time_tuples.inssert(j, new_tuple)
+                                        added = True
+                                        break
+                                    j += 1
+                                if not added:
+                                    unsorted_time_tuples.append(new_tuple)
+
+                            current_time_from = t[0]
+                            current_time_to = t[1]
+                            current_current = t[2]
+
+                    # overlapping
+                    # |---10--|
+                    #       |--X--|
+                    if t[0] < current_time_to and t[1] > current_time_to:
+
+                        # Add left |---10|
+                        if t[0] > current_time_from:
+                            t_tuples.append((current_time_from, t[0], current_current))
+
+                        # Add new tuple for right |X--|
+                        new_tuple = (current_time_to, t[1], t[2])
+                        added = False
+                        j = i
+                        while j < len(unsorted_time_tuples):
+                            tt = unsorted_time_tuples[j]
+                            if tt[0] > current_time_to:
+                                unsorted_time_tuples.inssert(j, new_tuple)
+                                added = True
+                                break
+                            j += 1
+                        if not added:
+                            unsorted_time_tuples.append(new_tuple)
+
+                        # Update currents
+                        current_time_from = t[0]
+                        current_time_to = current_time_to
+                        current_current = max(current_current, t[2])
+
+                    # later
+                    # |---X--|
+                    #           |-Y--|
+                    if t[0] > current_time_to:
+                        if current_time_to > current_time_from:
+                            t_tuples.append((current_time_from, current_time_to, current_current))
+                        current_time_from = t[0]
+                        current_time_to = t[1]
+                        current_current = t[2]
+                    i += 1
+
+                if current_time_to > current_time_from:
+                    t_tuples.append((current_time_from, current_time_to, current_current))
+            return t_tuples
+
+        def calculate_consumption_to_remove(waiting_tuples, transmitting_tuples):
+            """
+            Returns list of waiting tuples without times when host was transmitting.
+            """
+            consumption = 0.0
+            for wtt in waiting_tuples:
+                for ttt in transmitting_tuples:
+                    # overlapping
+                    if ttt[0] <= wtt[1] and ttt[1] >= wtt[0]:
+                        time = 0
+
+                        # inside
+                        if ttt[0] >= wtt[0] and ttt[1] <= wtt[1]:
+                            time = ttt[1] - ttt[0]
+
+                        # oversize
+                        if ttt[0] < wtt[0] and ttt[1] > wtt[1]:
+                            time = wtt[1] - wtt[0]
+
+                        # left side
+                        if ttt[0] < wtt[0] and ttt[1] <= wtt[1]:
+                            time = ttt[1] - wtt[0]
+
+                        # right side
+                        if ttt[0] >= wtt[0] and ttt[1] > wtt[1]:
+                            time = wtt[1] - ttt[0]
+
+                        consumption += voltage * wtt[2] * time / 1000.0
+
+            return consumption
+
+        metrics_manager = simulator.context.metrics_manager
         timetraces = self.timeanalysis_module.get_timetraces(simulator)
 
         # Clear results
@@ -164,18 +286,14 @@ class Module(module.Module):
             if timetrace.host not in hosts:
                 continue
             
-            # Get time from timetrace
-            time_sec = timetrace.length / 1000.0
-            
             consumption = 0.0
             # Get expressions from timetrace
             for simple_expression, time in timetrace.expressions_details:
                 current = self._get_current_for_expression(metrics_manager, timetrace.host, simple_expression)
-            
                 # Calculate consumption
-                consumption = voltage * current * time_sec
-                
-            hosts_consumption[timetrace.host] += consumption / 1000000.0
+                consumption += voltage * current * time
+                # print timetrace.host.name, 'cpu', unicode(simple_expression), current, time, voltage * time * current
+            hosts_consumption[timetrace.host] += consumption
             
         # Traverse channel traces
         # Look for times when host was waiting for message or sending a message
@@ -184,101 +302,66 @@ class Module(module.Module):
         for channel in channels_traces:
             channel_traces = channels_traces[channel]
 
-            host_channel_sending_time_tuples = {}  # Keeps list of tuples when host was sending message
+            host_channel_transmission_time_tuples = {}  # Keeps list of tuples when host was transmitting message
             host_channel_waiting_time_tuples = {}  # Keeps list of tuples when host was waiting for message
 
             # Traverse each trace and get the time of waiting
             for trace in channel_traces:
 
-                # Add time tuple for sender if he is in asked hosts
+                # Add sending energy consumption for sender
                 if trace.sender in hosts:
-                    if trace.sender not in host_channel_sending_time_tuples:
-                        host_channel_sending_time_tuples[trace.sender] = []
-                    host_channel_sending_time_tuples[trace.sender].append((trace.sent_at,
-                                                                           trace.sent_at + trace.sending_time))
+                    current_sending = self._get_current_transmission_for_link(simulator.context, channel,
+                                                                              trace.sender, trace.message,
+                                                                              trace.receiver)
+                    hosts_consumption[trace.sender] += (voltage * current_sending * trace.sending_time / 1000.0)
+
+                    if trace.sender not in host_channel_transmission_time_tuples:
+                        host_channel_transmission_time_tuples[trace.sender] = []
+                    host_channel_transmission_time_tuples[trace.sender].append((trace.sent_at,
+                                                                                trace.sent_at + trace.sending_time))
 
                 # Add time tuple for receiver if he is in asked hosts
                 if trace.receiver in hosts:
+                    current_receiving = self._get_current_transmission_for_link(simulator.context, channel,
+                                                                                trace.sender, trace.message,
+                                                                                trace.receiver)
+                    hosts_consumption[trace.receiver] += (voltage * current_receiving * trace.receiving_time / 1000.0)
+
                     if trace.receiver not in host_channel_waiting_time_tuples:
                         host_channel_waiting_time_tuples[trace.receiver] = []
+
+                    current_listening = self._get_current_waiting_for_link(simulator.context, channel,
+                                                                           trace.sender, trace.message, trace.receiver)
                     host_channel_waiting_time_tuples[trace.receiver].append((trace.started_waiting_at,
-                                                                             trace.received_at))
+                                                                             trace.started_receiving_at,
+                                                                             current_listening))
+                    if trace.receiver not in host_channel_transmission_time_tuples:
+                        host_channel_transmission_time_tuples[trace.receiver] = []
+                    host_channel_transmission_time_tuples[trace.receiver].append((trace.started_receiving_at,
+                                                                                  trace.started_receiving_at
+                                                                                  + trace.receiving_time))
 
             for host in hosts:
 
-                # Sort sending tuples
-                if host in host_channel_sending_time_tuples:
-                    host_channel_sending_time_tuples[host].sort(key=lambda t: t[0])
-                    time_tuples = host_channel_sending_time_tuples[host]
-                    sending_tuples = []
-                    if len(time_tuples) > 0:
-                        current_t_from = 0
-                        current_t_to = 0
-                        for i in range(0, len(time_tuples)):
-                            t = time_tuples[i]
-                            if t[0] > current_t_to:
-                                if current_t_to > 0:
-                                    sending_tuples.append((current_t_from, current_t_to))
-                                current_t_from = t[0]
-                            current_t_to = t[1]
-                        if current_t_to > 0:
-                            sending_tuples.append((current_t_from, current_t_to))
-                else:
-                    sending_tuples = []
-                # Sort waiting tuples
+                # Handle waiting tuples
                 if host in host_channel_waiting_time_tuples:
-                    host_channel_waiting_time_tuples[host].sort(key=lambda t: t[0])
-                    time_tuples = host_channel_waiting_time_tuples[host]
-                    waiting_tuples = []
-                    if len(time_tuples) > 0:
-                        current_t_from = 0
-                        current_t_to = 0
-                        for i in range(0, len(time_tuples)):
-                            t = time_tuples[i]
-                            if t[0] > current_t_to:
-                                if current_t_to > 0:
-                                    waiting_tuples.append((current_t_from, current_t_to))
-                                current_t_from = t[0]
-                            current_t_to = t[1]
-                        if current_t_to > 0:
-                            waiting_tuples.append((current_t_from, current_t_to))
-                else:
-                    waiting_tuples = []
+                    waiting_tuples = combine_waiting_time_tuples(host_channel_waiting_time_tuples[host])
 
-                # Get currents
-                current_sending = self._get_current_sending_for_host(metrics_manager, host, channel)
-                current_waiting = self._get_current_waiting_for_host(metrics_manager, host, channel)
+                    # Calculate consumption when host theoretically was waiting
+                    # but in fact it was sending or receiving message
+                    # This value will be removed from host's consumption
+                    consumption_to_remove = 0.0
+                    if host in host_channel_transmission_time_tuples:
+                        consumption_to_remove = calculate_consumption_to_remove(
+                            waiting_tuples, host_channel_transmission_time_tuples[host])
 
-                sending_time = 0.0
-                waiting_time = 0.0
+                    # Add waiting consumption
+                    for tf, tt, c in waiting_tuples:
+                        hosts_consumption[host] += voltage * c * (tt-tf) / 1000.0
 
-                for s_from, s_to in sending_tuples:
-                    sending_time += s_to - s_from
-                for w_from, w_to in waiting_tuples:
-                    waiting_time += w_to - w_from
+                    # Remove surplus consumtpion
+                    hosts_consumption[host] -= consumption_to_remove
 
-                overlapping_time = 0.0
-                w_index = 0
-                for s_from, s_to in sending_tuples:
-                    while w_index < len(waiting_tuples):
-                        wtuple = waiting_tuples[w_index]
-                        if wtuple[1] > s_from:
-                            min_end = min(s_to, wtuple[1])
-                            max_start = max(s_from, wtuple[0])
-                            overlapping_time += min_end - max_start
-                        if wtuple[1] > s_to:
-                            break
-                        else:
-                            w_index += 1
-
-                if current_sending > current_waiting:
-                    waiting_time -= overlapping_time
-                else:
-                    sending_time -= overlapping_time
-
-                hosts_consumption[host] += (voltage * current_sending * sending_time) / 1000000.0
-                hosts_consumption[host] += (voltage * current_waiting * waiting_time) / 1000000.0
-            
         return hosts_consumption
             
 

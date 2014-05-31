@@ -124,9 +124,9 @@ class PreInstructionHook(Hook):
 
             # Update time according to the time unit
             if metric_unit == "ms":
-                return time_value
+                return time_value / 1000.0
             else:  # metric_unit == "s":
-                return time_value * 1000
+                return time_value
 
         elif metric_unit in ["mspb", "mspB", "kbps", "mbps"]:
 
@@ -168,7 +168,9 @@ class PreInstructionHook(Hook):
             else: # mbps
                 msperbyte = 8000.0 / 1024.0 / 1024.0 / time_value
 
-            return msperbyte * size
+            # Make s from ms
+            sperbyte = msperbyte / 1000.0
+            return sperbyte * size
     
     def _get_time_for_block_metric(self, metric_type, metric_unit, metric_value, expression, host, context):
         """
@@ -196,7 +198,8 @@ class PreInstructionHook(Hook):
         time = units * unit_time
         if size_unit == 'b':
             time *= 8.0
-        return time
+        # Divided by 1000 to make seconds from ms
+        return time / 1000.0
     
     def _get_time_details_for_simple_expression(self, context, expression):
         """
@@ -228,7 +231,7 @@ class PreInstructionHook(Hook):
                 elif metric_type == "block":
 
                     time = self._get_time_for_block_metric(metric_type, metric_unit, metric_value,
-                                                                 expression, context.get_current_host(), context)
+                                                           expression, context.get_current_host(), context)
 
             if time > 0:
                 time_details.append((expression, time))
@@ -240,32 +243,11 @@ class PreInstructionHook(Hook):
 
         return time, time_details
 
-    def _get_time_for_communication_step(self, context, channel, metric, message, receiver=None):
+    def _get_time_for_communication_step(self, context, host, channel, metric, message, receiver=None):
         """ Returns time of sending/receiving message """
 
         if metric['type'] == 'metric':
-            unit = metric['unit']
-            if unit == 'ms':
-                # exact time
-                return metric['value']
-            else:
-                # time depending on the size
-                populated_expression = context.expression_populator.populate(message.expression, message.sender)
-                # size in bytes
-                size = context.metrics_manager.get_expression_size(populated_expression, context, message.sender)
-
-                mspB = 0
-                if unit == 'mspB':
-                    mspB = float(metric['value'])
-                elif unit == 'mspb':
-                    mspB = float(metric['value']) * 8.0
-                elif unit == 'kbps':
-                    mspB = 1.0 / (float(metric['value']) * 0.128)
-                elif unit == 'mbps':
-                    mspB = 1.0 / (float(metric['value']) * 0.000128)
-
-                return mspB * size
-
+            metric_value = metric['value']
         elif metric['type'] == 'algorithm':
             algorithm_name = metric['name']
             if not context.channels_manager.has_algorithm(algorithm_name):
@@ -274,38 +256,66 @@ class PreInstructionHook(Hook):
             link_quality = context.channels_manager.get_router().get_link_quality(channel.tag_name,
                                                                                   message.sender,
                                                                                   receiver)
-            return context.channels_manager.get_algorithm_resolver()\
-                .get_time(context, message.sender, algorithm_name, message.expression, link_quality=link_quality)
-
+            alg = context.channels_manager.get_algorithm(algorithm_name)
+            variables = {
+                'link_quality': link_quality,
+                alg['parameter']: message.expression,
+            }
+            metric_value = context.channels_manager.get_algorithm_resolver().calculate(context, host, algorithm_name,
+                                                                                       variables)
         else:
             return 0
+
+        unit = metric['unit']
+        if unit == 'ms':
+            # exact time
+            return metric_value / 1000.0
+        else:
+            # time depending on the size
+            populated_expression = context.expression_populator.populate(message.expression, message.sender)
+            # size in bytes
+            size = context.metrics_manager.get_expression_size(populated_expression, context, message.sender)
+
+            mspB = 0
+            if unit == 'mspB':
+                mspB = float(metric_value)
+            elif unit == 'mspb':
+                mspB = float(metric_value) * 8.0
+            elif unit == 'kbps':
+                mspB = 1.0 / (float(metric_value) * 0.128)
+            elif unit == 'mbps':
+                mspB = 1.0 / (float(metric_value) * 0.000128)
+
+            spB = mspB / 1000.0
+
+            return spB * size
 
     def _find_communication_metric(self, context, channel, sender, receiver=None):
         """
         Return the communication metric from topology.
         """
-        return context.channels_manager.get_router().get_link_parameter_value('t', channel.tag_name, sender, receiver)
+        return context.channels_manager.get_router().get_link_parameter_value('time', channel.tag_name, sender, receiver)
 
     def _get_time_of_sending_point_to_point(self, context, channel, message, request):
         """ Returns time of message sending process """
         metric = self._find_communication_metric(context, channel, message.sender, receiver=request.receiver)
         if metric is None:
             return 0
-        return self._get_time_for_communication_step(context, channel, metric, message, receiver=request.receiver)
+        return self._get_time_for_communication_step(context, message.sender, channel, metric, message, receiver=request.receiver)
 
     def _get_time_of_sending_boradcast(self, context, channel, message):
         """ Returns time of message sending process """
         metric = self._find_communication_metric(context, channel, message.sender, receiver=None)
         if metric is None:
             return 0
-        return self._get_time_for_communication_step(context, channel, metric, message, receiver=None)
+        return self._get_time_for_communication_step(context, message.sender, channel, metric, message, receiver=None)
 
     def _get_time_of_receiving(self, context, channel, message, request):
         """ Returns time of message receiving process """
         metric = self._find_communication_metric(context, channel, message.sender, receiver=request.receiver)
         if metric is None:
             return 0
-        return self._get_time_for_communication_step(context, channel, metric, message, receiver=request.receiver)
+        return self._get_time_for_communication_step(context, message.sender, channel, metric, message, receiver=request.receiver)
 
     def _execute_communication_instruction(self, context, **kwargs):
         """ """
@@ -411,7 +421,7 @@ class PreInstructionHook(Hook):
             # print 'sending message from ', sender.name, 'at', sender_time
             # DEBUG #
 
-            all_requests = channel.get_filtered_requests(sent_message)
+            all_requests = channel.get_filtered_requests(sent_message, context.channels_manager.get_router())
             accepted_requests = []
             for request in all_requests:
                 if self.module.get_request_created_time(self.simulator, request) > sender_time:
@@ -501,7 +511,7 @@ class PreInstructionHook(Hook):
 
             if request.assigned_message is None:
                 # Set messages from the past as cancelled for this request
-                all_messages = channel.get_filtered_messages(request)
+                all_messages = channel.get_filtered_messages(request, context.channels_manager.get_router())
                 accepted_messages = []
                 for message in all_messages:
                     if self.module.get_request_created_time(self.simulator, request) > \

@@ -13,8 +13,8 @@ class TimeTrace():
         self.process = process
         self.instruction = instruction
         self.expressions_details = expressions_details
-        self.started_at = started_at
-        self.length = length
+        self.started_at = started_at  # time in ms
+        self.length = length  # time in ms
 
 
 class ChannelMessageTrace():
@@ -27,10 +27,10 @@ class ChannelMessageTrace():
         self.channel = channel
         self.message = message
         self.sender = sender
-        self.sent_at = sent_at
-        self.sending_time = sending_time
+        self.sent_at = sent_at  # time in ms
+        self.sending_time = sending_time  # time in ms
         self.receiver = receiver
-        self.started_waiting_at = started_waiting_at
-        self.received_at = started_receiving_at
-        self.receiving_time = receiving_time
+        self.started_waiting_at = started_waiting_at  # time in ms
+        self.started_receiving_at = started_receiving_at  # time in ms
+        self.receiving_time = receiving_time  # time in ms
         
