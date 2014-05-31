@@ -34,7 +34,13 @@ class ModelParserExtension(LexYaccParserExtension):
         """
         medium_default_parameter : TIME_DEFAULT_PARAMETER EQUAL comm_time_value
         """
-        t[0] = {'default_t': t[3]}
+        t[0] = {'default_time': t[3]}
+
+    def topology_rule_time_parameter(self, t):
+        """
+        topology_rule_parameter : TIME_PARAMETER EQUAL comm_time_value
+        """
+        t[0] = {'time': t[3]}
 
     def comm_time_value(self, t):
         """
@@ -53,6 +59,20 @@ class ModelParserExtension(LexYaccParserExtension):
             'unit': t[2]
         }
 
+    def comm_time_algorithm(self, t):
+        """
+        comm_time_algorithm : IDENTIFIER SQLPARAN comm_time_metric_unit SQRPARAN
+                        | IDENTIFIER
+        """
+        unit = 'ms'
+        if len(t) == 5:
+            unit = t[3]
+        t[0] = {
+            'type': 'algorithm',
+            'name': t[1],
+            'unit': unit
+        }
+
     def comm_time_metric_unit(self, t):
         """
         comm_time_metric_unit : MS
@@ -63,15 +83,6 @@ class ModelParserExtension(LexYaccParserExtension):
         """
         t[0] = t[1]
 
-    def comm_time_algorithm(self, t):
-        """
-        comm_time_algorithm : IDENTIFIER
-        """
-        t[0] = {
-            'type': 'algorithm',
-            'name': t[1],
-        }
-
     def _extend(self):
         """ """
 
@@ -80,9 +91,11 @@ class ModelParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('mspB', 'MSPBYTE', state='communication', case_sensitive=True)
         self.parser.add_reserved_word('kbps', 'KBYTEPS', state='communication', case_sensitive=True)
         self.parser.add_reserved_word('mbps', 'MBYTEPS', state='communication', case_sensitive=True)
-        self.parser.add_reserved_word('default_t', 'TIME_DEFAULT_PARAMETER', state='communication',)
+        self.parser.add_reserved_word('default_time', 'TIME_DEFAULT_PARAMETER', state='communication',)
+        self.parser.add_reserved_word('time', 'TIME_PARAMETER', state='communication',)
 
         self.parser.add_rule(self.time_default_parameter)
+        self.parser.add_rule(self.topology_rule_time_parameter)
         self.parser.add_rule(self.comm_time_value)
         self.parser.add_rule(self.comm_time_metric)
         self.parser.add_rule(self.comm_time_metric_unit)
@@ -102,13 +115,13 @@ class ConfigParserExtension(LexYaccParserExtension):
         """
         version_medium_default_parameter : TIME_DEFAULT_PARAMETER EQUAL version_comm_time_value
         """
-        t[0] = {'default_t': t[3]}
+        t[0] = {'default_time': t[3]}
 
     def version_topology_rule_time_parameter(self, t):
         """
         version_topology_rule_parameter : TIME_PARAMETER EQUAL version_comm_time_value
         """
-        t[0] = {'t': t[3]}
+        t[0] = {'time': t[3]}
 
     def version_comm_time_value(self, t):
         """
@@ -127,6 +140,20 @@ class ConfigParserExtension(LexYaccParserExtension):
             'unit': t[2]
         }
 
+    def version_comm_time_algorithm(self, t):
+        """
+        version_comm_time_algorithm : IDENTIFIER SQLPARAN version_comm_time_metric_unit SQRPARAN
+                                | IDENTIFIER
+        """
+        unit = 'ms'
+        if len(t) == 5:
+            unit = t[3]
+        t[0] = {
+            'type': 'algorithm',
+            'name': t[1],
+            'unit': unit
+        }
+
     def version_comm_time_metric_unit(self, t):
         """
         version_comm_time_metric_unit : MS
@@ -137,15 +164,6 @@ class ConfigParserExtension(LexYaccParserExtension):
         """
         t[0] = t[1]
 
-    def version_comm_time_algorithm(self, t):
-        """
-        version_comm_time_algorithm : IDENTIFIER
-        """
-        t[0] = {
-            'type': 'algorithm',
-            'name': t[1],
-        }
-
     def _extend(self):
         """ """
 
@@ -154,8 +172,8 @@ class ConfigParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('mspB', 'MSPBYTE', state='versioncommunication', case_sensitive=True)
         self.parser.add_reserved_word('kbps', 'KBYTEPS', state='versioncommunication', case_sensitive=True)
         self.parser.add_reserved_word('mbps', 'MBYTEPS', state='versioncommunication', case_sensitive=True)
-        self.parser.add_reserved_word('default_t', 'TIME_DEFAULT_PARAMETER', state='versioncommunication',)
-        self.parser.add_reserved_word('t', 'TIME_PARAMETER', state='versioncommunication',)
+        self.parser.add_reserved_word('default_time', 'TIME_DEFAULT_PARAMETER', state='versioncommunication',)
+        self.parser.add_reserved_word('time', 'TIME_PARAMETER', state='versioncommunication',)
 
         self.parser.add_rule(self.version_time_default_parameter)
         self.parser.add_rule(self.version_topology_rule_time_parameter)

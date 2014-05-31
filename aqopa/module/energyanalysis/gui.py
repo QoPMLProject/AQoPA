@@ -296,7 +296,7 @@ class SingleVersionPanel(wx.Panel):
         consumptions = self.module.get_hosts_consumptions(simulator, hosts, voltage)
         
         for h in hosts:
-            lblText = "%s: %.2f mJ" % (h.name, consumptions[h])
+            lblText = "%s: %.6f J" % (h.name, consumptions[h])
             error = h.get_finish_error()
             if error is not None:
                 lblText += " (Not Finished - %s)" % error
@@ -323,7 +323,7 @@ class SingleVersionPanel(wx.Panel):
         self.consumptionsResultBoxSizer.Add(self.consumptionResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
         val = GetVal(self.module.get_hosts_consumptions(simulator, hosts, voltage), hosts)
-        lblText = "Average: %.2f mJ" % val
+        lblText = "Average: %.6f J" % val
         lbl = wx.StaticText(self.consumptionResultsPanel, label=lblText)        
     
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -349,7 +349,7 @@ class SingleVersionPanel(wx.Panel):
         self.consumptionsResultBoxSizer.Add(self.consumptionResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
         val = GetVal(self.module.get_hosts_consumptions(simulator, hosts, voltage), hosts)
-        lblText = "Minimum: %.2f mJ" % val
+        lblText = "Minimum: %.6f J" % val
         lbl = wx.StaticText(self.consumptionResultsPanel, label=lblText)        
     
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -375,7 +375,7 @@ class SingleVersionPanel(wx.Panel):
         self.consumptionsResultBoxSizer.Add(self.consumptionResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
         val = GetVal(self.module.get_hosts_consumptions(simulator, hosts, voltage), hosts)
-        lblText = "Maximum: %.2f mJ" % val
+        lblText = "Maximum: %.6f J" % val
         lbl = wx.StaticText(self.consumptionResultsPanel, label=lblText)     
     
         sizer = wx.BoxSizer(wx.HORIZONTAL)

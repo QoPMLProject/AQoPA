@@ -237,12 +237,15 @@ class Channel():
         # Check if request can be bound with expressions
         self._bind_messages_with_receivers()
 
-    def get_filtered_requests(self, message):
+    def get_filtered_requests(self, message, router):
         """
         Returns list of requests that can accept the message
         """
         requests = []
         for request in self._waiting_requests:
+            # Check if there is a link between sender and receiver
+            if not router.link_exists(self, message.sender, request.receiver):
+                continue
             # Check if message has not been declined for waiting host
             if not message.is_for_request(request):
                 continue
@@ -253,7 +256,7 @@ class Channel():
             requests.append(request)
         return requests
 
-    def get_filtered_messages(self, request):
+    def get_filtered_messages(self, request, router):
         """
         Returns list of messages from buffer that can be assigned to request
         """
@@ -261,13 +264,16 @@ class Channel():
         buffer = self.get_buffer_for_host(request.receiver)
         filters = request.get_populated_filters()
         for message in buffer:
+            # Check if there is a link between sender and receiver
+            if not router.link_exists(self, message.sender, request.receiver):
+                continue
             # Check if message passes the filters
             if not message.pass_filters(filters):
                 continue
             messages.append(message)
         return messages
 
-    def send_message(self, sender_host, message):
+    def send_message(self, sender_host, message, router):
         """
         Accept message with expressions.
         """
@@ -278,7 +284,7 @@ class Channel():
         # Receivers are retrieved from the requests present in the channel
         # When the channel is synchronous the buffers are cleaned after the binding try
         # and requests are removed after they are fulfilled
-        for request in self.get_filtered_requests(message):
+        for request in self.get_filtered_requests(message, router):
             if request.receiver not in self._buffers:
                 self._buffers[request.receiver] = []
             self._buffers[request.receiver].append(message)
@@ -338,6 +344,9 @@ class Manager():
 
     def has_algorithm(self, name):
         return self.algorithm_resolver.has_algorithm(name)
+
+    def get_algorithm(self, name):
+        return self.algorithm_resolver.get_algorithm(name)
     
     def get_router(self):
         return self.router
@@ -406,28 +415,29 @@ class AlgorithmResolver():
     def has_algorithm(self, name):
         return name in self.algorithms
 
-    def get_time(self, context, host, alg_name, message_expression, link_quality=None):
+    def get_algorithm(self, name):
+        return self.algorithms[name]
+
+    def calculate(self, context, host, alg_name, variables=None):
         if not self.has_algorithm(alg_name):
             return 0
-        alg = self.algorithms[alg_name]
-        variables = {
-            alg['parameter']: message_expression,
-        }
-        return AlgorithmCalculator(context, host, alg_name, variables,
-                                   alg['instructions'], link_quality).get_time()
+        if variables is None:
+            variables = {}
+        return AlgorithmCalculator(context, host, alg_name, variables, self.algorithms[alg_name]).calculate()
 
 
 class AlgorithmCalculator():
 
-    def __init__(self, context, host, algorithm_name, variables, instructions, link_quality):
+    def __init__(self, context, host, algorithm_name, variables, algorithm):
         self.context = context
         self.host = host
         self.algorithm_name = algorithm_name
         self.variables = variables
-        self.instructions = instructions
-        self.link_quality = link_quality
+        self.algorithm = algorithm
+        self.instructions = algorithm['instructions']
+        self.link_quality = variables['link_quality'] if 'link_quality' in variables else 1
 
-        self.instructions_stack = [instructions]
+        self.instructions_stack = [algorithm['instructions']]
         self.instructions_stack_index = 0
         self.instructions_lists_indexes = {0: 0}
 
@@ -630,7 +640,7 @@ class AlgorithmCalculator():
             self.goto_next_instruction()
 
 
-    def get_time(self):
+    def calculate(self):
         while not self.finished():
             self.execute_current_instruction()
         if self.return_value is None:
@@ -691,6 +701,20 @@ class Router():
         
     def has_medium(self, name):
         return name in self.mediums
+
+    def link_exists(self, channel, sender, receiver):
+        """
+        Returns True if there exists a link between sender and receiver.
+        If communication structure exists the link must be specified. If channel medium has no structure it is assumed
+        that channel may be used by all hosts.
+        """
+        medium_name = channel.tag_name
+        if medium_name not in self.mediums:
+            return True
+        topology = self.mediums[medium_name]['topology']
+        if len(topology) == 0:
+            return True
+        return self.get_link_quality(medium_name, sender, receiver) is not None
 
     def get_link_parameter_value(self, parameter, medium_name, sender, receiver=None, default=None):
         """
