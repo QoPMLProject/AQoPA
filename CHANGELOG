@@ -4,6 +4,9 @@
 
 Next release:
 
+v0.7.4 (2014-06-02)
+- Added two current metrics for sending and receiving message (not only one - transmission).
+
 v0.7.3 (2014-05-31)
 - Updated library models.
 - Updated energy module: moved communication metrics to communication structure.

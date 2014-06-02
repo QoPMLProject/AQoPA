@@ -30,11 +30,17 @@ class ModelParserExtension(LexYaccParserExtension):
     #  Communication Time
     #######################
 
-    def transmission_current_default_parameter(self, t):
+    def sending_current_default_parameter(self, t):
         """
-        medium_default_parameter : TRANSMISSION_CURRENT_DEFAULT_PARAMETER EQUAL comm_current_value
+        medium_default_parameter : SENDING_CURRENT_DEFAULT_PARAMETER EQUAL comm_current_value
         """
-        t[0] = {'default_transmission_current': t[3]}
+        t[0] = {'default_sending_current': t[3]}
+
+    def receiving_current_default_parameter(self, t):
+        """
+        medium_default_parameter : RECEIVING_CURRENT_DEFAULT_PARAMETER EQUAL comm_current_value
+        """
+        t[0] = {'default_receiving_current': t[3]}
 
     def listening_current_default_parameter(self, t):
         """
@@ -42,11 +48,17 @@ class ModelParserExtension(LexYaccParserExtension):
         """
         t[0] = {'default_listening_current': t[3]}
 
-    def topology_rule_transmission_current_parameter(self, t):
+    def topology_rule_sending_current_parameter(self, t):
         """
-        topology_rule_parameter : TRANSMISSION_CURRENT_PARAMETER EQUAL comm_current_value
+        topology_rule_parameter : SENDING_CURRENT_PARAMETER EQUAL comm_current_value
         """
-        t[0] = {'transmission_current': t[3]}
+        t[0] = {'sending_current': t[3]}
+
+    def topology_rule_receiving_current_parameter(self, t):
+        """
+        topology_rule_parameter : RECEIVING_CURRENT_PARAMETER EQUAL comm_current_value
+        """
+        t[0] = {'receiving_current': t[3]}
 
     def topology_rule_listening_current_parameter(self, t):
         """
@@ -95,18 +107,24 @@ class ModelParserExtension(LexYaccParserExtension):
         """ """
 
         self.parser.add_reserved_word('mA', 'MA', state='communication', case_sensitive=True)
-        self.parser.add_reserved_word('default_transmission_current', 'TRANSMISSION_CURRENT_DEFAULT_PARAMETER',
+        self.parser.add_reserved_word('default_sending_current', 'SENDING_CURRENT_DEFAULT_PARAMETER',
+                                      state='communication',)
+        self.parser.add_reserved_word('default_receiving_current', 'RECEIVING_CURRENT_DEFAULT_PARAMETER',
                                       state='communication',)
         self.parser.add_reserved_word('default_listening_current', 'LISTENING_CURRENT_DEFAULT_PARAMETER',
                                       state='communication',)
-        self.parser.add_reserved_word('transmission_current', 'TRANSMISSION_CURRENT_PARAMETER',
+        self.parser.add_reserved_word('sending_current', 'SENDING_CURRENT_PARAMETER',
+                                      state='communication',)
+        self.parser.add_reserved_word('receiving_current', 'RECEIVING_CURRENT_PARAMETER',
                                       state='communication',)
         self.parser.add_reserved_word('listening_current', 'LISTENING_CURRENT_PARAMETER',
                                       state='communication',)
 
-        self.parser.add_rule(self.transmission_current_default_parameter)
+        self.parser.add_rule(self.sending_current_default_parameter)
+        self.parser.add_rule(self.receiving_current_default_parameter)
         self.parser.add_rule(self.listening_current_default_parameter)
-        self.parser.add_rule(self.topology_rule_transmission_current_parameter)
+        self.parser.add_rule(self.topology_rule_sending_current_parameter)
+        self.parser.add_rule(self.topology_rule_receiving_current_parameter)
         self.parser.add_rule(self.topology_rule_listening_current_parameter)
         self.parser.add_rule(self.comm_current_value)
         self.parser.add_rule(self.comm_current_metric)
@@ -122,17 +140,29 @@ class ConfigParserExtension(LexYaccParserExtension):
     #  Communication Time
     #######################
 
-    def version_transmission_current_default_parameter(self, t):
+    def version_sending_current_default_parameter(self, t):
         """
-        version_medium_default_parameter : TRANSMISSION_CURRENT_DEFAULT_PARAMETER EQUAL version_comm_current_value
+        version_medium_default_parameter : SENDING_CURRENT_DEFAULT_PARAMETER EQUAL version_comm_current_value
         """
-        t[0] = {'default_transmission_current': t[3]}
+        t[0] = {'default_sending_current': t[3]}
 
-    def version_topology_rule_transmission_current_parameter(self, t):
+    def version_receiving_current_default_parameter(self, t):
         """
-        version_topology_rule_parameter : TRANSMISSION_CURRENT_PARAMETER EQUAL version_comm_current_value
+        version_medium_default_parameter : RECEIVING_CURRENT_DEFAULT_PARAMETER EQUAL version_comm_current_value
         """
-        t[0] = {'transmission_current': t[3]}
+        t[0] = {'default_receiving_current': t[3]}
+
+    def version_topology_rule_sending_current_parameter(self, t):
+        """
+        version_topology_rule_parameter : SENDING_CURRENT_PARAMETER EQUAL version_comm_current_value
+        """
+        t[0] = {'sending_current': t[3]}
+
+    def version_topology_rule_receiving_current_parameter(self, t):
+        """
+        version_topology_rule_parameter : RECEIVING_CURRENT_PARAMETER EQUAL version_comm_current_value
+        """
+        t[0] = {'receiving_current': t[3]}
 
     def version_listening_current_default_parameter(self, t):
         """
@@ -187,17 +217,23 @@ class ConfigParserExtension(LexYaccParserExtension):
         """ """
 
         self.parser.add_reserved_word('mA', 'MA', state='versioncommunication', case_sensitive=True)
-        self.parser.add_reserved_word('default_transmission_current', 'TRANSMISSION_CURRENT_DEFAULT_PARAMETER',
+        self.parser.add_reserved_word('default_sending_current', 'SENDING_CURRENT_DEFAULT_PARAMETER',
+                                      state='versioncommunication',)
+        self.parser.add_reserved_word('default_receiving_current', 'RECEIVING_CURRENT_DEFAULT_PARAMETER',
                                       state='versioncommunication',)
         self.parser.add_reserved_word('default_listening_current', 'LISTENING_CURRENT_DEFAULT_PARAMETER',
                                       state='versioncommunication',)
-        self.parser.add_reserved_word('transmission_current', 'TRANSMISSION_CURRENT_PARAMETER',
+        self.parser.add_reserved_word('sending_current', 'SENDING_CURRENT_PARAMETER',
+                                      state='versioncommunication',)
+        self.parser.add_reserved_word('receiving_current', 'RECEIVING_CURRENT_PARAMETER',
                                       state='versioncommunication',)
         self.parser.add_reserved_word('listening_current', 'LISTENING_CURRENT_PARAMETER',
                                       state='versioncommunication',)
 
-        self.parser.add_rule(self.version_transmission_current_default_parameter)
-        self.parser.add_rule(self.version_topology_rule_transmission_current_parameter)
+        self.parser.add_rule(self.version_sending_current_default_parameter)
+        self.parser.add_rule(self.version_receiving_current_default_parameter)
+        self.parser.add_rule(self.version_topology_rule_sending_current_parameter)
+        self.parser.add_rule(self.version_topology_rule_receiving_current_parameter)
         self.parser.add_rule(self.version_listening_current_default_parameter)
         self.parser.add_rule(self.version_topology_rule_listening_current_parameter)
         self.parser.add_rule(self.version_comm_current_value)
