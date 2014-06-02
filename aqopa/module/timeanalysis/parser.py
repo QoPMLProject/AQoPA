@@ -220,7 +220,8 @@ class MetricsParserExtension(LexYaccParserExtension):
     
     def metrics_services_time_unit(self, t):
         """
-        metrics_services_time_unit : MS
+        metrics_services_time_unit : S
+                                | MS
                                 | MSPBIT
                                 | MSPBYTE
                                 | KBYTEPS
@@ -230,7 +231,8 @@ class MetricsParserExtension(LexYaccParserExtension):
 
     def metrics_services_exact_time_unit(self, t):
         """
-        metrics_services_exact_time_unit : MS
+        metrics_services_exact_time_unit : S
+                                        | MS
         """
         t[0] = t[1].lower()
 
@@ -249,6 +251,7 @@ class MetricsParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('time', 'TIME', state='metricsprimhead', case_sensitive=False)
         self.parser.add_reserved_word('exact', 'EXACT', state='metricsprimhead', case_sensitive=False)
         self.parser.add_reserved_word('range', 'RANGE', state='metricsprimhead', case_sensitive=False)
+        self.parser.add_reserved_word('s', 'S', state='metricsprimhead', case_sensitive=True)
         self.parser.add_reserved_word('ms', 'MS', state='metricsprimhead', case_sensitive=True)
         self.parser.add_reserved_word('mspb', 'MSPBIT', state='metricsprimhead', case_sensitive=True)
         self.parser.add_reserved_word('mspB', 'MSPBYTE', state='metricsprimhead', case_sensitive=True)

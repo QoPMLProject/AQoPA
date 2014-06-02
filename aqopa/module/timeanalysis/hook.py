@@ -186,7 +186,9 @@ class PreInstructionHook(Hook):
             unit_time = float(mparts[0])
             unit_size = int(mparts[1])
 
-        #time_unit = metric_unit[0]
+        time_unit = metric_unit[0]
+        if time_unit == "ms":
+            unit_time /= 1000.0
         size_unit = metric_unit[1]
 
         expression_to_populate = expression if element_index is None else expression.arguments[element_index]
@@ -198,8 +200,7 @@ class PreInstructionHook(Hook):
         time = units * unit_time
         if size_unit == 'b':
             time *= 8.0
-        # Divided by 1000 to make seconds from ms
-        return time / 1000.0
+        return time
     
     def _get_time_details_for_simple_expression(self, context, expression):
         """
