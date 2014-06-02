@@ -596,7 +596,7 @@ class ProcessInstructionExecutor(InstructionExecutor):
         """ Overriden """
         process_instruction = context.get_current_instruction()
         current_process = context.get_current_host().get_current_process()
-        instructions_list = process_instruction.intructions_list
+        instructions_list = process_instruction.instructions_list
 
         # If process has at least one instruction
         if len(instructions_list) > 0:
