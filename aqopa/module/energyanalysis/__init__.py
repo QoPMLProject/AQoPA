@@ -126,11 +126,21 @@ class Module(module.Module):
         # exact current (only mA)
         return metric_value / 1000.0
 
-    def _get_current_transmission_for_link(self, context, channel, sender, message, receiver):
+    def _get_current_sending_for_link(self, context, channel, sender, message, receiver):
         """
         Returns current (in A) of sending between sender and receiver.
         """
-        metric = context.channels_manager.get_router().get_link_parameter_value('transmission_current',
+        metric = context.channels_manager.get_router().get_link_parameter_value('sending_current',
+                                                                                channel.tag_name, sender, receiver)
+        if metric is None:
+            return 0.0
+        return self._get_current_for_communication(context, sender, channel, metric, message, receiver)
+
+    def _get_current_receiving_for_link(self, context, channel, sender, message, receiver):
+        """
+        Returns current (in A) of sending between sender and receiver.
+        """
+        metric = context.channels_manager.get_router().get_link_parameter_value('receiving_current',
                                                                                 channel.tag_name, sender, receiver)
         if metric is None:
             return 0.0
@@ -310,7 +320,7 @@ class Module(module.Module):
 
                 # Add sending energy consumption for sender
                 if trace.sender in hosts:
-                    current_sending = self._get_current_transmission_for_link(simulator.context, channel,
+                    current_sending = self._get_current_sending_for_link(simulator.context, channel,
                                                                               trace.sender, trace.message,
                                                                               trace.receiver)
                     hosts_consumption[trace.sender] += (voltage * current_sending * trace.sending_time / 1000.0)
@@ -322,7 +332,7 @@ class Module(module.Module):
 
                 # Add time tuple for receiver if he is in asked hosts
                 if trace.receiver in hosts:
-                    current_receiving = self._get_current_transmission_for_link(simulator.context, channel,
+                    current_receiving = self._get_current_receiving_for_link(simulator.context, channel,
                                                                                 trace.sender, trace.message,
                                                                                 trace.receiver)
                     hosts_consumption[trace.receiver] += (voltage * current_receiving * trace.receiving_time / 1000.0)
