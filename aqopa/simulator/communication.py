@@ -733,7 +733,7 @@ class Router():
         medium = self.mediums[medium_name]
         if sender not in medium['topology']:
             return return_default()
-        sender_topology = medium['topology'][sender]
+        sender_topology = medium['topology'][sender]['parameters']
         if parameter not in sender_topology:
             return return_default()
         sender_parameters = sender_topology[parameter]
