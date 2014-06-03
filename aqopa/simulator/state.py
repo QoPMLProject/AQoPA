@@ -560,7 +560,8 @@ class AssignmentInstructionExecutor(InstructionExecutor):
         """ Overriden """
         instruction = context.get_current_instruction()
         expression = self._compute_current_expression(instruction.expression, context)
-        
+        expression = context.expression_reducer.reduce(expression)
+
         context.get_current_host().set_variable(instruction.variable_name, expression)
         context.get_current_host().mark_changed()
         
