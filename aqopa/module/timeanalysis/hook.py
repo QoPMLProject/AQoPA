@@ -480,10 +480,10 @@ class PreInstructionHook(Hook):
                                                       request.receiver, started_waiting_at,
                                                       receiver_time, receiving_time)
                 # DEBUG #
-                # print 'msg from', sent_message.sender.name, 'to', request.receiver.name, \
-                #     'at', sender_time, '(', sending_time, 'ms ) ', 'and started receiving at', \
-                #     receiver_time, '(t:', receiving_time, 'ms, wait since:', started_waiting_at, 'ms)', \
-                #     'message', unicode(sent_message.expression)
+                print 'msg from', sent_message.sender.name, 'to', request.receiver.name, \
+                    'at', sender_time, '(', sending_time, 'ms ) ', 'and started receiving at', \
+                    receiver_time, '(t:', receiving_time, 'ms, wait since:', started_waiting_at, 'ms)', \
+                    'message', unicode(sent_message.expression)
                 # DEBUG #
 
             else:  # zero receivers
@@ -493,6 +493,13 @@ class PreInstructionHook(Hook):
                 self.module.add_message_sending_time(self.simulator, sent_message, broadcast_time)
 
                 self.module.set_current_time(self.simulator, sender, sender_time + broadcast_time)
+
+                # DEBUG #
+                print 'all requests', len(all_requests), ' - accepted:', len(accepted_requests)
+                print 'msg from', sent_message.sender.name, \
+                    'at', sender_time, '(', broadcast_time, 'ms ) ', \
+                    'message', unicode(sent_message.expression)
+                # DEBUG #
 
         else:
             # IN instruction
