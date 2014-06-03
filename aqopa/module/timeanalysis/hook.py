@@ -373,7 +373,7 @@ class PreInstructionHook(Hook):
 
                 # In general, the instruction in host with smaller time
                 # should be executed earlier
-                delay_communication_execution = True
+                host_delay_communication_execution = True
 
                 # The only exception is when the host in the past is waiting on IN instruction
                 # and the request cannot be fulfilled
@@ -391,7 +391,10 @@ class PreInstructionHook(Hook):
                             if host_channel.is_waiting_on_instruction(h, current_instruction):
                                 request = host_channel.get_existing_request_for_instruction(h, current_instruction)
                                 if not request.ready_to_fulfill():
-                                    delay_communication_execution = False
+                                    host_delay_communication_execution = False
+
+                if host_delay_communication_execution:
+                    delay_communication_execution = True
 
         ## Delay execution of this instruction
         ## if needed according to previous check
@@ -454,6 +457,13 @@ class PreInstructionHook(Hook):
                                                               sent_message.sender, sender_time, broadcast_time,
                                                               request.receiver, started_waiting_at,
                                                               receiver_time, receiving_time)
+
+                # DEBUG #
+                print 'msg from', sent_message.sender.name, \
+                    'at', sender_time, '(', broadcast_time, 'ms ) ', 'to', len(accepted_requests), 'of', \
+                    len(all_requests), 'hosts', '- message', unicode(sent_message.expression)
+                # DEBUG #
+
             elif len(accepted_requests) == 1:
                 # point to point
                 # Send message with link metric, update sender's time and fill in the sending time in message
