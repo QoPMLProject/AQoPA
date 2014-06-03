@@ -626,19 +626,22 @@ class AlgorithmCalculator():
             self.return_value = self.calculate_value(current_instruction.expression)
             self.goto_next_instruction()
         elif isinstance(current_instruction, AlgWhile):
-            if self.calculate_value(current_instruction.condition):
+            if len(current_instruction.instructions) > 0 and self.calculate_value(current_instruction.condition):
                 self.add_instructions_list(current_instruction.instructions)
             else:
                 self.goto_next_instruction()
         elif isinstance(current_instruction, AlgIf):
             if self.calculate_value(current_instruction.condition):
-                self.add_instructions_list(current_instruction.true_instructions)
+                instructions = current_instruction.true_instructions
             else:
-                self.add_instructions_list(current_instruction.false_instructions)
+                instructions = current_instruction.false_instructions
+            if len(instructions) > 0:
+                self.add_instructions_list(instructions)
+            else:
+                self.goto_next_instruction()
         elif isinstance(current_instruction, AlgAssignment):
             self.variables[current_instruction.identifier] = self.calculate_value(current_instruction.expression)
             self.goto_next_instruction()
-
 
     def calculate(self):
         while not self.finished():
