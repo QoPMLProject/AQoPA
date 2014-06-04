@@ -27,6 +27,7 @@ class Context():
 
         self.metrics_manager = None
         self.channels_manager = None
+        self.algorithms_resolver = None
         
         self._current_host_index = 0
         self._previous_host_index = -1

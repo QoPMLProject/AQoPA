@@ -107,19 +107,18 @@ class Module(module.Module):
             metric_value = metric['value']
         elif metric['type'] == 'algorithm':
             algorithm_name = metric['name']
-            if not context.channels_manager.has_algorithm(algorithm_name):
+            if not context.algorithms_resolver.has_algorithm(algorithm_name):
                 raise RuntimeException("Communication algorithm {0} undeclared.".format(algorithm_name))
 
             link_quality = context.channels_manager.get_router().get_link_quality(channel.tag_name,
                                                                                   message.sender,
                                                                                   receiver)
-            alg = context.channels_manager.get_algorithm(algorithm_name)
+            alg = context.algorithms_resolver.get_algorithm(algorithm_name)
             variables = {
                 'link_quality': link_quality,
                 alg['parameter']: message.expression,
             }
-            metric_value = context.channels_manager.get_algorithm_resolver().calculate(context, host, algorithm_name,
-                                                                                       variables)
+            metric_value = context.algorithms_resolver.calculate(context, host, algorithm_name, variables)
         else:
             return 0
         # unit = metric['unit']

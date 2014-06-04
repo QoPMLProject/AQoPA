@@ -57,7 +57,7 @@ class PreInstructionHook(Hook):
         # Return details for each expression in instruction
         # In some instruction may be more expressions (tuple, nested call function)
         total_time, time_details = self._get_time_details_for_expression(context, expression)
-        
+
         if total_time > 0:
             host = context.get_current_host()
             self.module.add_timetrace(self.simulator, host, host.get_current_process(),
@@ -233,6 +233,19 @@ class PreInstructionHook(Hook):
 
                     time = self._get_time_for_block_metric(metric_type, metric_unit, metric_value,
                                                            expression, context.get_current_host(), context)
+                elif metric_type == 'algorithm':
+                    algorithm_name = metric_value
+                    if not context.algorithms_resolver.has_algorithm(algorithm_name):
+                        raise RuntimeException("Communication algorithm {0} undeclared.".format(algorithm_name))
+
+                    alg = context.algorithms_resolver.get_algorithm(algorithm_name)
+                    variables = {alg['parameter']: expression}
+                    time = context.algorithms_resolver.calculate(context, context.get_current_host(),
+                                                                 algorithm_name, variables)
+
+                    # Update time according to the time unit
+                    if metric_unit == "ms":
+                        time /= 1000.0
 
             if time > 0:
                 time_details.append((expression, time))
@@ -251,18 +264,18 @@ class PreInstructionHook(Hook):
             metric_value = metric['value']
         elif metric['type'] == 'algorithm':
             algorithm_name = metric['name']
-            if not context.channels_manager.has_algorithm(algorithm_name):
+            if not context.algorithms_resolver.has_algorithm(algorithm_name):
                 raise RuntimeException("Communication algorithm {0} undeclared.".format(algorithm_name))
 
             link_quality = context.channels_manager.get_router().get_link_quality(channel.tag_name,
                                                                                   message.sender,
                                                                                   receiver)
-            alg = context.channels_manager.get_algorithm(algorithm_name)
+            alg = context.algorithms_resolver.get_algorithm(algorithm_name)
             variables = {
                 'link_quality': link_quality,
                 alg['parameter']: message.expression,
             }
-            metric_value = context.channels_manager.get_algorithm_resolver().calculate(context, host, algorithm_name,
+            metric_value = context.algorithms_resolver.calculate(context, host, algorithm_name,
                                                                                        variables)
         else:
             return 0

@@ -9,12 +9,13 @@ import wx.lib.newevent
 import threading
 from aqopa.model.parser import ParserException, ModelParserException,\
     MetricsParserException, ConfigurationParserException
+from aqopa.model.parser.lex_yacc.grammar import algorithms
 from aqopa.model.store import QoPMLModelStore
 from aqopa.model import HostProcess, name_indexes, original_name,\
     HostSubprocess, WhileInstruction, IfInstruction
 from aqopa.simulator import Simulator,\
-    expression, state, equation, metrics, communication, scheduler, predefined
-    
+    expression, state, equation, metrics, communication, scheduler, predefined, algorithm
+
 from aqopa.simulator.state import Executor,\
     AssignmentInstructionExecutor, IfInstructionExecutor,\
     ProcessInstructionExecutor, SubprocessInstructionExecutor,\
@@ -420,8 +421,6 @@ class Builder():
                 topology_rules = store.mediums[name]['topology']['rules']
                 default_params = store.mediums[name]['default_parameters']
                 mgr.add_medium(name, self._build_topology(topology_rules, built_hosts), default_params)
-        for alg_name in store.communication_algorithms:
-            mgr.add_algorithm(alg_name, store.communication_algorithms[alg_name])
         return mgr
     
     def _build_predefined_functions_manager(self, context):
@@ -504,6 +503,14 @@ class Builder():
                             break
         
         return metrics.Manager(host_metrics)
+
+    def _build_algorithms_resolver(self, store):
+        """
+        """
+        resolver = algorithm.AlgorithmResolver()
+        for alg_name in store.algorithms:
+            resolver.add_algorithm(alg_name, store.algorithms[alg_name])
+        return resolver
     
     def _build_context(self, store, version):
         """
@@ -527,6 +534,7 @@ class Builder():
         c.expression_populator = expression_populator
         c.metrics_manager = self._build_metrics_manager(store, hosts, version)
         c.channels_manager = self._build_channels_manager(channels, hosts, version, store)
+        c.algorithms_resolver = self._build_algorithms_resolver(store)
         
         # Predefined manager
         predefined_functions_manager = self._build_predefined_functions_manager(c)
@@ -581,6 +589,7 @@ class Builder():
                 .add_extension(equations.ModelParserExtension()) \
                 .add_extension(expressions.ModelParserExtension()) \
                 .add_extension(comm_grammar.ModelParserExtension()) \
+                .add_extension(algorithms.ModelParserExtension()) \
                 .add_extension(instructions.ModelParserExtension()) \
                 .add_extension(hosts.ModelParserExtension())
                 
