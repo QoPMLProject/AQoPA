@@ -353,7 +353,7 @@ class Builder():
                         start_i = topology_host.index_range[0]
                         end_i = topology_host.index_range[1]
                         i = host.get_name_index()
-                        if (start_i is None or i >= start_i) and (end_i is None or i < end_i):
+                        if (start_i is None or i >= start_i) and (end_i is None or i <= end_i):
                             found_hosts.append(host)
             return found_hosts
         
@@ -381,7 +381,7 @@ class Builder():
                         start_i = topology_host.index_range[0]
                         end_i = topology_host.index_range[1]
                         i = host.get_name_index()
-                        if (start_i is None or i >= start_i) and (end_i is None or i < end_i):
+                        if (start_i is None or i >= start_i) and (end_i is None or i <= end_i):
                             found_hosts.append(host)
             return found_hosts
         

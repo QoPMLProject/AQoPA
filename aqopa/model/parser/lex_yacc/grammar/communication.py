@@ -359,7 +359,7 @@ class ConfigParserExtension(LexYaccParserExtension):
         """
         index_range = None
         if len(t) == 5:
-            index_range = (t[3], t[3]+1)
+            index_range = (t[3], t[3])
         elif len(t) == 6:
             if t[3] == ':':
                 index_range = (None, t[4])
