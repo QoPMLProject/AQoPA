@@ -275,8 +275,7 @@ class PreInstructionHook(Hook):
                 'link_quality': link_quality,
                 alg['parameter']: message.expression,
             }
-            metric_value = context.algorithms_resolver.calculate(context, host, algorithm_name,
-                                                                                       variables)
+            metric_value = context.algorithms_resolver.calculate(context, host, algorithm_name, variables)
         else:
             return 0
 
