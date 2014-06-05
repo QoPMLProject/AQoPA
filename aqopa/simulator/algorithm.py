@@ -109,8 +109,7 @@ class AlgorithmCalculator():
             return self.context.metrics_manager.get_expression_size(value, self.context, self.host)
         elif call_function_instruction.function_name == 'quality':
             if self.link_quality is None:
-                raise RuntimeException("Link quality is not specified in {0} algorithm. "
-                                       "Do you use quality() in OUT algorithm? The link is not specified when sending."
+                raise RuntimeException("Link quality is undefined in {0} algorithm. "
                                        .format(self.algorithm_name))
             return self.link_quality
         raise RuntimeException("Unresolved reference to function {0}() in algorithm {1}."
