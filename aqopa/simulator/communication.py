@@ -469,34 +469,44 @@ class Router():
             return True
         return self.get_link_quality(medium_name, sender, receiver) is not None
 
-    def get_link_parameter_value(self, parameter, medium_name, sender, receiver=None, default=None):
+    def get_link_parameter_value(self, parameter, medium_name, sender, receiver=None, default=None, no_link_value=None):
         """
         Returns value of parameter between sender and receiver in medium.
         When receiver is None the parameter is get for situation when sender is broadcasting.
         """
-        def return_default():
-            if medium_name in self.mediums:
-                defaults = self.mediums[medium_name]['default_parameters']
-                default_parameter_name = 'default_'+parameter
-                if default_parameter_name in defaults:
-                    return defaults[default_parameter_name]
+        def topology_default():
+            defaults = self.mediums[medium_name]['default_parameters']
+            default_parameter_name = 'default_'+parameter
+            if default_parameter_name in defaults:
+                return defaults[default_parameter_name]
             return default
         if medium_name not in self.mediums:
-            return return_default()
+            return default
         medium = self.mediums[medium_name]
+        if len(medium['topology']) == 0:
+            return default
         if sender not in medium['topology']:
-            return return_default()
+            return no_link_value
+
+        sender_hosts = medium['topology'][sender]['hosts']
         sender_topology = medium['topology'][sender]['parameters']
         if parameter not in sender_topology:
-            return return_default()
+            if receiver in sender_hosts:
+                return topology_default()
+            else:
+                return no_link_value
         sender_parameters = sender_topology[parameter]
         if receiver not in sender_parameters:
-            return return_default()
+            if receiver in sender_hosts:
+                return topology_default()
+            else:
+                return no_link_value
         return sender_parameters[receiver]
 
-    def get_link_quality(self, medium_name, sender, receiver, default=None):
+    def get_link_quality(self, medium_name, sender, receiver, default=1, no_link_value=None):
         """ """
-        return self.get_link_parameter_value('q', medium_name, sender, receiver, default=default)
+        return self.get_link_parameter_value('q', medium_name, sender, receiver, default=default,
+                                             no_link_value=no_link_value)
 
     def get_sender_links_qualities(self, medium_name, sender, exclude_broadcast=False):
         """ """
@@ -544,7 +554,7 @@ class Router():
         hosts = {}
         for sender in self.mediums[medium_name]['topology']:
 
-            q = self.get_link_quality(medium_name, sender, receiver, default=None)
+            q = self.get_link_quality(medium_name, sender, receiver)
             if q is not None:
                 hosts[sender] = q
         return hosts
