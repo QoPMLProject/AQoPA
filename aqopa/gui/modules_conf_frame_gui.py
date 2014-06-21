@@ -14,5 +14,14 @@ class ConfigFrame(wx.Frame):
     @brief frame (simply: window) for configuring chosen modules
     """
 
-    def __init__(self, *args, **kwargs):
-        wx.Frame.__init__(self, *args, **kwargs)
+    def __init__(self, parent):
+        wx.Frame.__init__(self, parent)
+        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.SetSizer(self.sizer)
+        self.Layout()
+
+    def AddPanel(self, panel) :
+        self.sizer.Add(panel, 1, wx.EXPAND)
+        self.SetSizer(self.sizer)
+        self.sizer.Layout()
+        self.CentreOnParent()

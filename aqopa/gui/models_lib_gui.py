@@ -116,9 +116,9 @@ class ModelDescriptionPanel(wx.Panel):
         cancelButton = wx.Button(self, label="Close")
 
         # create static texts aka labels
-        moduleNameLabel = wx.StaticText(self, label="Name:  ")
+        moduleNameLabel = wx.StaticText(self, label="Name:   ")
         moduleAuthorsNameLabel = wx.StaticText(self, label="Author: ")
-        moduleAuthorsEmailLabel = wx.StaticText(self, label="E-mail:  ")
+        moduleAuthorsEmailLabel = wx.StaticText(self, label="E-mail:   ")
 
         # create font for static texts = same as default panel font, just bold
         defSysFont = self.GetFont()

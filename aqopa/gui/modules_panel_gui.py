@@ -3,6 +3,7 @@
 import wx
 import wx.lib.newevent
 from aqopa.gui.combo_check_box import ComboCheckBox
+from aqopa.gui.modules_conf_frame_gui import ConfigFrame
 
 """
 @file       modules_panel_gui.py
@@ -25,6 +26,10 @@ class ModulesPanel(wx.Panel):
 
         wx.Panel.__init__(self, *args, **kwargs)
 
+        # new window (frame, actually) where we open up a
+        # panel received from module/name/gui.py[get_configuration_panel]
+        self.confWindow = ConfigFrame(self)
+
         # our main sizer
         mainSizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -37,12 +42,10 @@ class ModulesPanel(wx.Panel):
         # create group boxes, aka static boxes
         modulesSelectionBox = wx.StaticBox(self, label="Select modules")
         modulesConfigurationBox = wx.StaticBox(self, label="Configure modules")
-        modulesBox = wx.StaticBox(self, label="Modules")
 
         # create sizers = some kind of layout management
         modulesSelectionBoxSizer = wx.StaticBoxSizer(modulesSelectionBox, wx.HORIZONTAL)
         modulesConfigurationBoxSizer = wx.StaticBoxSizer(modulesConfigurationBox, wx.HORIZONTAL)
-        modulesBoxSizer = wx.StaticBoxSizer(modulesBox, wx.VERTICAL)
 
         # create labels, aka static texts
         selectModulesLabel = wx.StaticText(self, label="Choose modules for analysis and click the 'Select'\nbutton to add them to the configuration panel.")
@@ -75,70 +78,40 @@ class ModulesPanel(wx.Panel):
         selectButton.Bind(wx.EVT_BUTTON, self.OnSelectButtonClicked)
         self.configureButton.Bind(wx.EVT_BUTTON, self.OnConfigureButtonClicked)
 
-        #self.configurationBox = wx.StaticBox(self, label="")
-        configurationBoxSizer = wx.StaticBoxSizer(wx.StaticBox(None), wx.HORIZONTAL)
+        #self.tcp.checkBoxList.Bind(wx.EVT_CHECKLISTBOX, self.OnCheckBoxChange)
 
-        self.checkBoxesMap = {}
-        self.buttonsPanelMap = {}
-        self.buttonsModuleGui = {}
-        self.ModulesPanels = []
-
-        #emptyPanel = wx.Panel(self, size=(200,20))
-        #sizer = wx.BoxSizer(wx.VERTICAL)
-        #text = wx.StaticText(emptyPanel, label="Click 'Configure' button to configure selected module.")
-        #sizer.Add(text, 0, wx.ALL | wx.EXPAND, 5)
-        #emptyPanel.SetSizer(sizer)
-        #configurationBoxSizer.Add(emptyPanel, 1, wx.ALL | wx.EXPAND, 5)
-        #self.ModulesPanels.append(emptyPanel)
-
-        modulesNames4Combo = []
+        self.modulesNames4Combo = []
 
         for m in self.allModules:
             gui = m.get_gui()
-
-            modulePanel = wx.Panel(self)
-            modulePanelSizer = wx.BoxSizer(wx.HORIZONTAL)
-
-            ch = wx.CheckBox(modulePanel, label=gui.get_name())
-            modulesNames4Combo.append(gui.get_name())
-            ch.Bind(wx.EVT_CHECKBOX, self.OnCheckBoxChange)
-            self.checkBoxesMap[m] = ch
-
-            btn = wx.Button(modulePanel, label="Configure")
-            btn.Bind(wx.EVT_BUTTON, self.OldConfigButtonz)
-
-            # ordnung muss sein
-            modulePanelSizer.Add(ch, 0, wx.ALL)
-            modulePanelSizer.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
-            modulePanelSizer.Add(btn, 0, wx.ALL)
-            modulePanel.SetSizer(modulePanelSizer)
-
-            modulesBoxSizer.Add(modulePanel, 0, wx.ALL | wx.EXPAND, 5)
-
-            moduleConfigurationPanel = gui.get_configuration_panel(self)
-            configurationBoxSizer.Add(moduleConfigurationPanel, 1, wx.ALL | wx.EXPAND, 5)
-            moduleConfigurationPanel.Hide()
-
-            self.ModulesPanels.append(moduleConfigurationPanel)
-            self.buttonsPanelMap[btn] = moduleConfigurationPanel
-            self.buttonsModuleGui[btn] = gui
+            self.modulesNames4Combo.append(gui.get_name())
 
         # fill combocheckbox with modules names
-        self.tcp.SetChoices(modulesNames4Combo)
+        self.tcp.SetChoices(self.modulesNames4Combo)
 
+        for i in range(0,4) :
+            mainSizer.Add(wx.StaticText(self), 0, 0, wx.ALL | wx.EXPAND, 5)
         mainSizer.Add(modulesSelectionBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
+        for i in range(0,3) :
+            mainSizer.Add(wx.StaticText(self), 0, 0, wx.ALL | wx.EXPAND, 5)
         mainSizer.Add(modulesConfigurationBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
-        mainSizer.Add(modulesBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
-        #mainSizer.Add(configurationBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
-
         self.SetSizer(mainSizer)
 
     def OnSelectButtonClicked(self, event):
         """
         @brief grabs selected modules from
-        combocheckbox widget
+        combocheckbox widget, puts them into
+        conf combobox
         """
+
+        # add selected modules to config-combo box - u can
+        # configure only selected modules, one by one
         self.FillUpComboWithModules(self.tcp.GetSelectedItems())
+        # check which module was selected, make a list out of selected modules
+        modules = []
+        [modules.append(self.allModules[i]) for i in range(self.tcp.checkBoxList.GetCount()) if self.tcp.checkBoxList.IsChecked(i)]
+        # perform event - modules were selected
+        wx.PostEvent(self, ModulesChangedEvent(modules=modules, all_modules=self.allModules))
 
     def OnConfigureButtonClicked(self, event):
         """
@@ -146,6 +119,15 @@ class ModulesPanel(wx.Panel):
         a new window]
         """
         print self.modulesConfComboBox.GetStringSelection()
+        # get selected module from combo
+        selectedModule = self.modulesConfComboBox.GetValue()
+
+        for m in self.allModules :
+            if m.get_gui().get_name() == selectedModule :
+                print "%s - Configuration" % selectedModule
+                panel = m.get_gui().get_configuration_panel(self.confWindow)
+                self.confWindow.AddPanel(panel)
+                self.confWindow.Show()
 
     def FillUpComboWithModules(self, modules):
         """
@@ -165,28 +147,3 @@ class ModulesPanel(wx.Panel):
             self.configureButton.Enable()
         else:
             self.configureButton.Disable()
-
-    def ShowModuleConfigurationPanel(self, panel):
-        """ """
-        for p in self.ModulesPanels:
-            p.Hide()
-        panel.Show()
-        self.Layout()
-
-    def OnCheckBoxChange(self, event):
-        """ """
-        modules = []
-        for m in self.allModules:
-            ch = self.checkBoxesMap[m]
-            if ch.IsChecked():
-                modules.append(m)
-        print modules
-        wx.PostEvent(self, ModulesChangedEvent(modules=modules, all_modules=self.allModules))
-
-    def OldConfigButtonz(self, event):
-        """ """
-        btn = event.EventObject
-        moduleGui = self.buttonsModuleGui[btn]
-        print "%s - Configuration" % moduleGui.get_name()
-        #self.configurationBox.SetLabel("%s - Configuration" % moduleGui.get_name())
-        #self.ShowModuleConfigurationPanel(self.buttonsPanelMap[btn])
