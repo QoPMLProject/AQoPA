@@ -10,7 +10,7 @@ from aqopa.gui.modules_conf_frame_gui import ConfigFrame
 @brief      GUI for the 'Modules' tab on AQoPA's main window (panel)
 @author     Damian Rusinek
 @date       created on 05-09-2013 by Damian Rusinek
-@date       edited on 07-05-2014 by Katarzyna Mazur (visual improvements mainly)
+@date       edited on 07-05-2014 by Katarzyna Mazur
 """
 
 ModulesChangedEvent, EVT_MODULES_CHANGED = wx.lib.newevent.NewEvent()
@@ -26,10 +26,6 @@ class ModulesPanel(wx.Panel):
 
         wx.Panel.__init__(self, *args, **kwargs)
 
-        # new window (frame, actually) where we open up a
-        # panel received from module/name/gui.py[get_configuration_panel]
-        self.confWindow = ConfigFrame(self)
-
         # our main sizer
         mainSizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -42,10 +38,12 @@ class ModulesPanel(wx.Panel):
         # create group boxes, aka static boxes
         modulesSelectionBox = wx.StaticBox(self, label="Select modules")
         modulesConfigurationBox = wx.StaticBox(self, label="Configure modules")
+        mainBox = wx.StaticBox(self, label="Modules")
 
         # create sizers = some kind of layout management
         modulesSelectionBoxSizer = wx.StaticBoxSizer(modulesSelectionBox, wx.HORIZONTAL)
         modulesConfigurationBoxSizer = wx.StaticBoxSizer(modulesConfigurationBox, wx.HORIZONTAL)
+        mainBoxSizer = wx.StaticBoxSizer(mainBox, wx.VERTICAL)
 
         # create labels, aka static texts
         selectModulesLabel = wx.StaticText(self, label="Choose modules for analysis and click the 'Select'\nbutton to add them to the configuration panel.")
@@ -95,7 +93,8 @@ class ModulesPanel(wx.Panel):
         for i in range(0,3) :
             mainSizer.Add(wx.StaticText(self), 0, 0, wx.ALL | wx.EXPAND, 5)
         mainSizer.Add(modulesConfigurationBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
-        self.SetSizer(mainSizer)
+        mainBoxSizer.Add(mainSizer, 0, wx.ALL | wx.EXPAND, 5)
+        self.SetSizer(mainBoxSizer)
 
     def OnSelectButtonClicked(self, event):
         """
@@ -125,9 +124,13 @@ class ModulesPanel(wx.Panel):
         for m in self.allModules :
             if m.get_gui().get_name() == selectedModule :
                 print "%s - Configuration" % selectedModule
-                panel = m.get_gui().get_configuration_panel(self.confWindow)
-                self.confWindow.AddPanel(panel)
-                self.confWindow.Show()
+                # new window (frame, actually) where we open up a
+                # panel received from module/name/gui.py[get_configuration_panel]
+                confWindow = ConfigFrame(self)
+                panel = m.get_gui().get_configuration_panel(confWindow)
+                confWindow.AddPanel(panel)
+                confWindow.Show()
+                break
 
     def FillUpComboWithModules(self, modules):
         """

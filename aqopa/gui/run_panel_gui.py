@@ -83,11 +83,13 @@ class RunPanel(wx.Panel):
         self.runButton = wx.Button(bottomPanel, label="Run")
         self.runButton.SetToolTip(wx.ToolTip("Start the simulation process"))
         self.runButton.Enable(False)
+        #self.cleanButton = wx.Button(bottomPanel, label="Clean")
 
         # properly align the bottom panel, buttons on the right
         panelSizer = wx.BoxSizer(wx.HORIZONTAL)
         panelSizer.Add(self.parseButton, 0, wx.LEFT | wx.ALL, 5)
         panelSizer.Add(self.runButton, 0, wx.LEFT | wx.ALL, 5)
+        #panelSizer.Add(self.cleanButton, 0, wx.LEFT | wx.ALL, 5)
         bottomPanel.SetSizer(panelSizer)
         sizer.Add(bottomPanel, 0, wx.ALIGN_RIGHT | wx.RIGHT, 5)
 
@@ -99,6 +101,7 @@ class RunPanel(wx.Panel):
 
         self.parseButton.Bind(wx.EVT_BUTTON, self.OnParseClicked)
         self.runButton.Bind(wx.EVT_BUTTON, self.OnRunClicked)
+        #self.cleanButton.Bind(wx.EVT_BUTTON, self.OnCleanClicked)
 
         self.Bind(EVT_MODEL_PARSED, self.OnModelParsed)
 
@@ -392,3 +395,6 @@ class RunPanel(wx.Panel):
                 dots += ".."
             self.dotsLabel.SetLabel(dots)
             self.runPanel.Layout()
+
+    #def OnCleanClicked(self, event):
+    #    self.parseResult.Clear()
