@@ -244,49 +244,55 @@ class RunPanel(wx.Panel):
 
     def OnRunClicked(self, event):
         """ """
-        try:
-            self.statusStaticBox.SetLabel("Status: running")
-            self.analysisTime.SetLabel("---")
-            self.percentLabel.SetLabel("0%")
-            self.runResult.SetValue("")
+        if not self.selectedModules:
+            dial = wx.MessageDialog(None, "You have to choose some modules!", 'Warning', wx.OK | wx.ICON_EXCLAMATION)
+            dial.ShowModal()
+        else :
+            try:
+                self.DisableModulesSelection(True)
 
-            self.runButton.Enable(False)
+                self.statusStaticBox.SetLabel("Status: running")
+                self.analysisTime.SetLabel("---")
+                self.percentLabel.SetLabel("0%")
+                self.runResult.SetValue("")
+
+                self.runButton.Enable(False)
+                self.ShowPanel(self.runPanel)
+
+                self.finishedSimulators = []
+                self.simulatorIndex = 0
+
+                self.startAnalysisTime = time.time()
+
+                self.interpreter.prepare()
+                self.progressTimer.Start(1000)
+
+                simulator = self.interpreter.simulators[self.simulatorIndex]
+                wx.lib.delayedresult.startWorker(self.OnSimulationFinished,
+                                                 self.interpreter.run_simulation,
+                                                 wargs=(simulator,),
+                                                 jobID = self.simulatorIndex)
+
+
+            except EnvironmentDefinitionException, e:
+                self.statusStaticBox.SetLabel("Status: error")
+                self.runButton.Enable(True)
+                errorMessage = "Error on creating environment: %s\n" % e
+                if len(e.errors) > 0:
+                    errorMessage += "Errors:\n"
+                    errorMessage += "\n".join(e.errors)
+                self.runResult.SetValue(errorMessage)
+                self.progressTimer.Stop()
+
+            except Exception, e:
+                self.statusStaticBox.SetLabel("Error")
+                self.runButton.Enable(True)
+                sys.stderr.write(traceback.format_exc())
+                errorMessage = "Unknown error\n"
+                self.runResult.SetValue(errorMessage)
+                self.progressTimer.Stop()
+
             self.ShowPanel(self.runPanel)
-
-            self.finishedSimulators = []
-            self.simulatorIndex = 0
-
-            self.startAnalysisTime = time.time()
-
-            self.interpreter.prepare()
-            self.progressTimer.Start(1000)
-
-            simulator = self.interpreter.simulators[self.simulatorIndex]
-            wx.lib.delayedresult.startWorker(self.OnSimulationFinished,
-                                             self.interpreter.run_simulation,
-                                             wargs=(simulator,),
-                                             jobID = self.simulatorIndex)
-
-
-        except EnvironmentDefinitionException, e:
-            self.statusStaticBox.SetLabel("Status: error")
-            self.runButton.Enable(True)
-            errorMessage = "Error on creating environment: %s\n" % e
-            if len(e.errors) > 0:
-                errorMessage += "Errors:\n"
-                errorMessage += "\n".join(e.errors)
-            self.runResult.SetValue(errorMessage)
-            self.progressTimer.Stop()
-
-        except Exception, e:
-            self.statusStaticBox.SetLabel("Error")
-            self.runButton.Enable(True)
-            sys.stderr.write(traceback.format_exc())
-            errorMessage = "Unknown error\n"
-            self.runResult.SetValue(errorMessage)
-            self.progressTimer.Stop()
-
-        self.ShowPanel(self.runPanel)
 
     def OnSimulationFinished(self, result):
         """ """
@@ -338,6 +344,7 @@ class RunPanel(wx.Panel):
 
     def OnAllSimulationsFinished(self):
         """ """
+        self.DisableModulesSelection(False)
         self.progressTimer.Stop()
         self.PrintProgressbar(1)
 
@@ -398,3 +405,29 @@ class RunPanel(wx.Panel):
 
     #def OnCleanClicked(self, event):
     #    self.parseResult.Clear()
+
+    def DisableModulesSelection(self, value) :
+
+        """
+        @brief  disables/enables elements on 'Modules' tab (panel),
+        thanks to such approach we can get rid of some errors, simply
+        disable modules selection/configuration when the simulation
+        is running, and re-enable it when simulation ends
+        """
+
+        # get run panel parent - that is, the wx Notebook
+        notebook = self.GetParent()
+        # get modules panel, it's the third page in our wx Notebook
+        modulesTab = notebook.GetPage(3)
+
+        # disable or enable gui elements (depends on 'value')
+        if value :
+            modulesTab.selectButton.Disable()
+            modulesTab.configureButton.Disable()
+            modulesTab.comboCheckBox.Disable()
+            modulesTab.modulesConfComboBox.Disable()
+        else :
+            modulesTab.selectButton.Enable()
+            modulesTab.configureButton.Enable()
+            modulesTab.comboCheckBox.Enable()
+            modulesTab.modulesConfComboBox.Enable()

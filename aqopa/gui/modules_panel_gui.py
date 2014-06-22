@@ -30,7 +30,7 @@ class ModulesPanel(wx.Panel):
         mainSizer = wx.BoxSizer(wx.VERTICAL)
 
         # 'Select' button = select chosen modules
-        selectButton = wx.Button(self, label="Select")
+        self.selectButton = wx.Button(self, label="Select")
         # 'Configure' button = configure selected module, clicking the button should bring a new window where the configuration of the chosen module will be possible
         self.configureButton = wx.Button(self, label="Configure")
         self.configureButton.Disable()
@@ -65,7 +65,7 @@ class ModulesPanel(wx.Panel):
         # align 'select modules' group box
         modulesSelectionBoxSizer.Add(selectModulesLabel, 1, wx.ALL | wx.EXPAND, 5)
         modulesSelectionBoxSizer.Add(self.comboCheckBox, 1, wx.ALL | wx.EXPAND, 5)
-        modulesSelectionBoxSizer.Add(selectButton, 0, wx.ALL | wx.EXPAND, 5)
+        modulesSelectionBoxSizer.Add(self.selectButton, 0, wx.ALL | wx.EXPAND, 5)
 
         # align 'configure modules' group box
         modulesConfigurationBoxSizer.Add(configureModulesLabel, 1, wx.ALL | wx.EXPAND, 5)
@@ -73,7 +73,7 @@ class ModulesPanel(wx.Panel):
         modulesConfigurationBoxSizer.Add(self.configureButton, 0, wx.ALL | wx.EXPAND, 5)
 
         # do some bindings:
-        selectButton.Bind(wx.EVT_BUTTON, self.OnSelectButtonClicked)
+        self.selectButton.Bind(wx.EVT_BUTTON, self.OnSelectButtonClicked)
         self.configureButton.Bind(wx.EVT_BUTTON, self.OnConfigureButtonClicked)
 
         #self.tcp.checkBoxList.Bind(wx.EVT_CHECKLISTBOX, self.OnCheckBoxChange)
