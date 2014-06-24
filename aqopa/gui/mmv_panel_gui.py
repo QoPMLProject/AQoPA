@@ -161,7 +161,8 @@ class MMVPanel(wx.Panel):
         """
         @brief      checks if the checkbox is checked :D
                     if so, you can edit opened model/metric/version
-                    if not, model/metric/version is not editable
+                    if not, model/metric/version is not editable,
+                    nah, just a fancy feature
         """
         if event.IsChecked() :
             self.dataTextArea.SetEditable(True)

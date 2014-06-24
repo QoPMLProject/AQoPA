@@ -106,7 +106,7 @@ class ModulesPanel(wx.Panel):
         # add selected modules to config-combo box - u can
         # configure only selected modules, one by one
         self.FillUpComboWithModules(self.tcp.GetSelectedItems())
-        # check which module was selected, make a list out of selected modules
+        # check which module was selected, make a list out of the selected modules
         modules = []
         [modules.append(self.allModules[i]) for i in range(self.tcp.checkBoxList.GetCount()) if self.tcp.checkBoxList.IsChecked(i)]
         # perform event - modules were selected

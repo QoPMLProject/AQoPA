@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
 import wx
+from aqopa.gui.combo_check_box import ComboCheckBox
 
 """
 @file       main_notebook_gui.py
 @brief      GUI for the main notebook, where we attach our AQoPA tabs
 @author     Damian Rusinek
 @date       created on 05-09-2013 by Damian Rusinek
-@date       edited on 09-05-2014 by Katarzyna Mazur (visual improvements)
+@date       edited on 09-05-2014 by Katarzyna Mazur (visual improvements mainly)
 """
 
 class ResultsPanel(wx.Panel):
@@ -25,6 +26,10 @@ class ResultsPanel(wx.Panel):
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
 
+        self.modulesChooserBox = wx.StaticBox(self, label="TEMP LABEL")
+        self.modulesChooserBox.Hide()
+        self.modulesChooserBoxSizer = wx.StaticBoxSizer(self.modulesChooserBox, wx.HORIZONTAL)
+
         self.modulesBox = wx.StaticBox(self, label="Modules", size=(100, 100))
         self.modulesBox.Hide()
         self.modulesBoxSizer = wx.StaticBoxSizer(self.modulesBox, wx.VERTICAL)
@@ -33,14 +38,24 @@ class ResultsPanel(wx.Panel):
         self.resultsBox.Hide()
         self.resultsBoxSizer = wx.StaticBoxSizer(self.resultsBox, wx.VERTICAL)
 
+
         mainSizer.Add(self.modulesBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
         mainSizer.Add(self.resultsBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
+        mainSizer.Add(self.modulesChooserBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
 
         self.SetSizer(mainSizer)
         self.Layout()
 
     def _BuildModulesLayout(self):
         """ """
+
+        # create combocheckbox, empty at first
+        self.comboCheckBox = wx.combo.ComboCtrl(self)
+        self.tcp = ComboCheckBox()
+        self.comboCheckBox.SetPopupControl(self.tcp)
+        self.comboCheckBox.SetText('...')
+        # create static text - simple information for the user whatz goin' on with GUI
+        modulesInfo = wx.StaticText(self, label="Select module to see the analysis results.")
 
         for m in self.selectedModules:
             if m in self.moduleResultPanel:
@@ -59,6 +74,18 @@ class ResultsPanel(wx.Panel):
 
             self.Layout()
             resultPanel.Hide()
+
+
+        # add text near the combocheckbox
+        self.modulesChooserBoxSizer.Add(modulesInfo, 0, wx.ALL | wx.EXPAND, 5)
+
+        # add some horizontal space - empty label its simple and effective
+        self.modulesChooserBoxSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+
+        # add combocheck box to the panel that will show up after selecting
+        # modules in the modules tab from the main window
+        self.modulesChooserBoxSizer.Add(self.comboCheckBox, 0, wx.ALL | wx.EXPAND, 5)
+
 
         uncheckedModules = []
         for m in self.moduleResultPanel:
@@ -87,9 +114,11 @@ class ResultsPanel(wx.Panel):
         if len(self.selectedModules) > 0:
             self.modulesBox.Show()
             self.resultsBox.Show()
+            self.modulesChooserBox.Show()
         else:
             self.modulesBox.Hide()
             self.resultsBox.Hide()
+            self.modulesChooserBox.Hide()
 
         self._BuildModulesLayout()
 
