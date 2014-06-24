@@ -78,6 +78,7 @@ class ModulesPanel(wx.Panel):
 
         #self.tcp.checkBoxList.Bind(wx.EVT_CHECKLISTBOX, self.OnCheckBoxChange)
 
+        # names of the modules to appeared in the config combobox
         self.modulesNames4Combo = []
 
         for m in self.allModules:
