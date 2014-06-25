@@ -4,22 +4,22 @@ import wx
 import os
 
 """
-@file       modules_conf_frame_gui.py
+@file       general_purpose_frame_gui.py
 @brief      GUI (frame = window) for modules configuration
 @author     Katarzyna Mazur
 @date       created on 19-06-2014 by Katarzyna Mazur
 """
 
-class ConfigFrame(wx.Frame):
+class GeneralFrame(wx.Frame):
     """
     @brief frame (simply: window) for configuring chosen modules
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent, title, icon):
         wx.Frame.__init__(self, parent)
 
-        self.SetIcon(wx.Icon(self.CreatePath4Resource('config.png'), wx.BITMAP_TYPE_PNG))
-        self.SetTitle("Module Configuration")
+        self.SetIcon(wx.Icon(self.CreatePath4Resource(icon), wx.BITMAP_TYPE_PNG))
+        self.SetTitle(title)
 
         # create static box aka group box
         self.groupBox = wx.StaticBox(self, label="Configuration")

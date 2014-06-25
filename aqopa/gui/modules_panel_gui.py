@@ -3,7 +3,7 @@
 import wx
 import wx.lib.newevent
 from aqopa.gui.combo_check_box import ComboCheckBox
-from aqopa.gui.modules_conf_frame_gui import ConfigFrame
+from aqopa.gui.general_purpose_frame_gui import GeneralFrame
 
 """
 @file       modules_panel_gui.py
@@ -126,7 +126,7 @@ class ModulesPanel(wx.Panel):
             if m.get_gui().get_name() == selectedModule :
                 # new window (frame, actually) where we open up a
                 # panel received from module/name/gui.py[get_configuration_panel]
-                confWindow = ConfigFrame(self)
+                confWindow = GeneralFrame(self, "Module Configuration", "config.png")
                 panel = m.get_gui().get_configuration_panel(confWindow)
                 confWindow.AddPanel(panel)
                 confWindow.Show()

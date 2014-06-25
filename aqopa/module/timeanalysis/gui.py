@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import re
 import wx
 import wx.animate
@@ -1539,9 +1540,11 @@ class MainResultsNotebook(wx.Notebook):
         wx.Notebook.__init__(self, *args, **kwargs)
         
         self.module = module
-        
+
         self.oneVersionTab = SingleVersionPanel(self.module, self)
         self.AddPage(self.oneVersionTab, "Single Version")
+        #self.SetPageImage(0, singleVersionImg)
+
         self.oneVersionTab.Layout()
         
 #        self.compareTab = VersionsChartsPanel(self.module, self)
