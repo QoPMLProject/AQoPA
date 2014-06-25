@@ -1402,13 +1402,11 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
 
     def AddFinishedSimulation(self, simulator):
         """ """
-        #versionsList = []
         version = simulator.context.version
         ch = wx.CheckBox(self, label=version.name)
         self.checkBoxes.append(ch)
         self.checkBoxToSimulator[ch] = simulator
         self.versionsSelectSizer.Add(ch)
-        #versionsList.append(version.name)
         self.Layout()
     
     def OnAllSimulationsFinished(self, simulators):
@@ -1502,7 +1500,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
             return
         
         self.startButton.Enable(False)
-        self.statusText.SetLabel("Waiting for simulator")
+        self.statusText.SetLabel("Waiting for the simulator")
         
         self.resultsBoxSizer.Clear(True)
         hS = wx.BoxSizer(wx.HORIZONTAL)
