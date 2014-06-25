@@ -38,6 +38,9 @@ class ComboCheckBox(wx.combo.ComboPopup):
         self.checkBoxList.Bind(wx.EVT_LISTBOX, self.OnListBoxClicked)
         return True
 
+    def ClearChoices(self):
+        del self.choicesList[:]
+
     def SetChoices(self, choices):
         """
         @brief initializes combobox with checkboxes values
@@ -59,13 +62,17 @@ class ComboCheckBox(wx.combo.ComboPopup):
                 return True
         return False
 
-    def CountSelectedItems(self):
+    def GetSelectedItemsCount(self):
         """
         @brief counts selected items (checkboxes) in
-        our combobox
+        our combobox, returns the number of the
+        checked checkboxes
         """
         count = 0
-        pass
+        for i in range(self.checkBoxList.GetCount()) :
+            if self.checkBoxList.IsChecked(i) :
+                count += 1
+        return count
 
     def GetControl(self):
         """

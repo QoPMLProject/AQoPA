@@ -1027,7 +1027,6 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         
         configurationBox = wx.StaticBox(self, label="Optimization configuration")
         configurationBoxSizer = wx.StaticBoxSizer(configurationBox, wx.VERTICAL)
-        configurationBoxSizer.Add(self.comboCheckBox, 1, wx.ALL | wx.EXPAND, 5)
         
         hostSizer = wx.BoxSizer(wx.HORIZONTAL)
         hostText = wx.StaticText(self, label="Repeated host:", )
@@ -1063,6 +1062,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         
         configurationBoxSizer.Add(hostSizer, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         configurationBoxSizer.Add(versionsSizer, 0, wx.ALIGN_CENTER|wx.ALL, 10)
+        configurationBoxSizer.Add(self.comboCheckBox, 1, wx.ALL | wx.EXPAND, 5)
         configurationBoxSizer.Add(typeSizer, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         configurationBoxSizer.Add(toleranceSizer, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         configurationBoxSizer.Add(wx.StaticText(self), 1, 1, wx.ALL | wx.EXPAND, 5)
@@ -1450,6 +1450,10 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         # if not, simply do not start the optimization
         # process, first - correct the parameters
         # (select at least 2 versions)
+        if self.tcp.GetSelectedItemsCount() < 2 :
+            wx.MessageBox('Please select at least 2 versions.', 'Error',
+                          wx.OK | wx.ICON_ERROR)
+            return
 
         simulators = []
         for ch in self.checkBoxes:
