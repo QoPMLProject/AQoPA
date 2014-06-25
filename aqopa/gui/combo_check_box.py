@@ -48,6 +48,25 @@ class ComboCheckBox(wx.combo.ComboPopup):
         # add all the elements from the list to the combo -
         self.checkBoxList.AppendItems(choices)
 
+    def CheckIfAnythingIsSelected(self):
+        """
+        @brief checks if anything is selected on combobox,
+        if at least one item is selected, returns True,
+        otherwise False
+        """
+        for i in range(self.checkBoxList.GetCount()) :
+            if self.checkBoxList.IsChecked(i) :
+                return True
+        return False
+
+    def CountSelectedItems(self):
+        """
+        @brief counts selected items (checkboxes) in
+        our combobox
+        """
+        count = 0
+        pass
+
     def GetControl(self):
         """
         @brief returns the widget that is to be used for the popup

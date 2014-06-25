@@ -9,6 +9,7 @@ import wx.lib.delayedresult
 from aqopa.model import name_indexes
 from aqopa.bin import gui as aqopa_gui
 from aqopa.simulator.error import RuntimeException
+from aqopa.gui.combo_check_box import ComboCheckBox
 
 """
 @file       timeanalysis.py
@@ -1017,22 +1018,29 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         "finds the numbers of simultaneous clients for each version " + \
         "such that the execution time of protocols will be the same (with given tolerance)."
         , style=wx.TE_MULTILINE | wx.TE_READONLY)
+
+        # create combocheckbox, empty at first
+        self.comboCheckBox = wx.combo.ComboCtrl(self, style=wx.TE_READONLY, size=(200, -1))
+        self.tcp = ComboCheckBox()
+        self.comboCheckBox.SetPopupControl(self.tcp)
+        self.comboCheckBox.SetText('...')
         
         configurationBox = wx.StaticBox(self, label="Optimization configuration")
         configurationBoxSizer = wx.StaticBoxSizer(configurationBox, wx.VERTICAL)
+        configurationBoxSizer.Add(self.comboCheckBox, 1, wx.ALL | wx.EXPAND, 5)
         
         hostSizer = wx.BoxSizer(wx.HORIZONTAL)
-        hostText = wx.StaticText(self, label="Repeated host:", size=(200, -1))
+        hostText = wx.StaticText(self, label="Repeated host:", )
         self.hostCombo = wx.ComboBox(self, style=wx.TE_READONLY, size=(200, -1))
-        hostSizer.Add(hostText, 1)
-        hostSizer.Add(self.hostCombo, 1)
+        hostSizer.Add(hostText, 1, wx.ALL | wx.EXPAND, 5)
+        hostSizer.Add(self.hostCombo, 1, wx.ALL | wx.EXPAND, 5)
         
         versionsSizer = wx.BoxSizer(wx.HORIZONTAL)
         versionsText = wx.StaticText(self, label="Versions:", size=(200, -1))
         self.versionsSelectSizer = wx.BoxSizer(wx.VERTICAL)  
-        versionsSizer.Add(versionsText, 1)  
-        versionsSizer.Add(self.versionsSelectSizer, 1)
-        
+        versionsSizer.Add(versionsText, 1, wx.ALL | wx.EXPAND, 5)
+        versionsSizer.Add(self.versionsSelectSizer, 1, wx.ALL | wx.EXPAND, 5)
+
         typeSizer = wx.BoxSizer(wx.HORIZONTAL)
         timeTypeText = wx.StaticText(self, label="Time type:", size=(200, -1))
         timeTypeSelectSizer = wx.BoxSizer(wx.VERTICAL)
@@ -1041,14 +1049,14 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.totalRadioBtn = wx.RadioButton(self, label="Total")
         timeTypeSelectSizer.Add(self.avgRadioBtn)
         timeTypeSelectSizer.Add(self.totalRadioBtn)
-        typeSizer.Add(timeTypeText, 1)
-        typeSizer.Add(timeTypeSelectSizer, 1)
+        typeSizer.Add(timeTypeText, 1, wx.ALL | wx.EXPAND, 5)
+        typeSizer.Add(timeTypeSelectSizer, 1, wx.ALL | wx.EXPAND, 5)
         
         toleranceSizer = wx.BoxSizer(wx.HORIZONTAL)
         toleranceText = wx.StaticText(self, label="Tolerance: (in %)", size=(200, -1))
         self.toleranceTextCtrl = wx.TextCtrl(self)
-        toleranceSizer.Add(toleranceText, 1)
-        toleranceSizer.Add(self.toleranceTextCtrl, 1)
+        toleranceSizer.Add(toleranceText, 1, wx.ALL | wx.EXPAND, 5)
+        toleranceSizer.Add(self.toleranceTextCtrl, 1, wx.ALL | wx.EXPAND, 5)
         
         self.startButton = wx.Button(self, label="Start optimization")
         self.startButton.Bind(wx.EVT_BUTTON, self.OnStartClick)
@@ -1057,6 +1065,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         configurationBoxSizer.Add(versionsSizer, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         configurationBoxSizer.Add(typeSizer, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         configurationBoxSizer.Add(toleranceSizer, 0, wx.ALIGN_CENTER|wx.ALL, 10)
+        configurationBoxSizer.Add(wx.StaticText(self), 1, 1, wx.ALL | wx.EXPAND, 5)
         configurationBoxSizer.Add(self.startButton, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         
         # OPTIMIZATION PROCESS
@@ -1101,7 +1110,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.maximumVersionText = wx.StaticText(self, label="")
         hs.Add(self.maximumVersionText, 0, wx.ALIGN_LEFT, 5)
         maximumBoxSizer.Add(hs, 0, wx.EXPAND, 5)
-        
+
         hs = wx.BoxSizer(wx.HORIZONTAL)
 
         self.timeLabel = wx.StaticText(self, label="Time:")
@@ -1111,7 +1120,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.maximumTimeText = wx.StaticText(self, label="")
         hs.Add(self.maximumTimeText, 0, wx.ALIGN_LEFT, 5)
         maximumBoxSizer.Add(hs, 0, wx.EXPAND, 5)
-        
+
         hs = wx.BoxSizer(wx.HORIZONTAL)
         self.hostsNumberLabel = wx.StaticText(self, label="Number of\nsimultaneous clients:")
         self.hostsNumberLabel.SetFont(boldFont)
@@ -1120,10 +1129,10 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.maximumRepetitionText = wx.StaticText(self, label="")
         hs.Add(self.maximumRepetitionText, 0, wx.ALIGN_LEFT, 5)
         maximumBoxSizer.Add(hs, 0, wx.EXPAND, 5)
-        
+
         self.resultsBox = wx.StaticBox(self, label="Optimization results")
         self.resultsBoxSizer = wx.StaticBoxSizer(self.resultsBox, wx.VERTICAL)
-        
+
         processBoxSizer.Add(self.statusText, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         processBoxSizer.Add(self.dotsText, 0, wx.ALIGN_CENTER|wx.ALL, 10)
         processBoxSizer.Add(self.repetitionText, 0, wx.ALIGN_CENTER|wx.ALL, 10)
@@ -1390,21 +1399,28 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
 
     def AddFinishedSimulation(self, simulator):
         """ """
+        #versionsList = []
         version = simulator.context.version
         ch = wx.CheckBox(self, label=version.name)
         self.checkBoxes.append(ch)
         self.checkBoxToSimulator[ch] = simulator
         self.versionsSelectSizer.Add(ch)
+        #versionsList.append(version.name)
         self.Layout()
     
     def OnAllSimulationsFinished(self, simulators):
         """ """
+        versionsList = []
         items = []
         for s in simulators:
             version = s.context.version
+            versionsList.append(version.name)
             for rh in version.run_hosts:
                 if rh.host_name not in items:
                     items.append(rh.host_name)
+
+         # fill combocheckbox with versions names
+        self.tcp.SetChoices(versionsList)
 
         self.hostCombo.Clear()
         self.hostCombo.AppendItems(items)
@@ -1429,6 +1445,11 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.maximumVersionText.Show()
 
         self.resultsBox.Show()
+
+        # check if at least 2 versions were selected,
+        # if not, simply do not start the optimization
+        # process, first - correct the parameters
+        # (select at least 2 versions)
 
         simulators = []
         for ch in self.checkBoxes:

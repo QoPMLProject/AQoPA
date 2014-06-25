@@ -56,7 +56,7 @@ class ModulesPanel(wx.Panel):
         self.comboCheckBox.SetText('...')
 
         # create ordinary combobox for module configuration
-        self.modulesConfComboBox = wx.ComboBox(self)
+        self.modulesConfComboBox = wx.ComboBox(self, style=wx.TE_READONLY)
 
         # add tooltipz = make user's life easier
         modulesSelectionBox.SetToolTip(wx.ToolTip("Select modules for analysis"))
