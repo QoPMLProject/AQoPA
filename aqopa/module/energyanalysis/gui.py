@@ -1,8 +1,4 @@
-'''
-Created on 06-09-2013
-
-@author: Damian Rusinek <damian.rusinek@gmail.com>
-'''
+#!/usr/bin/env python
 
 import os
 import re
@@ -12,8 +8,17 @@ import wx.lib.scrolledpanel as scrolled
 import wx.lib.delayedresult
 
 from aqopa.model import name_indexes
+from aqopa.gui import results_frame_gui
 from aqopa.bin import gui as aqopa_gui
 from aqopa.simulator.error import RuntimeException
+
+"""
+@file       gui.py
+@brief      GUI for the energy analysis panel
+@author     Damian Rusinek <damian.rusinek@gmail.com>
+@date       created on 06-09-2013 by Damian Rusinek
+@date       edited on 25-06-2014 by Katarzyna Mazur (visual improvements mainly)
+"""
 
 class SingleVersionPanel(wx.Panel):
     """ 
@@ -383,7 +388,6 @@ class SingleVersionPanel(wx.Panel):
         
         self.consumptionResultsPanel.SetSizer(sizer)
         self.Layout()
-        
         
 class MainResultsNotebook(wx.Notebook):
     """ """

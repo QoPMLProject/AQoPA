@@ -25,6 +25,35 @@ class ResultsFrame(wx.Frame):
         self.groupBox = wx.StaticBox(self, label="Results")
         self.groupBoxSizer = wx.StaticBoxSizer(self.groupBox, wx.VERTICAL)
 
+    # create buttons - simple 'OK' and 'Cancel' will be enough
+        self.OKButton = wx.Button(self, label="OK")
+        self.cancelButton = wx.Button(self, label="Cancel")
+
+        # do some bindings - for now on OK, as well as the cancel button
+        # will simply close the module configuration window
+        self.OKButton.Bind(wx.EVT_BUTTON, self.OnOKButtonClicked)
+        self.cancelButton.Bind(wx.EVT_BUTTON, self.OnCancelButtonClicked)
+
+        # align buttons
+        bottomSizer = wx.BoxSizer(wx.HORIZONTAL)
+        bottomSizer.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
+        bottomSizer.Add(self.OKButton, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+        bottomSizer.Add(self.cancelButton, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.groupBoxSizer, 1, wx.EXPAND | wx.ALL, 5)
+        self.sizer.Add(bottomSizer, 0, wx.EXPAND, 5)
+        self.SetSizer(self.sizer)
+        self.CentreOnParent()
+        self.Layout()
+
+    def AddPanel(self, panel) :
+
+        self.groupBoxSizer.Add(panel, 1, wx.EXPAND)
+        self.SetSizer(self.sizer)
+        self.sizer.Layout()
+        self.CentreOnParent()
+
     def OnOKButtonClicked(self, event) :
         self.Close()
 
