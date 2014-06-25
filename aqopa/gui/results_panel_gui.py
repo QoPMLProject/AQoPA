@@ -103,11 +103,11 @@ class ResultsPanel(wx.Panel):
             # instead, clear combo and its selection
             self.modulesChooserComboBox.Clear()
             self.modulesChooserComboBox.SetSelection(-1)
-            self.modulesChooserComboBox.SetValue("")
+            self.modulesChooserComboBox.SetValue("...")
             # add selected modules to the combobox
             for m in self.selectedModules:
                 self.modulesChooserComboBox.Append(m.get_gui().get_name())
-            # refresh combo and show it 
+            # refresh combo and show it
             self.modulesChooserComboBox.Refresh()
             self.modulesChooserComboBox.Show()
             self.modulesInfo.Show()
