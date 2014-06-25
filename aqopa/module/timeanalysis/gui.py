@@ -1392,6 +1392,9 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.maximumVersionText.Hide()
         self.maximumVersionText.SetLabel("")
 
+        # clear versions combocheckbox
+        self.tcp.ClearChoices()
+
         self.resultsBox.Hide()
         self.resultsBoxSizer.Clear(True)
 
