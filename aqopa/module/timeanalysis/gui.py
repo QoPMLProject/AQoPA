@@ -1,10 +1,5 @@
-'''
-Created on 06-09-2013
+#!/usr/bin/env python
 
-@author: Damian Rusinek <damian.rusinek@gmail.com>
-'''
-
-import os
 import re
 import wx
 import wx.animate
@@ -14,6 +9,14 @@ import wx.lib.delayedresult
 from aqopa.model import name_indexes
 from aqopa.bin import gui as aqopa_gui
 from aqopa.simulator.error import RuntimeException
+
+"""
+@file       timeanalysis.py
+@brief      GUI for the main time analysis results, where we can see actual analysis results [time]
+@author     Damian Rusinek <damian.rusinek@gmail.com>
+@date       created on 05-09-2013 by Damian Rusinek
+@date       edited on 25-06-2014 by Katarzyna Mazur (visual improvements mainly)
+"""
 
 class SingleVersionPanel(wx.Panel):
     """ 

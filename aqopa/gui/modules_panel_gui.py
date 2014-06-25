@@ -118,13 +118,12 @@ class ModulesPanel(wx.Panel):
         @brief configures chosen module [ideally, do it in
         a new window]
         """
-        print self.modulesConfComboBox.GetStringSelection()
+        # print self.modulesConfComboBox.GetStringSelection()
         # get selected module from combo
         selectedModule = self.modulesConfComboBox.GetValue()
 
         for m in self.allModules :
             if m.get_gui().get_name() == selectedModule :
-                print "%s - Configuration" % selectedModule
                 # new window (frame, actually) where we open up a
                 # panel received from module/name/gui.py[get_configuration_panel]
                 confWindow = ConfigFrame(self)
