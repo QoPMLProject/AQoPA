@@ -5,7 +5,7 @@ import os
 
 """
 @file       general_purpose_frame_gui.py
-@brief      GUI (frame = window) for modules configuration
+@brief      GUI (frame = window) for modules configuration, results presentation, etc...
 @author     Katarzyna Mazur
 @date       created on 19-06-2014 by Katarzyna Mazur
 """
@@ -15,14 +15,14 @@ class GeneralFrame(wx.Frame):
     @brief frame (simply: window) for configuring chosen modules
     """
 
-    def __init__(self, parent, title, icon):
+    def __init__(self, parent, windowTitle, boxTitle, icon):
         wx.Frame.__init__(self, parent)
 
         self.SetIcon(wx.Icon(self.CreatePath4Resource(icon), wx.BITMAP_TYPE_PNG))
-        self.SetTitle(title)
+        self.SetTitle(windowTitle)
 
         # create static box aka group box
-        self.groupBox = wx.StaticBox(self, label="Configuration")
+        self.groupBox = wx.StaticBox(self, label=boxTitle)
         self.groupBoxSizer = wx.StaticBoxSizer(self.groupBox, wx.VERTICAL)
 
         # create buttons - simple 'OK' and 'Cancel' will be enough
@@ -49,10 +49,10 @@ class GeneralFrame(wx.Frame):
 
     def AddPanel(self, panel) :
 
-        self.groupBoxSizer.Add(panel, 1, wx.EXPAND)
+        self.panel = panel
+        self.groupBoxSizer.Add(self.panel, 0, wx.EXPAND | wx.ALL, 5)
         self.SetSizer(self.sizer)
         self.sizer.Layout()
-        self.CentreOnParent()
 
     def OnOKButtonClicked(self, event) :
         self.Close()

@@ -126,7 +126,7 @@ class ModulesPanel(wx.Panel):
             if m.get_gui().get_name() == selectedModule :
                 # new window (frame, actually) where we open up a
                 # panel received from module/name/gui.py[get_configuration_panel]
-                confWindow = GeneralFrame(self, "Module Configuration", "config.png")
+                confWindow = GeneralFrame(self, "Module Configuration", "Configuration", "config.png")
                 panel = m.get_gui().get_configuration_panel(confWindow)
                 confWindow.AddPanel(panel)
                 confWindow.Show()

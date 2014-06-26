@@ -11,6 +11,7 @@ from aqopa.model import name_indexes
 from aqopa.bin import gui as aqopa_gui
 from aqopa.simulator.error import RuntimeException
 from aqopa.gui.combo_check_box import ComboCheckBox
+from aqopa.gui.general_purpose_frame_gui import GeneralFrame
 
 """
 @file       timeanalysis.py
@@ -323,29 +324,40 @@ class SingleVersionPanel(wx.Panel):
         self.Layout()
     
     def ShowAverageHostsTime(self, simulator, hosts):
-        """ """
+        """
+        @brief shows average time [in ms] -
+        present results in a new window (frame, actually)
+        """
         def GetVal(simulator, hosts):
             sum = 0.0
             n = len(hosts)
             for h in hosts:
                 sum += self.module.get_current_time(simulator, h)
             return sum / float(n)
-        
-        if self.timeResultsPanel:
-            self.timeResultsPanel.Destroy()
-            
-        self.timeResultsPanel = scrolled.ScrolledPanel(self)
-        self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
-    
+
+        # create a new frame to show time analysis results on it
+        avgTimeWindow = GeneralFrame(self, "Time Analysis Results", "Average Time", "modules_results.png")
+
+        # create scrollable panel
+        avgPanel = scrolled.ScrolledPanel(avgTimeWindow)
+
+        # get average time and make a label out of it
         avg = GetVal(simulator, hosts)
         lblText = "Average: %.2f ms" % avg
-        lbl = wx.StaticText(self.timeResultsPanel, label=lblText)        
-    
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(lbl)
-        
-        self.timeResultsPanel.SetSizer(sizer)
-        self.Layout()
+        lbl = wx.StaticText(avgPanel, label=lblText)
+
+        # sizer to align gui elements properly
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(lbl, 0, wx.ALL | wx.EXPAND, 5)
+        avgPanel.SetSizer(sizer)
+        avgPanel.Layout()
+
+        # add panel on a window
+        avgTimeWindow.AddPanel(avgPanel)
+        # center window on a screen
+        avgTimeWindow.CentreOnScreen()
+        # show the results on the new window
+        avgTimeWindow.Show()
         
     def ShowMinimalHostsTime(self, simulator, hosts):
         """ """
