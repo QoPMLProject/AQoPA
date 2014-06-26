@@ -8,7 +8,6 @@ import wx.lib.scrolledpanel as scrolled
 import wx.lib.delayedresult
 
 from aqopa.model import name_indexes
-from aqopa.gui.results_frame_gui import ResultsFrame
 from aqopa.bin import gui as aqopa_gui
 from aqopa.simulator.error import RuntimeException
 

@@ -360,7 +360,9 @@ class SingleVersionPanel(wx.Panel):
         avgTimeWindow.Show()
         
     def ShowMinimalHostsTime(self, simulator, hosts):
-        """ """
+        """
+        @brief shows minimum hosts time
+        """
         def GetVal(simulator, hosts):
             val = None 
             for h in hosts:
@@ -368,23 +370,32 @@ class SingleVersionPanel(wx.Panel):
                 if val is None or t < val:
                     val = t
             return val
-        
-        if self.timeResultsPanel:
-            self.timeResultsPanel.Destroy()
-            
-        self.timeResultsPanel = scrolled.ScrolledPanel(self)
-        self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
         val = GetVal(simulator, hosts)
         lblText = "Minimum: %.2f ms" % val
-        lbl = wx.StaticText(self.timeResultsPanel, label=lblText)        
-    
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(lbl)
-        
-        self.timeResultsPanel.SetSizer(sizer)
-        self.Layout()
-    
+
+        # create a new frame to show time analysis results on it
+        minTimeWindow = GeneralFrame(self, "Time Analysis Results", "Minimal Time", "modules_results.png")
+
+        # create scrollable panel
+        minPanel = scrolled.ScrolledPanel(minTimeWindow)
+
+        # create informational label
+        lbl = wx.StaticText(minPanel, label=lblText)
+
+        # sizer to align gui elements properly
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(lbl, 0, wx.ALL | wx.EXPAND, 5)
+        minPanel.SetSizer(sizer)
+        minPanel.Layout()
+
+        # add panel on a window
+        minTimeWindow.AddPanel(minPanel)
+        # center window on a screen
+        minTimeWindow.CentreOnScreen()
+        # show the results on the new window
+        minTimeWindow.Show()
+
     def ShowMaximalHostsTime(self, simulator, hosts):
         """ """
         def GetVal(simulator, hosts):
@@ -394,22 +405,31 @@ class SingleVersionPanel(wx.Panel):
                 if t > val:
                     val = t
             return val
-        
-        if self.timeResultsPanel:
-            self.timeResultsPanel.Destroy()
-            
-        self.timeResultsPanel = scrolled.ScrolledPanel(self)
-        self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
-    
+
         val = GetVal(simulator, hosts)
         lblText = "Maximum: %.2f ms" % val
-        lbl = wx.StaticText(self.timeResultsPanel, label=lblText)     
-    
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(lbl)
-        
-        self.timeResultsPanel.SetSizer(sizer)
-        self.Layout()
+
+        # create a new frame to show time analysis results on it
+        maxTimeWindow = GeneralFrame(self, "Time Analysis Results", "Maximal Time", "modules_results.png")
+
+        # create scrollable panel
+        maxPanel = scrolled.ScrolledPanel(maxTimeWindow)
+
+        # create informational label
+        lbl = wx.StaticText(maxPanel, label=lblText)
+
+        # sizer to align gui elements properly
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(lbl, 0, wx.ALL | wx.EXPAND, 5)
+        maxPanel.SetSizer(sizer)
+        maxPanel.Layout()
+
+        # add panel on a window
+        maxTimeWindow.AddPanel(maxPanel)
+        # center window on a screen
+        maxTimeWindow.CentreOnScreen()
+        # show the results on the new window
+        maxTimeWindow.Show()
         
 #TIME_TYPE_MAX   = 1
 #TIME_TYPE_AVG   = 2
