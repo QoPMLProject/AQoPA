@@ -38,8 +38,6 @@ class SingleVersionPanel(wx.Panel):
         self.checkBoxInformations   = []  # Tuples with host name, and index ranges widget
         self.hostCheckBoxes         = []  # List of checkboxes with hosts names used for hosts' selection
 
-        self.timeResultsPanel       = None
-
         #################
         # VERSION BOX
         #################
@@ -78,13 +76,10 @@ class SingleVersionPanel(wx.Panel):
         
         self.showTimeBtn = wx.Button(self, label="Show time")
         self.showTimeBtn.Bind(wx.EVT_BUTTON, self.OnShowTimeButtonClicked)
-        
-        self.timesResultBox = wx.StaticBox(self, label="Results")
-        self.timesResultBoxSizer = wx.StaticBoxSizer(self.timesResultBox, wx.VERTICAL)
-        
+
         timesBoxSizer.Add(timesHBoxSizer, 0, wx.ALL | wx.EXPAND)
-        timesBoxSizer.Add(self.showTimeBtn, 0, wx.ALL | wx.EXPAND)
-        timesBoxSizer.Add(self.timesResultBoxSizer, 1, wx.ALL | wx.EXPAND)
+        timesBoxSizer.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
+        timesBoxSizer.Add(self.showTimeBtn, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(versionBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
@@ -202,7 +197,7 @@ class SingleVersionPanel(wx.Panel):
             panelSizer = wx.BoxSizer(wx.HORIZONTAL)
             
             ch = wx.CheckBox(panel, label=hostName, size=(120, 20))
-            textCtrl = wx.TextCtrl(panel)
+            textCtrl = wx.TextCtrl(panel, size=(300, 20))
             textCtrl.SetValue("0")
             
             rangeLabel = "Available range: 0"
@@ -236,7 +231,6 @@ class SingleVersionPanel(wx.Panel):
         widgets.append(self.maxTimeRB)
         widgets.append(self.hostsBox)
         widgets.append(self.showTimeBtn)
-        widgets.append(self.timesResultBox)
         
         for w in widgets:
             if visible:
@@ -300,28 +294,40 @@ class SingleVersionPanel(wx.Panel):
     
     def ShowHostsTimes(self, simulator, hosts):
         """ """
-        if self.timeResultsPanel:
-            self.timeResultsPanel.Destroy()
-            self.timeResultsPanel = None
-            
-        self.timeResultsPanel = scrolled.ScrolledPanel(self)
-        self.timesResultBoxSizer.Add(self.timeResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
-        
-        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        lblText = ""
+
         for h in hosts:
             
-            lblText = "%s: %.2f ms" % (h.name,self.module.get_current_time(simulator, h))
-            
+            lblText += "%s: %.2f ms" % (h.name,self.module.get_current_time(simulator, h))
+
             error = h.get_finish_error()
             if error is not None:
                 lblText += " (Not Finished - %s)" % error
-            
-            lbl = wx.StaticText(self.timeResultsPanel, label=lblText)
-            sizer.Add(lbl)
-        
-        self.timeResultsPanel.SetSizer(sizer)
-        self.timeResultsPanel.SetupScrolling(scroll_x=False)
-        self.Layout()
+            lblText += "\n\n"
+
+        # create a new frame to show time analysis results on it
+        hostsTimeWindow = GeneralFrame(self, "Time Analysis Results", "Host's Time", "modules_results.png")
+
+        # create scrollable panel
+        hostsPanel = scrolled.ScrolledPanel(hostsTimeWindow)
+
+        # create informational label
+        lbl = wx.StaticText(hostsPanel, label=lblText)
+
+        # sizer to align gui elements properly
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(lbl, 1, wx.ALL | wx.EXPAND, 5)
+        hostsPanel.SetSizer(sizer)
+        hostsPanel.SetupScrolling(scroll_x=True)
+        hostsPanel.Layout()
+
+        # add panel on a window
+        hostsTimeWindow.AddPanel(hostsPanel)
+        # center window on a screen
+        hostsTimeWindow.CentreOnScreen()
+        # show the results on the new window
+        hostsTimeWindow.Show()
     
     def ShowAverageHostsTime(self, simulator, hosts):
         """

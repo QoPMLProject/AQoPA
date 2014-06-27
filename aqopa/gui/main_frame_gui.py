@@ -13,7 +13,7 @@ from aqopa.gui.main_notebook_gui import MainNotebook
 """
 @file       main_frame_gui.py
 @brief      GUI for the main frame (the one with the tabs on it)
-@author     Damian Rusinek
+@author     Damian Rusinek <damian.rusinek@gmail.com>
 @date       created on 05-09-2013 by Damian Rusinek
 @date       edited on 07-05-2014 by Katarzyna Mazur (visual improvements)
 """

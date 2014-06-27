@@ -50,10 +50,15 @@ class GeneralFrame(wx.Frame):
     def AddPanel(self, panel) :
 
         self.panel = panel
-        self.groupBoxSizer.Add(self.panel, 0, wx.EXPAND | wx.ALL, 5)
-        self.sizer.Fit(self)
+        self.groupBoxSizer.Add(self.panel, 1, wx.EXPAND | wx.ALL, 5)
         self.SetSizer(self.sizer)
         self.sizer.Layout()
+
+    def DoFit(self):
+        self.sizer.Fit(self)
+
+    def SetWindowSize(self, width, height):
+        self.SetClientSize(wx.Size(width, height))
 
     def OnOKButtonClicked(self, event) :
         self.Close()

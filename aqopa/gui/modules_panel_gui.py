@@ -8,7 +8,7 @@ from aqopa.gui.general_purpose_frame_gui import GeneralFrame
 """
 @file       modules_panel_gui.py
 @brief      GUI for the 'Modules' tab on AQoPA's main window (panel)
-@author     Damian Rusinek
+@author     Damian Rusinek <damian.rusinek@gmail.com>
 @date       created on 05-09-2013 by Damian Rusinek
 @date       edited on 07-05-2014 by Katarzyna Mazur
 """

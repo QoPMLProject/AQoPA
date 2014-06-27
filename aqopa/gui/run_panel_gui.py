@@ -15,7 +15,7 @@ from aqopa.simulator.error import EnvironmentDefinitionException,\
 """
 @file       run_panel_gui.py
 @brief      GUI for the 'Run' tab on AQoPA's main window (panel)
-@author     Damian Rusinek
+@author     Damian Rusinek <damian.rusinek@gmail.com>
 @date       created on 05-09-2013 by Damian Rusinek
 @date       edited on 08-05-2014 by Katarzyna Mazur (visual improvements)
 """

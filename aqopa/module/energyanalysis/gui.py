@@ -10,6 +10,7 @@ import wx.lib.delayedresult
 from aqopa.model import name_indexes
 from aqopa.bin import gui as aqopa_gui
 from aqopa.simulator.error import RuntimeException
+from aqopa.gui.general_purpose_frame_gui import GeneralFrame
 
 """
 @file       gui.py
@@ -72,14 +73,15 @@ class SingleVersionPanel(wx.Panel):
         
         self.showConsumptionBtn = wx.Button(self, label="Show energy conspumption")
         self.showConsumptionBtn.Bind(wx.EVT_BUTTON, self.OnShowConsumptionButtonClicked)
-        
+
         self.consumptionsResultBox = wx.StaticBox(self, label="Results")
         self.consumptionsResultBoxSizer = wx.StaticBoxSizer(self.consumptionsResultBox, wx.VERTICAL)
         
-        consumptionsBoxSizer.Add(voltageHBoxSizer, 0, wx.ALL | wx.EXPAND)
-        consumptionsBoxSizer.Add(consumptionsHBoxSizer, 0, wx.ALL | wx.EXPAND)
-        consumptionsBoxSizer.Add(self.showConsumptionBtn, 0, wx.ALL | wx.EXPAND)
-        consumptionsBoxSizer.Add(self.consumptionsResultBoxSizer, 1, wx.ALL | wx.EXPAND)
+        consumptionsBoxSizer.Add(voltageHBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
+        consumptionsBoxSizer.Add(consumptionsHBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
+        consumptionsBoxSizer.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
+        consumptionsBoxSizer.Add(self.showConsumptionBtn, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
+        consumptionsBoxSizer.Add(self.consumptionsResultBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(versionBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
@@ -200,7 +202,7 @@ class SingleVersionPanel(wx.Panel):
             panelSizer = wx.BoxSizer(wx.HORIZONTAL)
             
             ch = wx.CheckBox(panel, label=hostName, size=(120, 20))
-            textCtrl = wx.TextCtrl(panel)
+            textCtrl = wx.TextCtrl(panel, size=(200, 20))
             textCtrl.SetValue("0")
             
             rangeLabel = "Available range: 0"
@@ -319,22 +321,31 @@ class SingleVersionPanel(wx.Panel):
             for h in hosts:
                 sum += consumptions[h]
             return sum / float(n)
-        
-        if self.consumptionResultsPanel:
-            self.consumptionResultsPanel.Destroy()
-            
-        self.consumptionResultsPanel = scrolled.ScrolledPanel(self)
-        self.consumptionsResultBoxSizer.Add(self.consumptionResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
     
         val = GetVal(self.module.get_hosts_consumptions(simulator, hosts, voltage), hosts)
         lblText = "Average: %.2f mJ" % val
-        lbl = wx.StaticText(self.consumptionResultsPanel, label=lblText)        
-    
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(lbl)
-        
-        self.consumptionResultsPanel.SetSizer(sizer)
-        self.Layout()
+
+        # create a new frame to show time analysis results on it
+        avgEnergyWindow = GeneralFrame(self, "Energy Analysis Results", "Average Host's Consumptions", "modules_results.png")
+
+        # create scrollable panel
+        avgPanel = scrolled.ScrolledPanel(avgEnergyWindow)
+
+        # create informational label
+        lbl = wx.StaticText(avgPanel, label=lblText)
+
+        # sizer to align gui elements properly
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(lbl, 0, wx.ALL | wx.EXPAND, 5)
+        avgPanel.SetSizer(sizer)
+        avgPanel.Layout()
+
+        # add panel on a window
+        avgEnergyWindow.AddPanel(avgPanel)
+        # center window on a screen
+        avgEnergyWindow.CentreOnScreen()
+        # show the results on the new window
+        avgEnergyWindow.Show()
         
     def ShowMinimalHostsConsumption(self, simulator, hosts, voltage):
         """ """
@@ -345,22 +356,31 @@ class SingleVersionPanel(wx.Panel):
                 if val is None or v < val:
                     val = v
             return val
-        
-        if self.consumptionResultsPanel:
-            self.consumptionResultsPanel.Destroy()
-            
-        self.consumptionResultsPanel = scrolled.ScrolledPanel(self)
-        self.consumptionsResultBoxSizer.Add(self.consumptionResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
-    
+
         val = GetVal(self.module.get_hosts_consumptions(simulator, hosts, voltage), hosts)
         lblText = "Minimum: %.2f mJ" % val
-        lbl = wx.StaticText(self.consumptionResultsPanel, label=lblText)        
-    
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(lbl)
-        
-        self.consumptionResultsPanel.SetSizer(sizer)
-        self.Layout()
+
+        # create a new frame to show time analysis results on it
+        minEnergyWindow = GeneralFrame(self, "Energy Analysis Results", "Minimal Host's Consumptions", "modules_results.png")
+
+        # create scrollable panel
+        minPanel = scrolled.ScrolledPanel(minEnergyWindow)
+
+        # create informational label
+        lbl = wx.StaticText(minPanel, label=lblText)
+
+        # sizer to align gui elements properly
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(lbl, 0, wx.ALL | wx.EXPAND, 5)
+        minPanel.SetSizer(sizer)
+        minPanel.Layout()
+
+        # add panel on a window
+        minEnergyWindow.AddPanel(minPanel)
+        # center window on a screen
+        minEnergyWindow.CentreOnScreen()
+        # show the results on the new window
+        minEnergyWindow.Show()
     
     def ShowMaximalHostsConsumption(self, simulator, hosts, voltage):
         """ """
@@ -371,22 +391,31 @@ class SingleVersionPanel(wx.Panel):
                 if v > val:
                     val = v
             return val
-        
-        if self.consumptionResultsPanel:
-            self.consumptionResultsPanel.Destroy()
-            
-        self.consumptionResultsPanel = scrolled.ScrolledPanel(self)
-        self.consumptionsResultBoxSizer.Add(self.consumptionResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
-    
+
         val = GetVal(self.module.get_hosts_consumptions(simulator, hosts, voltage), hosts)
         lblText = "Maximum: %.2f mJ" % val
-        lbl = wx.StaticText(self.consumptionResultsPanel, label=lblText)     
-    
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(lbl)
-        
-        self.consumptionResultsPanel.SetSizer(sizer)
-        self.Layout()
+
+        # create a new frame to show time analysis results on it
+        maxEnergyWindow = GeneralFrame(self, "Energy Analysis Results", "Maximal Host's Consumptions", "modules_results.png")
+
+        # create scrollable panel
+        maxPanel = scrolled.ScrolledPanel(maxEnergyWindow)
+
+        # create informational label
+        lbl = wx.StaticText(maxPanel, label=lblText)
+
+        # sizer to align gui elements properly
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(lbl, 0, wx.ALL | wx.EXPAND, 5)
+        maxPanel.SetSizer(sizer)
+        maxPanel.Layout()
+
+        # add panel on a window
+        maxEnergyWindow.AddPanel(maxPanel)
+        # center window on a screen
+        maxEnergyWindow.CentreOnScreen()
+        # show the results on the new window
+        maxEnergyWindow.Show()
 
 
 class MainResultsNotebook(wx.Notebook):
