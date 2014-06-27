@@ -1,8 +1,4 @@
-'''
-Created on 06-09-2013
-
-@author: Damian Rusinek <damian.rusinek@gmail.com>
-'''
+#!/usr/bin/env python
 
 import os
 import re
@@ -14,6 +10,15 @@ import wx.lib.delayedresult
 from aqopa.model import name_indexes
 from aqopa.bin import gui as aqopa_gui
 from aqopa.simulator.error import RuntimeException
+from aqopa.gui.general_purpose_frame_gui import GeneralFrame
+
+"""
+@file       gui.py
+@brief      GUI for the reputation analysis panel
+@author     Damian Rusinek <damian.rusinek@gmail.com>
+@date       created on 06-09-2013 by Damian Rusinek
+@date       edited on 27-06-2014 by Katarzyna Mazur (visual improvements mainly)
+"""
 
 class SingleVersionPanel(wx.Panel):
     """ 
@@ -31,8 +36,6 @@ class SingleVersionPanel(wx.Panel):
         self.hostChoosePanels       = []  # Panels used to choose hosts for energy consumptions results
         self.checkBoxInformations   = []  # Tuples with host name, and index ranges widget
         self.hostCheckBoxes         = []  # List of checkboxes with hosts names used for hosts' selection
-
-        self.reputationResultsPanel       = None
 
         #################
         # VERSION BOX
@@ -60,12 +63,13 @@ class SingleVersionPanel(wx.Panel):
         self.showReputationBtn = wx.Button(self, label="Show reputation results")
         self.showReputationBtn.Bind(wx.EVT_BUTTON, self.OnShowReputationButtonClicked)
         
-        self.reputationResultBox = wx.StaticBox(self, label="Results")
-        self.reputationResultBoxSizer = wx.StaticBoxSizer(self.reputationResultBox, wx.VERTICAL)
-        
         reputationBoxSizer.Add(reputationHBoxSizer, 0, wx.ALL | wx.EXPAND)
-        reputationBoxSizer.Add(self.showReputationBtn, 0, wx.ALL | wx.EXPAND)
-        reputationBoxSizer.Add(self.reputationResultBoxSizer, 1, wx.ALL | wx.EXPAND)
+
+        buttonsBoxSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonsBoxSizer.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
+        buttonsBoxSizer.Add(self.showReputationBtn, 0, wx.ALL | wx.ALIGN_RIGHT)
+
+        reputationBoxSizer.Add(buttonsBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(versionBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
@@ -154,7 +158,7 @@ class SingleVersionPanel(wx.Panel):
             panelSizer = wx.BoxSizer(wx.HORIZONTAL)
             
             ch = wx.CheckBox(panel, label=hostName, size=(120, 20))
-            textCtrl = wx.TextCtrl(panel)
+            textCtrl = wx.TextCtrl(panel, size=(200, 20))
             textCtrl.SetValue("0")
             
             rangeLabel = "Available range: 0"
@@ -163,6 +167,7 @@ class SingleVersionPanel(wx.Panel):
             maxLbl = wx.StaticText(panel, label=rangeLabel)
             
             panelSizer.Add(ch, 0, wx.ALL | wx.ALIGN_CENTER)
+            panelSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.ALIGN_RIGHT)
             panelSizer.Add(textCtrl, 0, wx.ALL | wx.ALIGN_CENTER)
             panelSizer.Add(maxLbl, 0, wx.ALL | wx.ALIGN_CENTER)
             panel.SetSizer(panelSizer)
@@ -181,8 +186,7 @@ class SingleVersionPanel(wx.Panel):
         widgets.append(self.consumptionsBox)
         widgets.append(self.hostsBox)
         widgets.append(self.showReputationBtn)
-        widgets.append(self.reputationResultBox)
-        
+
         for w in widgets:
             if visible:
                 w.Show()
@@ -236,32 +240,41 @@ class SingleVersionPanel(wx.Panel):
     
     def ShowHostsReputation(self, simulator, hosts):
         """ """
-        if self.reputationResultsPanel:
-            self.reputationResultsPanel.Destroy()
-            self.reputationResultsPanel = None
-            
-        self.reputationResultsPanel = scrolled.ScrolledPanel(self)
-        self.reputationResultBoxSizer.Add(self.reputationResultsPanel, 1, wx.ALL | wx.EXPAND, 5)
-        
-        sizer = wx.BoxSizer(wx.VERTICAL)
+        lblText = ""
 
         for h in hosts:
-            lblText = "%s: " % (h.name,)
+            lblText += "%s: " % (h.name,)
             error = h.get_finish_error()
             if error is not None:
                 lblText += " (Not Finished - %s)" % error
-            lbl = wx.StaticText(self.reputationResultsPanel, label=lblText)
-            sizer.Add(lbl)
 
             host_vars = self.module.get_host_vars(h)
             for var_name in host_vars:
                 lblText = "%s: %s" % (var_name, unicode(host_vars[var_name]))
-                lbl = wx.StaticText(self.reputationResultsPanel, label=lblText)
-                sizer.Add(lbl)
+            lblText += "\n\n"
 
-        self.reputationResultsPanel.SetSizer(sizer)
-        self.reputationResultsPanel.SetupScrolling(scroll_x=False)
-        self.Layout()
+        # create a new frame to show time analysis results on it
+        hostsReputationWindow = GeneralFrame(self, "Reputation Analysis Results", "Host's Reputation", "modules_results.png")
+
+        # create scrollable panel
+        hostsPanel = scrolled.ScrolledPanel(hostsReputationWindow)
+
+        # create informational label
+        lbl = wx.StaticText(hostsPanel, label=lblText)
+
+        # sizer to align gui elements properly
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(lbl, 0, wx.ALL | wx.EXPAND, 5)
+        hostsPanel.SetSizer(sizer)
+        hostsPanel.SetupScrolling(scroll_x=True)
+        hostsPanel.Layout()
+
+        # add panel on a window
+        hostsReputationWindow.AddPanel(hostsPanel)
+        # center window on a screen
+        hostsReputationWindow.CentreOnScreen()
+        # show the results on the new window
+        hostsReputationWindow.Show()
     
 class MainResultsNotebook(wx.Notebook):
     """ """
