@@ -267,11 +267,16 @@ class MainResultsNotebook(wx.Notebook):
     """ """
     def __init__(self, module, *args, **kwargs):
         wx.Notebook.__init__(self, *args, **kwargs)
-        
+
+        il = wx.ImageList(20, 20)
+        singleVersionImg = il.Add(wx.Bitmap(self.CreatePath4Resource('PuzzlePiece.png'), wx.BITMAP_TYPE_PNG))
+        self.AssignImageList(il)
+
         self.module = module
         
         self.oneVersionTab = SingleVersionPanel(self.module, self)
         self.AddPage(self.oneVersionTab, "Single Version")
+        self.SetPageImage(0, singleVersionImg)
         self.oneVersionTab.Layout()
         
     def OnParsedModel(self):
@@ -285,6 +290,20 @@ class MainResultsNotebook(wx.Notebook):
     def OnAllSimulationsFinished(self, simulators):
         """ """
         pass
+
+    def CreatePath4Resource(self, resourceName):
+        """
+        @brief      creates and returns path to the
+                    given file in the resource
+                    ('assets') dir
+        @return     path to the resource
+        """
+        tmp = os.path.split(os.path.dirname(__file__))
+        # find last / character in path
+        idx = tmp[0].rfind('/')
+        # get substring - path for resource
+        path = tmp[0][0:idx]
+        return os.path.join(path, 'bin', 'assets', resourceName)
         
 class ModuleGui(wx.EvtHandler):
     """
