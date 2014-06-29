@@ -1621,9 +1621,9 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         
         self.resultsBoxSizer.Clear(True)
         hS = wx.BoxSizer(wx.HORIZONTAL)
-        hS.Add(wx.StaticText(self, label="Version", font=self.boldFont, size=(200, -1)), 0)
-        hS.Add(wx.StaticText(self, label="Time", font=self.boldFont, size=(200, -1)), 0)
-        hS.Add(wx.StaticText(self, label="Number of simulatenous hosts", font=self.boldFont, size=(200, -1)), 0)
+        hS.Add(wx.StaticText(self, label="Version", size=(200, -1)), 0)
+        hS.Add(wx.StaticText(self, label="Time", size=(200, -1)), 0)
+        hS.Add(wx.StaticText(self, label="Number of simulatenous hosts", size=(200, -1)), 0)
         self.resultsBoxSizer.Add(hS, 0, wx.ALL | wx.EXPAND, 0)
         
         self.Layout()
