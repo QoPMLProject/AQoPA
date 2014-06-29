@@ -1102,6 +1102,19 @@ class DistributedVersionPanel(wx.Panel):
         sizer.Add(maximumBoxSizer, 0, wx.EXPAND|wx.ALL, 5)
         sizer.Add(self.resultsBoxSizer, 0, wx.EXPAND|wx.ALL, 5)
 
+        # labels
+        versionLbl = wx.StaticText(self, label="Version", size=(200, -1))
+        versionLbl.SetFont(boldFont)
+        timeLbl = wx.StaticText(self, label="Time", size=(200, -1))
+        timeLbl.SetFont(boldFont)
+        hostsLbl = wx.StaticText(self, label="Number of simulatenous hosts", size=(200, -1))
+        hostsLbl.SetFont(boldFont)
+
+        hS = wx.BoxSizer(wx.HORIZONTAL)
+        hS.Add(versionLbl, 0)
+        hS.Add(timeLbl, 0)
+        hS.Add(hostsLbl, 0)
+
         self.SetSizer(sizer)
         self.CenterOnParent()
         self.Layout()
