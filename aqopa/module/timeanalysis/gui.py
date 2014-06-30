@@ -1147,8 +1147,11 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         toleranceText = wx.StaticText(self, label="Tolerance: (in %)")
         self.toleranceTextCtrl = wx.TextCtrl(self, size=(220, 20))
 
+         # info label
+        descText = "Optimization algorithm finds the numbers of simultaneous clients for each version such that the execution time of protocols will be the same (with given tolerance)."
         # create static boxes aka group boxes
         configurationBox = wx.StaticBox(self, label="Optimization configuration")
+        configurationBox.SetToolTip(wx.ToolTip(descText))
 
         # create sizers
         configurationBoxSizer = wx.StaticBoxSizer(configurationBox, wx.VERTICAL)
@@ -1170,11 +1173,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         sizer4.Add(toleranceText, 1, wx.ALL | wx.EXPAND, 5)
         sizer4.Add(self.toleranceTextCtrl, 1, wx.ALL, 5)
 
-        # info label
-        descText = "Optimization algorithm finds the numbers of simultaneous clients for each version such that the execution time of protocols will be the same (with given tolerance)."
-
         self.startButton = wx.Button(self, label="Start optimization")
-        self.startButton.SetToolTip(wx.ToolTip(descText))
         self.startButton.Bind(wx.EVT_BUTTON, self.OnStartClick)
 
         configurationBoxSizer.Add(sizer1, 0, wx.ALIGN_CENTER|wx.ALL, 5)
