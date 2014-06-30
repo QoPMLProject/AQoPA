@@ -57,7 +57,7 @@ class PreInstructionHook(Hook):
         # Return details for each expression in instruction
         # In some instruction may be more expressions (tuple, nested call function)
         total_time, time_details = self._get_time_details_for_expression(context, expression)
-        
+
         if total_time > 0:
             host = context.get_current_host()
             self.module.add_timetrace(self.simulator, host, host.get_current_process(),
@@ -186,7 +186,9 @@ class PreInstructionHook(Hook):
             unit_time = float(mparts[0])
             unit_size = int(mparts[1])
 
-        #time_unit = metric_unit[0]
+        time_unit = metric_unit[0]
+        if time_unit == "ms":
+            unit_time /= 1000.0
         size_unit = metric_unit[1]
 
         expression_to_populate = expression if element_index is None else expression.arguments[element_index]
@@ -198,8 +200,7 @@ class PreInstructionHook(Hook):
         time = units * unit_time
         if size_unit == 'b':
             time *= 8.0
-        # Divided by 1000 to make seconds from ms
-        return time / 1000.0
+        return time
     
     def _get_time_details_for_simple_expression(self, context, expression):
         """
@@ -232,6 +233,19 @@ class PreInstructionHook(Hook):
 
                     time = self._get_time_for_block_metric(metric_type, metric_unit, metric_value,
                                                            expression, context.get_current_host(), context)
+                elif metric_type == 'algorithm':
+                    algorithm_name = metric_value
+                    if not context.algorithms_resolver.has_algorithm(algorithm_name):
+                        raise RuntimeException("Communication algorithm {0} undeclared.".format(algorithm_name))
+
+                    alg = context.algorithms_resolver.get_algorithm(algorithm_name)
+                    variables = {alg['parameter']: expression}
+                    time = context.algorithms_resolver.calculate(context, context.get_current_host(),
+                                                                 algorithm_name, variables)
+
+                    # Update time according to the time unit
+                    if metric_unit == "ms":
+                        time /= 1000.0
 
             if time > 0:
                 time_details.append((expression, time))
@@ -250,19 +264,18 @@ class PreInstructionHook(Hook):
             metric_value = metric['value']
         elif metric['type'] == 'algorithm':
             algorithm_name = metric['name']
-            if not context.channels_manager.has_algorithm(algorithm_name):
+            if not context.algorithms_resolver.has_algorithm(algorithm_name):
                 raise RuntimeException("Communication algorithm {0} undeclared.".format(algorithm_name))
 
             link_quality = context.channels_manager.get_router().get_link_quality(channel.tag_name,
                                                                                   message.sender,
                                                                                   receiver)
-            alg = context.channels_manager.get_algorithm(algorithm_name)
+            alg = context.algorithms_resolver.get_algorithm(algorithm_name)
             variables = {
                 'link_quality': link_quality,
                 alg['parameter']: message.expression,
             }
-            metric_value = context.channels_manager.get_algorithm_resolver().calculate(context, host, algorithm_name,
-                                                                                       variables)
+            metric_value = context.algorithms_resolver.calculate(context, host, algorithm_name, variables)
         else:
             return 0
 
@@ -372,7 +385,7 @@ class PreInstructionHook(Hook):
 
                 # In general, the instruction in host with smaller time
                 # should be executed earlier
-                delay_communication_execution = True
+                host_delay_communication_execution = True
 
                 # The only exception is when the host in the past is waiting on IN instruction
                 # and the request cannot be fulfilled
@@ -390,7 +403,10 @@ class PreInstructionHook(Hook):
                             if host_channel.is_waiting_on_instruction(h, current_instruction):
                                 request = host_channel.get_existing_request_for_instruction(h, current_instruction)
                                 if not request.ready_to_fulfill():
-                                    delay_communication_execution = False
+                                    host_delay_communication_execution = False
+
+                if host_delay_communication_execution:
+                    delay_communication_execution = True
 
         ## Delay execution of this instruction
         ## if needed according to previous check
@@ -453,6 +469,13 @@ class PreInstructionHook(Hook):
                                                               sent_message.sender, sender_time, broadcast_time,
                                                               request.receiver, started_waiting_at,
                                                               receiver_time, receiving_time)
+
+                # DEBUG #
+                # print 'msg from', sent_message.sender.name, \
+                #     'at', sender_time, '(', broadcast_time, 'ms ) ', 'to', len(accepted_requests), 'of', \
+                #     len(all_requests), 'hosts', '- message', unicode(sent_message.expression)
+                # DEBUG #
+
             elif len(accepted_requests) == 1:
                 # point to point
                 # Send message with link metric, update sender's time and fill in the sending time in message
@@ -492,6 +515,13 @@ class PreInstructionHook(Hook):
                 self.module.add_message_sending_time(self.simulator, sent_message, broadcast_time)
 
                 self.module.set_current_time(self.simulator, sender, sender_time + broadcast_time)
+
+                # DEBUG #
+                # print 'all requests', len(all_requests), ' - accepted:', len(accepted_requests)
+                # print 'msg from', sent_message.sender.name, \
+                #     'at', sender_time, '(', broadcast_time, 'ms ) ', \
+                #     'message', unicode(sent_message.expression)
+                # DEBUG #
 
         else:
             # IN instruction

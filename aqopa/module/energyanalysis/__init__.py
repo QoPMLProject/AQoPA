@@ -107,19 +107,18 @@ class Module(module.Module):
             metric_value = metric['value']
         elif metric['type'] == 'algorithm':
             algorithm_name = metric['name']
-            if not context.channels_manager.has_algorithm(algorithm_name):
+            if not context.algorithms_resolver.has_algorithm(algorithm_name):
                 raise RuntimeException("Communication algorithm {0} undeclared.".format(algorithm_name))
 
             link_quality = context.channels_manager.get_router().get_link_quality(channel.tag_name,
                                                                                   message.sender,
                                                                                   receiver)
-            alg = context.channels_manager.get_algorithm(algorithm_name)
+            alg = context.algorithms_resolver.get_algorithm(algorithm_name)
             variables = {
                 'link_quality': link_quality,
                 alg['parameter']: message.expression,
             }
-            metric_value = context.channels_manager.get_algorithm_resolver().calculate(context, host, algorithm_name,
-                                                                                       variables)
+            metric_value = context.algorithms_resolver.calculate(context, host, algorithm_name, variables)
         else:
             return 0
         # unit = metric['unit']
@@ -247,11 +246,14 @@ class Module(module.Module):
                     t_tuples.append((current_time_from, current_time_to, current_current))
             return t_tuples
 
-        def calculate_consumption_to_remove(waiting_tuples, transmitting_tuples):
+        def calculate_consumptions_to_remove(waiting_tuples, transmitting_tuples):
             """
             Returns list of waiting tuples without times when host was transmitting.
             """
-            consumption = 0.0
+            consumptions = {
+                'energy': 0.0,
+                'amp-hour': 0.0,
+            }
             for wtt in waiting_tuples:
                 for ttt in transmitting_tuples:
                     # overlapping
@@ -274,9 +276,10 @@ class Module(module.Module):
                         if ttt[0] >= wtt[0] and ttt[1] > wtt[1]:
                             time = wtt[1] - ttt[0]
 
-                        consumption += voltage * wtt[2] * time / 1000.0
+                        consumptions['energy'] += voltage * wtt[2] * time / 1000.0
+                        consumptions['amp-hour'] += wtt[2] * time / 1000.0 / 3600.0
 
-            return consumption
+            return consumptions
 
         metrics_manager = simulator.context.metrics_manager
         timetraces = self.timeanalysis_module.get_timetraces(simulator)
@@ -284,7 +287,10 @@ class Module(module.Module):
         # Clear results
         hosts_consumption = {}
         for h in hosts:
-            hosts_consumption[h] = 0.0
+            hosts_consumption[h] = {
+                'energy': 0.0,
+                'amp-hour': 0.0,
+            }
 
         # Traverse timetraces
         # Additionaly create list of finish times of instructions for each host
@@ -296,14 +302,17 @@ class Module(module.Module):
             if timetrace.host not in hosts:
                 continue
             
-            consumption = 0.0
+            energy_consumption = 0.0
+            amp_hour = 0.0
             # Get expressions from timetrace
             for simple_expression, time in timetrace.expressions_details:
                 current = self._get_current_for_expression(metrics_manager, timetrace.host, simple_expression)
                 # Calculate consumption
-                consumption += voltage * current * time
+                energy_consumption += voltage * current * time
+                amp_hour = current * time / 3600.0
                 # print timetrace.host.name, 'cpu', unicode(simple_expression), current, time, voltage * time * current
-            hosts_consumption[timetrace.host] += consumption
+            hosts_consumption[timetrace.host]['energy'] += energy_consumption
+            hosts_consumption[timetrace.host]['amp-hour'] += amp_hour
             
         # Traverse channel traces
         # Look for times when host was waiting for message or sending a message
@@ -323,7 +332,10 @@ class Module(module.Module):
                     current_sending = self._get_current_sending_for_link(simulator.context, channel,
                                                                               trace.sender, trace.message,
                                                                               trace.receiver)
-                    hosts_consumption[trace.sender] += (voltage * current_sending * trace.sending_time / 1000.0)
+                    energy_consumption = (voltage * current_sending * trace.sending_time / 1000.0)
+                    amp_hour = current_sending * trace.sending_time / 1000.0 / 3600.0
+                    hosts_consumption[trace.sender]['energy'] += energy_consumption
+                    hosts_consumption[trace.sender]['amp-hour'] += amp_hour
 
                     if trace.sender not in host_channel_transmission_time_tuples:
                         host_channel_transmission_time_tuples[trace.sender] = []
@@ -335,7 +347,10 @@ class Module(module.Module):
                     current_receiving = self._get_current_receiving_for_link(simulator.context, channel,
                                                                                 trace.sender, trace.message,
                                                                                 trace.receiver)
-                    hosts_consumption[trace.receiver] += (voltage * current_receiving * trace.receiving_time / 1000.0)
+                    energy_consumption = voltage * current_receiving * trace.receiving_time / 1000.0
+                    amp_hour = current_receiving * trace.receiving_time / 1000.0 / 3600.0
+                    hosts_consumption[trace.receiver]['energy'] += energy_consumption
+                    hosts_consumption[trace.receiver]['amp-hour'] += amp_hour
 
                     if trace.receiver not in host_channel_waiting_time_tuples:
                         host_channel_waiting_time_tuples[trace.receiver] = []
@@ -360,17 +375,24 @@ class Module(module.Module):
                     # Calculate consumption when host theoretically was waiting
                     # but in fact it was sending or receiving message
                     # This value will be removed from host's consumption
-                    consumption_to_remove = 0.0
+                    consumptions_to_remove = {
+                        'energy': 0.0,
+                        'amp-hour': 0.0,
+                    }
                     if host in host_channel_transmission_time_tuples:
-                        consumption_to_remove = calculate_consumption_to_remove(
+                        consumptions_to_remove = calculate_consumptions_to_remove(
                             waiting_tuples, host_channel_transmission_time_tuples[host])
 
                     # Add waiting consumption
                     for tf, tt, c in waiting_tuples:
-                        hosts_consumption[host] += voltage * c * (tt-tf) / 1000.0
+                        energy_consumption = voltage * c * (tt-tf) / 1000.0
+                        amp_hour = voltage * c * (tt-tf) / 1000.0 / 3600.0
+                        hosts_consumption[host]['energy'] += energy_consumption
+                        hosts_consumption[host]['amp-hour'] += amp_hour
 
                     # Remove surplus consumtpion
-                    hosts_consumption[host] -= consumption_to_remove
+                    hosts_consumption[host]['energy'] -= consumptions_to_remove['energy']
+                    hosts_consumption[host]['amp-hour'] -= consumptions_to_remove['amp-hour']
 
         return hosts_consumption
             

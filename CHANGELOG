@@ -4,6 +4,16 @@
 
 Next release:
 
+v0.8 (2014-06-30)
+- Changed GUI
+- Fixed errors in algorithm calculation.
+- Reduction of expression assigned to variable.
+- Fixed topology parameters reading.
+- Added seconds in time metrics.
+- Changed range in topology rules , now 1:2 includes 1 and 2 numbers.
+- Added Ah result in energy analysis.
+- Fixed link existance check.
+
 v0.7.4 (2014-06-02)
 - Added two current metrics for sending and receiving message (not only one - transmission).
 

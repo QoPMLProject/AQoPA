@@ -17,9 +17,9 @@ class QoPMLModelStore():
         self.metrics_datas           = []
         self.init_version_number     = []
         
+        self.algorithms = {}
         self.mediums = {}
-        self.communication_algorithms = {}
-    
+
     
     def find_host(self, name):
         for h in self.hosts:

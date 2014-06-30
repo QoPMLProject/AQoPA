@@ -20,7 +20,7 @@ class PrintResultsHook(Hook):
 
         self.output_file.write('-'*20)
         self.output_file.write('\n')
-        self.output_file.write('Module\tEnergy Analysis (consumption in J)')
+        self.output_file.write('Module\tEnergy Analysis (consumption in J and Ah )')
         self.output_file.write('\n')
         self.output_file.write('Version\t%s\n' % self.simulator.context.version.name)
         self.output_file.write('\n')
@@ -29,9 +29,13 @@ class PrintResultsHook(Hook):
 
         consumptions = self.module.get_hosts_consumptions(self.simulator, context.hosts, voltage)
         for h in context.hosts:
-            consumption = 'N/A'
+            host_consumptions = {
+                'energy': 'N/A',
+                'amp-hour': 'N/A',
+            }
             if h in consumptions:
-                consumption = str(consumptions[h])
-            self.output_file.write('{0}\t{1:}\t'.format(h.name, consumption))
+                host_consumptions = consumptions[h]
+            self.output_file.write('{0}\t{1}\t{2}\t'.format(h.name, str(host_consumptions['energy']),
+                                                            str(host_consumptions['amp-hour'])))
             self.output_file.write("\n")
         self.output_file.write('\n')

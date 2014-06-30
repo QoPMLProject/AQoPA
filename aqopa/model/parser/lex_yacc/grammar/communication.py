@@ -166,153 +166,6 @@ class ModelParserExtension(LexYaccParserExtension):
         """
         t[0] = t[1]
 
-    #   Algorithms
-
-    def algoriths_specification(self, t):
-        """
-        comm_specification : ALGORITHMS_SPECIFICATION BLOCKOPEN comm_algorithms_list BLOCKCLOSE
-        """
-        pass
-
-    def comm_algorithms_list(self, t):
-        """
-        comm_algorithms_list : comm_algorithm
-                        | comm_algorithms_list comm_algorithm
-        """
-        pass
-
-    def comm_algorithm(self, t):
-        """
-        comm_algorithm : ALGORITHM IDENTIFIER LPARAN IDENTIFIER RPARAN BLOCKOPEN comm_algorithm_instructions BLOCKCLOSE
-        """
-        self.parser.store.communication_algorithms[t[2]] = {'parameter': t[4], 'instructions': t[7]}
-
-    def comm_algorithm_instructions(self, t):
-        """
-        comm_algorithm_instructions : comm_algorithm_instruction
-                                | comm_algorithm_instructions comm_algorithm_instruction
-        """
-        if len(t) == 3:
-            t[0] = t[1]
-            t[0].append(t[2])
-        else:
-            t[0] = []
-            t[0].append(t[1])
-
-    def comm_algorithm_instruction(self, t):
-        """
-        comm_algorithm_instruction : comm_algorithm_instruction_assignment SEMICOLON
-                            | comm_algorithm_instruction_return SEMICOLON
-                            | comm_algorithm_instruction_if
-                            | comm_algorithm_instruction_while
-        """
-        t[0] = t[1]
-
-    def comm_algorithm_instruction_assignment(self, t):
-        """
-        comm_algorithm_instruction_assignment : IDENTIFIER EQUAL comm_algorithm_expression
-        """
-        t[0] = AlgAssignment(identifier=t[1], expression=t[3])
-
-    def comm_algorithm_instruction_return(self, t):
-        """
-        comm_algorithm_instruction_return : RETURN comm_algorithm_expression
-        """
-        t[0] = AlgReturn(expression=t[2])
-
-    def comm_algorithm_instruction_if(self, t):
-        """
-        comm_algorithm_instruction_if : IF LPARAN comm_algorithm_expression_conditional RPARAN BLOCKOPEN comm_algorithm_instructions BLOCKCLOSE
-            | IF LPARAN comm_algorithm_expression_conditional RPARAN BLOCKOPEN comm_algorithm_instructions BLOCKCLOSE ELSE BLOCKOPEN comm_algorithm_instructions BLOCKCLOSE
-        """
-        if len(t) == 8:
-            t[0] = AlgIf(condition=t[3], true_instructions=t[6], false_instructions=[])
-        else:
-            t[0] = AlgIf(condition=t[3], true_instructions=t[6], false_instructions=t[10])
-
-    def comm_algorithm_instruction_while(self, t):
-        """
-        comm_algorithm_instruction_while : WHILE LPARAN comm_algorithm_expression_conditional RPARAN BLOCKOPEN comm_algorithm_instructions BLOCKCLOSE
-        """
-        t[0] = AlgWhile(condition=t[3], instructions=t[6])
-
-    def comm_algorithm_expression_conditional_comparison(self, t):
-        """
-        comm_algorithm_expression_conditional : comm_algorithm_expression EQUAL EQUAL comm_algorithm_expression
-                                        | comm_algorithm_expression EXCLAMATION EQUAL comm_algorithm_expression
-                                        | comm_algorithm_expression GREATER comm_algorithm_expression
-                                        | comm_algorithm_expression GREATER EQUAL comm_algorithm_expression
-                                        | comm_algorithm_expression SMALLER comm_algorithm_expression
-                                        | comm_algorithm_expression SMALLER EQUAL comm_algorithm_expression
-                                        | comm_algorithm_expression_conditional AND AND comm_algorithm_expression_conditional
-                                        | comm_algorithm_expression_conditional OR OR comm_algorithm_expression_conditional
-        """
-        t[0] = t[1]
-        sign = t[2]
-        if len(t) == 5:
-            sign += t[3]
-            t[0].append(sign)
-            t[0].extend(t[4])
-        else:
-            t[0].append(sign)
-            t[0].extend(t[3])
-
-    def comm_algorithm_expression_conditional_paran(self, t):
-        """
-        comm_algorithm_expression_conditional : LPARAN comm_algorithm_expression_conditional RPARAN
-        """
-        t[0] = t[2]
-        t[0].prepend('(')
-        t[0].append(')')
-
-    def comm_algorithm_expression_simple(self, t):
-        """
-        comm_algorithm_expression : number
-                            | IDENTIFIER
-        """
-        t[0] = [t[1]]
-
-    def comm_algorithm_expression_uminus(self, t):
-        """
-        comm_algorithm_expression : COMM_MINUS comm_algorithm_expression %prec COMM_UMINUS
-        """
-        t[0] = t[2]
-        t[0].prepend('--')
-
-    def comm_algorithm_expression_paran(self, t):
-        """
-        comm_algorithm_expression : LPARAN comm_algorithm_expression RPARAN
-        """
-        t[0] = t[2]
-        t[0].prepend('(')
-        t[0].append(')')
-
-    def comm_algorithm_expression_operations(self, t):
-        """
-        comm_algorithm_expression : comm_algorithm_expression COMM_PLUS comm_algorithm_expression
-                            | comm_algorithm_expression COMM_MINUS comm_algorithm_expression
-                            | comm_algorithm_expression COMM_TIMES comm_algorithm_expression
-                            | comm_algorithm_expression COMM_DIVIDE comm_algorithm_expression
-        """
-        t[0] = t[1]
-        t[0].append(t[2])
-        t[0].extend(t[3])
-
-    def comm_algorithm_expression_function(self, t):
-        """
-        comm_algorithm_expression : QUALITY LPARAN RPARAN
-                                | SIZE LPARAN IDENTIFIER RPARAN
-                                | SIZE LPARAN IDENTIFIER SQLPARAN INTEGER SQRPARAN RPARAN
-        """
-        args = []
-        if len(t) == 5:
-            args = [t[3]]
-        elif len(t) == 8:
-            args = [t[3], t[5]]
-        t[0] = [AlgCallFunction(t[1], args)]
-
-    #   Predefined functions
-    
     def _extend(self):
         
         self.parser.add_state('communication', 'inclusive')
@@ -323,31 +176,12 @@ class ModelParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('default_q', 'QUALITY_DEFAULT_PARAMETER', state='communication',)
         self.parser.add_reserved_word('q', 'Q_PARAMETER', state='communication',)
         self.parser.add_reserved_word('topology', 'TOPOLOGY_SPECIFICATION', state='communication',)
-        self.parser.add_reserved_word('algorithms', 'ALGORITHMS_SPECIFICATION', state='communication')
-        self.parser.add_reserved_word('alg', 'ALGORITHM', state='communication')
-        self.parser.add_reserved_word('if', 'IF', state='communication', case_sensitive=True)
-        self.parser.add_reserved_word('while', 'WHILE', state='communication', case_sensitive=True)
-        self.parser.add_reserved_word('else', 'ELSE', state='communication', case_sensitive=True)
-        self.parser.add_reserved_word('quality', 'QUALITY', state='communication', case_sensitive=True)
-        self.parser.add_reserved_word('size', 'SIZE', state='communication', case_sensitive=True)
-        self.parser.add_reserved_word('return', 'RETURN', state='communication', case_sensitive=True)
 
         self.parser.add_token('BLOCKOPEN', func=self.token_block_open, states=['communication'])
         self.parser.add_token('BLOCKCLOSE', func=self.token_block_close, states=['communication'])
         self.parser.add_token('ARROWRIGHT', r'\-\>', states=['communication'])
         self.parser.add_token('ARROWLEFT', r'\<\-', states=['communication'])
         self.parser.add_token('ARROWBOTH', r'\<\-\>', states=['communication'])
-
-        self.parser.add_token('COMM_PLUS', r'\+', states=['communication'])
-        self.parser.add_token('COMM_MINUS', r'\-', states=['communication'])
-        self.parser.add_token('COMM_TIMES', r'\*', states=['communication'])
-        self.parser.add_token('COMM_DIVIDE', r'/', states=['communication'])
-
-        self.parser.add_token('GREATER', r'\>', states=['communication'])
-        self.parser.add_token('SMALLER', r'\<', states=['communication'])
-        self.parser.add_token('EXCLAMATION', r'\!', states=['communication'])
-        self.parser.add_token('AND', r'\&', states=['communication'])
-        self.parser.add_token('OR', r'\|', states=['communication'])
 
         self.parser.add_rule(self.communication_specification)
         self.parser.add_rule(self.comm_specifications)
@@ -362,26 +196,6 @@ class ModelParserExtension(LexYaccParserExtension):
         self.parser.add_rule(self.topology_rule_parameters)
         self.parser.add_rule(self.topology_rule_quality_parameter)
         self.parser.add_rule(self.topology_arrow)
-        self.parser.add_rule(self.algoriths_specification)
-        self.parser.add_rule(self.comm_algorithms_list)
-        self.parser.add_rule(self.comm_algorithm)
-        self.parser.add_rule(self.comm_algorithm_instructions)
-        self.parser.add_rule(self.comm_algorithm_instruction)
-        self.parser.add_rule(self.comm_algorithm_instruction_assignment)
-        self.parser.add_rule(self.comm_algorithm_instruction_return)
-        self.parser.add_rule(self.comm_algorithm_instruction_if)
-        self.parser.add_rule(self.comm_algorithm_instruction_while)
-        self.parser.add_rule(self.comm_algorithm_expression_conditional_comparison)
-        self.parser.add_rule(self.comm_algorithm_expression_conditional_paran)
-        self.parser.add_rule(self.comm_algorithm_expression_simple)
-        self.parser.add_rule(self.comm_algorithm_expression_uminus)
-        self.parser.add_rule(self.comm_algorithm_expression_paran)
-        self.parser.add_rule(self.comm_algorithm_expression_operations)
-        self.parser.add_rule(self.comm_algorithm_expression_function)
-
-        self.parser.add_precedence(['COMM_PLUS', 'COMM_MINUS'], 'left')
-        self.parser.add_precedence(['COMM_TIMES', 'COMM_DIVIDE'], 'left')
-        self.parser.add_precedence(['COMM_UMINUS'], 'right')
 
 
 class ConfigParserExtension(LexYaccParserExtension):
@@ -545,7 +359,7 @@ class ConfigParserExtension(LexYaccParserExtension):
         """
         index_range = None
         if len(t) == 5:
-            index_range = (t[3], t[3]+1)
+            index_range = (t[3], t[3])
         elif len(t) == 6:
             if t[3] == ':':
                 index_range = (None, t[4])
