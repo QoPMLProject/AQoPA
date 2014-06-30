@@ -1105,8 +1105,8 @@ class DistributedVersionPanel(wx.Panel):
 
         # results report
         self.reportText = ""
-        reportTextCtrl = wx.StaticText(self, label=self.reportText, style=wx.TE_MULTILINE)
-        self.resultsBoxSizer.Add(reportTextCtrl, 0, wx.ALL | wx.EXPAND, 5)
+        self.reportTextCtrl = wx.StaticText(self, label=self.reportText, style=wx.TE_MULTILINE)
+        self.resultsBoxSizer.Add(self.reportTextCtrl, 0, wx.ALL | wx.EXPAND, 5)
 
         self.SetSizer(sizer)
         self.CenterOnParent()
@@ -1116,7 +1116,9 @@ class DistributedVersionPanel(wx.Panel):
         self.maximumVersionText.SetLabel(versionsTxt)
         self.maximumTimeText.SetLabel(timeTxt)
         self.maximumRepetitionText.SetLabel(hostsNumberTxt)
-        self.reportText = reportTxt
+        self.reportTextCtrl.SetLabel(reportTxt)
+        self.Refresh()
+        self.Layout()
 
 class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
 
@@ -1211,42 +1213,45 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.repetitionText = wx.StaticText(self, label="")
         self.repetitionText.Hide()
         
-        self.maximumBox = wx.StaticBox(self, label="Version with maximum execution time")
-        maximumBoxSizer = wx.StaticBoxSizer(self.maximumBox, wx.VERTICAL)
+        #self.maximumBox = wx.StaticBox(self, label="Version with maximum execution time")
+        #maximumBoxSizer = wx.StaticBoxSizer(self.maximumBox, wx.VERTICAL)
         
-        hs = wx.BoxSizer(wx.HORIZONTAL)
-        self.versionsLabel = wx.StaticText(self, label="Version:")
-        hs.Add(self.versionsLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
-        hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
+        #hs = wx.BoxSizer(wx.HORIZONTAL)
+        #self.versionsLabel = wx.StaticText(self, label="Version:")
+        #hs.Add(self.versionsLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
+        #hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
         self.maximumVersionText = wx.StaticText(self, label="")
-        hs.Add(self.maximumVersionText, 0, wx.ALIGN_LEFT, 5)
-        maximumBoxSizer.Add(hs, 0, wx.EXPAND, 5)
+        self.maximumVersionText.Hide()
+        #hs.Add(self.maximumVersionText, 0, wx.ALIGN_LEFT, 5)
+        #maximumBoxSizer.Add(hs, 0, wx.EXPAND, 5)
 
         hs = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.timeLabel = wx.StaticText(self, label="Time:")
-        hs.Add(self.timeLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
-        hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
+        # self.timeLabel = wx.StaticText(self, label="Time:")
+        # hs.Add(self.timeLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
+        # hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
         self.maximumTimeText = wx.StaticText(self, label="")
-        hs.Add(self.maximumTimeText, 0, wx.ALIGN_LEFT, 5)
-        maximumBoxSizer.Add(hs, 0, wx.EXPAND, 5)
+        self.maximumTimeText.Hide()
+        # hs.Add(self.maximumTimeText, 0, wx.ALIGN_LEFT, 5)
+        # maximumBoxSizer.Add(hs, 0, wx.EXPAND, 5)
 
-        hs = wx.BoxSizer(wx.HORIZONTAL)
-        self.hostsNumberLabel = wx.StaticText(self, label="Number of\nsimultaneous clients:")
-        hs.Add(self.hostsNumberLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
-        hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
+        # hs = wx.BoxSizer(wx.HORIZONTAL)
+        # self.hostsNumberLabel = wx.StaticText(self, label="Number of\nsimultaneous clients:")
+        # hs.Add(self.hostsNumberLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
+        # hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
         self.maximumRepetitionText = wx.StaticText(self, label="")
-        hs.Add(self.maximumRepetitionText, 0, wx.ALIGN_LEFT, 5)
-        maximumBoxSizer.Add(hs, 0, wx.EXPAND, 5)
+        self.maximumRepetitionText.Hide()
+        # hs.Add(self.maximumRepetitionText, 0, wx.ALIGN_LEFT, 5)
+        # maximumBoxSizer.Add(hs, 0, wx.EXPAND, 5)
 
-        self.resultsBox = wx.StaticBox(self, label="Optimization results")
-        self.resultsBoxSizer = wx.StaticBoxSizer(self.resultsBox, wx.VERTICAL)
+        # self.resultsBox = wx.StaticBox(self, label="Optimization results")
+        # self.resultsBoxSizer = wx.StaticBoxSizer(self.resultsBox, wx.VERTICAL)
 
         processBoxSizer.Add(self.statusText, 0, wx.ALIGN_CENTER|wx.ALL, 5)
         processBoxSizer.Add(self.dotsText, 0, wx.ALIGN_CENTER|wx.ALL, 5)
         processBoxSizer.Add(self.repetitionText, 0, wx.ALIGN_CENTER|wx.ALL, 5)
-        processBoxSizer.Add(maximumBoxSizer, 0, wx.EXPAND|wx.ALL, 5)
-        processBoxSizer.Add(self.resultsBoxSizer, 0, wx.EXPAND|wx.ALL, 5)
+        #processBoxSizer.Add(maximumBoxSizer, 0, wx.EXPAND|wx.ALL, 5)
+        #processBoxSizer.Add(self.resultsBoxSizer, 0, wx.EXPAND|wx.ALL, 5)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(configurationBoxSizer, 0, wx.EXPAND|wx.ALL, 5)
@@ -1346,11 +1351,11 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
             timeText = "%.2f ms" % self.currentTime
             repetitionText = "%d" % self.currentRepetition
             
-        hS = wx.BoxSizer(wx.HORIZONTAL)
-        hS.Add(wx.StaticText(self, label=simulator.context.version.name, size=(200, -1)), 0)
-        hS.Add(wx.StaticText(self, label=timeText, size=(200, -1)), 0)
-        hS.Add(wx.StaticText(self, label=repetitionText, size=(200, -1)), 0)
-        self.resultsBoxSizer.Add(hS, 0, wx.ALL | wx.EXPAND, 0)
+        # hS = wx.BoxSizer(wx.HORIZONTAL)
+        # hS.Add(wx.StaticText(self, label=simulator.context.version.name, size=(200, -1)), 0)
+        # hS.Add(wx.StaticText(self, label=timeText, size=(200, -1)), 0)
+        # hS.Add(wx.StaticText(self, label=repetitionText, size=(200, -1)), 0)
+        # self.resultsBoxSizer.Add(hS, 0, wx.ALL | wx.EXPAND, 0)
         self.Layout()
         
         self.optimizedSimulatorIndex += 1
@@ -1400,13 +1405,14 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
                                                 simulator.context.version.name, results[1]))
                             
             self.reportText += " and\n".join(simulatorsReportTexts) + "."
-            reportTextCtrl = wx.StaticText(self, label=self.reportText, style=wx.TE_MULTILINE)
-            self.resultsBoxSizer.Add(reportTextCtrl, 0, wx.ALL | wx.EXPAND, 10)
-            
+            #reportTextCtrl = wx.StaticText(self, label=self.reportText, style=wx.TE_MULTILINE)
+
+            #self.resultsBoxSizer.Add(reportTextCtrl, 0, wx.ALL | wx.EXPAND, 10)
+
             self.Layout()
             wx.PostEvent(self.module.get_gui(), aqopa_gui.ModuleSimulationFinishedEvent())
             return
-            
+
         simulator = self.optimizedSimulators[self.optimizedSimulatorIndex]
         
         self.previousRepetition = 0
@@ -1500,22 +1506,22 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.dotsText.Hide()
         self.repetitionText.Hide()
 
-        self.maximumBox.Hide()
-        self.versionsLabel.Hide()
-        self.timeLabel.Hide()
-        self.hostsNumberLabel.Hide()
-        self.maximumRepetitionText.Hide()
-        self.maximumRepetitionText.SetLabel("")
-        self.maximumTimeText.Hide()
-        self.maximumTimeText.SetLabel("")
-        self.maximumVersionText.Hide()
-        self.maximumVersionText.SetLabel("")
+        # self.maximumBox.Hide()
+        # self.versionsLabel.Hide()
+        # self.timeLabel.Hide()
+        # self.hostsNumberLabel.Hide()
+        # self.maximumRepetitionText.Hide()
+        # self.maximumRepetitionText.SetLabel("")
+        # self.maximumTimeText.Hide()
+        # self.maximumTimeText.SetLabel("")
+        # self.maximumVersionText.Hide()
+        # self.maximumVersionText.SetLabel("")
 
         # clear versions combocheckbox
         self.tcp.ClearChoices()
 
-        self.resultsBox.Hide()
-        self.resultsBoxSizer.Clear(True)
+      #  self.resultsBox.Hide()
+      #  self.resultsBoxSizer.Clear(True)
 
         self.Layout()
 
@@ -1554,15 +1560,15 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.dotsText.Show()
         self.repetitionText.Show()
 
-        self.maximumBox.Show()
-        self.versionsLabel.Show()
-        self.timeLabel.Show()
-        self.hostsNumberLabel.Show()
-        self.maximumRepetitionText.Show()
-        self.maximumTimeText.Show()
-        self.maximumVersionText.Show()
-
-        self.resultsBox.Show()
+        # self.maximumBox.Show()
+        # self.versionsLabel.Show()
+        # self.timeLabel.Show()
+        # self.hostsNumberLabel.Show()
+        # self.maximumRepetitionText.Show()
+        # self.maximumTimeText.Show()
+        # self.maximumVersionText.Show()
+        #
+        # self.resultsBox.Show()
 
 
         # check if at least 2 versions were selected,
@@ -1615,12 +1621,12 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.startButton.Enable(False)
         self.statusText.SetLabel("Waiting for the simulator")
         
-        self.resultsBoxSizer.Clear(True)
-        hS = wx.BoxSizer(wx.HORIZONTAL)
-        hS.Add(wx.StaticText(self, label="Version", size=(200, -1)), 0)
-        hS.Add(wx.StaticText(self, label="Time", size=(200, -1)), 0)
-        hS.Add(wx.StaticText(self, label="Number of simulatenous hosts", size=(200, -1)), 0)
-        self.resultsBoxSizer.Add(hS, 0, wx.ALL | wx.EXPAND, 0)
+        # self.resultsBoxSizer.Clear(True)
+        # hS = wx.BoxSizer(wx.HORIZONTAL)
+        # hS.Add(wx.StaticText(self, label="Version", size=(200, -1)), 0)
+        # hS.Add(wx.StaticText(self, label="Time", size=(200, -1)), 0)
+        # hS.Add(wx.StaticText(self, label="Number of simulatenous hosts", size=(200, -1)), 0)
+        # self.resultsBoxSizer.Add(hS, 0, wx.ALL | wx.EXPAND, 0)
         
         self.Layout()
         
