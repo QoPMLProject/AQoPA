@@ -1265,12 +1265,22 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.SetScrollRate(0, 10)
 
     def DisableGUI(self, value):
+        """
+        @brief disables/enables GUI elements
+        (action depends on value)
+        """
         if value :
             self.hostCombo.Disable()
             self.timeComboBox.Disable()
+            self.comboCheckBox.Disable()
+            self.toleranceTextCtrl.Disable()
+            self.startButton.Disable()
         else :
             self.hostCombo.Enable()
             self.timeComboBox.Enable()
+            self.comboCheckBox.Enable()
+            self.toleranceTextCtrl.Enable()
+            self.startButton.Enable()
 
     def _OptimizationStep(self):
         """
@@ -1368,6 +1378,18 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         # hS.Add(wx.StaticText(self, label=repetitionText, size=(200, -1)), 0)
         # self.resultsBoxSizer.Add(hS, 0, wx.ALL | wx.EXPAND, 0)
         self.Layout()
+
+        # create a new frame to show time analysis results on it
+        self.resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
+        # create scrollable panel
+        maxPanel = DistributedVersionPanel(self.resultsWindow)
+        maxPanel.SetValues(self.maximumVersionText.GetLabelText(), self.maximumTimeText.GetLabelText(),
+                           self.maximumRepetitionText.GetLabelText(), self.reportText)
+        # add panel on a window
+        self.resultsWindow.AddPanel(maxPanel)
+        self.resultsWindow.SetWindowSize(600,350)
+        # show the results on the new window
+        self.resultsWindow.Show()
         
         self.optimizedSimulatorIndex += 1
         self._OptimizeNextSimulator()
