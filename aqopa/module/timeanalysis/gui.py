@@ -1170,7 +1170,11 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         sizer4.Add(toleranceText, 1, wx.ALL | wx.EXPAND, 5)
         sizer4.Add(self.toleranceTextCtrl, 1, wx.ALL, 5)
 
+        # info label
+        descText = "Optimization algorithm finds the numbers of simultaneous clients for each version such that the execution time of protocols will be the same (with given tolerance)."
+        
         self.startButton = wx.Button(self, label="Start optimization")
+        self.startButton.SetToolTip(descText)
         self.startButton.Bind(wx.EVT_BUTTON, self.OnStartClick)
 
         configurationBoxSizer.Add(sizer1, 0, wx.ALIGN_CENTER|wx.ALL, 5)
@@ -1657,9 +1661,6 @@ class MainResultsNotebook(wx.Notebook):
     def __init__(self, module, *args, **kwargs):
         wx.Notebook.__init__(self, *args, **kwargs)
 
-        # info label
-        descText = "Optimization algorithm finds the numbers of simultaneous clients for each version such that the execution time of protocols will be the same (with given tolerance)."
-
         # tab images
         il = wx.ImageList(20, 20)
         singleVersionImg = il.Add(wx.Bitmap(self.CreatePath4Resource('PuzzlePiece.png'), wx.BITMAP_TYPE_PNG))
@@ -1677,7 +1678,6 @@ class MainResultsNotebook(wx.Notebook):
         self.distributedOptimizationTab = DistributedSystemOptimizationPanel(self.module, self)
         self.AddPage(self.distributedOptimizationTab, "Distributed System Optimization")
         self.SetPageImage(1, distributedVersionImg)
-        self.distributedOptimizationTab.SetToolTip(wx.ToolTip(descText))
         self.distributedOptimizationTab.Layout()
         
 #        self.compareTab = VersionsChartsPanel(self.module, self)
