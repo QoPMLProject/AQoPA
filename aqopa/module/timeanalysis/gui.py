@@ -1379,17 +1379,17 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         # self.resultsBoxSizer.Add(hS, 0, wx.ALL | wx.EXPAND, 0)
         self.Layout()
 
-        # # create a new frame to show time analysis results on it
-        resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
-        # # create scrollable panel
-        maxPanel = DistributedVersionPanel(resultsWindow)
-        maxPanel.SetValues(self.maximumVersionText.GetLabelText(), self.maximumTimeText.GetLabelText(),
-                            self.maximumRepetitionText.GetLabelText(), self.reportText)
-        # # add panel on a window
-        resultsWindow.AddPanel(maxPanel)
-        resultsWindow.SetWindowSize(600,350)
-        # # show the results on the new window
-        resultsWindow.Show()
+        # # # create a new frame to show time analysis results on it
+        # resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
+        # # # create scrollable panel
+        # maxPanel = DistributedVersionPanel(resultsWindow)
+        # maxPanel.SetValues(self.maximumVersionText.GetLabelText(), self.maximumTimeText.GetLabelText(),
+        #                     self.maximumRepetitionText.GetLabelText(), self.reportText)
+        # # # add panel on a window
+        # resultsWindow.AddPanel(maxPanel)
+        # resultsWindow.SetWindowSize(600,350)
+        # # # show the results on the new window
+        # resultsWindow.Show()
         
         self.optimizedSimulatorIndex += 1
         self._OptimizeNextSimulator()
