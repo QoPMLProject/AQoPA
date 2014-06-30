@@ -1382,9 +1382,9 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         # # create a new frame to show time analysis results on it
         resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
         # # create scrollable panel
-        maxPanel = DistributedVersionPanel(self.resultsWindow)
+        maxPanel = DistributedVersionPanel(resultsWindow)
         maxPanel.SetValues(self.maximumVersionText.GetLabelText(), self.maximumTimeText.GetLabelText(),
-        #                    self.maximumRepetitionText.GetLabelText(), self.reportText)
+                            self.maximumRepetitionText.GetLabelText(), self.reportText)
         # # add panel on a window
         resultsWindow.AddPanel(maxPanel)
         resultsWindow.SetWindowSize(600,350)
@@ -1436,7 +1436,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
                 # create a new frame to show time analysis results on it
                 resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
                 # create scrollable panel
-                maxPanel = DistributedVersionPanel(self.resultsWindow)
+                maxPanel = DistributedVersionPanel(resultsWindow)
                 maxPanel.SetValues(self.maximumVersionText.GetLabelText(), self.maximumTimeText.GetLabelText(),
                                    self.maximumRepetitionText.GetLabelText(), self.reportText)
                 # add panel on a window
