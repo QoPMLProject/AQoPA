@@ -1361,21 +1361,9 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.optimizedSimulatorIndex += 1
         self._OptimizeNextSimulator()
 
-        # create a new frame to show time analysis results on it
-        self.resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
-        # create scrollable panel
-        maxPanel = DistributedVersionPanel(self.resultsWindow)
-        maxPanel.SetValues(self.maximumVersionText.GetLabelText(), self.maximumTimeText.GetLabelText(),
-                           self.maximumRepetitionText.GetLabelText(), self.reportText)
-        # add panel on a window
-        self.resultsWindow.AddPanel(maxPanel)
-        self.resultsWindow.SetWindowSize(600,350)
-        # show the results on the new window
-        self.resultsWindow.Show()
-        
     def _OptimizeNextSimulator(self):
         """ 
-        Function find the number of simultaneous clients 
+        Function finds the number of simultaneous clients
         for the next simulator from class field ```optimizedSimulators```.
         The next simulator is at index ```optimizedSimulatorIndex``` field.
         When no more simulators are left the optimization process is finished.
@@ -1411,6 +1399,18 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
 
             self.Layout()
             wx.PostEvent(self.module.get_gui(), aqopa_gui.ModuleSimulationFinishedEvent())
+
+            # create a new frame to show time analysis results on it
+            self.resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
+            # create scrollable panel
+            maxPanel = DistributedVersionPanel(self.resultsWindow)
+            maxPanel.SetValues(self.maximumVersionText.GetLabelText(), self.maximumTimeText.GetLabelText(),
+                               self.maximumRepetitionText.GetLabelText(), self.reportText)
+            # add panel on a window
+            self.resultsWindow.AddPanel(maxPanel)
+            self.resultsWindow.SetWindowSize(600,350)
+            # show the results on the new window
+            self.resultsWindow.Show()
             return
 
         simulator = self.optimizedSimulators[self.optimizedSimulatorIndex]
