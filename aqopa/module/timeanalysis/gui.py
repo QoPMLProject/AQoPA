@@ -1054,6 +1054,7 @@ class DistributedVersionPanel(wx.Panel):
         wx.Panel.__init__(self, *args)
 
         self.repetitionText = wx.StaticText(self, label="")
+        self.resultsWindow = None
 
         self.maximumBox = wx.StaticBox(self, label="Version with maximum execution time")
         maximumBoxSizer = wx.StaticBoxSizer(self.maximumBox, wx.VERTICAL)
@@ -1379,17 +1380,18 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         # self.resultsBoxSizer.Add(hS, 0, wx.ALL | wx.EXPAND, 0)
         self.Layout()
 
-        # create a new frame to show time analysis results on it
-        self.resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
-        # create scrollable panel
-        maxPanel = DistributedVersionPanel(self.resultsWindow)
-        maxPanel.SetValues(self.maximumVersionText.GetLabelText(), self.maximumTimeText.GetLabelText(),
-                           self.maximumRepetitionText.GetLabelText(), self.reportText)
-        # add panel on a window
-        self.resultsWindow.AddPanel(maxPanel)
-        self.resultsWindow.SetWindowSize(600,350)
-        # show the results on the new window
-        self.resultsWindow.Show()
+        if self.resultsWindow == None :
+            # create a new frame to show time analysis results on it
+            self.resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
+            # create scrollable panel
+            maxPanel = DistributedVersionPanel(self.resultsWindow)
+            maxPanel.SetValues(self.maximumVersionText.GetLabelText(), self.maximumTimeText.GetLabelText(),
+                               self.maximumRepetitionText.GetLabelText(), self.reportText)
+            # add panel on a window
+            self.resultsWindow.AddPanel(maxPanel)
+            self.resultsWindow.SetWindowSize(600,350)
+            # show the results on the new window
+            self.resultsWindow.Show()
         
         self.optimizedSimulatorIndex += 1
         self._OptimizeNextSimulator()
