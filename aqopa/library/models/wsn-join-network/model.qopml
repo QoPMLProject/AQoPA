@@ -483,13 +483,11 @@ hosts
         }
     }
 }
-communication
-{
-    algorithms {
-        alg wsn_time(msg) {
-            sending_headers = 18.28;
-            sending_data = size(msg[3]) * 0.12;
-            return sending_headers + sending_data;
-        }
+
+algorithms {
+    alg wsn_time(msg) {
+        sending_headers = 18.28;
+        sending_data = size(msg[3]) * 0.12;
+        return sending_headers + sending_data;
     }
 }

@@ -3,6 +3,7 @@ Created on 22-04-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
+import re
 from aqopa.model.parser.lex_yacc import LexYaccParserExtension
 
 class ModelParserExtension(LexYaccParserExtension):
@@ -23,8 +24,14 @@ class ModelParserExtension(LexYaccParserExtension):
     ##########################################
     
     def token_identifier(self, t):
-        r'[_a-zA-Z][_a-zA-Z0-9]*'
-        
+        r'[_a-zA-Z][_a-zA-Z0-9]*(\.[0-9]+)*'
+
+
+        qualified_regexp = r'[_a-zA-Z][_a-zA-Z0-9]*(\.[0-9]+)+'
+        if re.match(qualified_regexp, t.value):
+            t.type = 'QUALIFIED_IDENTIFIER'
+            return t
+
         words = self.parser.get_reserved_words()
         
         states_stack = []
@@ -54,7 +61,7 @@ class ModelParserExtension(LexYaccParserExtension):
                         t.type = word_tuple[0]
                         break
             i -= 1
-            
+
         return t
 
     def token_float(self, t):
@@ -126,7 +133,7 @@ class ModelParserExtension(LexYaccParserExtension):
         self.parser.add_token('COMMA', r',')
         self.parser.add_token('FLOAT', func=self.token_float)
         self.parser.add_token('INTEGER', func=self.token_integer)
-        self.parser.add_token('QUALIFIED_IDENTIFIER', r'[_a-zA-Z][_a-zA-Z0-9]*(\.[1-9][0-9]*)+')
+        self.parser.add_token('QUALIFIED_IDENTIFIER')
         self.parser.add_token('IDENTIFIER', func=self.token_identifier)
         self.parser.add_token('TEXT', r'[-_A-Za-z0-9 ]+')
         
@@ -174,7 +181,13 @@ class MetricsParserExtension(LexYaccParserExtension):
     ##########################################
     
     def token_identifier(self, t):
-        r'[_a-zA-Z][_a-zA-Z0-9]*'
+        r'[_a-zA-Z][_a-zA-Z0-9]*(\.[0-9]+)*'
+
+
+        qualified_regexp = r'[_a-zA-Z][_a-zA-Z0-9]*(\.[0-9]+)+'
+        if re.match(qualified_regexp, t.value):
+            t.type = 'QUALIFIED_IDENTIFIER'
+            return t
         
         words = self.parser.get_reserved_words()
         
@@ -276,7 +289,7 @@ class MetricsParserExtension(LexYaccParserExtension):
         self.parser.add_token('COMMA', r',')
         self.parser.add_token('FLOAT', func=self.token_float)
         self.parser.add_token('INTEGER', func=self.token_integer)
-        self.parser.add_token('QUALIFIED_IDENTIFIER', r'[_a-zA-Z][_a-zA-Z0-9]*(\.[1-9][0-9]*)+')
+        self.parser.add_token('QUALIFIED_IDENTIFIER')
         self.parser.add_token('IDENTIFIER', func=self.token_identifier)
         self.parser.add_token('TEXT', r'[-_A-Za-z0-9 ]+')
         
@@ -322,12 +335,14 @@ class ConfigParserExtension(LexYaccParserExtension):
     #                TOKENS
     ##########################################
     
-    def token_qualified_identifier(self, t):
-        r'[_a-zA-Z][_a-zA-Z0-9]*(\.[1-9][0-9]*)+'
-        return t
-
     def token_identifier(self, t):
-        r'[_a-zA-Z][_a-zA-Z0-9]*'
+        r'[_a-zA-Z][_a-zA-Z0-9]*(\.[0-9]+)*'
+
+
+        qualified_regexp = r'[_a-zA-Z][_a-zA-Z0-9]*(\.[0-9]+)+'
+        if re.match(qualified_regexp, t.value):
+            t.type = 'QUALIFIED_IDENTIFIER'
+            return t
         
         words = self.parser.get_reserved_words()
         
@@ -432,7 +447,7 @@ class ConfigParserExtension(LexYaccParserExtension):
         self.parser.add_token('COMMA', r',')
         self.parser.add_token('FLOAT', func=self.token_float)
         self.parser.add_token('INTEGER', func=self.token_integer)
-        self.parser.add_token('QUALIFIED_IDENTIFIER', func=self.token_qualified_identifier)
+        self.parser.add_token('QUALIFIED_IDENTIFIER')
         self.parser.add_token('IDENTIFIER', func=self.token_identifier)
         self.parser.add_token('TEXT', r'[-_A-Za-z0-9 ]+')
 

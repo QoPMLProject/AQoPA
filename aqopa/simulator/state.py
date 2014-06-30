@@ -27,6 +27,7 @@ class Context():
 
         self.metrics_manager = None
         self.channels_manager = None
+        self.algorithms_resolver = None
         
         self._current_host_index = 0
         self._previous_host_index = -1
@@ -560,7 +561,8 @@ class AssignmentInstructionExecutor(InstructionExecutor):
         """ Overriden """
         instruction = context.get_current_instruction()
         expression = self._compute_current_expression(instruction.expression, context)
-        
+        expression = context.expression_reducer.reduce(expression)
+
         context.get_current_host().set_variable(instruction.variable_name, expression)
         context.get_current_host().mark_changed()
         
@@ -596,7 +598,7 @@ class ProcessInstructionExecutor(InstructionExecutor):
         """ Overriden """
         process_instruction = context.get_current_instruction()
         current_process = context.get_current_host().get_current_process()
-        instructions_list = process_instruction.intructions_list
+        instructions_list = process_instruction.instructions_list
 
         # If process has at least one instruction
         if len(instructions_list) > 0:
