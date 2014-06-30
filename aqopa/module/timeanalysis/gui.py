@@ -1403,6 +1403,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         """
         
         if self.optimizedSimulatorIndex >= len(self.optimizedSimulators):
+
             self.progressTimer.Stop()
             self.startButton.Enable(True)
             
@@ -1427,12 +1428,8 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
                             
             self.reportText += " and\n".join(simulatorsReportTexts) + "."
             #reportTextCtrl = wx.StaticText(self, label=self.reportText, style=wx.TE_MULTILINE)
-
             #self.resultsBoxSizer.Add(reportTextCtrl, 0, wx.ALL | wx.EXPAND, 10)
-
-            self.Layout()
-            wx.PostEvent(self.module.get_gui(), aqopa_gui.ModuleSimulationFinishedEvent())
-
+            #self.Layout()
             # create a new frame to show time analysis results on it
             self.resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
             # create scrollable panel
@@ -1444,6 +1441,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
             self.resultsWindow.SetWindowSize(600,350)
             # show the results on the new window
             self.resultsWindow.Show()
+            wx.PostEvent(self.module.get_gui(), aqopa_gui.ModuleSimulationFinishedEvent())
             return
 
         simulator = self.optimizedSimulators[self.optimizedSimulatorIndex]
