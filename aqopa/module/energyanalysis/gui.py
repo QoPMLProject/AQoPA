@@ -296,7 +296,7 @@ class SingleVersionPanel(wx.Panel):
         lblText = ""
 
         for h in hosts:
-            lblText += "%s: %.6f J" % (h.name, consumptions[h])
+            lblText += "%s: %.6f J" % (h.name, consumptions[h]['energy'])
             error = h.get_finish_error()
             if error is not None:
                 lblText += " (Not Finished - %s)" % error
@@ -331,7 +331,7 @@ class SingleVersionPanel(wx.Panel):
             sum = 0.0
             n = len(hosts)
             for h in hosts:
-                sum += consumptions[h]
+                sum += consumptions[h]['energy']
             return sum / float(n)
     
         val = GetVal(self.module.get_hosts_consumptions(simulator, hosts, voltage), hosts)
@@ -362,7 +362,7 @@ class SingleVersionPanel(wx.Panel):
         def GetVal(consumptions, hosts):
             val = None 
             for h in hosts:
-                v = consumptions[h]
+                v = consumptions[h]['energy']
                 if val is None or v < val:
                     val = v
             return val
@@ -397,7 +397,7 @@ class SingleVersionPanel(wx.Panel):
         def GetVal(consumptions, hosts):
             val = 0.0 
             for h in hosts:
-                v = consumptions[h]
+                v = consumptions[h]['energy']
                 if v > val:
                     val = v
             return val
