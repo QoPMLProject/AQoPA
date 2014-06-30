@@ -1172,9 +1172,9 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
 
         # info label
         descText = "Optimization algorithm finds the numbers of simultaneous clients for each version such that the execution time of protocols will be the same (with given tolerance)."
-        
+
         self.startButton = wx.Button(self, label="Start optimization")
-        self.startButton.SetToolTip(descText)
+        self.startButton.SetToolTip(wx.ToolTip(descText))
         self.startButton.Bind(wx.EVT_BUTTON, self.OnStartClick)
 
         configurationBoxSizer.Add(sizer1, 0, wx.ALIGN_CENTER|wx.ALL, 5)
