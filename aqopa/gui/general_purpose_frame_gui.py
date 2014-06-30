@@ -48,7 +48,6 @@ class GeneralFrame(wx.Frame):
         self.Layout()
 
     def AddPanel(self, panel) :
-
         self.panel = panel
         self.groupBoxSizer.Add(self.panel, 1, wx.EXPAND | wx.ALL, 5)
         self.SetSizer(self.sizer)

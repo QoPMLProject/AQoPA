@@ -354,8 +354,6 @@ class SingleVersionPanel(wx.Panel):
 
         # add panel on a window
         avgEnergyWindow.AddPanel(avgPanel)
-        # center window on a screen
-        avgEnergyWindow.CentreOnScreen()
         # show the results on the new window
         avgEnergyWindow.Show()
         
