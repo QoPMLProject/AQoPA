@@ -1380,18 +1380,17 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         # self.resultsBoxSizer.Add(hS, 0, wx.ALL | wx.EXPAND, 0)
         self.Layout()
 
-        if self.resultsWindow == None :
-            # create a new frame to show time analysis results on it
-            self.resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
-            # create scrollable panel
-            maxPanel = DistributedVersionPanel(self.resultsWindow)
-            maxPanel.SetValues(self.maximumVersionText.GetLabelText(), self.maximumTimeText.GetLabelText(),
-                               self.maximumRepetitionText.GetLabelText(), self.reportText)
-            # add panel on a window
-            self.resultsWindow.AddPanel(maxPanel)
-            self.resultsWindow.SetWindowSize(600,350)
-            # show the results on the new window
-            self.resultsWindow.Show()
+        # # create a new frame to show time analysis results on it
+        # self.resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
+        # # create scrollable panel
+        # maxPanel = DistributedVersionPanel(self.resultsWindow)
+        # maxPanel.SetValues(self.maximumVersionText.GetLabelText(), self.maximumTimeText.GetLabelText(),
+        #                    self.maximumRepetitionText.GetLabelText(), self.reportText)
+        # # add panel on a window
+        # self.resultsWindow.AddPanel(maxPanel)
+        # self.resultsWindow.SetWindowSize(600,350)
+        # # show the results on the new window
+        # self.resultsWindow.Show()
         
         self.optimizedSimulatorIndex += 1
         self._OptimizeNextSimulator()
@@ -1432,17 +1431,20 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
             #reportTextCtrl = wx.StaticText(self, label=self.reportText, style=wx.TE_MULTILINE)
             #self.resultsBoxSizer.Add(reportTextCtrl, 0, wx.ALL | wx.EXPAND, 10)
             #self.Layout()
-            # create a new frame to show time analysis results on it
-            self.resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
-            # create scrollable panel
-            maxPanel = DistributedVersionPanel(self.resultsWindow)
-            maxPanel.SetValues(self.maximumVersionText.GetLabelText(), self.maximumTimeText.GetLabelText(),
-                               self.maximumRepetitionText.GetLabelText(), self.reportText)
-            # add panel on a window
-            self.resultsWindow.AddPanel(maxPanel)
-            self.resultsWindow.SetWindowSize(600,350)
-            # show the results on the new window
-            self.resultsWindow.Show()
+
+            if not self.progressTimer.IsRunning() :
+                # create a new frame to show time analysis results on it
+                self.resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
+                # create scrollable panel
+                maxPanel = DistributedVersionPanel(self.resultsWindow)
+                maxPanel.SetValues(self.maximumVersionText.GetLabelText(), self.maximumTimeText.GetLabelText(),
+                                   self.maximumRepetitionText.GetLabelText(), self.reportText)
+                # add panel on a window
+                self.resultsWindow.AddPanel(maxPanel)
+                self.resultsWindow.SetWindowSize(600,350)
+                # show the results on the new window
+                self.resultsWindow.Show()
+
             wx.PostEvent(self.module.get_gui(), aqopa_gui.ModuleSimulationFinishedEvent())
             return
 
