@@ -44,7 +44,7 @@ class GeneralFrame(wx.Frame):
         self.sizer.Add(self.groupBoxSizer, 1, wx.EXPAND | wx.ALL, 5)
         self.sizer.Add(bottomSizer, 0, wx.EXPAND, 5)
         self.SetSizer(self.sizer)
-        self.CentreOnParent()
+        self.CentreOnScreen()
         self.Layout()
 
     def AddPanel(self, panel) :
@@ -56,9 +56,13 @@ class GeneralFrame(wx.Frame):
 
     def DoFit(self):
         self.sizer.Fit(self)
+        self.CentreOnScreen()
+        self.Layout()
 
     def SetWindowSize(self, width, height):
         self.SetClientSize(wx.Size(width, height))
+        self.CentreOnScreen()
+        self.Layout()
 
     def OnOKButtonClicked(self, event) :
         self.Close()

@@ -1053,13 +1053,6 @@ class DistributedVersionPanel(wx.Panel):
     def __init__(self, *args):
         wx.Panel.__init__(self, *args)
 
-        # create font for static texts = same as default panel font, just bold
-        defSysFont = self.GetFont()
-        boldFont = wx.Font(pointSize=defSysFont.GetPointSize(),
-                           family=defSysFont.GetFamily(),
-                           style=defSysFont.GetStyle(),
-                           weight=wx.FONTWEIGHT_BOLD)
-
         self.repetitionText = wx.StaticText(self, label="")
 
         self.maximumBox = wx.StaticBox(self, label="Version with maximum execution time")
@@ -1067,7 +1060,6 @@ class DistributedVersionPanel(wx.Panel):
 
         hs = wx.BoxSizer(wx.HORIZONTAL)
         self.versionsLabel = wx.StaticText(self, label="Version:")
-        self.versionsLabel.SetFont(boldFont)
         hs.Add(self.versionsLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
         hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
         self.maximumVersionText = wx.StaticText(self, label="")
@@ -1077,7 +1069,6 @@ class DistributedVersionPanel(wx.Panel):
         hs = wx.BoxSizer(wx.HORIZONTAL)
 
         self.timeLabel = wx.StaticText(self, label="Time:")
-        self.timeLabel.SetFont(boldFont)
         hs.Add(self.timeLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
         hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
         self.maximumTimeText = wx.StaticText(self, label="")
@@ -1085,8 +1076,7 @@ class DistributedVersionPanel(wx.Panel):
         maximumBoxSizer.Add(hs, 0, wx.EXPAND, 5)
 
         hs = wx.BoxSizer(wx.HORIZONTAL)
-        self.hostsNumberLabel = wx.StaticText(self, label="Number of\nsimultaneous clients:")
-        self.hostsNumberLabel.SetFont(boldFont)
+        self.hostsNumberLabel = wx.StaticText(self, label="Number of simultaneous clients:")
         hs.Add(self.hostsNumberLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
         hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
         self.maximumRepetitionText = wx.StaticText(self, label="")
@@ -1104,25 +1094,29 @@ class DistributedVersionPanel(wx.Panel):
 
         # labels
         versionLbl = wx.StaticText(self, label="Version", size=(200, -1))
-        versionLbl.SetFont(boldFont)
         timeLbl = wx.StaticText(self, label="Time", size=(200, -1))
-        timeLbl.SetFont(boldFont)
-        hostsLbl = wx.StaticText(self, label="Number of simulatenous hosts", size=(200, -1))
-        hostsLbl.SetFont(boldFont)
+        hostsLbl = wx.StaticText(self, label="Number of simulatenous\nhosts", size=(200, -1))
 
         hS = wx.BoxSizer(wx.HORIZONTAL)
         hS.Add(versionLbl, 0)
         hS.Add(timeLbl, 0)
         hS.Add(hostsLbl, 0)
+        self.resultsBoxSizer.Add(hS, 0, wx.ALL | wx.EXPAND, 5)
+
+        # results report
+        self.reportText = ""
+        reportTextCtrl = wx.StaticText(self, label=self.reportText, style=wx.TE_MULTILINE)
+        self.resultsBoxSizer.Add(reportTextCtrl, 0, wx.ALL | wx.EXPAND, 5)
 
         self.SetSizer(sizer)
         self.CenterOnParent()
         self.Layout()
 
-    def SetValues(self, versionsTxt, timeTxt, hostsNumberTxt):
-        self.versionsLabel.SetLabel(versionsTxt)
-        self.timeLabel.SetLabel(timeTxt)
-        self.hostsNumberLabel.SetLabel(hostsNumberTxt)
+    def SetValues(self, versionsTxt, timeTxt, hostsNumberTxt, reportTxt):
+        self.maximumVersionText.SetLabel(versionsTxt)
+        self.maximumTimeText.SetLabel(timeTxt)
+        self.maximumRepetitionText.SetLabel(hostsNumberTxt)
+        self.reportText = reportTxt
 
 class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
 
@@ -1133,15 +1127,6 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.checkBoxes = []
         self.checkBoxToSimulator = {}
         self.optimizationResults = {}
-
-        # create font for static texts = same as default panel font, just bold
-        defSysFont = self.GetFont()
-        self.boldFont = wx.Font(pointSize=defSysFont.GetPointSize(),
-                           family=defSysFont.GetFamily(),
-                           style=defSysFont.GetStyle(),
-                           weight=wx.FONTWEIGHT_BOLD)
-        
-        # OPTIMIZATION CONFIGURATION
 
         # combobox with time types
         self.timeComboBox = wx.ComboBox(self, choices=["Average", "Total"], style=wx.CB_READONLY, size=(220, 20))
@@ -1172,16 +1157,16 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
 
         # add repeated host
         sizer1.Add(hostText, 1, wx.ALL | wx.EXPAND, 5)
-        sizer1.Add(self.hostCombo, 1, wx.ALL | wx.EXPAND, 5)
+        sizer1.Add(self.hostCombo, 1, wx.ALL, 5)
         # add versions
         sizer2.Add(versionsText, 1, wx.ALL | wx.EXPAND, 5)
-        sizer2.Add(self.comboCheckBox, 1, wx.ALL | wx.EXPAND, 5)
+        sizer2.Add(self.comboCheckBox, 1, wx.ALL, 5)
         # add time type: avg or total
         sizer3.Add(timeTypeText, 1, wx.ALL | wx.EXPAND, 5)
-        sizer3.Add(self.timeComboBox, 1, wx.ALL | wx.EXPAND, 5)
+        sizer3.Add(self.timeComboBox, 1, wx.ALL, 5)
         # add tolerance percent
         sizer4.Add(toleranceText, 1, wx.ALL | wx.EXPAND, 5)
-        sizer4.Add(self.toleranceTextCtrl, 1, wx.ALL | wx.EXPAND, 5)
+        sizer4.Add(self.toleranceTextCtrl, 1, wx.ALL, 5)
 
         self.startButton = wx.Button(self, label="Start optimization")
         self.startButton.Bind(wx.EVT_BUTTON, self.OnStartClick)
@@ -1192,6 +1177,8 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         configurationBoxSizer.Add(sizer4, 0, wx.ALIGN_CENTER|wx.ALL, 5)
         configurationBoxSizer.Add(wx.StaticText(self), 1, 1, wx.ALL | wx.EXPAND)
         configurationBoxSizer.Add(self.startButton, 0, wx.ALIGN_CENTER|wx.ALL)
+
+        self.reportText = ""
 
         # OPTIMIZATION PROCESS
         self.module.get_gui().Bind(aqopa_gui.EVT_MODULE_SIMULATION_ALLOWED, self.OnSimulationAllowed)
@@ -1229,7 +1216,6 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         
         hs = wx.BoxSizer(wx.HORIZONTAL)
         self.versionsLabel = wx.StaticText(self, label="Version:")
-        self.versionsLabel.SetFont(self.boldFont)
         hs.Add(self.versionsLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
         hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
         self.maximumVersionText = wx.StaticText(self, label="")
@@ -1239,7 +1225,6 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         hs = wx.BoxSizer(wx.HORIZONTAL)
 
         self.timeLabel = wx.StaticText(self, label="Time:")
-        self.timeLabel.SetFont(self.boldFont)
         hs.Add(self.timeLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
         hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
         self.maximumTimeText = wx.StaticText(self, label="")
@@ -1248,7 +1233,6 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
 
         hs = wx.BoxSizer(wx.HORIZONTAL)
         self.hostsNumberLabel = wx.StaticText(self, label="Number of\nsimultaneous clients:")
-        self.hostsNumberLabel.SetFont(self.boldFont)
         hs.Add(self.hostsNumberLabel, 0, wx.ALIGN_LEFT | wx.EXPAND, 5)
         hs.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
         self.maximumRepetitionText = wx.StaticText(self, label="")
@@ -1265,7 +1249,6 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         processBoxSizer.Add(self.resultsBoxSizer, 0, wx.EXPAND|wx.ALL, 5)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
-        #sizer.Add(descText, 0, wx.EXPAND | wx.ALL, 10)
         sizer.Add(configurationBoxSizer, 0, wx.EXPAND|wx.ALL, 5)
         sizer.Add(processBoxSizer, 0, wx.EXPAND|wx.ALL, 5)
         
@@ -1374,16 +1357,16 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self._OptimizeNextSimulator()
 
         # create a new frame to show time analysis results on it
-        #self.resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
+        self.resultsWindow = GeneralFrame(self.GetParent(), "Time Analysis Results", "Optimization Process", "modules_results.png")
         # create scrollable panel
-        #maxPanel = DistributedVersionPanel(self.resultsWindow)
+        maxPanel = DistributedVersionPanel(self.resultsWindow)
+        maxPanel.SetValues(self.maximumVersionText.GetLabelText(), self.maximumTimeText.GetLabelText(),
+                           self.maximumRepetitionText.GetLabelText(), self.reportText)
         # add panel on a window
-        #self.resultsWindow.AddPanel(maxPanel)
-        # center window on a screen
-        #self.resultsWindow.CentreOnScreen()
-        #self.resultsWindow.SetWindowSize(600,300)
+        self.resultsWindow.AddPanel(maxPanel)
+        self.resultsWindow.SetWindowSize(600,350)
         # show the results on the new window
-        #self.resultsWindow.Show()
+        self.resultsWindow.Show()
         
     def _OptimizeNextSimulator(self):
         """ 
@@ -1404,7 +1387,7 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
             self.repetitionText.Hide()
             
             # Create report.
-            reportText = "The execution time of the scenario {0} ({1} simultaneous clients) is similar (with the {2}% tolerance): \n".format(
+            self.reportText = "The execution time of the scenario {0} ({1} simultaneous clients) is similar (with the {2}% tolerance): \n".format(
                                 self.maxSimulator.context.version.name, self.maxRepetition, self.tolerance*100.0)
             
             simulatorsReportTexts = []
@@ -1416,8 +1399,8 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
                 simulatorsReportTexts.append(" - to the scenario {0} with {1} simultaneous clients".format(
                                                 simulator.context.version.name, results[1]))
                             
-            reportText += " and\n".join(simulatorsReportTexts) + "."
-            reportTextCtrl = wx.StaticText(self, label=reportText, style=wx.TE_MULTILINE)
+            self.reportText += " and\n".join(simulatorsReportTexts) + "."
+            reportTextCtrl = wx.StaticText(self, label=self.reportText, style=wx.TE_MULTILINE)
             self.resultsBoxSizer.Add(reportTextCtrl, 0, wx.ALL | wx.EXPAND, 10)
             
             self.Layout()
@@ -1671,6 +1654,7 @@ class MainResultsNotebook(wx.Notebook):
         # info label
         descText = "Optimization algorithm finds the numbers of simultaneous clients for each version such that the execution time of protocols will be the same (with given tolerance)."
 
+        # tab images
         il = wx.ImageList(20, 20)
         singleVersionImg = il.Add(wx.Bitmap(self.CreatePath4Resource('PuzzlePiece.png'), wx.BITMAP_TYPE_PNG))
         distributedVersionImg = il.Add(wx.Bitmap(self.CreatePath4Resource('PuzzlePieces.png'), wx.BITMAP_TYPE_PNG))
@@ -1678,20 +1662,21 @@ class MainResultsNotebook(wx.Notebook):
         
         self.module = module
 
+        # single version tab
         self.oneVersionTab = SingleVersionPanel(self.module, self)
         self.AddPage(self.oneVersionTab, "Single Version")
         self.SetPageImage(0, singleVersionImg)
         self.oneVersionTab.Layout()
-        
-#        self.compareTab = VersionsChartsPanel(self.module, self)
-#        self.AddPage(self.compareTab, "Versions' Charts")
-#        self.compareTab.Layout()
-        
+        # distributed version tab
         self.distributedOptimizationTab = DistributedSystemOptimizationPanel(self.module, self)
         self.AddPage(self.distributedOptimizationTab, "Distributed System Optimization")
         self.SetPageImage(1, distributedVersionImg)
         self.distributedOptimizationTab.SetToolTip(wx.ToolTip(descText))
         self.distributedOptimizationTab.Layout()
+        
+#        self.compareTab = VersionsChartsPanel(self.module, self)
+#        self.AddPage(self.compareTab, "Versions' Charts")
+#        self.compareTab.Layout()
 
     def CreatePath4Resource(self, resourceName):
         """
