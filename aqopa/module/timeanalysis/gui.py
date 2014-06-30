@@ -1263,7 +1263,15 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.SetSizer(sizer)
         self.CentreOnParent()
         self.SetScrollRate(0, 10)
-        
+
+    def DisableGUI(self, value):
+        if value :
+            self.hostCombo.Disable()
+            self.timeComboBox.Disable()
+        else :
+            self.hostCombo.Enable()
+            self.timeComboBox.Enable()
+
     def _OptimizationStep(self):
         """
         Implements one step of optimization.
