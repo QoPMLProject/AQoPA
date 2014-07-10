@@ -1,0 +1,13 @@
+<model>
+	<name>Security trade-off and energy efficiency analysis in Wireless Sensor Networks</name>
+	<author>Damian Rusinek</author>
+	<author_email>Damian.Rusinek@gmail.com</author_email>
+	<description><![CDATA[The model was used in the case study of the energy efficiency analysis and security trade-offs for complex wireless sensor network. The case study was based on existing WSN deployed on Jindo Bridge in South Korea.
+	The central components of the WSN deployment are TelosB motes and the security metrics for communication and cryptographic primitives (symmetric and asymmetric encryption) were taken from previous experiments.
+	The deployed network is unsecured as it does not ensure any security attributes. In the case study we want to evaluate the influence of security attributes on the performance of the network. We introduce three levels of security.]]></description>
+	<files>
+		<model>model.qopml</model>
+		<metrics>metrics.qopml</metrics>
+		<versions>versions.qopml</versions>
+	</files>
+</model>

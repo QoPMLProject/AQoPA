@@ -1,0 +1,478 @@
+versions 
+{
+
+  % LOW SECURITY LEVEL (Original version): No encrption
+  version NoEnc_Updated
+  {
+    set host Sink(TelosB);
+    set host Sensor(TelosB);
+    set host ManagerJindo(TelosB);
+    set host ManagerHaenam(TelosB);
+
+    % JINDO
+    run host Sink(*) {
+      run MainUpdated()
+    }
+    run host Sensor(*){33} {
+      run MainUpdated()
+    }
+    run host ManagerJindo(*) {
+      run PrepareMessages(*)
+      run MainUpdated(Wait_NoAuth)
+    }
+
+    % HAENAM
+    run host Sink(*) {
+      run MainUpdated()
+    }
+    run host Sensor(*){36} {
+      run MainUpdated()
+    }
+    run host ManagerHaenam(*) {
+      run PrepareMessages(*)
+      run MainUpdated(Wait_NoAuth)
+    }
+    
+    communication {
+      medium[wsn] {
+	default_time = wsn_time [ms];
+	default_listening_current = 1.14 mA; % Duty cycle - 5%
+	default_sending_current = 22.8 mA;
+	default_receiving_current = 22.8 mA;
+      
+	topology {
+	
+	  % Jindo (Sink[0])
+	  % Deck - West
+	  Sink[0] <-> Sensor[0] : q = 59; % D-JW1
+	  Sink[0] <-> Sensor[1] : q = 47; % D-JW2
+	  Sink[0] <-> Sensor[2] : q = 27; % D-JW3
+	  Sink[0] <-> Sensor[3] : q = 10; % D-JW4
+	  Sink[0] <-> Sensor[4] : q = 27; % D-JW5
+	  Sink[0] <-> Sensor[5] : q = 59; % D-JW6
+	  Sink[0] <-> Sensor[6] : q = 91.5; % D-JW7
+	  Sink[0] <-> Sensor[7] : q = 124.5; % D-JW8
+	  Sink[0] <-> Sensor[8] : q = 140.5; % D-JW9
+	  Sink[0] <-> Sensor[9] : q = 160.5; % D-JW10
+	  Sink[0] <-> Sensor[10] : q = 172.5; % D-JW11
+	  % Deck - East
+	  Sink[0] <-> Sensor[11] : q = 62; % D-JE1
+	  Sink[0] <-> Sensor[12] : q = 51; % D-JE2
+	  Sink[0] <-> Sensor[13] : q = 33.5; % D-JE3
+	  Sink[0] <-> Sensor[14] : q = 22.5; % D-JE4
+	  Sink[0] <-> Sensor[15] : q = 33.5; % D-JE5
+	  Sink[0] <-> Sensor[16] : q = 62; % D-JE6
+	  Sink[0] <-> Sensor[17] : q = 94; % D-JE7
+	  Sink[0] <-> Sensor[18] : q = 126; % D-JE8
+	  Sink[0] <-> Sensor[19] : q = 142; % D-JE9
+	  Sink[0] <-> Sensor[20] : q = 161.5; % D-JE10
+	  Sink[0] <-> Sensor[21] : q = 173.5; % D-JE11
+	  % Pylon
+	  Sink[0] <-> Sensor[22] : q = 13.5; % P-JW1
+	  Sink[0] <-> Sensor[23] : q = 24; % P-JE1
+	  Sink[0] <-> Sensor[24] : q = 71; % P-JT1
+	  % Cable
+	  Sink[0] <-> Sensor[25] : q = 55; % C-JE1
+	  Sink[0] <-> Sensor[26] : q = 30.5; % C-JE2
+	  Sink[0] <-> Sensor[27] : q = 30.5; % C-JE3
+	  Sink[0] <-> Sensor[28] : q = 49.5; % C-JE4
+	  Sink[0] <-> Sensor[29] : q = 60.5; % C-JE5
+	  Sink[0] <-> Sensor[30] : q = 72; % C-JE6
+	  Sink[0] <-> Sensor[31] : q = 97; % C-JE7
+	  Sink[0] <-> Sensor[32] : q = 123; % C-JE8
+	  
+	  
+	  % Haenam (Sink[1])
+	  % Deck - West
+	  Sink[1] <-> Sensor[33] : q = 64.3; % D-HW1
+	  Sink[1] <-> Sensor[34] : q = 46; % D-HW2
+	  Sink[1] <-> Sensor[35] : q = 26.5; % D-HW3
+	  Sink[1] <-> Sensor[36] : q = 10; % D-HW4
+	  Sink[1] <-> Sensor[37] : q = 26.5; % D-HW5
+	  Sink[1] <-> Sensor[38] : q = 58.35; % D-HW6
+	  Sink[1] <-> Sensor[39] : q = 91; % D-HW7
+	  Sink[1] <-> Sensor[40] : q = 124; % D-HW8
+	  Sink[1] <-> Sensor[41] : q = 130; % D-HW9
+	  Sink[1] <-> Sensor[42] : q = 135.9; % D-HW10
+	  Sink[1] <-> Sensor[43] : q = 146; % D-HW11
+	  Sink[1] <-> Sensor[44] : q = 156.3; % D-HW12
+	  Sink[1] <-> Sensor[45] : q = 166.5; % D-HW13
+	  % Deck - East
+	  Sink[1] <-> Sensor[46] : q = 67.4; % D-HE1
+	  Sink[1] <-> Sensor[47] : q = 50.3; % D-HE2
+	  Sink[1] <-> Sensor[48] : q = 33.25; % D-HE3
+	  Sink[1] <-> Sensor[49] : q = 22.5; % D-HE4
+	  Sink[1] <-> Sensor[50] : q = 33.25; % D-HE5
+	  Sink[1] <-> Sensor[51] : q = 61.75; % D-HE6
+	  Sink[1] <-> Sensor[52] : q = 93.25; % D-HE7
+	  Sink[1] <-> Sensor[53] : q = 125.5; % D-HE8
+	  Sink[1] <-> Sensor[54] : q = 131.45; % D-HE9
+	  Sink[1] <-> Sensor[55] : q = 137.35; % D-HE10
+	  Sink[1] <-> Sensor[56] : q = 147.5; % D-HE11
+	  Sink[1] <-> Sensor[57] : q = 157.60; % D-HE12
+	  Sink[1] <-> Sensor[58] : q = 167.75; % D-HE13
+	  % Pylon
+	  Sink[1] <-> Sensor[59] : q = 13.5; % P-HW1
+	  Sink[1] <-> Sensor[60] : q = 24; % P-HE1
+	  Sink[1] <-> Sensor[61] : q = 71; % P-HT1
+	  % Cable
+	  Sink[1] <-> Sensor[62] : q = 55.1; % C-HE1
+	  Sink[1] <-> Sensor[63] : q = 30.5; % C-HE2
+	  Sink[1] <-> Sensor[64] : q = 30.5; % C-HE3
+	  Sink[1] <-> Sensor[65] : q = 49.35; % C-HE4
+	  Sink[1] <-> Sensor[66] : q = 73.6; % C-HE5
+	  Sink[1] <-> Sensor[67] : q = 99; % C-HE6
+	  Sink[1] <-> Sensor[68] : q = 124.9; % C-HE7
+	}
+      }
+      
+      medium[timer] {
+	default_q = 1;
+	default_time = 0ms;
+	default_listening_current = 0.18mA; % Current of timer
+	default_sending_current = 0 mA;
+	default_receiving_current = 0 mA;
+	  
+	topology {
+	  ManagerJindo <-> Sensor[0:32];
+	  ManagerHaenam <-> Sensor[33:68];
+	}
+      }
+      
+      medium[mgnt] {
+	default_q = 1;
+	default_time = 0ms;
+	default_listening_current = 0mA; 
+	default_sending_current = 0 mA;
+	default_receiving_current = 0 mA;
+	  
+	topology {
+	  ManagerJindo <-> Sink[0];
+	  ManagerJindo <-> Sensor[0:32];
+	  Sink[0] <-> Sensor[0:32];
+	  
+	  ManagerHaenam <-> Sink[1];
+	  ManagerHaenam <-> Sensor[33:68];
+	  Sink[1] <-> Sensor[33:68];
+	}
+      }
+    }
+  }
+  
+  % MID SECURITY LEVEL: Collected data encrption
+  version Enc_Updated
+  {
+    set host Sink(TelosB);
+    set host Sensor(TelosB);
+    set host ManagerJindo(TelosB);
+    set host ManagerHaenam(TelosB);
+
+    % JINDO
+    run host Sink(*) {
+      run MainUpdated(DecCollectedData)
+    }
+    run host Sensor(*){33} {
+      run MainUpdated(EncCollectedData)
+    }
+    run host ManagerJindo(*) {
+      run PrepareMessages(*)
+      run MainUpdated(Wait_NoAuth)
+    }
+
+    % HAENAM
+    run host Sink(*) {
+      run MainUpdated(DecCollectedData)
+    }
+    run host Sensor(*){36} {
+      run MainUpdated(EncCollectedData)
+    }
+    run host ManagerHaenam(*) {
+      run PrepareMessages(*)
+      run MainUpdated(Wait_NoAuth)
+    }
+
+    communication {
+      medium[wsn] {
+	default_time = wsn_time [ms];
+	default_listening_current = 1.14 mA; % Duty cycle - 5%
+	default_sending_current = 22.8 mA;
+	default_receiving_current = 22.8 mA;
+      
+	topology {
+	
+	  % Jindo (Sink[0])
+	  % Deck - West
+	  Sink[0] <-> Sensor[0] : q = 59; % D-JW1
+	  Sink[0] <-> Sensor[1] : q = 47; % D-JW2
+	  Sink[0] <-> Sensor[2] : q = 27; % D-JW3
+	  Sink[0] <-> Sensor[3] : q = 10; % D-JW4
+	  Sink[0] <-> Sensor[4] : q = 27; % D-JW5
+	  Sink[0] <-> Sensor[5] : q = 59; % D-JW6
+	  Sink[0] <-> Sensor[6] : q = 91.5; % D-JW7
+	  Sink[0] <-> Sensor[7] : q = 124.5; % D-JW8
+	  Sink[0] <-> Sensor[8] : q = 140.5; % D-JW9
+	  Sink[0] <-> Sensor[9] : q = 160.5; % D-JW10
+	  Sink[0] <-> Sensor[10] : q = 172.5; % D-JW11
+	  % Deck - East
+	  Sink[0] <-> Sensor[11] : q = 62; % D-JE1
+	  Sink[0] <-> Sensor[12] : q = 51; % D-JE2
+	  Sink[0] <-> Sensor[13] : q = 33.5; % D-JE3
+	  Sink[0] <-> Sensor[14] : q = 22.5; % D-JE4
+	  Sink[0] <-> Sensor[15] : q = 33.5; % D-JE5
+	  Sink[0] <-> Sensor[16] : q = 62; % D-JE6
+	  Sink[0] <-> Sensor[17] : q = 94; % D-JE7
+	  Sink[0] <-> Sensor[18] : q = 126; % D-JE8
+	  Sink[0] <-> Sensor[19] : q = 142; % D-JE9
+	  Sink[0] <-> Sensor[20] : q = 161.5; % D-JE10
+	  Sink[0] <-> Sensor[21] : q = 173.5; % D-JE11
+	  % Pylon
+	  Sink[0] <-> Sensor[22] : q = 13.5; % P-JW1
+	  Sink[0] <-> Sensor[23] : q = 24; % P-JE1
+	  Sink[0] <-> Sensor[24] : q = 71; % P-JT1
+	  % Cable
+	  Sink[0] <-> Sensor[25] : q = 55; % C-JE1
+	  Sink[0] <-> Sensor[26] : q = 30.5; % C-JE2
+	  Sink[0] <-> Sensor[27] : q = 30.5; % C-JE3
+	  Sink[0] <-> Sensor[28] : q = 49.5; % C-JE4
+	  Sink[0] <-> Sensor[29] : q = 60.5; % C-JE5
+	  Sink[0] <-> Sensor[30] : q = 72; % C-JE6
+	  Sink[0] <-> Sensor[31] : q = 97; % C-JE7
+	  Sink[0] <-> Sensor[32] : q = 123; % C-JE8
+	  
+	  
+	  % Haenam (Sink[1])
+	  % Deck - West
+	  Sink[1] <-> Sensor[33] : q = 64.3; % D-HW1
+	  Sink[1] <-> Sensor[34] : q = 46; % D-HW2
+	  Sink[1] <-> Sensor[35] : q = 26.5; % D-HW3
+	  Sink[1] <-> Sensor[36] : q = 10; % D-HW4
+	  Sink[1] <-> Sensor[37] : q = 26.5; % D-HW5
+	  Sink[1] <-> Sensor[38] : q = 58.35; % D-HW6
+	  Sink[1] <-> Sensor[39] : q = 91; % D-HW7
+	  Sink[1] <-> Sensor[40] : q = 124; % D-HW8
+	  Sink[1] <-> Sensor[41] : q = 130; % D-HW9
+	  Sink[1] <-> Sensor[42] : q = 135.9; % D-HW10
+	  Sink[1] <-> Sensor[43] : q = 146; % D-HW11
+	  Sink[1] <-> Sensor[44] : q = 156.3; % D-HW12
+	  Sink[1] <-> Sensor[45] : q = 166.5; % D-HW13
+	  % Deck - East
+	  Sink[1] <-> Sensor[46] : q = 67.4; % D-HE1
+	  Sink[1] <-> Sensor[47] : q = 50.3; % D-HE2
+	  Sink[1] <-> Sensor[48] : q = 33.25; % D-HE3
+	  Sink[1] <-> Sensor[49] : q = 22.5; % D-HE4
+	  Sink[1] <-> Sensor[50] : q = 33.25; % D-HE5
+	  Sink[1] <-> Sensor[51] : q = 61.75; % D-HE6
+	  Sink[1] <-> Sensor[52] : q = 93.25; % D-HE7
+	  Sink[1] <-> Sensor[53] : q = 125.5; % D-HE8
+	  Sink[1] <-> Sensor[54] : q = 131.45; % D-HE9
+	  Sink[1] <-> Sensor[55] : q = 137.35; % D-HE10
+	  Sink[1] <-> Sensor[56] : q = 147.5; % D-HE11
+	  Sink[1] <-> Sensor[57] : q = 157.60; % D-HE12
+	  Sink[1] <-> Sensor[58] : q = 167.75; % D-HE13
+	  % Pylon
+	  Sink[1] <-> Sensor[59] : q = 13.5; % P-HW1
+	  Sink[1] <-> Sensor[60] : q = 24; % P-HE1
+	  Sink[1] <-> Sensor[61] : q = 71; % P-HT1
+	  % Cable
+	  Sink[1] <-> Sensor[62] : q = 55.1; % C-HE1
+	  Sink[1] <-> Sensor[63] : q = 30.5; % C-HE2
+	  Sink[1] <-> Sensor[64] : q = 30.5; % C-HE3
+	  Sink[1] <-> Sensor[65] : q = 49.35; % C-HE4
+	  Sink[1] <-> Sensor[66] : q = 73.6; % C-HE5
+	  Sink[1] <-> Sensor[67] : q = 99; % C-HE6
+	  Sink[1] <-> Sensor[68] : q = 124.9; % C-HE7
+	}
+      }
+      
+      medium[timer] {
+	default_q = 1;
+	default_time = 0ms;
+	default_listening_current = 0.18mA; % Current of timer
+	default_sending_current = 0 mA;
+	default_receiving_current = 0 mA;
+	  
+	topology {
+	  ManagerJindo <-> Sensor[0:32];
+	  ManagerHaenam <-> Sensor[33:68];
+	}
+      }
+      
+      medium[mgnt] {
+	default_q = 1;
+	default_time = 0ms;
+	default_listening_current = 0mA; 
+	default_sending_current = 0 mA;
+	default_receiving_current = 0 mA;
+	  
+	topology {
+	  ManagerJindo <-> Sink[0];
+	  ManagerJindo <-> Sensor[0:32];
+	  Sink[0] <-> Sensor[0:32];
+	  
+	  ManagerHaenam <-> Sink[1];
+	  ManagerHaenam <-> Sensor[33:68];
+	  Sink[1] <-> Sensor[33:68];
+	}
+      }
+    }
+  }
+  
+  % HIGH SECURITY LEVEL: Params Auth + Collected data encrption
+  version AuthEnc_Updated
+  {
+    set host Sink(TelosB);
+    set host Sensor(TelosB);
+    set host ManagerJindo(TelosB);
+    set host ManagerHaenam(TelosB);
+
+    % JINDO
+    run host Sink(*) {
+      run MainUpdated(EncParams,AuthParams,DecCollectedData)
+    }
+    run host Sensor(*){33} {
+      run MainUpdated(DeauthParams,DecParams,EncCollectedData)
+    }
+    run host ManagerJindo(*) {
+      run PrepareMessages(*)
+      run MainUpdated(Wait_Auth)
+    }
+
+    % HAENAM
+    run host Sink(*) {
+      run MainUpdated(EncParams,AuthParams,DecCollectedData)
+    }
+    run host Sensor(*){36} {
+      run MainUpdated(DeauthParams,DecParams,EncCollectedData)
+    }
+    run host ManagerHaenam(*) {
+      run PrepareMessages(*)
+      run MainUpdated(Wait_Auth)
+    }
+
+    communication {
+      medium[wsn] {
+	default_time = wsn_time [ms];
+	default_listening_current = 1.14 mA; % Duty cycle - 5%
+	default_sending_current = 22.8 mA;
+	default_receiving_current = 22.8 mA;
+      
+	topology {
+	
+	  % Jindo (Sink[0])
+	  % Deck - West
+	  Sink[0] <-> Sensor[0] : q = 59; % D-JW1
+	  Sink[0] <-> Sensor[1] : q = 47; % D-JW2
+	  Sink[0] <-> Sensor[2] : q = 27; % D-JW3
+	  Sink[0] <-> Sensor[3] : q = 10; % D-JW4
+	  Sink[0] <-> Sensor[4] : q = 27; % D-JW5
+	  Sink[0] <-> Sensor[5] : q = 59; % D-JW6
+	  Sink[0] <-> Sensor[6] : q = 91.5; % D-JW7
+	  Sink[0] <-> Sensor[7] : q = 124.5; % D-JW8
+	  Sink[0] <-> Sensor[8] : q = 140.5; % D-JW9
+	  Sink[0] <-> Sensor[9] : q = 160.5; % D-JW10
+	  Sink[0] <-> Sensor[10] : q = 172.5; % D-JW11
+	  % Deck - East
+	  Sink[0] <-> Sensor[11] : q = 62; % D-JE1
+	  Sink[0] <-> Sensor[12] : q = 51; % D-JE2
+	  Sink[0] <-> Sensor[13] : q = 33.5; % D-JE3
+	  Sink[0] <-> Sensor[14] : q = 22.5; % D-JE4
+	  Sink[0] <-> Sensor[15] : q = 33.5; % D-JE5
+	  Sink[0] <-> Sensor[16] : q = 62; % D-JE6
+	  Sink[0] <-> Sensor[17] : q = 94; % D-JE7
+	  Sink[0] <-> Sensor[18] : q = 126; % D-JE8
+	  Sink[0] <-> Sensor[19] : q = 142; % D-JE9
+	  Sink[0] <-> Sensor[20] : q = 161.5; % D-JE10
+	  Sink[0] <-> Sensor[21] : q = 173.5; % D-JE11
+	  % Pylon
+	  Sink[0] <-> Sensor[22] : q = 13.5; % P-JW1
+	  Sink[0] <-> Sensor[23] : q = 24; % P-JE1
+	  Sink[0] <-> Sensor[24] : q = 71; % P-JT1
+	  % Cable
+	  Sink[0] <-> Sensor[25] : q = 55; % C-JE1
+	  Sink[0] <-> Sensor[26] : q = 30.5; % C-JE2
+	  Sink[0] <-> Sensor[27] : q = 30.5; % C-JE3
+	  Sink[0] <-> Sensor[28] : q = 49.5; % C-JE4
+	  Sink[0] <-> Sensor[29] : q = 60.5; % C-JE5
+	  Sink[0] <-> Sensor[30] : q = 72; % C-JE6
+	  Sink[0] <-> Sensor[31] : q = 97; % C-JE7
+	  Sink[0] <-> Sensor[32] : q = 123; % C-JE8
+	  
+	  
+	  % Haenam (Sink[1])
+	  % Deck - West
+	  Sink[1] <-> Sensor[33] : q = 64.3; % D-HW1
+	  Sink[1] <-> Sensor[34] : q = 46; % D-HW2
+	  Sink[1] <-> Sensor[35] : q = 26.5; % D-HW3
+	  Sink[1] <-> Sensor[36] : q = 10; % D-HW4
+	  Sink[1] <-> Sensor[37] : q = 26.5; % D-HW5
+	  Sink[1] <-> Sensor[38] : q = 58.35; % D-HW6
+	  Sink[1] <-> Sensor[39] : q = 91; % D-HW7
+	  Sink[1] <-> Sensor[40] : q = 124; % D-HW8
+	  Sink[1] <-> Sensor[41] : q = 130; % D-HW9
+	  Sink[1] <-> Sensor[42] : q = 135.9; % D-HW10
+	  Sink[1] <-> Sensor[43] : q = 146; % D-HW11
+	  Sink[1] <-> Sensor[44] : q = 156.3; % D-HW12
+	  Sink[1] <-> Sensor[45] : q = 166.5; % D-HW13
+	  % Deck - East
+	  Sink[1] <-> Sensor[46] : q = 67.4; % D-HE1
+	  Sink[1] <-> Sensor[47] : q = 50.3; % D-HE2
+	  Sink[1] <-> Sensor[48] : q = 33.25; % D-HE3
+	  Sink[1] <-> Sensor[49] : q = 22.5; % D-HE4
+	  Sink[1] <-> Sensor[50] : q = 33.25; % D-HE5
+	  Sink[1] <-> Sensor[51] : q = 61.75; % D-HE6
+	  Sink[1] <-> Sensor[52] : q = 93.25; % D-HE7
+	  Sink[1] <-> Sensor[53] : q = 125.5; % D-HE8
+	  Sink[1] <-> Sensor[54] : q = 131.45; % D-HE9
+	  Sink[1] <-> Sensor[55] : q = 137.35; % D-HE10
+	  Sink[1] <-> Sensor[56] : q = 147.5; % D-HE11
+	  Sink[1] <-> Sensor[57] : q = 157.60; % D-HE12
+	  Sink[1] <-> Sensor[58] : q = 167.75; % D-HE13
+	  % Pylon
+	  Sink[1] <-> Sensor[59] : q = 13.5; % P-HW1
+	  Sink[1] <-> Sensor[60] : q = 24; % P-HE1
+	  Sink[1] <-> Sensor[61] : q = 71; % P-HT1
+	  % Cable
+	  Sink[1] <-> Sensor[62] : q = 55.1; % C-HE1
+	  Sink[1] <-> Sensor[63] : q = 30.5; % C-HE2
+	  Sink[1] <-> Sensor[64] : q = 30.5; % C-HE3
+	  Sink[1] <-> Sensor[65] : q = 49.35; % C-HE4
+	  Sink[1] <-> Sensor[66] : q = 73.6; % C-HE5
+	  Sink[1] <-> Sensor[67] : q = 99; % C-HE6
+	  Sink[1] <-> Sensor[68] : q = 124.9; % C-HE7
+	}
+      }
+      
+      medium[timer] {
+	default_q = 1;
+	default_time = 0ms;
+	default_listening_current = 0.18mA; % Current of timer
+	default_sending_current = 0 mA;
+	default_receiving_current = 0 mA;
+	  
+	topology {
+	  ManagerJindo <-> Sensor[0:32];
+	  ManagerHaenam <-> Sensor[33:68];
+	}
+      }
+      
+      medium[mgnt] {
+	default_q = 1;
+	default_time = 0ms;
+	default_listening_current = 0mA; 
+	default_sending_current = 0 mA;
+	default_receiving_current = 0 mA;
+	  
+	topology {
+	  ManagerJindo <-> Sink[0];
+	  ManagerJindo <-> Sensor[0:32];
+	  Sink[0] <-> Sensor[0:32];
+	  
+	  ManagerHaenam <-> Sink[1];
+	  ManagerHaenam <-> Sensor[33:68];
+	  Sink[1] <-> Sensor[33:68];
+	}
+      }
+    }
+  }
+
+}
