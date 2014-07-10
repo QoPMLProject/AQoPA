@@ -1,0 +1,62 @@
+
+metrics {
+
+conf (TelosB) {
+	CPU = 16-bit 8MHz TI MSP430;
+}
+
+data(TelosB) {
+    primhead[function][size:exact(B)];
+    primitive[nonce][4];
+    primitive[id][1];
+    primitive[dh_key][16];
+    primitive[empty_list][0];
+    primitive[empty][0];
+    #
+    primhead[function][key_size][size:exact(b)];
+    primitive[pk][160][320];
+    primitive[ecies_temp_key][160][160];
+    primitive[ecies_mac][160][160];
+    #
+    primhead[function][state][size:exact(B)][time:exact(s)];
+    primitive[collected_data][UPDATED][30000][1500]; % no points: 5000, freq.: 10Hz, channels: 3, sample size: 2B
+    #
+    primhead[function][state][size:ratio][time:algorithm(ms)][current:exact(mA)];
+    primitive[save_collected_data][UPDATED][1:1][save_collected_data][2];
+    #
+    primhead[function][size:exact(B)];
+    primitive[generate_params][3];
+    #
+    primhead[function][state][time:exact(s)][current:exact(mA)];
+    primitive[wait_time_sync][UPDATED][30][0.18];
+    #
+    primhead[function][state][nodes_cnt][time:exact(s)][current:exact(mA)];
+    primitive[sensing_start_delay][UPDATED][33][99.5][0.18];
+    primitive[sensing_start_delay][UPDATED-AUTH][33][210][0.18];
+    primitive[sensing_start_delay][UPDATED][36][104][0.18];
+    primitive[sensing_start_delay][UPDATED-AUTH][36][222][0.18];
+    #
+    primhead[function][size:sum_ratio];
+    primitive[add_to_list][1:1,2:1];
+    #
+    primhead[function][alg][key_size][time:block(ms,B)][size:ratio];
+    primitive[s_enc][AES-CTR][128][1:34:16][1:1];
+    #
+    primhead[function][alg][key_size][time:block(ms,B)][size:nested];
+    primitive[s_dec][AES-CTR][128][1:34:16][1:1];
+    #
+    primhead[function][key_size][time:exact(ms)];
+    primitive[ecies_kdf_mac][160][5892];
+    primitive[ecies_kdf][160][3967.1];
+    #
+    primhead[function][inside_algorithm][key_size][time:block(ms,B)][size:ratio];
+    primitive[ecies_enc][AES][160][1:34:16][1:1];
+    #
+    primhead[function][inside_algorithm][key_size][time:block(ms,B)][size:nested];
+    primitive[ecies_dec][AES][160][1:34:16][1:1];
+    #
+    primhead[function][current:exact(mA)];
+    primitive[cpu][2.4];
+}
+
+}
