@@ -1,0 +1,429 @@
+functions
+{
+    % List operations
+    fun empty_list();
+    fun add_to_list(list, element);
+    fun get_from_list(list);
+    fun pop_list(list);
+    fun is_list_empty(list);
+
+    % Messages types
+    fun nodes_msg();
+    fun params_msg();
+    fun start_sensing_msg();
+    fun start_collecting_msg();
+    fun data_collected_msg();
+    fun data_req_msg();
+    fun data_msg();
+    
+    fun empty(); % function representing no data
+
+    % SHM
+    fun wait_time_sync(); % waits unitl nodes are synchronized
+    fun generate_params(node_id); % generates parameters (3B) for node
+    fun collected_data(); % returns data that has been sensed by sensor in one phase
+    fun save_collected_data(data); % saves collected data in gateway - basestation's database
+
+    fun nonce(); %generates nonce
+    fun sk(host_id); %secret key of id
+    fun pk(sk); %public key for sk secret key
+
+    fun ecies_kdf_mac(); %ecies key derivation function and MAC calculation before encryption
+    fun ecies_kdf(); %ecies key derivation function before decryption
+    fun ecies_enc(data, PK); %assymetric encryption using ECIES algorithm
+    fun ecies_dec(data, SK); %assymetric decryption using ECIES algorithm
+    fun ecies_temp_key(); %generates temporary key for encryption
+    fun ecies_mac(); %generates MAC for encrypted message
+
+    fun dh_key(PK_ID1, SK_ID2); %generates Diffie-Hellman key between two nodes ID1 and ID2 using their public and secret keys
+
+    fun s_enc(data, K)[Time: algorithm,key_size]; %symmetric encryption
+    fun s_dec(data, K)[Time: algorithm,key_size]; %symmetric decryption
+}
+equations
+{
+    % List equations
+    eq get_from_list(add_to_list(L, E)) = E;
+    eq pop_list(add_to_list(L, E)) = L;
+    eq is_list_empty(empty_list()) = true;
+	
+    % ECC equations
+    eq ecies_enc(ecies_dec(data, SK), pk(SK)) = data;
+    eq ecies_dec(ecies_enc(data, pk(SK)), SK) = data;
+
+    % Symmetric enc/dec
+    eq s_enc(s_dec(data, K), K) = data;
+    eq s_dec(s_enc(data, K), K) = data;
+
+    % DH keys symmetric enc/dec
+    eq s_dec(s_enc(data, dh_key(pk(sk(ID1)), sk(ID2))), dh_key(pk(sk(ID2)), sk(ID1))) = data;
+    eq s_enc(s_dec(data, dh_key(pk(sk(ID1)), sk(ID2))), dh_key(pk(sk(ID2)), sk(ID1))) = data;
+}
+channels
+{
+    channel ch_WSN(0)[wsn];
+    channel ch_MGNT(*)[mgnt];
+    channel ch_TIMER(*)[timer];
+}
+hosts
+{
+
+    host Sensor(rr)(*)
+    {
+      # KEY = nonce();
+      # MY_SK = sk(id());
+      # MY_PK = pk(sk(id()));
+      
+      process MainUpdated(*)
+      {
+	  wait_time_sync()[UPDATED];
+
+	  in(ch_WSN: PARAMS_MSG: |*, id(), params_msg()|);
+	  PARAMS = PARAMS_MSG[3];
+	  
+	  subprocess DeauthParams(*) {
+	    ecies_kdf()[160];
+	    PARAMS = ecies_dec(PARAMS, MY_SK)[AES,160];
+	  }
+	  
+	  subprocess DecParams(*) {
+	    PARAMS = s_dec(PARAMS, KEY)[AES-CTR,128];
+	    PARAMS = PARAMS[0];
+	  }
+	  
+	  in(ch_TIMER: START_MSG: |*, *, start_sensing_msg()|);
+
+	  DATA = collected_data()[UPDATED];
+	  save_collected_data(DATA)[UPDATED];
+	  
+	  subprocess EncCollectedData(*) {
+	    DATA = (DATA, nonce());
+	    DATA = s_enc(DATA, KEY)[AES-CTR,128];
+	    save_collected_data(DATA)[UPDATED];
+	  }
+	  
+	  COLLECTED_NOTIFICATION_MSG = (id(), broadcast(), data_collected_msg());
+	  out(ch_MGNT: COLLECTED_NOTIFICATION_MSG);
+
+	  in(ch_MGNT: REQ_MSG: |*, id(), data_req_msg()|);
+	  SINK_ID = REQ_MSG[0];
+	  
+	  DATA_MSG = (id(), SINK_ID, data_msg(), DATA);
+	  out(ch_WSN: DATA_MSG);
+      }
+
+    }
+
+    host Sink(rr)(*) 
+    {
+      # KEY = nonce();
+      # MY_SK = sk(id());
+
+      process MainUpdated(*)
+      {
+	in(ch_MGNT: NODES_MSG: |*, id(), nodes_msg()|);
+	NODES_LIST = NODES_MSG[3];
+	PKS_LIST = NODES_MSG[4];
+
+	wait_time_sync()[UPDATED];
+    
+	TMP_NODES_LIST = NODES_LIST;
+	TMP_PKS_LIST = PKS_LIST;
+	while (is_list_empty(TMP_NODES_LIST) != true) {
+	  NODE_ID = get_from_list(TMP_NODES_LIST);
+	  TMP_NODES_LIST = pop_list(TMP_NODES_LIST);
+	  
+	  NODE_PK = get_from_list(TMP_PKS_LIST);
+	  TMP_PKS_LIST = pop_list(TMP_PKS_LIST);
+	  
+	  PARAMS = generate_params();
+	  
+	  subprocess EncParams(*) {
+	    PARAMS = (PARAMS, nonce());
+	    PARAMS = s_enc(PARAMS, KEY)[AES-CTR,128];
+	  }
+	  
+	  subprocess AuthParams(*) {
+	    ecies_kdf_mac()[160];
+	    PARAMS = ecies_enc(PARAMS, NODE_PK)[AES,160];
+	  }
+	  
+	  PARAMS_MSG = (id(), NODE_ID, params_msg(), PARAMS);
+	  out(ch_WSN: PARAMS_MSG);
+	}
+
+	in(ch_MGNT: START_MSG: |*, id(), start_collecting_msg()|);
+	TMP_NODES_LIST = NODES_LIST;
+	while (is_list_empty(TMP_NODES_LIST) != true) {
+	  NODE_ID = get_from_list(TMP_NODES_LIST);
+	  TMP_NODES_LIST = pop_list(TMP_NODES_LIST);
+
+	  REQ_MSG = (id(), NODE_ID, data_req_msg(), empty());
+	  out(ch_MGNT: REQ_MSG);
+	  
+	  in(ch_WSN: DATA_MSG: |*, id(), data_msg()|);
+	  DATA = DATA_MSG[3];
+	  save_collected_data(DATA)[UPDATED];
+
+	  subprocess DecCollectedData(*) {
+	    DATA = s_dec(DATA, KEY)[AES-CTR,128];
+	    DATA = DATA[0];
+	    save_collected_data(DATA)[UPDATED];
+	  }
+	  
+	}
+      }
+    }
+
+    host ManagerJindo(fifo)(*) 
+    {
+
+	process PrepareMessages(*) 
+	{
+	    % Create list of all Jindo nodes
+	    NODES_LIST = empty_list();
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.0));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.1));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.2));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.3));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.4));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.5));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.6));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.7));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.8));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.9));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.10));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.11));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.12));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.13));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.14));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.15));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.16));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.17));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.18));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.19));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.20));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.21));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.22));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.23));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.24));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.25));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.26));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.27));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.28));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.29));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.30));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.31));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.32));
+	    
+	    % Create list of all Jindo sensors' public keys
+	    PKS_LIST = empty_list();
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.0))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.1))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.2))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.3))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.4))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.5))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.6))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.7))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.8))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.9))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.10))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.11))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.12))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.13))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.14))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.15))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.16))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.17))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.18))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.19))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.20))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.21))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.22))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.23))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.24))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.25))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.26))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.27))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.28))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.29))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.30))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.31))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.32))));
+	}
+    
+	process MainUpdated(*) {
+	  
+	    % Send list of nodes to Jindo sink
+	    NODES_MSG = (id(), id(Sink.0), nodes_msg(), NODES_LIST, PKS_LIST);
+	    out(ch_MGNT: NODES_MSG);
+
+	    % Wait until time synchronization process is finished
+            wait_time_sync()[UPDATED];
+            
+            subprocess Wait_NoAuth(*) {
+	      % Wait until all parameters are sent
+	      sensing_start_delay()[UPDATED,33];
+	    }
+	    
+            subprocess Wait_Auth(*) {
+	      % Wait until all parameters are sent
+	      sensing_start_delay()[UPDATED-AUTH,33];
+	    }
+
+            % Send command to start sending
+            START_MSG = (id(), broadcast(), start_sensing_msg());
+            out(ch_TIMER: START_MSG);
+            
+            % Wait for the first notification that data is collected
+            in(ch_MGNT: X: |*, *, data_collected_msg()|);
+            
+            % Send command to sink to retrieve data
+            COLLECT_MSG = (id(), id(Sink.0), start_collecting_msg());
+            out(ch_MGNT: COLLECT_MSG);
+	}
+    }
+
+    host ManagerHaenam(fifo)(*) 
+    {
+
+	process PrepareMessages(*) 
+	{
+	    % Create list of all Jindo nodes
+	    NODES_LIST = empty_list();
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.33));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.34));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.35));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.36));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.37));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.38));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.39));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.40));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.41));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.42));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.43));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.44));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.45));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.46));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.47));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.48));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.49));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.50));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.51));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.52));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.53));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.54));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.55));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.56));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.57));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.58));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.59));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.60));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.61));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.62));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.63));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.64));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.65));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.66));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.67));
+	    NODES_LIST = add_to_list(NODES_LIST, id(Sensor.68));
+	    
+	    % Create list of all Jindo sensors' public keys
+	    PKS_LIST = empty_list();
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.33))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.34))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.35))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.36))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.37))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.38))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.39))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.40))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.41))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.42))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.43))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.44))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.45))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.46))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.47))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.48))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.49))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.50))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.51))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.52))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.53))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.54))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.55))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.56))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.57))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.58))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.59))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.60))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.61))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.62))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.63))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.64))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.65))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.66))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.67))));
+	    PKS_LIST = add_to_list(PKS_LIST, pk(sk(id(Sensor.68))));
+	}
+    
+	process MainUpdated(*) {
+	  
+	    % Send list of nodes to Jindo sink
+	    NODES_MSG = (id(), id(Sink.1), nodes_msg(), NODES_LIST, PKS_LIST);
+	    out(ch_MGNT: NODES_MSG);
+
+	    % Wait until time synchronization process is finished
+            wait_time_sync()[UPDATED];
+            
+            subprocess Wait_NoAuth(*) {
+	      % Wait until all parameters are sent
+	      sensing_start_delay()[UPDATED,36];
+	    }
+	    
+            subprocess Wait_Auth(*) {
+	      % Wait until all parameters are sent
+	      sensing_start_delay()[UPDATED-AUTH,36];
+	    }
+
+            % Send command to start sending
+            START_MSG = (id(), broadcast(), start_sensing_msg());
+            out(ch_TIMER: START_MSG);
+            
+            % Wait for the first notification that data is collected
+            in(ch_MGNT: X: |*, *, data_collected_msg()|);
+            
+            % Send command to sink to retrieve data
+            COLLECT_MSG = (id(), id(Sink.1), start_collecting_msg());
+            out(ch_MGNT: COLLECT_MSG);
+	}
+    }
+
+}
+
+algorithms {
+    alg wsn_time(msg) {
+	msg_size = size(msg[3]); 
+	xtime = 0;
+	while (msg_size > 0) {
+	    sending = 18;
+	    one_size = 110;
+	    if (msg_size < one_size) {
+		one_size = msg_size;
+	    }
+	    transmitting = one_size * 0.12;
+	    xtime = xtime + sending + transmitting;
+	    msg_size = msg_size - 110;
+	}
+	return xtime;
+    }
+    
+    alg save_collected_data(msg) {
+      const = 14;
+      vtime = size(msg) / 30 * 3.16;
+      return const + vtime;
+    }
+}
+
