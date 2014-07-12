@@ -74,7 +74,7 @@ class SingleVersionPanel(wx.Panel):
         timesHBoxSizer.Add(operationBoxSizer, 0, wx.ALL | wx.EXPAND)
         timesHBoxSizer.Add(hostsBoxSizer, 1, wx.ALL | wx.EXPAND)
         
-        self.showTimeBtn = wx.Button(self, label="Show time")
+        self.showTimeBtn = wx.Button(self, label="Show")
         self.showTimeBtn.Bind(wx.EVT_BUTTON, self.OnShowTimeButtonClicked)
 
         timesBoxSizer.Add(timesHBoxSizer, 0, wx.ALL | wx.EXPAND)

@@ -60,7 +60,7 @@ class SingleVersionPanel(wx.Panel):
         reputationHBoxSizer = wx.BoxSizer(wx.HORIZONTAL)
         reputationHBoxSizer.Add(hostsBoxSizer, 1, wx.ALL | wx.EXPAND)
         
-        self.showReputationBtn = wx.Button(self, label="Show reputation results")
+        self.showReputationBtn = wx.Button(self, label="Show")
         self.showReputationBtn.Bind(wx.EVT_BUTTON, self.OnShowReputationButtonClicked)
         
         reputationBoxSizer.Add(reputationHBoxSizer, 0, wx.ALL | wx.EXPAND)

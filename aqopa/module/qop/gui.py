@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
+import wx
+import os
+from aqopa.gui.general_purpose_frame_gui import GeneralFrame
+from sme.SMETool import SMETool
+
 """
 @file       __init__.py
 @brief      gui file for the qop module
 @author     Katarzyna Mazur
 """
-
-import wx
-import os
 
 class SingleVersionPanel(wx.Panel):
     """
@@ -21,6 +23,8 @@ class SingleVersionPanel(wx.Panel):
 
         self.module = module
         self.versionSimulator = {}
+        self.allFacts = []
+        self.occuredFacts = []
 
         #################
         # VERSION BOX
@@ -43,11 +47,14 @@ class SingleVersionPanel(wx.Panel):
         #################
         # BUTTONS LAY
         #################
-        self.showQoPBtn = wx.Button(self, label="Show QoPs")
+        self.showQoPBtn = wx.Button(self, label="Show")
+        self.launchSMEBtn = wx.Button(self, label="Evaluate")
         self.showQoPBtn.Bind(wx.EVT_BUTTON, self.OnShowQoPBtnClicked)
+        self.launchSMEBtn.Bind(wx.EVT_BUTTON, self.OnLaunchSMEClicked)
         buttonsSizer = wx.BoxSizer(wx.HORIZONTAL)
         buttonsSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
         buttonsSizer.Add(self.showQoPBtn, 0, wx.ALL | wx.EXPAND, 5)
+        buttonsSizer.Add(self.launchSMEBtn, 0, wx.ALL | wx.EXPAND, 5)
 
         #################
         # MAIN LAY
@@ -65,6 +72,14 @@ class SingleVersionPanel(wx.Panel):
         versionName = self.versionsList.GetValue()
         simulator = self.versionSimulator[versionName]
         host = self._GetSelectedHost(simulator)
+
+        self.ShowQoPParameters(simulator, host)
+
+    def OnLaunchSMEClicked(self, event):
+        smetool = SMETool(None)
+        smetool.SetClientSize(wx.Size(800,450))
+        smetool.CentreOnScreen()
+        smetool.Show()
 
     def _GetSelectedHost(self, simulator):
 
@@ -143,6 +158,7 @@ class SingleVersionPanel(wx.Panel):
         widgets.append(self.hostsList)
         widgets.append(self.hostsBox)
         widgets.append(self.showQoPBtn)
+        widgets.append(self.launchSMEBtn)
         widgets.append(self.qopParamsBox)
         widgets.append(self.showQoPBtn)
         widgets.append(self.chooseHostLbl)
@@ -155,6 +171,38 @@ class SingleVersionPanel(wx.Panel):
 
         self.Layout()
 
+    def ShowQoPParameters(self, simulator, host) :
+
+        qopsWindow = GeneralFrame(self, "QoP Analysis Results", "QoP Parameters", "modules_results.png")
+        qopParamsPanel = wx.Panel(qopsWindow)
+
+        ##################################
+        # ALL FACTS LAYOUT
+        ##################################
+        allFactsListBox = wx.ListBox(qopParamsPanel, choices=self.allFacts)
+        allFactsBox = wx.StaticBox(qopParamsPanel, label="All Facts")
+        allFactsBoxSizer = wx.StaticBoxSizer(allFactsBox, wx.VERTICAL)
+        allFactsBoxSizer.Add(allFactsListBox, 1, wx.ALL | wx.EXPAND, 5)
+
+        ##################################
+        # OCCURED FACTS LAYOUT
+        ##################################
+        occuredFactsListBox = wx.ListBox(qopParamsPanel, choices=self.occuredFacts)
+        occuredFactsBox = wx.StaticBox(qopParamsPanel, label="Occured Facts")
+        occuredFactsBoxSizer = wx.StaticBoxSizer(occuredFactsBox, wx.VERTICAL)
+        occuredFactsBoxSizer.Add(occuredFactsListBox, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(allFactsBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(occuredFactsBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
+
+        qopParamsPanel.SetSizer(sizer)
+        qopParamsPanel.Layout()
+
+        qopsWindow.CentreOnScreen()
+        qopsWindow.AddPanel(qopParamsPanel)
+        qopsWindow.SetWindowSize(600, 300)
+        qopsWindow.Show()
 
 class MainResultsNotebook(wx.Notebook):
     """ """

@@ -2622,7 +2622,7 @@ class SMETool(wx.Frame):
         self.populatelctrl11(Structs.caseList)
 
     def OnExit(self, e):
-        sys.exit(0)
+        self.Close()
 
 #Category
     def onClickLoadCategories(self, e):

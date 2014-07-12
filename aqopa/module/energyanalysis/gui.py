@@ -69,7 +69,7 @@ class SingleVersionPanel(wx.Panel):
         consumptionsHBoxSizer.Add(operationBoxSizer, 0, wx.ALL | wx.EXPAND)
         consumptionsHBoxSizer.Add(hostsBoxSizer, 1, wx.ALL | wx.EXPAND)
         
-        self.showConsumptionBtn = wx.Button(self, label="Show energy conspumption")
+        self.showConsumptionBtn = wx.Button(self, label="Show")
         self.showConsumptionBtn.Bind(wx.EVT_BUTTON, self.OnShowConsumptionButtonClicked)
         
         consumptionsBoxSizer.Add(voltageHBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
