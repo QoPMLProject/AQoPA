@@ -71,15 +71,11 @@ class SingleVersionPanel(wx.Panel):
         
         self.showConsumptionBtn = wx.Button(self, label="Show energy conspumption")
         self.showConsumptionBtn.Bind(wx.EVT_BUTTON, self.OnShowConsumptionButtonClicked)
-
-        self.consumptionsResultBox = wx.StaticBox(self, label="Results")
-        self.consumptionsResultBoxSizer = wx.StaticBoxSizer(self.consumptionsResultBox, wx.VERTICAL)
         
         consumptionsBoxSizer.Add(voltageHBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
         consumptionsBoxSizer.Add(consumptionsHBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
         consumptionsBoxSizer.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
         consumptionsBoxSizer.Add(self.showConsumptionBtn, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
-        consumptionsBoxSizer.Add(self.consumptionsResultBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(versionBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
@@ -232,7 +228,6 @@ class SingleVersionPanel(wx.Panel):
         widgets.append(self.maxECRB)
         widgets.append(self.hostsBox)
         widgets.append(self.showConsumptionBtn)
-        widgets.append(self.consumptionsResultBox)
         widgets.append(self.voltageLabel)
         widgets.append(self.voltageInput)
         
@@ -249,7 +244,7 @@ class SingleVersionPanel(wx.Panel):
     #################
         
     def _GetSelectedHosts(self, simulator):
-        """ Returns list of hosts selected by user """
+        """ Returns list of hosts selected by the user """
         
         def ValidateHostsRange(indexesRange):
             """ """
