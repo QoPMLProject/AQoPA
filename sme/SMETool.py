@@ -22,19 +22,14 @@ class ModelLibraryDialog(wx.Dialog):
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
 
-        self.panel_1 = wx.Panel(self, wx.ID_ANY)
-
         # create txt ctrls
-        self.factNameTxtCtrl = wx.TextCtrl(self.panel_1, wx.ID_ANY, "")
-        self.factNameTxtCtrl.SetEditable(False)
-
-        # create labels
-        self.label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, ("MODEL"), style=wx.ALIGN_CENTRE)
-        self.factNameTxtCtrl.AppendText("Model Description:")
+        self.modelDescTxtCtrl = wx.TextCtrl(self, wx.ID_ANY, "")
+        self.modelDescTxtCtrl.SetEditable(False)
+        self.modelDescTxtCtrl.AppendText("Model Description:")
 
         self.tree_ctrl_1 = wx.TreeCtrl(self, 2, style=wx.TR_HAS_BUTTONS | wx.TR_DEFAULT_STYLE | wx.SUNKEN_BORDER)
 
-        self.loadFactsBtn = wx.Button(self.panel_1, 1, ("Load model"))
+        self.loadModelBtn = wx.Button(self, 1, ("Load model"))
         self.Bind(wx.EVT_BUTTON, self.onClickLoadModel, id=1)
         root = self.tree_ctrl_1.AddRoot("Models:")
         self.tree_ctrl_1.AppendItem(root, "TLS cryptographic protocol")
@@ -52,25 +47,39 @@ class ModelLibraryDialog(wx.Dialog):
     def onClickModelTreeNode(self, e):
         self.currentlySelected = self.tree_ctrl_1.GetItemText(e.GetItem())
         if(self.currentlySelected=="TLS cryptographic protocol"):
-            self.factNameTxtCtrl.Clear()
-            self.factNameTxtCtrl.AppendText("TLS cryptographic protocol description")
+            self.modelDescTxtCtrl.Clear()
+            self.modelDescTxtCtrl.AppendText("TLS cryptographic protocol description")
 
     def __set_properties(self):
-        self.SetTitle(("Model library"))
-        self.label_1.SetFont(wx.Font(8, wx.ROMAN, wx.NORMAL, wx.BOLD, 0, ""))
-        self.factNameTxtCtrl.SetMinSize((366, 550))
+        self.SetTitle(("Model's Library"))
+        self.SetClientSize(wx.Size(600, 400))
 
     def __do_layout(self):
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_3 = wx.BoxSizer(wx.VERTICAL)
-        sizer_2.Add(self.tree_ctrl_1, 1, wx.EXPAND, 0)
-        sizer_3.Add(self.label_1, 0, wx.ALIGN_CENTER_HORIZONTAL, 0)
-        sizer_3.Add(self.factNameTxtCtrl, 0, wx.EXPAND, 0)
-        sizer_3.Add(self.loadFactsBtn, 0, wx.ALIGN_CENTER_HORIZONTAL, 0)
-        self.panel_1.SetSizer(sizer_3)
-        sizer_2.Add(self.panel_1, 1, wx.EXPAND | wx.ALIGN_CENTER_HORIZONTAL, 0)
-        self.SetSizer(sizer_2)
-        sizer_2.Fit(self)
+
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+
+        groupBoxAll = wx.StaticBox(self, label="Model's Library")
+        groupBoxAllSizer = wx.StaticBoxSizer(groupBoxAll, wx.HORIZONTAL)
+
+        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer1.Add(self.tree_ctrl_1, 1, wx.EXPAND, 5)
+
+        descBox = wx.StaticBox(self, label="Model's Description")
+        descBoxSizer = wx.StaticBoxSizer(descBox, wx.HORIZONTAL)
+        descBoxSizer.Add(self.modelDescTxtCtrl, 1, wx.EXPAND, 5)
+
+        buttonsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonsSizer.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
+        buttonsSizer.Add(self.loadModelBtn, 0, wx.EXPAND, 5)
+
+        groupBoxAllSizer.Add(sizer1, 1, wx.ALL | wx.EXPAND, 5)
+        groupBoxAllSizer.Add(descBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
+
+        mainSizer.Add(groupBoxAllSizer, 1, wx.ALL | wx.EXPAND, 5)
+        mainSizer.Add(buttonsSizer, 0, wx.ALL | wx.EXPAND, 5)
+
+        self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 ################################################################## CATEGORY CLASSES ##################################################################
@@ -149,6 +158,7 @@ class AddCategoryDialog(wx.Dialog):
         mainSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
 
         self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 class EditCategoryDialog(wx.Dialog):
@@ -234,6 +244,7 @@ class EditCategoryDialog(wx.Dialog):
         mainSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
 
         self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 ################################################################## CATEGORY CLASSES ##################################################################
 
@@ -312,7 +323,7 @@ class AddFactDialog(wx.Dialog):
 
     def __set_properties(self):
         self.SetTitle(("Add a Fact"))
-        self.SetSize((365, 216))
+        self.SetSize((365, 316))
 
     def __do_layout(self):
 
@@ -355,6 +366,7 @@ class AddFactDialog(wx.Dialog):
         mainSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
 
         self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 class EditFactDialog(wx.Dialog):
@@ -419,7 +431,7 @@ class EditFactDialog(wx.Dialog):
 
     def __set_properties(self):
         self.SetTitle(("Edit the Fact"))
-        self.SetSize((365, 216))
+        self.SetSize((365, 316))
 
     def __do_layout(self):
 
@@ -462,6 +474,7 @@ class EditFactDialog(wx.Dialog):
         mainSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
 
         self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 class ViewFactsDialog(wx.Dialog):
@@ -490,6 +503,7 @@ class ViewFactsDialog(wx.Dialog):
         mainSizer.Add(groupBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
 
         self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
     def populateFactView(self):
@@ -581,6 +595,7 @@ class AddSADialog(wx.Dialog):
         mainSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
 
         self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 class EditSADialog(wx.Dialog):
@@ -599,12 +614,12 @@ class EditSADialog(wx.Dialog):
         self.SADescTxtCtrl = wx.TextCtrl(self, wx.ID_ANY, Structs.saList[self.index].description, size=(200,-1))
 
         # create buttons
-        self.applyBtn = wx.Button(self, 1, ("Apply"))
-        self.cancelBtn = wx.Button(self, 2, ("Cancel"))
+        self.applyBtn = wx.Button(self, label="Apply")
+        self.cancelBtn = wx.Button(self, label="Cancel")
 
         # do some buttons-bindings
-        self.Bind(wx.EVT_BUTTON, self.onClickApply, id=1)
-        self.Bind(wx.EVT_BUTTON, self.onClickCancel, id=2)
+        self.applyBtn.Bind(wx.EVT_BUTTON, self.onClickApply)
+        self.cancelBtn.Bind(wx.EVT_BUTTON, self.onClickCancel)
 
         self.__set_properties()
         self.__do_layout()
@@ -675,6 +690,7 @@ class EditSADialog(wx.Dialog):
         mainSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
 
         self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 ################################################################## SECURITY ATTRIBUTE CLASSES ##################################################################
 
@@ -710,8 +726,8 @@ class AddRuleDialog(wx.Dialog):
         self.completeRuleBtn.Bind(wx.EVT_BUTTON, self.onClickComplete)
 
         # create combo boxes
-        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY)
-        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200, -1))
+        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200, -1))
         self.combo_box_2.Disable()
 
         # do some combo-bindings
@@ -767,7 +783,7 @@ class AddRuleDialog(wx.Dialog):
 
     def __set_properties(self):
         self.SetTitle(("Create a Rule"))
-        self.SetSize((708, 473))
+        self.SetSize((708, 500))
         self.list_box_1.SetMinSize((574, 300))
 
     def __do_layout(self):
@@ -808,7 +824,9 @@ class AddRuleDialog(wx.Dialog):
 
         mainSizer.Add(groupBoxSizer, 1, wx.EXPAND | wx.ALL, 5)
         mainSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+
         self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 class EditRuleDialog(wx.Dialog):
@@ -820,26 +838,29 @@ class EditRuleDialog(wx.Dialog):
         self.list_box_1 = wx.ListBox(self, wx.ID_ANY, choices=self.fillListBox())
         self.label_1 = wx.StaticText(self, wx.ID_ANY, ("Choose Fact Category:"))
         self.label_2 = wx.StaticText(self, wx.ID_ANY, ("Choose Fact:"))
-        self.AND_Btn = wx.Button(self, 1, ("AND"))
-        self.Bind(wx.EVT_BUTTON, self.onClickAND, id=1)
-        self.OR_Btn = wx.Button(self, 2, ("OR"))
-        self.Bind(wx.EVT_BUTTON, self.onClickOR, id=2)
-        self.NEG_Btn = wx.Button(self, 3, ("NEG"))
-        self.Bind(wx.EVT_BUTTON, self.onClickNEG, id=3)
-        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY)
+
+        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200, -1))
         self.Bind(wx.EVT_COMBOBOX, self.OnSelect1, id=10)
-        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200, -1))
         self.combo_box_2.Disable()
-        #self.button_9 = wx.Button(self, wx.ID_ANY, ("temp"))
-        #self.loadFactsBtn0 = wx.Button(self, wx.ID_ANY, ("temp"))
-        self.IMPLY_Btn = wx.Button(self, 6, ("IMPLY"))
-        self.Bind(wx.EVT_BUTTON, self.onClickIMPLY, id=6)
-        self.addRuleBtn = wx.Button(self, 7, ("Add"))
-        self.Bind(wx.EVT_BUTTON, self.onClickAdd, id=7)
-        self.undoRuleBtn = wx.Button(self, 8, ("Undo"))
-        self.Bind(wx.EVT_BUTTON, self.onClickUndo, id=8)
-        self.completeRuleBtn = wx.Button(self, 9, ("Complete"))
-        self.Bind(wx.EVT_BUTTON, self.onClickComplete, id=9)
+
+        # create buttons
+        self.IMPLY_Btn = wx.Button(self, label="IMPLY")
+        self.AND_Btn = wx.Button(self, label="AND")
+        self.OR_Btn = wx.Button(self, label="OR")
+        self.NEG_Btn = wx.Button(self, label="NEG")
+        self.addRuleBtn = wx.Button(self, label="Add")
+        self.undoRuleBtn = wx.Button(self, label="Undo")
+        self.completeRuleBtn = wx.Button(self, label="Complete")
+
+        # do some buttons-bindings
+        self.AND_Btn.Bind(wx.EVT_BUTTON, self.onClickAND)
+        self.OR_Btn.Bind(wx.EVT_BUTTON, self.onClickOR)
+        self.NEG_Btn.Bind(wx.EVT_BUTTON, self.onClickNEG)
+        self.IMPLY_Btn.Bind(wx.EVT_BUTTON, self.onClickIMPLY)
+        self.addRuleBtn.Bind(wx.EVT_BUTTON, self.onClickAdd)
+        self.undoRuleBtn.Bind(wx.EVT_BUTTON, self.onClickUndo)
+        self.completeRuleBtn.Bind(wx.EVT_BUTTON, self.onClickComplete)
 
         self.__set_properties()
         self.__do_layout()
@@ -894,7 +915,7 @@ class EditRuleDialog(wx.Dialog):
 
     def __set_properties(self):
         self.SetTitle(("Edit the Rule"))
-        self.SetSize((708, 473))
+        self.SetSize((708, 500))
         self.list_box_1.SetMinSize((574, 300))
 
     def __do_layout(self):
@@ -937,6 +958,7 @@ class EditRuleDialog(wx.Dialog):
         mainSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
 
         self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 ################################################################## RULE CLASSES ##################################################################
@@ -949,19 +971,15 @@ class AddFODialog(wx.Dialog):
         wx.Dialog.__init__(self, *args, **kwds)
 
         self.list_box_1 = wx.ListBox(self, wx.ID_ANY, choices=[])
-        self.label_1 = wx.StaticText(self, wx.ID_ANY, ("Choose fact category:"))
-        self.label_2 = wx.StaticText(self, wx.ID_ANY, ("Choose fact:"))
-        self.label_3 = wx.StaticText(self, wx.ID_ANY, ("Choose security attribute:"))
+        self.label_1 = wx.StaticText(self, wx.ID_ANY, ("Choose Fact Category:"))
+        self.label_2 = wx.StaticText(self, wx.ID_ANY, ("Choose Fact:"))
+        self.label_3 = wx.StaticText(self, wx.ID_ANY, ("Choose Security Attribute:"))
 
-        s
-        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200, -1))
         self.Bind(wx.EVT_COMBOBOX, self.OnSelect1, id=10)
-        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN)
+        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN, size=(200, -1))
         self.combo_box_2.Disable()
-        self.combo_box_3 = wx.ComboBox(self, wx.ID_ANY, choices=self.securitylist(), style=wx.CB_DROPDOWN|wx.TE_READONLY)
-
-        self.panel_1 = wx.Panel(self, wx.ID_ANY)
-        self.panel_2 = wx.Panel(self, wx.ID_ANY)
+        self.combo_box_3 = wx.ComboBox(self, wx.ID_ANY, choices=self.securitylist(), style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200, -1))
 
         # create buttons
         self.addFactsOrderBtn = wx.Button(self, label="Add")
@@ -972,9 +990,9 @@ class AddFODialog(wx.Dialog):
         self.NEG_Btn = wx.Button(self, label="EQUALS")
 
         # do some buttons-bindings
-        self.addFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickComplete)
+        self.addFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickAdd)
         self.undoFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickUndo)
-        self.completeFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickAdd)
+        self.completeFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickComplete)
         self.AND_Btn.Bind(wx.EVT_BUTTON, self.onClickLESSER)
         self.OR_Btn.Bind(wx.EVT_BUTTON, self.onClickGREATER)
         self.NEG_Btn.Bind(wx.EVT_BUTTON, self.onClickEQUALS)
@@ -1027,37 +1045,56 @@ class AddFODialog(wx.Dialog):
         self.Close()
 
     def __set_properties(self):
-        self.SetTitle(("Create a facts order"))
-        self.SetSize((708, 473))
+        self.SetTitle(("Create a Facts Order"))
+        self.SetSize((708, 550))
         self.list_box_1.SetMinSize((574, 300))
 
     def __do_layout(self):
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        grid_sizer_1 = wx.GridSizer(3, 3, 0, 0)
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_1.Add(self.list_box_1, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_1, 0, wx.ALIGN_BOTTOM, 0)
-        grid_sizer_1.Add(self.label_2, 0, wx.ALIGN_BOTTOM, 0)
-        sizer_3.Add(self.AND_Btn, 0, 0, 0)
-        sizer_3.Add(self.OR_Btn, 0, 0, 0)
-        sizer_3.Add(self.NEG_Btn, 0, 0, 0)
-        grid_sizer_1.Add(sizer_3, 1, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.factCatComboBox, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.combo_box_2, 0, wx.EXPAND, 0)
-        #sizer_4.Add(self.button_9, 0, 0, 0)
-        #sizer_4.Add(self.loadFactsBtn0, 0, 0, 0)
-        #sizer_4.Add(self.IMPLY_Btn, 0, 0, 0)
-        grid_sizer_1.Add(sizer_4, 1, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_3, 0, wx.ALIGN_RIGHT, 0)
-        grid_sizer_1.Add(self.combo_box_3, 0, wx.EXPAND, 0)
-        sizer_2.Add(self.addRuleBtn, 0, 0, 0)
-        sizer_2.Add(self.undoRuleBtn, 0, 0, 0)
-        sizer_2.Add(self.completeRuleBtn, 0, 0, 0)
-        grid_sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
-        sizer_1.Add(grid_sizer_1, 1, wx.EXPAND, 0)
-        self.SetSizer(sizer_1)
+
+        groupBox = wx.StaticBox(self, label="Create a Facts Order")
+        groupBoxSizer = wx.StaticBoxSizer(groupBox, wx.VERTICAL)
+
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer1.Add(self.label_1, 0, wx.ALIGN_LEFT, 5)
+        sizer1.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer1.Add(self.factCatComboBox, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer2.Add(self.label_2, 0, wx.ALIGN_LEFT, 5)
+        sizer2.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer2.Add(self.combo_box_2, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer3 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer3.Add(self.label_3, 0, wx.ALIGN_LEFT, 5)
+        sizer3.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer3.Add(self.combo_box_3, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer4 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer4.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer4.Add(self.AND_Btn, 0, wx.ALIGN_CENTER_HORIZONTAL, 5)
+        sizer4.Add(self.OR_Btn, 0, wx.ALIGN_CENTER_HORIZONTAL, 5)
+        sizer4.Add(self.NEG_Btn, 0, wx.ALIGN_CENTER_HORIZONTAL, 5)
+        sizer4.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+
+        buttonsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonsSizer.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        buttonsSizer.Add(self.addFactsOrderBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+        buttonsSizer.Add(self.undoFactsOrderBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+        buttonsSizer.Add(self.completeFactsOrderBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+
+        groupBoxSizer.Add(self.list_box_1, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer1, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer2, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer3, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer4, 0, wx.EXPAND | wx.ALL, 5)
+
+        mainSizer.Add(groupBoxSizer, 1, wx.EXPAND | wx.ALL, 5)
+        mainSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 class EditFODialog(wx.Dialog):
@@ -1065,36 +1102,29 @@ class EditFODialog(wx.Dialog):
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
         self.list_box_1 = wx.ListBox(self, wx.ID_ANY, choices=self.fillListBox())
-        self.label_1 = wx.StaticText(self, wx.ID_ANY, ("Choose fact category:"))
-        self.label_2 = wx.StaticText(self, wx.ID_ANY, ("Choose fact:"))
-        self.label_3 = wx.StaticText(self, wx.ID_ANY, ("Choose security attribute:"))
+        self.label_1 = wx.StaticText(self, wx.ID_ANY, ("Choose Fact Category:"))
+        self.label_2 = wx.StaticText(self, wx.ID_ANY, ("Choose Fact:"))
+        self.label_3 = wx.StaticText(self, wx.ID_ANY, ("Choose Security Attribute:"))
 
-
-
-        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200, -1))
         self.Bind(wx.EVT_COMBOBOX, self.OnSelect1, id=10)
-        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200, -1))
         self.combo_box_2.Disable()
-        self.combo_box_3 = wx.ComboBox(self, wx.ID_ANY, choices=self.securitylist(), style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.combo_box_3 = wx.ComboBox(self, wx.ID_ANY, choices=self.securitylist(), style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200, -1))
         self.combo_box_3.SetValue(Structs.foList[smetool.factsOrderListView.GetFocusedItem()].security_attribute)
-        #self.button_9 = wx.Button(self, wx.ID_ANY, ("temp"))
-        #self.loadFactsBtn0 = wx.Button(self, wx.ID_ANY, ("temp"))
-        #self.IMPLY_Btn = wx.Button(self, 6, ("temp"))
-        self.panel_1 = wx.Panel(self, wx.ID_ANY)
-        self.panel_2 = wx.Panel(self, wx.ID_ANY)
 
         # create buttons
-        self.addFactsOrderBtn = wx.Button(self, ("Add"))
-        self.undoFactsOrderBtn = wx.Button(self, ("Undo"))
-        self.completeFactsOrderBtn = wx.Button(self,("Complete"))
-        self.AND_Btn = wx.Button(self, 1, ("LESSER"))
-        self.OR_Btn = wx.Button(self, 2, ("GREATER"))
-        self.NEG_Btn = wx.Button(self, 3, ("EQUALS"))
+        self.addFactsOrderBtn = wx.Button(self, label="Add")
+        self.undoFactsOrderBtn = wx.Button(self, label="Undo")
+        self.completeFactsOrderBtn = wx.Button(self,label="Complete")
+        self.AND_Btn = wx.Button(self, label="LESSER")
+        self.OR_Btn = wx.Button(self, label="GREATER")
+        self.NEG_Btn = wx.Button(self, label="EQUALS")
 
         # do some buttons-bindings
-        self.addFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickComplete)
+        self.addFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickAdd)
         self.undoFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickUndo)
-        self.completeFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickAdd)
+        self.completeFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickComplete)
         self.AND_Btn.Bind(wx.EVT_BUTTON, self.onClickLESSER)
         self.OR_Btn.Bind(wx.EVT_BUTTON, self.onClickGREATER)
         self.NEG_Btn.Bind(wx.EVT_BUTTON, self.onClickEQUALS)
@@ -1155,36 +1185,55 @@ class EditFODialog(wx.Dialog):
 
     def __set_properties(self):
         self.SetTitle(("Edit the Facts Order"))
-        self.SetSize((708, 473))
+        self.SetSize((708, 550))
         self.list_box_1.SetMinSize((574, 300))
 
     def __do_layout(self):
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        grid_sizer_1 = wx.GridSizer(3, 3, 0, 0)
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_1.Add(self.list_box_1, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_1, 0, wx.ALIGN_BOTTOM, 0)
-        grid_sizer_1.Add(self.label_2, 0, wx.ALIGN_BOTTOM, 0)
-        sizer_3.Add(self.AND_Btn, 0, 0, 0)
-        sizer_3.Add(self.OR_Btn, 0, 0, 0)
-        sizer_3.Add(self.NEG_Btn, 0, 0, 0)
-        grid_sizer_1.Add(sizer_3, 1, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.factCatComboBox, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.combo_box_2, 0, wx.EXPAND, 0)
-        #sizer_4.Add(self.button_9, 0, 0, 0)
-        #sizer_4.Add(self.loadFactsBtn0, 0, 0, 0)
-        #sizer_4.Add(self.IMPLY_Btn, 0, 0, 0)
-        grid_sizer_1.Add(sizer_4, 1, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_3, 0, wx.ALIGN_RIGHT, 0)
-        grid_sizer_1.Add(self.combo_box_3, 0, wx.EXPAND, 0)
-        sizer_2.Add(self.addFactsOrderBtn, 0, 0, 0)
-        sizer_2.Add(self.undoFactsOrderBtn, 0, 0, 0)
-        sizer_2.Add(self.completeFactsOrderBtn, 0, 0, 0)
-        grid_sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
-        sizer_1.Add(grid_sizer_1, 1, wx.EXPAND, 0)
-        self.SetSizer(sizer_1)
+
+        groupBox = wx.StaticBox(self, label="Create a Facts Order")
+        groupBoxSizer = wx.StaticBoxSizer(groupBox, wx.VERTICAL)
+
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer1.Add(self.label_1, 0, wx.ALIGN_LEFT, 5)
+        sizer1.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer1.Add(self.factCatComboBox, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer2.Add(self.label_2, 0, wx.ALIGN_LEFT, 5)
+        sizer2.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer2.Add(self.combo_box_2, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer3 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer3.Add(self.label_3, 0, wx.ALIGN_LEFT, 5)
+        sizer3.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer3.Add(self.combo_box_3, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer4 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer4.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer4.Add(self.AND_Btn, 0, wx.ALIGN_CENTER_HORIZONTAL, 5)
+        sizer4.Add(self.OR_Btn, 0, wx.ALIGN_CENTER_HORIZONTAL, 5)
+        sizer4.Add(self.NEG_Btn, 0, wx.ALIGN_CENTER_HORIZONTAL, 5)
+        sizer4.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+
+        buttonsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonsSizer.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        buttonsSizer.Add(self.addFactsOrderBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+        buttonsSizer.Add(self.undoFactsOrderBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+        buttonsSizer.Add(self.completeFactsOrderBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+
+        groupBoxSizer.Add(self.list_box_1, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer1, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer2, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer3, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer4, 0, wx.EXPAND | wx.ALL, 5)
+
+        mainSizer.Add(groupBoxSizer, 1, wx.EXPAND | wx.ALL, 5)
+        mainSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 #EVALUATION RULES
@@ -1197,10 +1246,10 @@ class AddERDialog(wx.Dialog):
         self.list_box_1 = wx.ListBox(self, wx.ID_ANY, choices=[])
 
         # create labels
-        self.label_1 = wx.StaticText(self, wx.ID_ANY, ("Choose fact category:"))
-        self.label_2 = wx.StaticText(self, wx.ID_ANY, ("Choose fact:"))
-        self.label_3 = wx.StaticText(self, wx.ID_ANY, ("Choose security attribute:"))
-        self.label_4 = wx.StaticText(self, wx.ID_ANY, ("Enter influence value:"))
+        self.label_1 = wx.StaticText(self, wx.ID_ANY, ("Choose Fact Category:"))
+        self.label_2 = wx.StaticText(self, wx.ID_ANY, ("Choose Fact:"))
+        self.label_3 = wx.StaticText(self, wx.ID_ANY, ("Choose Security Attribute:"))
+        self.label_4 = wx.StaticText(self, wx.ID_ANY, ("Enter Influence Value:"))
 
         # create buttons
         self.AND_Btn = wx.Button(self, label="AND")
@@ -1219,20 +1268,16 @@ class AddERDialog(wx.Dialog):
         self.completeBtn.Bind(wx.EVT_BUTTON, self.onClickComplete)
 
         # create combos
-        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY)
-        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200,-1))
+        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200,-1))
         self.combo_box_2.Disable()
-        self.combo_box_3 = wx.ComboBox(self, wx.ID_ANY, choices=self.securitylist(), style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.combo_box_3 = wx.ComboBox(self, wx.ID_ANY, choices=self.securitylist(), style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200,-1))
 
         # do some combo bindings
         self.Bind(wx.EVT_COMBOBOX, self.OnSelect1, id=10)
 
         # create txt ctrls
-        self.textctrl_1 = wx.TextCtrl(self, wx.ID_ANY)
-
-        self.panel_1 = wx.Panel(self, wx.ID_ANY)
-        self.panel_2 = wx.Panel(self, wx.ID_ANY)
-        self.panel_3 = wx.Panel(self, wx.ID_ANY)
+        self.textctrl_1 = wx.TextCtrl(self, wx.ID_ANY, size=(200,-1))
 
         self.__set_properties()
         self.__do_layout()
@@ -1286,40 +1331,62 @@ class AddERDialog(wx.Dialog):
         self.Close()
 
     def __set_properties(self):
-        self.SetTitle(("Create an evaluation rule"))
-        self.SetSize((708, 473))
+        self.SetTitle(("Create an Evaluation Rule"))
+        self.SetSize((708, 570))
         self.list_box_1.SetMinSize((574, 300))
 
     def __do_layout(self):
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        grid_sizer_1 = wx.GridSizer(4, 3, 0, 0)
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_1.Add(self.list_box_1, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_1, 0, wx.ALIGN_BOTTOM, 0)
-        grid_sizer_1.Add(self.label_2, 0, wx.ALIGN_BOTTOM, 0)
-        sizer_3.Add(self.AND_Btn, 0, 0, 0)
-        sizer_3.Add(self.OR_Btn, 0, 0, 0)
-        sizer_3.Add(self.NEG_Btn, 0, 0, 0)
-        grid_sizer_1.Add(sizer_3, 1, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.factCatComboBox, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.combo_box_2, 0, wx.EXPAND, 0)
-        #sizer_4.Add(self.button_9, 0, 0, 0)
-        #sizer_4.Add(self.loadFactsBtn0, 0, 0, 0)
-        #sizer_4.Add(self.IMPLY_Btn, 0, 0, 0)
-        grid_sizer_1.Add(sizer_4, 1, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_3, 0, wx.ALIGN_RIGHT, 0)
-        grid_sizer_1.Add(self.combo_box_3, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.panel_3, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_4, 0, wx.ALIGN_RIGHT, 0)
-        grid_sizer_1.Add(self.textctrl_1, 0, wx.ALIGN_LEFT, 0)
-        sizer_2.Add(self.addBtn, 0, 0, 0)
-        sizer_2.Add(self.undoBtn, 0, 0, 0)
-        sizer_2.Add(self.completeBtn, 0, 0, 0)
-        grid_sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
-        sizer_1.Add(grid_sizer_1, 1, wx.EXPAND, 0)
-        self.SetSizer(sizer_1)
+
+        groupBox = wx.StaticBox(self, label="Create an Evaluation Rule")
+        groupBoxSizer = wx.StaticBoxSizer(groupBox, wx.VERTICAL)
+
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer1.Add(self.label_1, 0, wx.ALIGN_LEFT, 5)
+        sizer1.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer1.Add(self.factCatComboBox, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer2.Add(self.label_2, 0, wx.ALIGN_LEFT, 5)
+        sizer2.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer2.Add(self.combo_box_2, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer3 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer3.Add(self.label_3, 0, wx.ALIGN_LEFT, 5)
+        sizer3.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer3.Add(self.combo_box_3, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer4 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer4.Add(self.label_4, 0, wx.ALIGN_LEFT, 5)
+        sizer4.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer4.Add(self.textctrl_1, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer5 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer5.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer5.Add(self.AND_Btn, 0, wx.ALIGN_CENTER_HORIZONTAL, 5)
+        sizer5.Add(self.OR_Btn, 0, wx.ALIGN_CENTER_HORIZONTAL, 5)
+        sizer5.Add(self.NEG_Btn, 0, wx.ALIGN_CENTER_HORIZONTAL, 5)
+        sizer5.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+
+        buttonsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonsSizer.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        buttonsSizer.Add(self.addBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+        buttonsSizer.Add(self.undoBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+        buttonsSizer.Add(self.completeBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+
+        groupBoxSizer.Add(self.list_box_1, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer1, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer2, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer3, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer4, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer5, 0, wx.EXPAND | wx.ALL, 5)
+
+        mainSizer.Add(groupBoxSizer, 1, wx.EXPAND | wx.ALL, 5)
+        mainSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 class EditERDialog(wx.Dialog):
@@ -1339,25 +1406,20 @@ class EditERDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.onClickOR, id=2)
         self.NEG_Btn = wx.Button(self, 3, ("IMPLY"))
         self.Bind(wx.EVT_BUTTON, self.onClickIMPLY, id=3)
-        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200,-1))
         self.Bind(wx.EVT_COMBOBOX, self.OnSelect1, id=10)
-        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200,-1))
         self.combo_box_2.Disable()
-        self.combo_box_3 = wx.ComboBox(self, wx.ID_ANY, choices=self.securitylist(), style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.combo_box_3 = wx.ComboBox(self, wx.ID_ANY, choices=self.securitylist(), style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200,-1))
         self.combo_box_3.SetValue(Structs.erList[smetool.evaluationRulesListView.GetFocusedItem()].security_attribute)
-        self.textctrl_1 = wx.TextCtrl(self, wx.ID_ANY)
+        self.textctrl_1 = wx.TextCtrl(self, wx.ID_ANY, size=(200,-1))
         self.textctrl_1.SetValue(Structs.erList[smetool.evaluationRulesListView.GetFocusedItem()].influence)
-        #self.button_9 = wx.Button(self, wx.ID_ANY, ("temp"))
-        #self.loadFactsBtn0 = wx.Button(self, wx.ID_ANY, ("temp"))
-        #self.IMPLY_Btn = wx.Button(self, 6, ("temp"))
-        self.panel_1 = wx.Panel(self, wx.ID_ANY)
-        self.panel_2 = wx.Panel(self, wx.ID_ANY)
-        self.panel_3 = wx.Panel(self, wx.ID_ANY)
-        self.addRuleBtn = wx.Button(self, 7, ("Add"))
+
+        self.addERBtn = wx.Button(self, 7, ("Add"))
         self.Bind(wx.EVT_BUTTON, self.onClickAdd, id=7)
-        self.undoRuleBtn = wx.Button(self, 8, ("Undo"))
+        self.undoERBtn = wx.Button(self, 8, ("Undo"))
         self.Bind(wx.EVT_BUTTON, self.onClickUndo, id=8)
-        self.completeRuleBtn = wx.Button(self, 9, ("Complete"))
+        self.completeERBtn = wx.Button(self, 9, ("Complete"))
         self.Bind(wx.EVT_BUTTON, self.onClickComplete, id=9)
 
         self.__set_properties()
@@ -1419,43 +1481,62 @@ class EditERDialog(wx.Dialog):
         self.Close()
 
     def __set_properties(self):
-        self.SetTitle(("Create an evaluation rule"))
-        self.SetSize((708, 473))
+        self.SetTitle(("Edit the Evaluation Rule"))
+        self.SetSize((708, 570))
         self.list_box_1.SetMinSize((574, 300))
 
     def __do_layout(self):
 
+        groupBox = wx.StaticBox(self, label="Edit the Evaluation Rule")
+        groupBoxSizer = wx.StaticBoxSizer(groupBox, wx.VERTICAL)
+
         mainSizer = wx.BoxSizer(wx.VERTICAL)
 
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        grid_sizer_1 = wx.GridSizer(4, 3, 0, 0)
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_1.Add(self.list_box_1, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_1, 0, wx.ALIGN_BOTTOM, 0)
-        grid_sizer_1.Add(self.label_2, 0, wx.ALIGN_BOTTOM, 0)
-        sizer_3.Add(self.AND_Btn, 0, 0, 0)
-        sizer_3.Add(self.OR_Btn, 0, 0, 0)
-        sizer_3.Add(self.NEG_Btn, 0, 0, 0)
-        grid_sizer_1.Add(sizer_3, 1, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.factCatComboBox, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.combo_box_2, 0, wx.EXPAND, 0)
-        #sizer_4.Add(self.button_9, 0, 0, 0)
-        #sizer_4.Add(self.loadFactsBtn0, 0, 0, 0)
-        #sizer_4.Add(self.IMPLY_Btn, 0, 0, 0)
-        grid_sizer_1.Add(sizer_4, 1, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_3, 0, wx.ALIGN_RIGHT, 0)
-        grid_sizer_1.Add(self.combo_box_3, 0, wx.EXPAND, 0)
-      #  grid_sizer_1.Add(self.panel_3, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_4, 0, wx.ALIGN_RIGHT, 0)
-        grid_sizer_1.Add(self.textctrl_1, 0, wx.ALIGN_LEFT, 0)
-        sizer_2.Add(self.addRuleBtn, 0, 0, 0)
-        sizer_2.Add(self.undoRuleBtn, 0, 0, 0)
-        sizer_2.Add(self.completeRuleBtn, 0, 0, 0)
-        grid_sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
-        sizer_1.Add(grid_sizer_1, 1, wx.EXPAND, 0)
-        self.SetSizer(sizer_1)
+        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer1.Add(self.label_1, 0, wx.ALIGN_LEFT, 5)
+        sizer1.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer1.Add(self.factCatComboBox, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer2.Add(self.label_2, 0, wx.ALIGN_LEFT, 5)
+        sizer2.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer2.Add(self.combo_box_2, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer3 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer3.Add(self.label_3, 0, wx.ALIGN_LEFT, 5)
+        sizer3.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer3.Add(self.combo_box_3, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer4 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer4.Add(self.label_4, 0, wx.ALIGN_LEFT, 5)
+        sizer4.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer4.Add(self.textctrl_1, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer5 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer5.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer5.Add(self.AND_Btn, 0, wx.ALIGN_CENTER_HORIZONTAL, 5)
+        sizer5.Add(self.OR_Btn, 0, wx.ALIGN_CENTER_HORIZONTAL, 5)
+        sizer5.Add(self.NEG_Btn, 0, wx.ALIGN_CENTER_HORIZONTAL, 5)
+        sizer5.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+
+        buttonsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonsSizer.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        buttonsSizer.Add(self.addERBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+        buttonsSizer.Add(self.undoERBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+        buttonsSizer.Add(self.completeERBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+
+        groupBoxSizer.Add(self.list_box_1, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer1, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer2, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer3, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer4, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer5, 0, wx.EXPAND | wx.ALL, 5)
+
+        mainSizer.Add(groupBoxSizer, 1, wx.EXPAND | wx.ALL, 5)
+        mainSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 #CASE
@@ -1466,20 +1547,24 @@ class AddCaseDialog(wx.Dialog):
         wx.Dialog.__init__(self, *args, **kwds)
 
         self.list_box_1 = wx.ListBox(self, wx.ID_ANY, choices=[])
-        self.label_1 = wx.StaticText(self, wx.ID_ANY, ("Choose fact category:"))
-        self.label_2 = wx.StaticText(self, wx.ID_ANY, ("Choose fact:"))
-        self.label_4 = wx.StaticText(self, wx.ID_ANY, ("Enter description:"))
-        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.label_1 = wx.StaticText(self, wx.ID_ANY, ("Choose Fact Category:"))
+        self.label_2 = wx.StaticText(self, wx.ID_ANY, ("Choose Fact:"))
+        self.label_4 = wx.StaticText(self, wx.ID_ANY, ("Enter Description:"))
+        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200,-1))
         self.Bind(wx.EVT_COMBOBOX, self.OnSelect1, id=10)
-        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200,-1))
         self.combo_box_2.Disable()
-        self.textctrl_1 = wx.TextCtrl(self, wx.ID_ANY)
-        self.addRuleBtn = wx.Button(self, 7, ("Add"))
-        self.Bind(wx.EVT_BUTTON, self.onClickAdd, id=7)
-        self.undoRuleBtn = wx.Button(self, 8, ("Undo"))
-        self.Bind(wx.EVT_BUTTON, self.onClickUndo, id=8)
-        self.completeRuleBtn = wx.Button(self, 9, ("Complete"))
-        self.Bind(wx.EVT_BUTTON, self.onClickComplete, id=9)
+        self.textctrl_1 = wx.TextCtrl(self, wx.ID_ANY, size=(200,-1))
+
+        # create buttons
+        self.addCaseBtn = wx.Button(self, label="Add")
+        self.undoCaseBtn = wx.Button(self, label="Undo")
+        self.completeCaseBtn = wx.Button(self, label="Complete")
+
+        # do some buttons-bindings
+        self.addCaseBtn.Bind(wx.EVT_BUTTON, self.onClickAdd)
+        self.undoCaseBtn.Bind(wx.EVT_BUTTON, self.onClickUndo)
+        self.completeCaseBtn.Bind(wx.EVT_BUTTON, self.onClickComplete)
 
         self.__set_properties()
         self.__do_layout()
@@ -1528,31 +1613,48 @@ class AddCaseDialog(wx.Dialog):
         return casename
 
     def __set_properties(self):
-        self.SetTitle(("Create a case"))
-        self.SetSize((708, 473))
+        self.SetTitle(("Create a Case"))
+        self.SetSize((708, 490))
         self.list_box_1.SetMinSize((574, 300))
 
     def __do_layout(self):
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        grid_sizer_1 = wx.GridSizer(4, 3, 0, 0)
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_1.Add(self.list_box_1, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_1, 0, wx.ALIGN_BOTTOM, 0)
-        grid_sizer_1.Add(self.label_2, 0, wx.ALIGN_BOTTOM, 0)
-        grid_sizer_1.Add(sizer_3, 1, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.factCatComboBox, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.combo_box_2, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(sizer_4, 1, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_4, 0, wx.ALIGN_RIGHT, 0)
-        grid_sizer_1.Add(self.textctrl_1, 0, wx.ALIGN_LEFT, 0)
-        sizer_2.Add(self.addRuleBtn, 0, 0, 0)
-        sizer_2.Add(self.undoRuleBtn, 0, 0, 0)
-        sizer_2.Add(self.completeRuleBtn, 0, 0, 0)
-        grid_sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
-        sizer_1.Add(grid_sizer_1, 1, wx.EXPAND, 0)
-        self.SetSizer(sizer_1)
+
+        groupBox = wx.StaticBox(self, label="Create a Case")
+        groupBoxSizer = wx.StaticBoxSizer(groupBox, wx.VERTICAL)
+
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer1.Add(self.label_1, 0, wx.ALIGN_LEFT, 5)
+        sizer1.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer1.Add(self.factCatComboBox, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer2.Add(self.label_2, 0, wx.ALIGN_LEFT, 5)
+        sizer2.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer2.Add(self.combo_box_2, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer3 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer3.Add(self.label_4, 0, wx.ALIGN_LEFT, 5)
+        sizer3.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer3.Add(self.textctrl_1, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        buttonsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonsSizer.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        buttonsSizer.Add(self.addCaseBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+        buttonsSizer.Add(self.undoCaseBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+        buttonsSizer.Add(self.completeCaseBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+
+        groupBoxSizer.Add(self.list_box_1, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer1, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer2, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer3, 0, wx.EXPAND | wx.ALL, 5)
+
+        mainSizer.Add(groupBoxSizer, 1, wx.EXPAND | wx.ALL, 5)
+        mainSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 class EditCaseDialog(wx.Dialog):
@@ -1560,20 +1662,20 @@ class EditCaseDialog(wx.Dialog):
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
         self.list_box_1 = wx.ListBox(self, wx.ID_ANY, choices=self.fillListBox())
-        self.label_1 = wx.StaticText(self, wx.ID_ANY, ("Choose fact category:"))
-        self.label_2 = wx.StaticText(self, wx.ID_ANY, ("Choose fact:"))
-        self.label_4 = wx.StaticText(self, wx.ID_ANY, ("Enter description:"))
-        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.label_1 = wx.StaticText(self, wx.ID_ANY, ("Choose Fact Category:"))
+        self.label_2 = wx.StaticText(self, wx.ID_ANY, ("Choose Fact:"))
+        self.label_4 = wx.StaticText(self, wx.ID_ANY, ("Enter Description:"))
+        self.factCatComboBox = wx.ComboBox(self, 10, choices=self.catlist(), style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200,-1))
         self.Bind(wx.EVT_COMBOBOX, self.OnSelect1, id=10)
-        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN|wx.TE_READONLY)
+        self.combo_box_2 = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN|wx.TE_READONLY, size=(200,-1))
         self.combo_box_2.Disable()
-        self.textctrl_1 = wx.TextCtrl(self, wx.ID_ANY)
+        self.textctrl_1 = wx.TextCtrl(self, wx.ID_ANY, size=(200,-1))
         self.textctrl_1.SetValue(Structs.caseList[smetool.casesListView.GetFocusedItem()].description)
-        self.addRuleBtn = wx.Button(self, 7, ("Add"))
+        self.addCaseBtn = wx.Button(self, 7, ("Add"))
         self.Bind(wx.EVT_BUTTON, self.onClickAdd, id=7)
-        self.undoRuleBtn = wx.Button(self, 8, ("Undo"))
+        self.undoCaseBtn = wx.Button(self, 8, ("Undo"))
         self.Bind(wx.EVT_BUTTON, self.onClickUndo, id=8)
-        self.completeRuleBtn = wx.Button(self, 9, ("Complete"))
+        self.completeCaseBtn = wx.Button(self, 9, ("Complete"))
         self.Bind(wx.EVT_BUTTON, self.onClickComplete, id=9)
 
         self.__set_properties()
@@ -1618,31 +1720,48 @@ class EditCaseDialog(wx.Dialog):
         self.Close()
 
     def __set_properties(self):
-        self.SetTitle(("Edit the case"))
-        self.SetSize((708, 473))
+        self.SetTitle(("Edit the Case"))
+        self.SetSize((708, 490))
         self.list_box_1.SetMinSize((574, 300))
 
     def __do_layout(self):
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        grid_sizer_1 = wx.GridSizer(4, 3, 0, 0)
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_1.Add(self.list_box_1, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_1, 0, wx.ALIGN_BOTTOM, 0)
-        grid_sizer_1.Add(self.label_2, 0, wx.ALIGN_BOTTOM, 0)
-        grid_sizer_1.Add(sizer_3, 1, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.factCatComboBox, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.combo_box_2, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(sizer_4, 1, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_4, 0, wx.ALIGN_RIGHT, 0)
-        grid_sizer_1.Add(self.textctrl_1, 0, wx.ALIGN_LEFT, 0)
-        sizer_2.Add(self.addRuleBtn, 0, 0, 0)
-        sizer_2.Add(self.undoRuleBtn, 0, 0, 0)
-        sizer_2.Add(self.completeRuleBtn, 0, 0, 0)
-        grid_sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
-        sizer_1.Add(grid_sizer_1, 1, wx.EXPAND, 0)
-        self.SetSizer(sizer_1)
+
+        groupBox = wx.StaticBox(self, label="Edit the Case")
+        groupBoxSizer = wx.StaticBoxSizer(groupBox, wx.VERTICAL)
+
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer1.Add(self.label_1, 0, wx.ALIGN_LEFT, 5)
+        sizer1.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer1.Add(self.factCatComboBox, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer2.Add(self.label_2, 0, wx.ALIGN_LEFT, 5)
+        sizer2.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer2.Add(self.combo_box_2, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        sizer3 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer3.Add(self.label_4, 0, wx.ALIGN_LEFT, 5)
+        sizer3.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        sizer3.Add(self.textctrl_1, 0, wx.EXPAND | wx.ALIGN_RIGHT, 5)
+
+        buttonsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonsSizer.Add(wx.StaticText(self), 1, wx.ALIGN_CENTER, 5)
+        buttonsSizer.Add(self.addCaseBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+        buttonsSizer.Add(self.undoCaseBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+        buttonsSizer.Add(self.completeCaseBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM, 5)
+
+        groupBoxSizer.Add(self.list_box_1, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer1, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer2, 0, wx.EXPAND | wx.ALL, 5)
+        groupBoxSizer.Add(sizer3, 0, wx.EXPAND | wx.ALL, 5)
+
+        mainSizer.Add(groupBoxSizer, 1, wx.EXPAND | wx.ALL, 5)
+        mainSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 class EvaluateCaseDialog(wx.Dialog):
@@ -1651,8 +1770,8 @@ class EvaluateCaseDialog(wx.Dialog):
         wx.Dialog.__init__(self, *args, **kwds)
         self.list_box_1 = wx.ListBox(self, wx.ID_ANY, choices=[])
         self.list_box_1.Enable(False)
-        self.completeRuleBtn = wx.Button(self, 9, ("Close"))
-        self.loadFactsBtn3 = wx.Button(self, 10, ("Details"))
+        self.closeBtn = wx.Button(self, 9, ("Close"))
+        self.detailsBtn = wx.Button(self, 10, ("Details"))
         self.grid_1 = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
         self.Bind(wx.EVT_BUTTON, self.onClickClose, id=9)
         self.Bind(wx.EVT_BUTTON, self.onClickDetails, id=10)
@@ -1846,7 +1965,7 @@ class EvaluateCaseDialog(wx.Dialog):
         self.list_box_1.AppendItems(self.factsetList)
 
     def __set_properties(self):
-        self.SetTitle(("Case QoP evaluation"))
+        self.SetTitle(("Case QoP Evaluation"))
         self.SetSize((800, 473))
         self.grid_1.CreateGrid(1, len(Structs.saList))
         for col in range(len(Structs.saList)):
@@ -1856,15 +1975,26 @@ class EvaluateCaseDialog(wx.Dialog):
         self.list_box_1.SetMinSize((550, 100))
 
     def __do_layout(self):
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+
+        buttonsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonsSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+        buttonsSizer.Add(self.detailsBtn, 0, wx.ALL | wx.EXPAND, 5)
+        buttonsSizer.Add(self.closeBtn, 0, wx.ALL | wx.EXPAND, 5)
+
+        sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_1.Add(self.grid_1, 1, wx.EXPAND, 5)
+
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_1.Add(self.grid_1, 1, wx.EXPAND, 0)
-        sizer_2.Add(self.loadFactsBtn3, 0, 0, 0)
-        sizer_2.Add(self.completeRuleBtn, 0, 0, 0)
-        sizer_2.Add(self.list_box_1, 0, wx.EXPAND, 0)
-        sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
-        self.SetSizer(sizer_1)
-        sizer_1.Fit(self)
+        sizer_2.Add(self.list_box_1, 1, wx.EXPAND, 5)
+
+        mainSizer.Add(sizer_1, 0, wx.ALL | wx.EXPAND, 5)
+        mainSizer.Add(sizer_2, 0, wx.ALL | wx.EXPAND, 5)
+        mainSizer.Add(buttonsSizer, 0, wx.ALL | wx.EXPAND, 5)
+
+        self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 class EvaluateAllCasesDialog(wx.Dialog):
@@ -1873,8 +2003,8 @@ class EvaluateAllCasesDialog(wx.Dialog):
         wx.Dialog.__init__(self, *args, **kwds)
         self.list_box_1 = wx.ListBox(self, wx.ID_ANY, choices=[])
         self.list_box_1.Enable(False)
-        self.completeRuleBtn = wx.Button(self, 9, ("Close"))
-        self.loadFactsBtn3 = wx.Button(self, 10, ("Details"))
+        self.closeBtn = wx.Button(self, 9, ("Close"))
+        self.detailsBtn = wx.Button(self, 10, ("Details"))
         self.grid_1 = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
         self.Bind(wx.EVT_BUTTON, self.onClickClose, id=9)
         self.Bind(wx.EVT_BUTTON, self.onClickDetails, id=10)
@@ -2126,7 +2256,7 @@ class EvaluateAllCasesDialog(wx.Dialog):
         self.list_box_1.AppendItems(self.factsetList)
 
     def __set_properties(self):
-        self.SetTitle(("All cases QoP evaluation"))
+        self.SetTitle(("All Cases QoP Evaluation"))
         self.SetSize((800, 473))
         self.grid_1.CreateGrid(len(Structs.caseList), len(Structs.saList))
         for col in range(len(Structs.saList)):
@@ -2136,15 +2266,25 @@ class EvaluateAllCasesDialog(wx.Dialog):
         self.list_box_1.SetMinSize((550, 100))
 
     def __do_layout(self):
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+
+        buttonsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonsSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+        buttonsSizer.Add(self.detailsBtn, 0, wx.ALL | wx.EXPAND, 5)
+        buttonsSizer.Add(self.closeBtn, 0, wx.ALL | wx.EXPAND, 5)
+
+        sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_1.Add(self.grid_1, 1, wx.EXPAND, 5)
+
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_1.Add(self.grid_1, 1, wx.EXPAND, 0)
-        sizer_2.Add(self.loadFactsBtn3, 0, 0, 0)
-        sizer_2.Add(self.completeRuleBtn, 0, 0, 0)
-        sizer_2.Add(self.list_box_1, 0, wx.EXPAND, 0)
-        sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
-        self.SetSizer(sizer_1)
-        sizer_1.Fit(self)
+        sizer_2.Add(self.list_box_1, 1, wx.EXPAND, 5)
+
+        mainSizer.Add(sizer_1, 0, wx.ALL | wx.EXPAND, 5)
+        mainSizer.Add(sizer_2, 0, wx.ALL | wx.EXPAND, 5)
+        mainSizer.Add(buttonsSizer, 0, wx.ALL | wx.EXPAND, 5)
+
+        self.SetSizer(mainSizer)
+        self.CentreOnParent()
         self.Layout()
 
 #MAINFRAME
@@ -2170,27 +2310,25 @@ class SMETool(wx.Frame):
         wxglade_tmp_menu.AppendSeparator()
 
         # save all menu item
-        menu_item_saveall = wx.MenuItem(wxglade_tmp_menu, 997, u"&Save All\tCTRL+S", "", wx.ITEM_NORMAL)
-        menu_item_saveall.Enable(False)
-        self.Bind(wx.EVT_MENU, self.OnSaveAll, id=997)
-        wxglade_tmp_menu.AppendItem(menu_item_saveall)
+        item = wx.MenuItem(wxglade_tmp_menu, 997, u"&Save All\tCTRL+S", "", wx.ITEM_NORMAL)
+        item.Enable(False)
+        self.Bind(wx.EVT_MENU, self.OnSaveAll, id=996)
+        wxglade_tmp_menu.AppendItem(item)
 
         # separator
         wxglade_tmp_menu.AppendSeparator()
 
         # exit item
-        exitItem = wx.MenuItem(wxglade_tmp_menu, 996, u"&Quit\tCTRL+Q", "", wx.ITEM_NORMAL)
-        exitItem.SetBitmap(wx.Bitmap(self.CreatePath4Icons('exit.png')))
-        exitItem.SetBitmap(wx.Bitmap(self.CreatePath4Icons('exit.png')))
+        item = wx.MenuItem(wxglade_tmp_menu, 996, u"&Quit\tCTRL+Q", "", wx.ITEM_NORMAL)
+        item.SetBitmap(wx.Bitmap(self.CreatePath4Icons('exit.png')))
         self.Bind(wx.EVT_MENU, self.OnExit, id=996)
-        wxglade_tmp_menu.AppendItem(exitItem)
+        wxglade_tmp_menu.AppendItem(item)
 
-
-        menu_item_model = wx.MenuItem(wxglade_tmp_menu2,9999, u"&Browse Models\tCTRL+M", "", wx.ITEM_NORMAL)
-        menu_item_model.SetBitmap(wx.Bitmap(self.CreatePath4Icons('lib.png')))
+        item = wx.MenuItem(wxglade_tmp_menu2,9999, u"&Browse Models\tCTRL+M", "", wx.ITEM_NORMAL)
+        item.SetBitmap(wx.Bitmap(self.CreatePath4Icons('lib.png')))
         self.Bind(wx.EVT_MENU, self.OnModelLibrary, id=9999)
-        menu_item_model.Enable(True)
-        wxglade_tmp_menu2.AppendItem(menu_item_model)
+        item.Enable(True)
+        wxglade_tmp_menu2.AppendItem(item)
 
         self.sme_menubar.Append(wxglade_tmp_menu, ("Menu"))
         self.sme_menubar.Append(wxglade_tmp_menu2, ("Library"))
@@ -2216,27 +2354,22 @@ class SMETool(wx.Frame):
 
         # main panel for the first tab
         self.categoriesPanel = wx.Panel(self.notebook_1, wx.ID_ANY)
-        # create static box aka group box
-        self.categoriesBox = wx.StaticBox(self.notebook_1, label="Categories")
-        # create sizers = some kind of layout management
-        self.categoriesBoxSizer = wx.StaticBoxSizer(self.categoriesBox, wx.VERTICAL)
-
         # smetool logo
         self.logoSmall1 = wx.StaticBitmap(self.categoriesPanel, -1, self.losma)
 
         # create buttons, give them actual, meaningful names
-        self.loadCategoriesBtn = wx.Button(self.categoriesPanel, 81, ("Load"))
-        self.saveCategoriesBtn = wx.Button(self.categoriesPanel, 91, ("Save"))
-        self.addCategoriesBtn = wx.Button(self.categoriesPanel, 101, ("Add"))
-        self.deleteCategoriesBtn = wx.Button(self.categoriesPanel, 111, ("Delete"))
-        self.editCategoriesBtn = wx.Button(self.categoriesPanel, 121, ("Edit"))
+        self.loadCategoriesBtn = wx.Button(self.categoriesPanel, label="Load")
+        self.saveCategoriesBtn = wx.Button(self.categoriesPanel, label="Save")
+        self.addCategoriesBtn = wx.Button(self.categoriesPanel, label="Add")
+        self.deleteCategoriesBtn = wx.Button(self.categoriesPanel, label="Delete")
+        self.editCategoriesBtn = wx.Button(self.categoriesPanel, label="Edit")
 
         # do some buttons-bindings
-        self.Bind(wx.EVT_BUTTON, self.onClickLoadCategories, id=81)
-        self.Bind(wx.EVT_BUTTON, self.onClickSaveCategories, id=91)
-        self.Bind(wx.EVT_BUTTON, self.onClickAddCategory, id=101)
-        self.Bind(wx.EVT_BUTTON, self.onClickDeleteCategory, id=111)
-        self.Bind(wx.EVT_BUTTON, self.onClickEditCategory, id=121)
+        self.loadCategoriesBtn.Bind(wx.EVT_BUTTON, self.onClickLoadCategories)
+        self.saveCategoriesBtn.Bind(wx.EVT_BUTTON, self.onClickSaveCategories)
+        self.addCategoriesBtn.Bind(wx.EVT_BUTTON, self.onClickAddCategory)
+        self.deleteCategoriesBtn.Bind(wx.EVT_BUTTON, self.onClickDeleteCategory)
+        self.editCategoriesBtn.Bind(wx.EVT_BUTTON, self.onClickEditCategory)
 
         # create list view
         self.categoriesListView = wx.ListView(self.categoriesPanel, wx.ID_ANY, style=wx.LC_REPORT | wx.SUNKEN_BORDER)
@@ -2250,29 +2383,24 @@ class SMETool(wx.Frame):
 
         #main panel for the second tab
         self.factsPanel = wx.Panel(self.notebook_1, wx.ID_ANY)
-        # create static box aka group box
-        self.factsBox = wx.StaticBox(self.notebook_1, label="Facts")
-        # create sizers = some kind of layout management
-        self.factsBoxSizer = wx.StaticBoxSizer(self.factsBox, wx.VERTICAL)
-
         # smetool logo
         self.logoSmall2 = wx.StaticBitmap(self.factsPanel, -1, self.losma)
 
         # create buttons, give them actual, meaningful names
-        self.loadFactsBtn = wx.Button(self.factsPanel, 3, ("Load"))
-        self.saveFactsBtn = wx.Button(self.factsPanel, 4, ("Save"))
-        self.addFactsBtn = wx.Button(self.factsPanel, 5, ("Add"))
-        self.deleteFactBtn = wx.Button(self.factsPanel, 6, ("Delete"))
-        self.editFactBtn = wx.Button(self.factsPanel, 7, ("Edit"))
-        self.viewFactsBtn = wx.Button(self.factsPanel, 60, ("View"))
+        self.loadFactsBtn = wx.Button(self.factsPanel, label="Load")
+        self.saveFactsBtn = wx.Button(self.factsPanel, label="Save")
+        self.addFactsBtn = wx.Button(self.factsPanel, label="Add")
+        self.deleteFactBtn = wx.Button(self.factsPanel, label="Delete")
+        self.editFactBtn = wx.Button(self.factsPanel, label="Edit")
+        self.viewFactsBtn = wx.Button(self.factsPanel, label="View")
 
         # do some buttons-bindings
-        self.Bind(wx.EVT_BUTTON, self.onClickLoadFacts, id=3)
-        self.Bind(wx.EVT_BUTTON, self.onClickSaveFacts, id=4)
-        self.Bind(wx.EVT_BUTTON, self.onClickAddFact, id=5)
-        self.Bind(wx.EVT_BUTTON, self.onClickDeleteFact, id=6)
-        self.Bind(wx.EVT_BUTTON, self.onClickEditFact, id=7)
-        self.Bind(wx.EVT_BUTTON, self.onClickViewFact, id=60)
+        self.loadFactsBtn.Bind(wx.EVT_BUTTON, self.onClickLoadFacts)
+        self.saveFactsBtn.Bind(wx.EVT_BUTTON, self.onClickSaveFacts)
+        self.addFactsBtn.Bind(wx.EVT_BUTTON, self.onClickAddFact)
+        self.deleteFactBtn.Bind(wx.EVT_BUTTON, self.onClickDeleteFact)
+        self.editFactBtn.Bind(wx.EVT_BUTTON, self.onClickEditFact)
+        self.viewFactsBtn.Bind(wx.EVT_BUTTON, self.onClickViewFact)
 
         # create list view
         self.factsListView = wx.ListView(self.factsPanel, wx.ID_ANY, style=wx.LC_REPORT | wx.SUNKEN_BORDER)
@@ -2290,27 +2418,22 @@ class SMETool(wx.Frame):
 
         #main panel for the third tab
         self.SAPanel = wx.Panel(self.notebook_1, wx.ID_ANY)
-        # create static box aka group box
-        self.SABox = wx.StaticBox(self.notebook_1, label="Security Attributes")
-        # create sizers = some kind of layout management
-        self.SABoxSizer = wx.StaticBoxSizer(self.SABox, wx.VERTICAL)
-
         # smetool logo
         self.logoSmall3 = wx.StaticBitmap(self.SAPanel, -1, self.losma)
         
         # create buttons, give them actual, meaningful names
-        self.loadSABtn = wx.Button(self.SAPanel, 83, ("Load"))
-        self.saveSABtn = wx.Button(self.SAPanel, 93, ("Save"))
-        self.addSABtn = wx.Button(self.SAPanel, 103, ("Add"))
-        self.deleteSABtn = wx.Button(self.SAPanel, 113, ("Delete"))
-        self.editSABtn = wx.Button(self.SAPanel, 123, ("Edit"))
+        self.loadSABtn = wx.Button(self.SAPanel, label="Load")
+        self.saveSABtn = wx.Button(self.SAPanel, label="Save")
+        self.addSABtn = wx.Button(self.SAPanel, label="Add")
+        self.deleteSABtn = wx.Button(self.SAPanel, label="Delete")
+        self.editSABtn = wx.Button(self.SAPanel, label="Edit")
 
         # do some buttons-bindings
-        self.Bind(wx.EVT_BUTTON, self.onClickLoadSA, id=83)
-        self.Bind(wx.EVT_BUTTON, self.onClickSaveSA, id=93)
-        self.Bind(wx.EVT_BUTTON, self.onClickAddSA, id=103)
-        self.Bind(wx.EVT_BUTTON, self.onClickDeleteSA, id=113)
-        self.Bind(wx.EVT_BUTTON, self.onClickEditSA, id=123)
+        self.loadSABtn.Bind(wx.EVT_BUTTON, self.onClickLoadSA)
+        self.saveSABtn.Bind(wx.EVT_BUTTON, self.onClickSaveSA)
+        self.addSABtn.Bind(wx.EVT_BUTTON, self.onClickAddSA)
+        self.deleteSABtn.Bind(wx.EVT_BUTTON, self.onClickDeleteSA)
+        self.editSABtn.Bind(wx.EVT_BUTTON, self.onClickEditSA)
 
         # create list view
         self.SAListView = wx.ListView(self.SAPanel, wx.ID_ANY, style=wx.LC_REPORT | wx.SUNKEN_BORDER)
@@ -2322,29 +2445,24 @@ class SMETool(wx.Frame):
 
     # -------------------------- TAB4 --------------------------
 
-        #main panel for the fourth tab
+        # main panel for the fourth tab
         self.rulePanel = wx.Panel(self.notebook_1, wx.ID_ANY)
-        # create static box aka group box
-        self.ruleBox = wx.StaticBox(self.notebook_1, label="Rules")
-        # create sizers = some kind of layout management
-        self.ruleBoxSizer = wx.StaticBoxSizer(self.ruleBox, wx.VERTICAL)
-
         # smetool logo
         self.logoSmall4 = wx.StaticBitmap(self.rulePanel, -1, self.losma)
 
         # create buttons, give them actual, meaningful names
-        self.loadRuleBtn = wx.Button(self.rulePanel, 84, ("Load"))
-        self.saveRuleBtn = wx.Button(self.rulePanel, 94, ("Save"))
-        self.addRuleBtn = wx.Button(self.rulePanel, 104, ("Add"))
-        self.deleteRuleBtn = wx.Button(self.rulePanel, 114, ("Delete"))
-        self.editRuleBtn = wx.Button(self.rulePanel, 124, ("Edit"))
+        self.loadRuleBtn = wx.Button(self.rulePanel, label="Load")
+        self.saveRuleBtn = wx.Button(self.rulePanel, label="Save")
+        self.addRuleBtn = wx.Button(self.rulePanel, label="Add")
+        self.deleteRuleBtn = wx.Button(self.rulePanel, label="Delete")
+        self.editRuleBtn = wx.Button(self.rulePanel, label="Edit")
 
         # do some buttons-bindings
-        self.Bind(wx.EVT_BUTTON, self.onClickLoadRules, id=84)
-        self.Bind(wx.EVT_BUTTON, self.onClickSaveRules, id=94)
-        self.Bind(wx.EVT_BUTTON, self.onClickAddRule, id=104)
-        self.Bind(wx.EVT_BUTTON, self.onClickDeleteRule, id=114)
-        self.Bind(wx.EVT_BUTTON, self.onClickEditRule, id=124)
+        self.loadRuleBtn.Bind(wx.EVT_BUTTON, self.onClickLoadRules)
+        self.saveRuleBtn.Bind(wx.EVT_BUTTON, self.onClickSaveRules)
+        self.addRuleBtn.Bind(wx.EVT_BUTTON, self.onClickAddRule)
+        self.deleteRuleBtn.Bind(wx.EVT_BUTTON, self.onClickDeleteRule)
+        self.editRuleBtn.Bind(wx.EVT_BUTTON, self.onClickEditRule)
 
         # create list view
         self.ruleListView = wx.ListView(self.rulePanel, wx.ID_ANY, style=wx.LC_REPORT | wx.SUNKEN_BORDER)
@@ -2356,27 +2474,22 @@ class SMETool(wx.Frame):
 
         #main panel for the fifth tab
         self.factsOrderPanel = wx.Panel(self.notebook_1, wx.ID_ANY)
-        # create static box aka group box
-        self.factsOrderBox = wx.StaticBox(self.notebook_1, label="Facts Order")
-        # create sizers = some kind of layout management
-        self.factsOrderSizer = wx.StaticBoxSizer(self.factsOrderBox, wx.VERTICAL)
-
         # smetool logo
         self.logoSmall5 = wx.StaticBitmap(self.factsOrderPanel, -1, self.losma)
 
         # create buttons, give them actual, meaningful names
-        self.loadFactsOrderBtn = wx.Button(self.factsOrderPanel, 84, ("Load"))
-        self.saveFactsOrderBtn = wx.Button(self.factsOrderPanel, 94, ("Save"))
-        self.addFactsOrderBtn = wx.Button(self.factsOrderPanel, 104, ("Add"))
-        self.deleteFactsOrderBtn = wx.Button(self.factsOrderPanel, 114, ("Delete"))
-        self.editFactsOrderBtn = wx.Button(self.factsOrderPanel, 124, ("Edit"))
+        self.loadFactsOrderBtn = wx.Button(self.factsOrderPanel, label="Load")
+        self.saveFactsOrderBtn = wx.Button(self.factsOrderPanel, label="Save")
+        self.addFactsOrderBtn = wx.Button(self.factsOrderPanel, label="Add")
+        self.deleteFactsOrderBtn = wx.Button(self.factsOrderPanel, label="Delete")
+        self.editFactsOrderBtn = wx.Button(self.factsOrderPanel, label="Edit")
 
         # do some buttons-bindings
-        self.Bind(wx.EVT_BUTTON, self.onClickLoadFOs, id=86)
-        self.Bind(wx.EVT_BUTTON, self.onClickSaveFOs, id=96)
-        self.Bind(wx.EVT_BUTTON, self.onClickAddFO, id=106)
-        self.Bind(wx.EVT_BUTTON, self.onClickDeleteFO, id=116)
-        self.Bind(wx.EVT_BUTTON, self.onClickEditFO, id=126)
+        self.loadFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickLoadFOs)
+        self.saveFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickSaveFOs)
+        self.addFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickAddFO)
+        self.deleteFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickDeleteFO)
+        self.editFactsOrderBtn.Bind(wx.EVT_BUTTON, self.onClickEditFO)
 
         # create list view
         self.factsOrderListView = wx.ListView(self.factsOrderPanel, wx.ID_ANY, style=wx.LC_REPORT | wx.SUNKEN_BORDER)
@@ -2390,26 +2503,22 @@ class SMETool(wx.Frame):
 
         #main panel for the sixth tab
         self.evaluationRulesPanel = wx.Panel(self.notebook_1, wx.ID_ANY)
-        # create static box aka group box
-        self.evaluationRulesBox = wx.StaticBox(self.notebook_1, label="Evaluation Rules")
-        # create sizers = some kind of layout management
-        self.evaluationRulesBoxSizer = wx.StaticBoxSizer(self.evaluationRulesBox, wx.VERTICAL)
-
         # smetool logo
         self.logoSmall6 = wx.StaticBitmap(self.evaluationRulesPanel, -1, self.losma)
 
         # create buttons, give them actual, meaningful names
-        self.loadEvaluationRulesBtn = wx.Button(self.evaluationRulesPanel, 810, ("Load"))
-        self.saveEvaluationRulesBtn = wx.Button(self.evaluationRulesPanel, 910, ("Save"))
-        self.addEvaluationRulesBtn = wx.Button(self.evaluationRulesPanel, 1010, ("Add"))
-        self.deleteEvaluationRuleBtn = wx.Button(self.evaluationRulesPanel, 1110, ("Delete"))
-        self.editEvaluationRuleBtn = wx.Button(self.evaluationRulesPanel, 1210, ("Edit"))
-        
-        self.Bind(wx.EVT_BUTTON, self.onClickLoadERs, id=810)
-        self.Bind(wx.EVT_BUTTON, self.onClickSaveERs, id=910)
-        self.Bind(wx.EVT_BUTTON, self.onClickAddER, id=1010)
-        self.Bind(wx.EVT_BUTTON, self.onClickDeleteER, id=1110)
-        self.Bind(wx.EVT_BUTTON, self.onClickEditER, id=1210)
+        self.loadEvaluationRulesBtn = wx.Button(self.evaluationRulesPanel, label="Load")
+        self.saveEvaluationRulesBtn = wx.Button(self.evaluationRulesPanel, label="Save")
+        self.addEvaluationRulesBtn = wx.Button(self.evaluationRulesPanel, label="Add")
+        self.deleteEvaluationRuleBtn = wx.Button(self.evaluationRulesPanel, label="Delete")
+        self.editEvaluationRuleBtn = wx.Button(self.evaluationRulesPanel, label="Edit")
+
+        # do some buttons-bindings
+        self.loadEvaluationRulesBtn.Bind(wx.EVT_BUTTON, self.onClickLoadERs)
+        self.saveEvaluationRulesBtn.Bind(wx.EVT_BUTTON, self.onClickSaveERs)
+        self.addEvaluationRulesBtn.Bind(wx.EVT_BUTTON, self.onClickAddER)
+        self.deleteEvaluationRuleBtn.Bind(wx.EVT_BUTTON, self.onClickDeleteER)
+        self.editEvaluationRuleBtn.Bind(wx.EVT_BUTTON, self.onClickEditER)
 
         # create list view
         self.evaluationRulesListView = wx.ListView(self.evaluationRulesPanel, wx.ID_ANY, style=wx.LC_REPORT | wx.SUNKEN_BORDER)
@@ -2425,30 +2534,26 @@ class SMETool(wx.Frame):
 
         #main panel for the seventh tab
         self.casesPanel = wx.Panel(self.notebook_1, wx.ID_ANY)
-        # create static box aka group box
-        self.casesBox = wx.StaticBox(self.notebook_1, label="Cases")
-        # create sizers = some kind of layout management
-        self.casesBoxSizer = wx.StaticBoxSizer(self.casesBox, wx.VERTICAL)
-
         # smetool logo
         self.logoSmall7 = wx.StaticBitmap(self.casesPanel, -1, self.losma)
 
         # create buttons, give them actual, meaningful names
-        self.loadCasesBtn = wx.Button(self.casesPanel, 810, ("Load"))
-        self.saveCasesBtn = wx.Button(self.casesPanel, 910, ("Save"))
-        self.addCasesBtn = wx.Button(self.casesPanel, 1010, ("Add"))
-        self.deleteCasesBtn = wx.Button(self.casesPanel, 1110, ("Delete"))
-        self.editCasesBtn = wx.Button(self.casesPanel, 1210, ("Edit"))
-        self.evaluateCasesBtn = wx.Button(self.casesPanel, 13, ("Evaluate"))
-        self.evaluateAllCasesBtn = wx.Button(self.casesPanel, 14, ("Evaluate All"))
+        self.loadCasesBtn = wx.Button(self.casesPanel, label="Load")
+        self.saveCasesBtn = wx.Button(self.casesPanel, label="Save")
+        self.addCasesBtn = wx.Button(self.casesPanel, label="Add")
+        self.deleteCasesBtn = wx.Button(self.casesPanel, label="Delete")
+        self.editCasesBtn = wx.Button(self.casesPanel, label="Edit")
+        self.evaluateCasesBtn = wx.Button(self.casesPanel, label="Evaluate")
+        self.evaluateAllCasesBtn = wx.Button(self.casesPanel, label="Evaluate All")
 
-        self.Bind(wx.EVT_BUTTON, self.onClickLoadCases, id=8)
-        self.Bind(wx.EVT_BUTTON, self.onClickSaveCases, id=9)
-        self.Bind(wx.EVT_BUTTON, self.onClickAddCase, id=10)
-        self.Bind(wx.EVT_BUTTON, self.onClickDeleteCase, id=11)
-        self.Bind(wx.EVT_BUTTON, self.onClickEditCase, id=12)
-        self.Bind(wx.EVT_BUTTON, self.onClickEvaluateCase, id=13)
-        self.Bind(wx.EVT_BUTTON, self.onClickEvaluateAllCases, id=14)
+        # do some buttons-bindings
+        self.loadCasesBtn.Bind(wx.EVT_BUTTON, self.onClickLoadCases)
+        self.saveCasesBtn.Bind(wx.EVT_BUTTON, self.onClickSaveCases)
+        self.addCasesBtn.Bind(wx.EVT_BUTTON, self.onClickAddCase)
+        self.deleteCasesBtn.Bind(wx.EVT_BUTTON, self.onClickDeleteCase)
+        self.editCasesBtn.Bind(wx.EVT_BUTTON, self.onClickEditCase)
+        self.evaluateCasesBtn.Bind(wx.EVT_BUTTON, self.onClickEvaluateCase)
+        self.evaluateAllCasesBtn.Bind(wx.EVT_BUTTON, self.onClickEvaluateAllCases)
 
         # create list view
         self.casesListView = wx.ListView(self.casesPanel, wx.ID_ANY, style=wx.LC_REPORT | wx.SUNKEN_BORDER)
@@ -2471,9 +2576,9 @@ class SMETool(wx.Frame):
 
     def OnAboutBox(self, e):
         info = wx.AboutDialogInfo()
-        info.SetIcon(wx.Icon(os.path.dirname(os.path.abspath(__file__))+"/img/logo_SMETool_small.png", wx.BITMAP_TYPE_PNG))
+        info.SetIcon(wx.Icon(self.CreatePath4Icons("logo_SMETool_small.png"), wx.BITMAP_TYPE_PNG))
         info.SetName("Security Mechanisms Evaluation Tool")
-        info.SetVersion('(v 0.9.2)')
+        info.SetVersion('(v 0.9.3)')
         info.SetDescription("Michail Mokkas, mokkas@pjwstk.edu.pl")
         info.SetCopyright('(C) 2014')
         wx.AboutBox(info)
@@ -2551,7 +2656,7 @@ class SMETool(wx.Frame):
         self.populatelctrl1(Structs.categoryList)
 
     def onClickEditCategory(self, e):
-        dia = EditCategoryDialog(self, -1, 'Edit the category')
+        dia = EditCategoryDialog(self, -1, 'Edit the Category')
         dia.ShowModal()
         dia.Destroy()
 
@@ -2586,12 +2691,12 @@ class SMETool(wx.Frame):
         self.populatelctrl2(Structs.factList)
 
     def onClickEditFact(self, e):
-        dia = EditFactDialog(self, -1, 'Edit the fact')
+        dia = EditFactDialog(self, -1, 'Edit the Fact')
         dia.ShowModal()
         dia.Destroy()
 
     def onClickViewFact(self, e):
-        dia = ViewFactsDialog(self, -1, 'View facts')
+        dia = ViewFactsDialog(self, -1, 'View Facts')
         dia.ShowModal()
         dia.Destroy()
 
@@ -2728,7 +2833,7 @@ class SMETool(wx.Frame):
         Utility.saveRules(dlg.GetPath())
 
     def onClickAddRule(self, e):
-        dia = AddRuleDialog(self, -1, 'Add a rule')
+        dia = AddRuleDialog(self, -1, 'Add a Rule')
         dia.ShowModal()
         dia.Destroy()
 
@@ -2737,7 +2842,7 @@ class SMETool(wx.Frame):
         self.populatelctrl4(Structs.ruleList)
 
     def onClickEditRule(self, e):
-        dia = EditRuleDialog(self, -1, 'Edit the rule')
+        dia = EditRuleDialog(self, -1, 'Edit the Rule')
         dia.ShowModal()
         dia.Destroy()
 
@@ -2764,7 +2869,7 @@ class SMETool(wx.Frame):
         Utility.saveFOs(dlg.GetPath())
 
     def onClickAddFO(self, e):
-        dia = AddFODialog(self, -1, 'Add the facts order')
+        dia = AddFODialog(self, -1, 'Add the Facts Order')
         dia.ShowModal()
         dia.Destroy()
 
@@ -2773,7 +2878,7 @@ class SMETool(wx.Frame):
         self.populatelctrl6(Structs.foList)
 
     def onClickEditFO(self, e):
-        dia = EditFODialog(self, -1, 'Edit the facts order')
+        dia = EditFODialog(self, -1, 'Edit the Facts Order')
         dia.ShowModal()
         dia.Destroy()
 
@@ -2788,20 +2893,20 @@ class SMETool(wx.Frame):
 
 #Evaluation rules
     def onClickLoadERs(self, e):
-        dlg = wx.FileDialog(self, "Choose a file to load evaluation rules from:")
+        dlg = wx.FileDialog(self, "Choose a File to Load Evaluation Rules from:")
         dlg.ShowModal()
         dlg.Destroy()
         Utility.loadERs(dlg.GetPath())
         self.populatelctrl10(Structs.erList)
 
     def onClickSaveERs(self, e):
-        dlg = wx.FileDialog(self, "Choose a file to save evaluation rules from:")
+        dlg = wx.FileDialog(self, "Choose a File to Save Evaluation Rules from:")
         dlg.ShowModal()
         dlg.Destroy()
         Utility.saveERs(dlg.GetPath())
 
     def onClickAddER(self, e):
-        dia = AddERDialog(self, -1, 'Add an evaluation rule')
+        dia = AddERDialog(self, -1, 'Add an Evaluation Rule')
         dia.ShowModal()
         dia.Destroy()
 
@@ -2810,7 +2915,7 @@ class SMETool(wx.Frame):
         self.populatelctrl10(Structs.erList)
 
     def onClickEditER(self, e):
-        dia = EditERDialog(self, -1, 'Edit the evaluation rules')
+        dia = EditERDialog(self, -1, 'Edit the Evaluation Rules')
         dia.ShowModal()
         dia.Destroy()
 
@@ -2825,20 +2930,20 @@ class SMETool(wx.Frame):
 
 #Case
     def onClickLoadCases(self, e):
-        dlg = wx.FileDialog(self, "Choose a file to load cases from:")
+        dlg = wx.FileDialog(self, "Choose a File to Load Cases from:")
         dlg.ShowModal()
         dlg.Destroy()
         Utility.loadCases(dlg.GetPath())
         self.populatelctrl11(Structs.caseList)
 
     def onClickSaveCases(self, e):
-        dlg = wx.FileDialog(self, "Choose a file to save cases to:")
+        dlg = wx.FileDialog(self, "Choose a File to Save Cases to:")
         dlg.ShowModal()
         dlg.Destroy()
         Utility.saveCases(dlg.GetPath())
 
     def onClickAddCase(self, e):
-        dia = AddCaseDialog(self, -1, 'Add a case')
+        dia = AddCaseDialog(self, -1, 'Add a Case')
         dia.ShowModal()
         dia.Destroy()
 
@@ -2847,17 +2952,17 @@ class SMETool(wx.Frame):
         self.populatelctrl11(Structs.caseList)
 
     def onClickEditCase(self, e):
-        dia = EditCaseDialog(self, -1, 'Edit the case')
+        dia = EditCaseDialog(self, -1, 'Edit the Case')
         dia.ShowModal()
         dia.Destroy()
 
     def onClickEvaluateCase(self, e):
-        dia = EvaluateCaseDialog(self, -1, 'Case QoP evaluation')
+        dia = EvaluateCaseDialog(self, -1, 'Case QoP Evaluation')
         dia.ShowModal()
         dia.Destroy()
 
     def onClickEvaluateAllCases(self, e):
-        dia = EvaluateAllCasesDialog(self, -1, 'All cases QoP evaluation')
+        dia = EvaluateAllCasesDialog(self, -1, 'All Cases QoP Eavaluation')
         dia.ShowModal()
         dia.Destroy()
 
@@ -2875,7 +2980,6 @@ class SMETool(wx.Frame):
         self.SetTitle(("Security Mechanisms Evaluation Tool"))
 
     def __do_layout(self):
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
         # -------------------------- TAB1 --------------------------
 
@@ -2890,9 +2994,10 @@ class SMETool(wx.Frame):
         buttonsSizer.Add(self.editCategoriesBtn, 0, wx.ALIGN_CENTER | wx.ALL, 5)
 
         # do the final alignment
-        self.categoriesBoxSizer.Add(self.categoriesListView, 1, wx.EXPAND | wx.ALL, 5)
-        self.categoriesBoxSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
-        self.categoriesPanel.SetSizer(self.categoriesBoxSizer)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.categoriesListView, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+        self.categoriesPanel.SetSizer(sizer)
 
         # -------------------------- TAB2 --------------------------
 
@@ -2908,9 +3013,10 @@ class SMETool(wx.Frame):
         buttonsSizer.Add(self.viewFactsBtn, 0, wx.ALIGN_CENTER | wx.ALL, 5)
 
         # do the final alignment
-        self.factsBoxSizer.Add(self.factsListView, 1, wx.EXPAND | wx.ALL, 5)
-        self.factsBoxSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
-        self.factsPanel.SetSizer(self.factsBoxSizer)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.factsListView, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+        self.factsPanel.SetSizer(sizer)
 
         # -------------------------- TAB3 --------------------------
 
@@ -2925,9 +3031,10 @@ class SMETool(wx.Frame):
         buttonsSizer.Add(self.editSABtn, 0, wx.ALIGN_CENTER | wx.ALL, 5)
 
         # do the final alignment
-        self.SABoxSizer.Add(self.SAListView, 1, wx.EXPAND | wx.ALL, 5)
-        self.SABoxSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
-        self.SAPanel.SetSizer(self.SABoxSizer)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.SAListView, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+        self.SAPanel.SetSizer(sizer)
 
         # -------------------------- TAB4 --------------------------
 
@@ -2942,9 +3049,10 @@ class SMETool(wx.Frame):
         buttonsSizer.Add(self.editRuleBtn, 0, wx.ALIGN_CENTER | wx.ALL, 5)
 
         # do the final alignment
-        self.ruleBoxSizer.Add(self.ruleListView, 1, wx.EXPAND | wx.ALL, 5)
-        self.ruleBoxSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
-        self.rulePanel.SetSizer(self.ruleBoxSizer)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.ruleListView, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+        self.rulePanel.SetSizer(sizer)
 
         # -------------------------- TAB5 --------------------------
 
@@ -2959,9 +3067,10 @@ class SMETool(wx.Frame):
         buttonsSizer.Add(self.editFactsOrderBtn, 0, wx.ALIGN_CENTER | wx.ALL, 5)
 
         # do the final alignment
-        self.factsOrderSizer.Add(self.factsOrderListView, 1, wx.EXPAND | wx.ALL, 5)
-        self.factsOrderSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
-        self.factsOrderPanel.SetSizer(self.factsOrderSizer)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.factsOrderListView, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+        self.factsOrderPanel.SetSizer(sizer)
 
         # -------------------------- TAB6 --------------------------
 
@@ -2976,9 +3085,10 @@ class SMETool(wx.Frame):
         buttonsSizer.Add(self.editEvaluationRuleBtn, 0, wx.ALIGN_CENTER | wx.ALL, 5)
 
         # do the final alignment
-        self.evaluationRulesBoxSizer.Add(self.evaluationRulesListView, 1, wx.EXPAND | wx.ALL, 5)
-        self.evaluationRulesBoxSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
-        self.evaluationRulesPanel.SetSizer(self.evaluationRulesBoxSizer)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.evaluationRulesListView, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+        self.evaluationRulesPanel.SetSizer(sizer)
 
         # -------------------------- TAB7 --------------------------
 
@@ -2995,9 +3105,10 @@ class SMETool(wx.Frame):
         buttonsSizer.Add(self.evaluateAllCasesBtn, 0, wx.ALIGN_CENTER | wx.ALL, 5)
 
         # do the final alignment
-        self.casesBoxSizer.Add(self.casesListView, 1, wx.EXPAND | wx.ALL, 5)
-        self.casesBoxSizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
-        self.casesPanel.SetSizer(self.casesBoxSizer)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.casesListView, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+        self.casesPanel.SetSizer(sizer)
 
         #ALLTABS
         self.notebook_1.AddPage(self.categoriesPanel, ("Categories"))
@@ -3014,16 +3125,17 @@ class SMETool(wx.Frame):
         self.notebook_1.SetPageImage(5, self.evaluationRulesTabImg)
         self.notebook_1.AddPage(self.casesPanel, ("Cases"))
         self.notebook_1.SetPageImage(6, self.casesTabImg)
-        sizer_1.Add(self.notebook_1, 1, wx.EXPAND, 0)
-        self.SetSizer(sizer_1)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(self.notebook_1, 1, wx.EXPAND, 0, 5)
+        self.SetSizer(sizer)
         self.Layout()
-        #self.Centre()
 
 if __name__ == "__main__":
 
     app = wx.App()
     smetool = SMETool(None, wx.ID_ANY, "")
-    smetool.SetClientSize(wx.Size(850,500))
+    smetool.SetClientSize(wx.Size(850,550))
     smetool.CenterOnScreen()
     smetool.Show()
     app.SetTopWindow(smetool)
