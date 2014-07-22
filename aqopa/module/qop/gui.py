@@ -68,12 +68,12 @@ class SingleVersionPanel(wx.Panel):
         self.SetVersionsResultsVisibility(False)
 
     def OnShowQoPBtnClicked(self, event):
-
-        versionName = self.versionsList.GetValue()
-        simulator = self.versionSimulator[versionName]
-        host = self._GetSelectedHost(simulator)
-
-        self.ShowQoPParameters(simulator, host)
+        hostName = self.hostsList.GetValue()
+        if hostName != "" :
+            versionName = self.versionsList.GetValue()
+            simulator = self.versionSimulator[versionName]
+            host = self._GetSelectedHost(simulator)
+            self.ShowQoPParameters(simulator, host)
 
     def OnLaunchSMEClicked(self, event):
         smetool = SMETool(None)
@@ -92,14 +92,13 @@ class SingleVersionPanel(wx.Panel):
         for h in simulator.context.hosts:
             if h.original_name() == hostName:
                 host = h
+                break
 
         return host
 
     def _PopulateComboWithHostsNames(self, simulator):
         hostsNames = []
-        for h in simulator.context.hosts :
-            if h.original_name() not in hostsNames :
-                hostsNames.append(h.original_name())
+        [hostsNames.append(h.original_name()) for h in simulator.context.hosts if h.original_name() not in hostsNames]
         self.hostsList.Clear()
         self.hostsList.AppendItems(hostsNames)
 
@@ -176,6 +175,12 @@ class SingleVersionPanel(wx.Panel):
         qopsWindow = GeneralFrame(self, "QoP Analysis Results", "QoP Parameters", "modules_results.png")
         qopParamsPanel = wx.Panel(qopsWindow)
 
+        # simply copy lists
+        #self.allFacts = self._GetAllFacts(simulator)[:]
+        #self.occuredFacts = self._GetOccuredFacts(simulator)[:]
+
+        print self.occuredFacts
+
         ##################################
         # ALL FACTS LAYOUT
         ##################################
@@ -203,6 +208,36 @@ class SingleVersionPanel(wx.Panel):
         qopsWindow.AddPanel(qopParamsPanel)
         qopsWindow.SetWindowSize(600, 300)
         qopsWindow.Show()
+
+    def _GetAllFacts(self, simulator):
+        host = None
+        # get all hosts assigned to this simulator
+        allHosts = self.module.allFacts[simulator]
+        # get the name of the host selected on hosts combo box
+        hostName = self.hostsList.GetValue()
+        # from all hosts get the selected one - its the host
+        # with the same same selected on combobox
+        for h in allHosts :
+            if h.original_name() == hostName :
+                host = h
+                break
+        # get all facts for the particular simulator and host
+        return self.module.get_all_facts(simulator, host)
+
+    def _GetOccuredFacts(self, simulator):
+        host = None
+        # get all hosts assigned to this simulator
+        allHosts = self.module.occuredFacts[simulator]
+        # get the name of the host selected on hosts combo box
+        hostName = self.hostsList.GetValue()
+        # from all hosts get the selected one - its the host
+        # with the same same selected on combobox
+        for h in allHosts :
+            if h.original_name() == hostName :
+                host = h
+                break
+        # get all facts for the particular simulator and host
+        return self.module.get_occured_facts(simulator, host)
 
 class MainResultsNotebook(wx.Notebook):
     """ """

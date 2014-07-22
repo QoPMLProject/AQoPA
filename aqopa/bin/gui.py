@@ -207,14 +207,14 @@ class MainFrame(wx.Frame):
         libraryMenu = wx.Menu()
         # create models menu item
         item = wx.MenuItem(libraryMenu, wx.NewId(), u"&Browse models\tCTRL+M")
-        item.SetBitmap(wx.Bitmap(self.CreatePath4Resource('models_lib.png')))
+        item.SetBitmap(wx.Bitmap(self.CreatePath4Resource('lib.png')))
         libraryMenu.AppendItem(item)
         self.Bind(wx.EVT_MENU, self.OnBrowseModels, item)
 
         # create metric menu item
-        item = wx.MenuItem(libraryMenu, wx.NewId(), u"&Browse metrics\tCTRL+F")
-        item.SetBitmap(wx.Bitmap(self.CreatePath4Resource('metrics.png')))
-        libraryMenu.AppendItem(item)
+        # item = wx.MenuItem(libraryMenu, wx.NewId(), u"&Browse metrics\tCTRL+F")
+        # item.SetBitmap(wx.Bitmap(self.CreatePath4Resource('metrics.png')))
+        # libraryMenu.AppendItem(item)
 
         # add 'library' menu to the menubar
         menuBar.Append(libraryMenu, "&Library")

@@ -1541,17 +1541,6 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.dotsText.Hide()
         self.repetitionText.Hide()
 
-        # self.maximumBox.Hide()
-        # self.versionsLabel.Hide()
-        # self.timeLabel.Hide()
-        # self.hostsNumberLabel.Hide()
-        # self.maximumRepetitionText.Hide()
-        # self.maximumRepetitionText.SetLabel("")
-        # self.maximumTimeText.Hide()
-        # self.maximumTimeText.SetLabel("")
-        # self.maximumVersionText.Hide()
-        # self.maximumVersionText.SetLabel("")
-
         # clear versions combocheckbox
         self.tcp.ClearChoices()
 
