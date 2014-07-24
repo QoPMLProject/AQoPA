@@ -49,7 +49,8 @@ class Module(module.Module):
     def add_new_fact(self, simulator, host, fact):
         """
         @brief adds a new fact to the list of all facts
-        for the particular host
+        for the particular host present in the
+        QoP-ML's model
         """
         # add a new simulator if not available yet
         if simulator not in self.allFacts:
@@ -63,7 +64,8 @@ class Module(module.Module):
     def get_all_facts(self, simulator, host):
         """
         @brief gets a list of all available facts
-        for the particular host
+        for the particular host present in the
+        QoP-ML's model
         """
         if simulator not in self.allFacts:
             self.allFacts[simulator] = {}
@@ -75,6 +77,7 @@ class Module(module.Module):
         """
         @brief adds a new, occured fact to the list
         of occured facts for the particular host
+        present in the QoP-ML's model
         """
         # add a new simulator if not available yet
         if simulator not in self.occuredFacts:
@@ -88,7 +91,8 @@ class Module(module.Module):
     def get_occured_facts(self, simulator, host) :
         """
         @brief gets a list of all occured facts
-        for the particular host
+        for the particular host present in the
+        QoP-ML's model
         """
         if simulator not in self.occuredFacts:
             self.occuredFacts[simulator] = {}

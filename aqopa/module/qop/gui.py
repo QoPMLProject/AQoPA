@@ -209,6 +209,12 @@ class SingleVersionPanel(wx.Panel):
         qopsWindow.SetWindowSize(600, 300)
         qopsWindow.Show()
 
+        versionName = self.versionsList.GetValue()
+        simulator = self.versionSimulator[versionName]
+
+        # some kind of debugging
+        print "All facts from GUI: "+str(self._GetAllFacts(simulator))
+
     def _GetAllFacts(self, simulator):
         host = None
         # get all hosts assigned to this simulator
