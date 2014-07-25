@@ -10,7 +10,6 @@ from aqopa.model import AssignmentInstruction,\
 @author     Katarzyna Mazur
 """
 
-
 class PreInstructionHook(Hook):
 
     """
@@ -31,7 +30,7 @@ class PreInstructionHook(Hook):
         # temp - test me!
         # if instruction.__class__ is CallFunctionInstruction:
         #     print "QoP function_name:"+str(instruction.function_name)
-        #     print "QoP arguments:"+str(instruction.qop_arguments)
+        #     print "qop_arguments:"+str(instruction.qop_arguments)
         #     for i in instruction.arguments:
         #         print "QoP args:"+str(i.identifier)
 
@@ -42,6 +41,10 @@ class PreInstructionHook(Hook):
         self._update_all_facts(context)
         self._update_occured_facts(context)
         return ExecutionResult()
+
+    ####################################
+    #           ALL FACTS              #
+    ####################################
 
     def _update_all_facts(self, context):
         """
@@ -71,21 +74,34 @@ class PreInstructionHook(Hook):
 
     def _get_all_facts_details_for_expression(self, context, expression):
         if isinstance(expression, TupleExpression):
+            # print "TupleExpression _get_all_facts_details_for_expression"
             return self._get_all_facts_details_for_tuple_expression(context, expression)
         elif isinstance(expression, CallFunctionExpression):
+            # print "CallFunctionExpression _get_all_facts_details_for_expression"
             return self._get_all_facts_details_for_simple_expression(context, expression)
         elif isinstance(expression, ComparisonExpression):
+            # print "ComparisonExpression _get_all_facts_details_for_expression"
             return self._get_all_facts_details_for_comparison_expression(context, expression)
         return []
 
     def _get_all_facts_details_for_tuple_expression(self, context, expression):
+        qop_args = []
+        for i in range(0, len(expression.elements)):
+            qop_arg = self._get_occured_facts_details_for_expression(context, expression.elements[i])
+            qop_args.extend(qop_arg)
+            # some kind of debugging
+            print "_get_all_facts_details_for_tuple_expression : " + str(qop_arg)
+        return qop_args
+
+    def _get_all_facts_details_for_simple_expression(self, context, expression):
         pass
 
-    def _get_all_facts_details_for_simple_expression(self):
+    def _get_all_facts_details_for_comparison_expression(self, context, expression):
         pass
 
-    def _get_all_facts_details_for_comparison_expression(self):
-        pass
+    ####################################
+    #           OCCURED FACTS          #
+    ####################################
 
     def _update_occured_facts(self, context):
         """
@@ -99,4 +115,34 @@ class PreInstructionHook(Hook):
         #print "_update_occured_facts"
 
     def _get_occured_facts_details_for_expression(self, context, expression):
+        if isinstance(expression, TupleExpression):
+            #print "TupleExpression _get_occured_facts_details_for_expression"
+            return self._get_occured_facts_details_for_tuple_expression(context, expression)
+        elif isinstance(expression, CallFunctionExpression):
+            #print "CallFunctionExpression _get_occured_facts_details_for_expression"
+            return self._get_occured_facts_details_for_simple_expression(context, expression)
+        elif isinstance(expression, ComparisonExpression):
+            #print "ComparisonExpression _get_occured_facts_details_for_expression"
+            return self._get_occured_facts_details_for_comparison_expression(context, expression)
+        return []
+
+    def _get_occured_facts_details_for_tuple_expression(self, context, expression):
+        qop_args = []
+        for i in range(0, len(expression.elements)):
+            qop_arg = self._get_occured_facts_details_for_expression(context, expression.elements[i])
+            qop_args.extend(qop_arg)
+            # some kind of debugging
+            #print "_get_occured_facts_details_for_tuple_expression : " + str(qop_arg)
+        return qop_args
+
+    def _get_occured_facts_details_for_simple_expression(self, context, expression):
+        qop_args = []
+        for expr in expression.arguments:
+            qop_arg = self._get_occured_facts_details_for_expression(context, expr)
+            qop_args.extend(qop_arg)
+            # some kind of debugging
+            print "_get_occured_facts_details_for_simple_expression : " + str(qop_arg)
+        return qop_args
+
+    def _get_occured_facts_details_for_comparison_expression(self, context, expression):
         pass
