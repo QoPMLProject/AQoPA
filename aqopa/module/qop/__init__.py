@@ -58,8 +58,10 @@ class Module(module.Module):
         # add a new host if not available yet
         if host not in self.allFacts[simulator] :
             self.allFacts[simulator][host] = []
-        # add a new fact for the host
-        self.allFacts[simulator][host].append(fact)
+        # add a new fact for the host - but only if we
+        # have not added it yet and if it is not empty
+        if str(fact) not in self.allFacts[simulator][host] and str(fact) != '[]' and str(fact) != 'None':
+            self.allFacts[simulator][host].append(str(fact).replace("'",""))
 
     def get_all_facts(self, simulator, host):
         """

@@ -175,9 +175,11 @@ class SingleVersionPanel(wx.Panel):
         qopsWindow = GeneralFrame(self, "QoP Analysis Results", "QoP Parameters", "modules_results.png")
         qopParamsPanel = wx.Panel(qopsWindow)
 
+        # get all & occured facts
+        versionName = self.versionsList.GetValue()
+        simulator = self.versionSimulator[versionName]
         # simply copy lists
-        #self.allFacts = self._GetAllFacts(simulator)[:]
-        #self.occuredFacts = self._GetOccuredFacts(simulator)[:]
+        self.allFacts = self._GetAllFacts(simulator)[:]
 
         print self.occuredFacts
 
@@ -209,9 +211,6 @@ class SingleVersionPanel(wx.Panel):
         qopsWindow.SetWindowSize(600, 300)
         qopsWindow.Show()
 
-        versionName = self.versionsList.GetValue()
-        simulator = self.versionSimulator[versionName]
-
         # some kind of debugging
         print "All facts from GUI: "+str(self._GetAllFacts(simulator))
 
@@ -219,16 +218,20 @@ class SingleVersionPanel(wx.Panel):
         host = None
         # get all hosts assigned to this simulator
         allHosts = self.module.allFacts[simulator]
-        # get the name of the host selected on hosts combo box
-        hostName = self.hostsList.GetValue()
-        # from all hosts get the selected one - its the host
-        # with the same same selected on combobox
-        for h in allHosts :
-            if h.original_name() == hostName :
-                host = h
-                break
-        # get all facts for the particular simulator and host
-        return self.module.get_all_facts(simulator, host)
+        if allHosts is not None :
+            # get the name of the host selected on hosts combo box
+            hostName = self.hostsList.GetValue()
+            print str(allHosts)
+            # from all hosts get the selected one - its the host
+            # with the same same selected on combobox
+            for h in allHosts :
+                if h.original_name() == hostName :
+                    host = h
+                    break
+            # get all facts for the particular simulator and host
+            return self.module.get_all_facts(simulator, host)
+        else :
+            return None
 
     def _GetOccuredFacts(self, simulator):
         host = None
