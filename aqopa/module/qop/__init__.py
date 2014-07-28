@@ -82,15 +82,6 @@ class Module(module.Module):
             self.allFacts[simulator][host] = []
         return self.__make_list_flat(self.allFacts[simulator][host])
 
-    def __make_list_flat(self, l) :
-        ans = []
-        for i in l:
-            if type(i) is list:
-                ans = self.__make_list_flat(i)
-            else:
-                ans.append(i)
-        return ans
-
     def add_occured_fact(self, simulator, host, fact):
         """
         @brief adds a new, occured fact to the list
@@ -126,3 +117,12 @@ class Module(module.Module):
         if host not in self.occuredFacts[simulator]:
             self.occuredFacts[simulator][host] = []
         return self.__make_list_flat(self.occuredFacts[simulator][host])
+
+    def __make_list_flat(self, l) :
+        ans = []
+        for i in l:
+            if type(i) is list:
+                ans = self.__make_list_flat(i)
+            else:
+                ans.append(i)
+        return ans

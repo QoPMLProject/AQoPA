@@ -184,8 +184,6 @@ class SingleVersionPanel(wx.Panel):
         # simply copy lists
         self.occuredFacts = self._GetOccuredFacts(simulator)[:]
 
-        print self.occuredFacts
-
         ##################################
         # ALL FACTS LAYOUT
         ##################################
