@@ -93,8 +93,8 @@ class PreInstructionHook(Hook):
 
     def _get_all_facts_details_for_simple_expression(self, context, expression):
         qop_args = []
-        for expr in expression.arguments:
-        #for expr in expression.qop_arguments:
+        #for expr in expression.arguments:
+        for expr in expression.qop_arguments:
             print "expr = " + str(expr)
             e = self._get_all_facts_details_for_expression(context, expr)
             if type(e) is list :
