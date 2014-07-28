@@ -1,11 +1,13 @@
+#!/bin/env/python
+
+import copy
+#from aqopa.simulator.error import RuntimeException
+
 '''
 Created on 23-04-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
-
-import copy
-#from aqopa.simulator.error import RuntimeException
 
 ################################################
 #             Names functions

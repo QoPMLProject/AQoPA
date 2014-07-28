@@ -60,8 +60,15 @@ class Module(module.Module):
             self.allFacts[simulator][host] = []
         # add a new fact for the host - but only if we
         # have not added it yet and if it is not empty
-        if str(fact) not in self.allFacts[simulator][host] and str(fact) != '[]' and str(fact) != 'None':
-            self.allFacts[simulator][host].append(str(fact).replace("'",""))
+        if str(fact) not in self.allFacts[simulator][host] and fact:
+            # if the fact is actually a list of facts,
+            if type(fact) is list:
+                # add all the elements from the facts list
+                for f in fact :
+                    if str(f) not in self.allFacts[simulator][host]:
+                        self.allFacts[simulator][host].append(str(f))
+            else:
+                self.allFacts[simulator][host].append(str(fact))
 
     def get_all_facts(self, simulator, host):
         """
@@ -73,7 +80,16 @@ class Module(module.Module):
             self.allFacts[simulator] = {}
         if host not in self.allFacts[simulator]:
             self.allFacts[simulator][host] = []
-        return self.allFacts[simulator][host]
+        return self.__make_list_flat(self.allFacts[simulator][host])
+
+    def __make_list_flat(self, l) :
+        ans = []
+        for i in l:
+            if type(i) is list:
+                ans = self.__make_list_flat(i)
+            else:
+                ans.append(i)
+        return ans
 
     def add_occured_fact(self, simulator, host, fact):
         """
@@ -87,8 +103,17 @@ class Module(module.Module):
         # add a new host if not available yet
         if host not in self.occuredFacts[simulator] :
             self.occuredFacts[simulator][host] = []
-        # add a new fact for the host
-        self.occuredFacts[simulator][host].append(fact)
+        # add a new fact for the host - but only if we
+        # have not added it yet and if it is not empty
+        if str(fact) not in self.occuredFacts[simulator][host] and fact:
+            # if the fact is actually a list of facts,
+            if type(fact) is list:
+                # add all the elements from the facts list
+                for f in fact :
+                    if str(f) not in self.occuredFacts[simulator][host]:
+                        self.occuredFacts[simulator][host].append(str(f))
+            else:
+                self.occuredFacts[simulator][host].append(str(fact))
 
     def get_occured_facts(self, simulator, host) :
         """
@@ -100,4 +125,4 @@ class Module(module.Module):
             self.occuredFacts[simulator] = {}
         if host not in self.occuredFacts[simulator]:
             self.occuredFacts[simulator][host] = []
-        return self.occuredFacts[simulator][host]
+        return self.__make_list_flat(self.occuredFacts[simulator][host])

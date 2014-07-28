@@ -172,14 +172,17 @@ class SingleVersionPanel(wx.Panel):
 
     def ShowQoPParameters(self, simulator, host) :
 
-        qopsWindow = GeneralFrame(self, "QoP Analysis Results", "QoP Parameters", "modules_results.png")
+        title = "QoP Parameters for host: "
+        title += host.original_name()
+
+        qopsWindow = GeneralFrame(self, "QoP Analysis Results", title, "modules_results.png")
         qopParamsPanel = wx.Panel(qopsWindow)
 
         # get all & occured facts
         versionName = self.versionsList.GetValue()
         simulator = self.versionSimulator[versionName]
         # simply copy lists
-        self.allFacts = self._GetAllFacts(simulator)[:]
+        self.occuredFacts = self._GetOccuredFacts(simulator)[:]
 
         print self.occuredFacts
 
@@ -212,7 +215,7 @@ class SingleVersionPanel(wx.Panel):
         qopsWindow.Show()
 
         # some kind of debugging
-        print "All facts from GUI: "+str(self._GetAllFacts(simulator))
+        print "All facts from GUI: "+str(self._GetOccuredFacts(simulator))
 
     def _GetAllFacts(self, simulator):
         host = None
