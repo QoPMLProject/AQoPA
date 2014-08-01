@@ -24,6 +24,8 @@ class Module(module.Module):
         # { simulator: {host0: [f1,f2, ... fn], host1: [f1,f2, ..., fm]} }
         self.allFacts = {}
 
+        self.qopParams = {}
+
     def get_gui(self):
         if not getattr(self, '__gui', None):
             setattr(self, '__gui', ModuleGui(self))
