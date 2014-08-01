@@ -111,6 +111,3 @@ class PreInstructionHook(Hook):
         else:
             qop_args.append(r)
         return qop_args
-
-    def _get_all_facts_details_for_identifier_expression(self, context, expression):
-        return expression.identifier
