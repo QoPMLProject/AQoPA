@@ -16,14 +16,16 @@ class Module(module.Module):
 
     def __init__(self):
 
-        # all available facts in a host, format, simulator is the dict's key:
+        # all available facts in a host, format: (simulator is the dict's key):
         # { simulator: {host0: [f1,f2, ... fn], host1: [f1,f2, ..., fm]} }
         self.occuredFacts = {}
 
-        # all occured facts in a host, format, simulator is the dict's key:
+        # all occured facts in a host, format: (simulator is the dict's key):
         # { simulator: {host0: [f1,f2, ... fn], host1: [f1,f2, ..., fm]} }
         self.allFacts = {}
 
+        # qop params list in a host, format: (simulator is the dict's key):
+        # { simulator: {host0: [[qop1, qop2, ..., qopn], ..., [qop1, qop2, ..., qopm]], host1: [[qop1, qop2, ..., qopk], ...,  [qop1, qop2, ..., qopx]]} }
         self.qopParams = {}
 
     def get_gui(self):
@@ -119,6 +121,12 @@ class Module(module.Module):
         if host not in self.occuredFacts[simulator]:
             self.occuredFacts[simulator][host] = []
         return self.__make_list_flat(self.occuredFacts[simulator][host])
+
+    def get_qop_params(self):
+        pass
+
+    def add_qop_param(self):
+        pass
 
     def __make_list_flat(self, l) :
         ans = []

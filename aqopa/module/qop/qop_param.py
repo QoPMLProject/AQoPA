@@ -11,7 +11,7 @@ class QoPParameter():
     # static params counter
     qop_param_num = 1
 
-    def __init__(self, qop_param_name, fun_name, val):
+    def __init__(self, qop_param_name="", fun_name="", val=""):
         # those values can describe the QoP parameters
         self.qop_label = "qop" + QoPParameter.qop_param_num
         self.qop_param_name = qop_param_name

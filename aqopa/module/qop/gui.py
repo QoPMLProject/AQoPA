@@ -183,6 +183,7 @@ class SingleVersionPanel(wx.Panel):
         simulator = self.versionSimulator[versionName]
         # simply copy lists
         self.occuredFacts = self._GetOccuredFacts(simulator)[:]
+        self.allFacts = self._GetAllFacts(simulator)[:]
 
         ##################################
         # ALL FACTS LAYOUT
@@ -213,7 +214,8 @@ class SingleVersionPanel(wx.Panel):
         qopsWindow.Show()
 
         # some kind of debugging
-        print "All facts from GUI: "+str(self._GetOccuredFacts(simulator))
+        print "Occured facts from GUI: "+str(self._GetOccuredFacts(simulator))
+        print "All facts from GUI: "+str(self._GetAllFacts(simulator))
 
     def _GetAllFacts(self, simulator):
         host = None

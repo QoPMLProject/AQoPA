@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from .qop_param import QoPParameter
+from .parser import FactsFinder
 from aqopa.simulator.state import Hook, ExecutionResult
 from aqopa.model import AssignmentInstruction,\
     CallFunctionInstruction, IfInstruction, WhileInstruction,\
@@ -22,6 +24,7 @@ class PreInstructionHook(Hook):
         """ """
         self.module = module
         self.simulator = simulator
+        self.ff = FactsFinder(self.module, self.simulator)
 
     def execute(self, context, **kwargs):
         """
@@ -40,14 +43,15 @@ class PreInstructionHook(Hook):
                                      IfInstruction, WhileInstruction]:
             return
 
-        self._update_all_facts(context)
+        self._update_occured_facts(context)
+        self.ff.execute(context)
         return ExecutionResult()
 
     ####################################
     #           ALL FACTS              #
     ####################################
 
-    def _update_all_facts(self, context):
+    def _update_occured_facts(self, context):
         """
         Update all facts in context according to current instruction.
         """
@@ -59,49 +63,47 @@ class PreInstructionHook(Hook):
         if isinstance(instruction, AssignmentInstruction):
             expression = instruction.expression
         elif isinstance(instruction, CallFunctionInstruction):
-            print "instruction.qop_arguments = " + str(instruction.qop_arguments)
             expression = CallFunctionExpression(instruction.function_name, instruction.arguments, instruction.qop_arguments)
         else:
             expression = instruction.condition
 
         # Return details for each expression in instruction
         # In some instruction may be more expressions (tuple, nested call function)
-        fact = self._get_all_facts_details_for_expression(context, expression)
+        fact = self._get_occured_facts_details_for_expression(context, expression)
 
         # add fact to the module's fact list
         self.module.add_occured_fact(self.simulator, context.get_current_host(), fact)
 
-    def _get_all_facts_details_for_expression(self, context, expression):
-
+    def _get_occured_facts_details_for_expression(self, context, expression):
         if isinstance(expression, TupleExpression):
-            return self._get_all_facts_details_for_tuple_expression(context, expression)
+            return self._get_occured_facts_details_for_tuple_expression(context, expression)
         elif isinstance(expression, CallFunctionExpression):
-            return self._get_all_facts_details_for_simple_expression(context, expression)
+            return self._get_occured_facts_details_for_simple_expression(context, expression)
         elif isinstance(expression, ComparisonExpression):
-            return self._get_all_facts_details_for_comparison_expression(context, expression)
+            return self._get_occured_facts_details_for_comparison_expression(context, expression)
         return []
 
-    def _get_all_facts_details_for_tuple_expression(self, context, expression):
+    def _get_occured_facts_details_for_tuple_expression(self, context, expression):
         qop_args = []
         for i in range(0, len(expression.elements)):
-            qop_arg = self._get_all_facts_details_for_expression(context, expression.elements[i])
+            qop_arg = self._get_occured_facts_details_for_expression(context, expression.elements[i])
             if type(qop_arg) is list :
                 qop_args.extend(qop_arg)
             else:
                 qop_args.append(qop_arg)
         return qop_args
 
-    def _get_all_facts_details_for_simple_expression(self, context, expression):
+    def _get_occured_facts_details_for_simple_expression(self, context, expression):
         qop_args = []
         for expr in expression.qop_arguments:
-            e = self._get_all_facts_details_for_expression(context, expr)
+            #e = self._get_occured_facts_details_for_expression(context, expr)
             qop_args.append(str(expr))
         return qop_args
 
-    def _get_all_facts_details_for_comparison_expression(self, context, expression):
+    def _get_occured_facts_details_for_comparison_expression(self, context, expression):
         qop_args = []
-        l = self._get_all_facts_details_for_expression(context, expression.left)
-        r = self._get_all_facts_details_for_expression(context, expression.right)
+        l = self._get_occured_facts_details_for_expression(context, expression.left)
+        r = self._get_occured_facts_details_for_expression(context, expression.right)
         if type(l) is list :
             qop_args.extend(l)
         else:
@@ -111,3 +113,6 @@ class PreInstructionHook(Hook):
         else:
             qop_args.append(r)
         return qop_args
+
+    def _make_qop_params_list(self, expression):
+        pass
