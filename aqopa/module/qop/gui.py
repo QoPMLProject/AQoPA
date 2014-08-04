@@ -214,7 +214,7 @@ class SingleVersionPanel(wx.Panel):
         qopsWindow.Show()
 
         # some kind of debugging
-        print "Occured facts from GUI: "+str(self._GetoOccuredFacts(simulator))
+        #print "Occured facts from GUI: "+str(self._GetoOccuredFacts(simulator))
         print "All facts from GUI: "+str(self._GetAllFacts(simulator))
 
     def _GetAllFacts(self, simulator):
