@@ -7,7 +7,7 @@ from sme.SMETool import SMETool
 
 """
 @file       __init__.py
-@brief      gui file for the qop module
+@brief      gui file for the qopanalysis module
 @author     Katarzyna Mazur
 """
 

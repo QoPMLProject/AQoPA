@@ -6,7 +6,7 @@ from aqopa.gui.general_purpose_frame_gui import GeneralFrame
 
 """
 @file       gui.py
-@brief      gui file for the finance module
+@brief      gui file for the financialanalysis module
 @author     Katarzyna Mazur
 """
 

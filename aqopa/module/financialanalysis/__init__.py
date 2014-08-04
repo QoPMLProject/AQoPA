@@ -6,7 +6,7 @@ from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED, HOOK_TYPE_PRE_I
 
 """
 @file       __init__.py
-@brief      initial file for the finance module
+@brief      initial file for the financialanalysis module
 @author     Katarzyna Mazur
 """
 
@@ -14,7 +14,7 @@ class Module(module.Module):
 
     def __init__(self):
 
-        self.power = 0
+        self.watts = 0
         self.usage_time = 0
         self.price_per_kWh = 0
         self.final_cost = 0

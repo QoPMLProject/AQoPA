@@ -13,7 +13,7 @@ from aqopa.model.parser import ModelParserException,\
     MetricsParserException, ConfigurationParserException
 from aqopa.app import Builder, ConsoleInterpreter
 from aqopa.simulator import EnvironmentDefinitionException
-from aqopa.module import timeanalysis, energyanalysis, reputation, qop
+from aqopa.module import timeanalysis, energyanalysis, reputation, qopanalysis
 
 
 class ProgressThread(threading.Thread):
@@ -71,7 +71,7 @@ def run(qopml_model, qopml_metrics, qopml_configuration,
     time_module = timeanalysis.Module()
     energy_module = energyanalysis.Module(time_module)
     reputation_module = reputation.Module()
-    #qop_module = qop.Module()
+    #qop_module = qopanalysis.Module()
 
     available_modules = [time_module, energy_module, reputation_module]
 

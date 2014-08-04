@@ -13,7 +13,7 @@ class QoPParameter():
 
     def __init__(self, qop_param_name="", fun_name="", val=""):
         # those values can describe the QoP parameters
-        self.qop_label = "qop" + QoPParameter.qop_param_num
+        self.qop_label = "qopanalysis" + QoPParameter.qop_param_num
         self.qop_param_name = qop_param_name
         self.fun_name = fun_name
         self.val = val

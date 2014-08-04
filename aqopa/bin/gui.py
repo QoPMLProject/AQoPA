@@ -56,8 +56,8 @@ class MainNotebook(wx.Notebook):
         from aqopa.module import reputation
         self.availableModules.append(reputation.Module())
 
-        from aqopa.module import qop
-        self.availableModules.append(qop.Module())
+        from aqopa.module import qopanalysis
+        self.availableModules.append(qopanalysis.Module())
 
         # list containing notebook images:
         # .ico seem to be more OS portable, although we use .png here

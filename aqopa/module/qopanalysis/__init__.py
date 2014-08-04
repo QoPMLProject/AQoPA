@@ -8,7 +8,7 @@ from .hook import PreInstructionHook
 
 """
 @file       __init__.py
-@brief      initial file for the qop module
+@brief      initial file for the qopanalysis module
 @author     Katarzyna Mazur
 """
 
@@ -23,7 +23,7 @@ class Module(module.Module):
         # all facts in a model
         self.all_facts = []
 
-        # qop params list in a host, format: (simulator is the dict's key):
+        # qopanalysis params list in a host, format: (simulator is the dict's key):
         # { simulator: {host0: [[qop1, qop2, ..., qopn], ..., [qop1, qop2, ..., qopm]], host1: [[qop1, qop2, ..., qopk], ...,  [qop1, qop2, ..., qopx]]} }
         self.qopParams = {}
 
