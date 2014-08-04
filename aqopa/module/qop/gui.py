@@ -23,8 +23,8 @@ class SingleVersionPanel(wx.Panel):
 
         self.module = module
         self.versionSimulator = {}
-        self.allFacts = []
-        self.occuredFacts = []
+        self.all_facts = []
+        self.occured_facts = []
 
         #################
         # VERSION BOX
@@ -182,24 +182,24 @@ class SingleVersionPanel(wx.Panel):
         versionName = self.versionsList.GetValue()
         simulator = self.versionSimulator[versionName]
         # simply copy lists
-        self.occuredFacts = self._GetOccuredFacts(simulator)[:]
-        self.allFacts = self._GetAllFacts(simulator)[:]
+        self.occured_facts = self._GetoOccuredFacts(simulator)[:]
+        self.all_facts = self._GetAllFacts(simulator)[:]
 
         ##################################
         # ALL FACTS LAYOUT
         ##################################
-        allFactsListBox = wx.ListBox(qopParamsPanel, choices=self.allFacts)
-        allFactsBox = wx.StaticBox(qopParamsPanel, label="All Facts")
-        allFactsBoxSizer = wx.StaticBoxSizer(allFactsBox, wx.VERTICAL)
-        allFactsBoxSizer.Add(allFactsListBox, 1, wx.ALL | wx.EXPAND, 5)
+        all_factsListBox = wx.ListBox(qopParamsPanel, choices=self.all_facts)
+        all_factsBox = wx.StaticBox(qopParamsPanel, label="All Facts")
+        allFactsBoxSizer = wx.StaticBoxSizer(all_factsBox, wx.VERTICAL)
+        allFactsBoxSizer.Add(all_factsListBox, 1, wx.ALL | wx.EXPAND, 5)
 
         ##################################
         # OCCURED FACTS LAYOUT
         ##################################
-        occuredFactsListBox = wx.ListBox(qopParamsPanel, choices=self.occuredFacts)
-        occuredFactsBox = wx.StaticBox(qopParamsPanel, label="Occured Facts")
-        occuredFactsBoxSizer = wx.StaticBoxSizer(occuredFactsBox, wx.VERTICAL)
-        occuredFactsBoxSizer.Add(occuredFactsListBox, 1, wx.ALL | wx.EXPAND, 5)
+        occured_factsListBox = wx.ListBox(qopParamsPanel, choices=self.occured_facts)
+        occured_factsBox = wx.StaticBox(qopParamsPanel, label="Occured Facts")
+        occuredFactsBoxSizer = wx.StaticBoxSizer(occured_factsBox, wx.VERTICAL)
+        occuredFactsBoxSizer.Add(occured_factsListBox, 1, wx.ALL | wx.EXPAND, 5)
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(allFactsBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
@@ -214,32 +214,16 @@ class SingleVersionPanel(wx.Panel):
         qopsWindow.Show()
 
         # some kind of debugging
-        print "Occured facts from GUI: "+str(self._GetOccuredFacts(simulator))
+        print "Occured facts from GUI: "+str(self._GetoOccuredFacts(simulator))
         print "All facts from GUI: "+str(self._GetAllFacts(simulator))
 
     def _GetAllFacts(self, simulator):
-        host = None
-        # get all hosts assigned to this simulator
-        allHosts = self.module.allFacts[simulator]
-        if allHosts is not None :
-            # get the name of the host selected on hosts combo box
-            hostName = self.hostsList.GetValue()
-            print str(allHosts)
-            # from all hosts get the selected one - its the host
-            # with the same same selected on combobox
-            for h in allHosts :
-                if h.original_name() == hostName :
-                    host = h
-                    break
-            # get all facts for the particular simulator and host
-            return self.module.get_all_facts(simulator, host)
-        else :
-            return None
+        return self.module.get_all_facts()
 
-    def _GetOccuredFacts(self, simulator):
+    def _GetoOccuredFacts(self, simulator):
         host = None
         # get all hosts assigned to this simulator
-        allHosts = self.module.occuredFacts[simulator]
+        allHosts = self.module.occured_facts[simulator]
         # get the name of the host selected on hosts combo box
         hostName = self.hostsList.GetValue()
         # from all hosts get the selected one - its the host

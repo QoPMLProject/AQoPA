@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from .qop_param import QoPParameter
-from .parser import FactsFinder
 from aqopa.simulator.state import Hook, ExecutionResult
 from aqopa.model import AssignmentInstruction,\
     CallFunctionInstruction, IfInstruction, WhileInstruction,\
@@ -20,15 +19,15 @@ class PreInstructionHook(Hook):
     Returns execution result.
     """
 
+    # its static, cause we need to have the list for EVERY
+    # simulator and its hosts, right?
+    all_facts = []
+
     def __init__(self, module, simulator):
-        """ """
         self.module = module
         self.simulator = simulator
-        self.ff = FactsFinder(self.module, self.simulator)
 
     def execute(self, context, **kwargs):
-        """
-        """
         instruction = context.get_current_instruction()
 
         # temp - test me!
@@ -44,12 +43,8 @@ class PreInstructionHook(Hook):
             return
 
         self._update_occured_facts(context)
-        self.ff.execute(context)
+        self._update_all_facts(context)
         return ExecutionResult()
-
-    ####################################
-    #           ALL FACTS              #
-    ####################################
 
     def _update_occured_facts(self, context):
         """
@@ -114,5 +109,12 @@ class PreInstructionHook(Hook):
             qop_args.append(r)
         return qop_args
 
-    def _make_qop_params_list(self, expression):
-        pass
+    def _update_all_facts(self, context):
+        # make a list from all the facts within the simulator and its hosts,
+        # simply concatenate all the facts from all the simulators and its all
+        # hosts into a one, big list of facts available within the loaded model
+        facts = self.module.get_occured_facts(self.simulator, context.get_current_host())
+        for fact in facts:
+            if fact not in PreInstructionHook.all_facts:
+                PreInstructionHook.all_facts.append(fact)
+        self.module.set_all_facts(PreInstructionHook.all_facts)
