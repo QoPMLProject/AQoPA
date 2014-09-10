@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from aqopa import module
-from aqopa import module
 from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED, HOOK_TYPE_PRE_INSTRUCTION_EXECUTION
 
 """
@@ -12,9 +11,14 @@ from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED, HOOK_TYPE_PRE_I
 
 class Module(module.Module):
 
-    def __init__(self):
+    def __init__(self) :
+        pass
 
-        self.watts = 0
-        self.usage_time = 0
-        self.price_per_kWh = 0
-        self.final_cost = 0
+    def calculate(self):
+        """
+        @brief calculates the total cost ($) of the host
+        usage, its quite simple math:
+        1) Watts / 1000 = X kWatts
+        2) X kWatts * Y hours = Z kWh
+        3) $/kWh * Z kWh = final cost
+        """
