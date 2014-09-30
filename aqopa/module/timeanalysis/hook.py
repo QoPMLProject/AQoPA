@@ -538,6 +538,10 @@ class PreInstructionHook(Hook):
                 receiver = context.get_current_host()
                 self.module.add_request_created_time(self.simulator, request,
                                                      self.module.get_current_time(self.simulator, receiver))
+                # DEBUG #
+                # print 'msg requested by', receiver.name, 'at', self.module.get_current_time(self.simulator, receiver)
+                # DEBUG #
+
 
             if request.assigned_message is None:
                 # Set messages from the past as cancelled for this request
