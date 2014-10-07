@@ -127,8 +127,8 @@ class CallFunctionExpression():
     def __unicode__(self):
         u = u"%s(%s)" % (unicode(self.function_name), unicode(', '.join([unicode(a) for a in self.arguments])))
         if len(self.qop_arguments) > 0:
-            u += "[%s]" % unicode(', '.join([ unicode(a) for a in self.qop_arguments]))
-        return u 
+            u += "[%s]" % unicode(', '.join([unicode(a) for a in self.qop_arguments]))
+        return u
 
     def clone(self):
         # Regular clone

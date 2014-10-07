@@ -192,7 +192,7 @@ class Module(module.Module):
                                 while j < len(unsorted_time_tuples):
                                     tt = unsorted_time_tuples[j]
                                     if tt[0] > t[1]:
-                                        unsorted_time_tuples.inssert(j, new_tuple)
+                                        unsorted_time_tuples.insert(j, new_tuple)
                                         added = True
                                         break
                                     j += 1
@@ -219,7 +219,7 @@ class Module(module.Module):
                         while j < len(unsorted_time_tuples):
                             tt = unsorted_time_tuples[j]
                             if tt[0] > current_time_to:
-                                unsorted_time_tuples.inssert(j, new_tuple)
+                                unsorted_time_tuples.insert(j, new_tuple)
                                 added = True
                                 break
                             j += 1

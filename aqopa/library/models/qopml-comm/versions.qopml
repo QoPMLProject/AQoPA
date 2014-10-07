@@ -11,7 +11,7 @@ versions
 
     % JINDO
     run host Sink(*) {
-      run MainUpdated()
+      run MainUpdated(GetNodeId)
     }
     run host Sensor(*){33} {
       run MainUpdated()
@@ -23,7 +23,7 @@ versions
 
     % HAENAM
     run host Sink(*) {
-      run MainUpdated()
+      run MainUpdated(GetNodeId)
     }
     run host Sensor(*){36} {
       run MainUpdated()
@@ -169,7 +169,7 @@ versions
 
     % JINDO
     run host Sink(*) {
-      run MainUpdated(DecCollectedData)
+      run MainUpdated(GetNodeId,DecCollectedData)
     }
     run host Sensor(*){33} {
       run MainUpdated(EncCollectedData)
@@ -181,7 +181,7 @@ versions
 
     % HAENAM
     run host Sink(*) {
-      run MainUpdated(DecCollectedData)
+      run MainUpdated(GetNodeId,DecCollectedData)
     }
     run host Sensor(*){36} {
       run MainUpdated(EncCollectedData)
@@ -327,26 +327,26 @@ versions
 
     % JINDO
     run host Sink(*) {
-      run MainUpdated(EncParams,AuthParams,DecCollectedData)
+      run MainUpdated(HandleAuthRequest,DecAuthCollectedData)
     }
     run host Sensor(*){33} {
-      run MainUpdated(DeauthParams,DecParams,EncCollectedData)
+      run MainUpdated(StartAuthProcess,DeauthParams,EncAuthCollectedData)
     }
     run host ManagerJindo(*) {
       run PrepareMessages(*)
-      run MainUpdated(Wait_Auth)
+      run MainUpdated(StartAuthProcess,Wait_Auth)
     }
 
     % HAENAM
     run host Sink(*) {
-      run MainUpdated(EncParams,AuthParams,DecCollectedData)
+      run MainUpdated(HandleAuthRequest,DecAuthCollectedData)
     }
     run host Sensor(*){36} {
-      run MainUpdated(DeauthParams,DecParams,EncCollectedData)
+      run MainUpdated(StartAuthProcess,DeauthParams,EncAuthCollectedData)
     }
     run host ManagerHaenam(*) {
       run PrepareMessages(*)
-      run MainUpdated(Wait_Auth)
+      run MainUpdated(StartAuthProcess,Wait_Auth)
     }
 
     communication {
