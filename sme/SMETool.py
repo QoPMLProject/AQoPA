@@ -2301,28 +2301,28 @@ class SMETool(wx.Frame):
         wxglade_tmp_menu2 = wx.Menu()
 
         # about menu item
-        item = wx.MenuItem(wxglade_tmp_menu, 999, u"&About SMETool\tCTRL+I", "", wx.ITEM_NORMAL)
-        self.Bind(wx.EVT_MENU, self.OnAboutBox, id=999)
-        item.SetBitmap(wx.Bitmap(self.CreatePath4Icons('about.png')))
-        wxglade_tmp_menu.AppendItem(item)
+        itemAbout = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), u"&About SMETool\tCTRL+I", "", wx.ITEM_NORMAL)
+        self.Bind(wx.EVT_MENU, self.OnAboutBox, itemAbout)
+        itemAbout.SetBitmap(wx.Bitmap(self.CreatePath4Icons('about.png')))
+        wxglade_tmp_menu.AppendItem(itemAbout)
 
         # separator
         wxglade_tmp_menu.AppendSeparator()
 
         # save all menu item
-        item = wx.MenuItem(wxglade_tmp_menu, 997, u"&Save All\tCTRL+S", "", wx.ITEM_NORMAL)
-        item.Enable(False)
-        self.Bind(wx.EVT_MENU, self.OnSaveAll, id=996)
-        wxglade_tmp_menu.AppendItem(item)
+        saveAllItem = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), u"&Save All\tCTRL+S", "", wx.ITEM_NORMAL)
+        saveAllItem.Enable(False)
+        self.Bind(wx.EVT_MENU, self.OnSaveAll, saveAllItem)
+        wxglade_tmp_menu.AppendItem(saveAllItem)
 
         # separator
         wxglade_tmp_menu.AppendSeparator()
 
         # exit item
-        item = wx.MenuItem(wxglade_tmp_menu, 996, u"&Quit\tCTRL+Q", "", wx.ITEM_NORMAL)
-        item.SetBitmap(wx.Bitmap(self.CreatePath4Icons('exit.png')))
-        self.Bind(wx.EVT_MENU, self.OnExit, id=996)
-        wxglade_tmp_menu.AppendItem(item)
+        exitItem = wx.MenuItem(wxglade_tmp_menu, wx.NewId(), u"&Quit\tCTRL+Q", "", wx.ITEM_NORMAL)
+        exitItem.SetBitmap(wx.Bitmap(self.CreatePath4Icons('exit.png')))
+        self.Bind(wx.EVT_MENU, self.OnExit, exitItem)
+        wxglade_tmp_menu.AppendItem(exitItem)
 
         item = wx.MenuItem(wxglade_tmp_menu2,9999, u"&Browse Models\tCTRL+M", "", wx.ITEM_NORMAL)
         item.SetBitmap(wx.Bitmap(self.CreatePath4Icons('lib.png')))
@@ -2606,13 +2606,27 @@ class SMETool(wx.Frame):
         self.populatelctrl11(Structs.caseList)
 
     def OnSaveAll(self, e):
-        Utility.saveCategories()
-        Utility.saveFacts()
-        Utility.saveSA()
-        Utility.saveRules()
-        Utility.saveFOs()
-        Utility.saveERs()
-        Utility.saveCases()
+
+        saveFileDialog = wx.FileDialog(self, "Choose A File To Save Model To:", "", "",
+                                       "SME Tool Files (*.sme)|*.sme",
+                                       wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+        saveFileDialog.ShowModal()
+        Utility.saveCategories(saveFileDialog.GetPath()+"_category.sme")
+        Utility.saveFacts(saveFileDialog.GetPath()+"_fact.sme")
+        Utility.saveSA(saveFileDialog.GetPath()+"_sa.sme")
+        Utility.saveRules(saveFileDialog.GetPath()+"_rule.sme")
+        Utility.saveFOs(saveFileDialog.GetPath()+"_fo.sme")
+        Utility.saveERs(saveFileDialog.GetPath()+"_er.sme")
+        Utility.saveCases(saveFileDialog.GetPath()+"_case.sme")
+        saveFileDialog.Destroy()
+
+        #Utility.saveCategories()
+        #Utility.saveFacts()
+        #Utility.saveSA()
+        #Utility.saveRules()
+        #Utility.saveFOs()
+        #Utility.saveERs()
+        #Utility.saveCases()
         self.populatelctrl1(Structs.categoryList)
         self.populatelctrl2(Structs.factList)
         self.populatelctrl3(Structs.saList)
@@ -2678,7 +2692,6 @@ class SMETool(wx.Frame):
         dlg.ShowModal()
         dlg.Destroy()
         Utility.saveFacts(dlg.GetPath())
-
 
     def onClickAddFact(self, e):
         dia = AddFactDialog(self, -1, 'Add a fact')

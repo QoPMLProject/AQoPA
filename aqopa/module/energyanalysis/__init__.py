@@ -22,7 +22,7 @@ class Module(module.Module):
     
     def extend_metrics_parser(self, parser):
         """
-        Overriden
+        Overridden
         """
         parser.add_extension(MetricsParserExtension())
         return parser
@@ -156,7 +156,7 @@ class Module(module.Module):
 
         # Traverse timetraces
         # Additionaly create list of finish times of instructions for each host
-        # (List of times when instructions has been finished)  
+        # (List of times when instructions has been finished)  ze co
 
         for timetrace in timetraces:
             
