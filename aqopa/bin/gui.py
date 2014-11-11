@@ -39,8 +39,11 @@ class MainNotebook(wx.Notebook):
         # MODULES
         ###########
 
+
+        # create and add some aqopa modules
         self.availableModules = []
 
+        # add time analysis module
         from aqopa.module import timeanalysis
         timeanalysis_module = timeanalysis.Module()
         timeanalysis_module.get_gui().Bind(EVT_MODULE_SIMULATION_REQUEST,
@@ -49,15 +52,23 @@ class MainNotebook(wx.Notebook):
                                            self.OnModuleSimulationFinished)
         self.availableModules.append(timeanalysis_module)
 
+        # add energy analysis module - it depends on time analysis module
         from aqopa.module import energyanalysis
         m = energyanalysis.Module(timeanalysis_module)
         self.availableModules.append(m)
 
+        # add reputation module
         from aqopa.module import reputation
         self.availableModules.append(reputation.Module())
 
+        # add qop module - KM
         from aqopa.module import qopanalysis
         self.availableModules.append(qopanalysis.Module())
+
+        # add finance module - it depends on energy analysis module - KM
+        from aqopa.module import financialanalysis
+        fm = financialanalysis.Module(energyanalysis)
+        self.availableModules.append(fm)
 
         # list containing notebook images:
         # .ico seem to be more OS portable, although we use .png here

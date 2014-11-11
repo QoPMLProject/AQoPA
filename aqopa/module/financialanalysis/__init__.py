@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 from aqopa import module
+from .gui import ModuleGui
 from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED, HOOK_TYPE_PRE_INSTRUCTION_EXECUTION
+from aqopa.module.energyanalysis.console import PrintResultsHook
+from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED
 
 """
 @file       __init__.py
@@ -11,14 +14,38 @@ from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED, HOOK_TYPE_PRE_I
 
 class Module(module.Module):
 
-    def __init__(self) :
-        pass
+    def __init__(self, energyanalysis_module) :
+        self.guis = {}
+        self.energyanalysis_module = energyanalysis_module
+        self.cost_per_kWh = 0.0
 
-    def calculate(self):
+    def get_gui(self):
+        if not getattr(self, '__gui', None):
+            setattr(self, '__gui', ModuleGui(self))
+        return getattr(self, '__gui', None)
+
+    def _install(self, simulator):
         """
-        @brief calculates the total cost ($) of the host
-        usage, its quite simple math:
-        1) Watts / 1000 = X kWatts
-        2) X kWatts * Y hours = Z kWh
-        3) $/kWh * Z kWh = final cost
         """
+        return simulator
+
+    def install_console(self, simulator):
+        """ Install module for console simulation """
+        self._install(simulator)
+        hook = PrintResultsHook(self, simulator)
+        simulator.register_hook(HOOK_TYPE_SIMULATION_FINISHED, hook)
+        return simulator
+
+    def install_gui(self, simulator):
+        """ Install module for gui simulation """
+        self._install(simulator)
+        return simulator
+
+    def get_cost_per_kWh(self):
+        return self.cost_per_kWh
+
+    def set_cost_per_kWh(self, cost):
+        self.cost_per_kWh = cost
+
+    def get_total_cost(self):
+        pass

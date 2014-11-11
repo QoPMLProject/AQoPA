@@ -31,18 +31,21 @@ class SingleVersionPanel(wx.Panel):
         #################
 
         versionBox = wx.StaticBox(self, label="Version")
+        versionsLabel = wx.StaticText(self, label="Choose Version To See\nAnalysis Results:")
         self.versionsList = wx.ComboBox(self, style=wx.TE_READONLY)
         self.versionsList.Bind(wx.EVT_COMBOBOX, self.OnVersionChanged)
-        versionBoxSizer = wx.StaticBoxSizer(versionBox, wx.VERTICAL)
+        versionBoxSizer = wx.StaticBoxSizer(versionBox, wx.HORIZONTAL)
+        versionBoxSizer.Add(versionsLabel, 0, wx.ALL | wx.ALIGN_CENTER, 5)
+        versionBoxSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
         versionBoxSizer.Add(self.versionsList, 1, wx.ALL | wx.ALIGN_CENTER, 5)
 
         ##################################
         # QoP PARAMETERS BOX
         ##################################
-        self.qopParamsBox = wx.StaticBox(self, label="QoP Analysis Results")
+        self.qopParamsBox = wx.StaticBox(self, label="The QoP Analysis Results")
         hostsBox, hostsBoxSizer = self._BuildHostsBoxAndSizer()
         qopParamsBoxSizer = wx.StaticBoxSizer(self.qopParamsBox, wx.VERTICAL)
-        qopParamsBoxSizer.Add(hostsBoxSizer, 1, wx.ALL | wx.EXPAND)
+        qopParamsBoxSizer.Add(hostsBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
 
         #################
         # BUTTONS LAY
@@ -109,7 +112,7 @@ class SingleVersionPanel(wx.Panel):
     def _BuildHostsBoxAndSizer(self):
         """ """
 
-        self.chooseHostLbl = wx.StaticText(self, label="Choose Host:")
+        self.chooseHostLbl = wx.StaticText(self, label="Choose Host To See\nit's QoP Parameters:")
         self.hostsList = wx.ComboBox(self, style=wx.TE_READONLY)
 
         self.hostsBox = wx.StaticBox(self, label="Host(s)")
@@ -129,14 +132,12 @@ class SingleVersionPanel(wx.Panel):
         """ """
         version = simulator.context.version
         self.versionsList.Append(version.name)
-
         self.versionSimulator[version.name] = simulator
 
     def OnVersionChanged(self, event):
         """ """
         versionName = self.versionsList.GetValue()
         simulator = self.versionSimulator[versionName]
-
         self._PopulateComboWithHostsNames(simulator)
         self.SetVersionsResultsVisibility(True)
 
@@ -145,10 +146,8 @@ class SingleVersionPanel(wx.Panel):
         self.versionsList.Clear()
         self.versionsList.SetValue("")
         self.versionSimulator = {}
-
         self.hostsList.Clear()
         self.hostsList.SetValue("")
-
         self.SetVersionsResultsVisibility(False)
 
     def SetVersionsResultsVisibility(self, visible):
@@ -159,7 +158,6 @@ class SingleVersionPanel(wx.Panel):
         widgets.append(self.showQoPBtn)
         widgets.append(self.launchSMEBtn)
         widgets.append(self.qopParamsBox)
-        widgets.append(self.showQoPBtn)
         widgets.append(self.chooseHostLbl)
 
         for w in widgets:
@@ -242,8 +240,8 @@ class MainResultsNotebook(wx.Notebook):
 
         self.module = module
 
-        il = wx.ImageList(20, 20)
-        singleVersionImg = il.Add(wx.Bitmap(self.CreatePath4Resource('PuzzlePiece.png'), wx.BITMAP_TYPE_PNG))
+        il = wx.ImageList(24, 24)
+        singleVersionImg = il.Add(wx.Bitmap(self.CreatePath4Resource('qop.png'), wx.BITMAP_TYPE_PNG))
         self.AssignImageList(il)
 
         self.oneVersionTab = SingleVersionPanel(self.module, self)
@@ -301,13 +299,11 @@ class ModuleGui(wx.EvtHandler):
         """ Returns WX panel with configuration controls. """
 
         panel = wx.Panel(parent)
-
         sizer = wx.BoxSizer(wx.VERTICAL)
         text = wx.StaticText(panel, label="Module does not need to be configured.")
         sizer.Add(text, 0, wx.ALL | wx.EXPAND, 5)
         text = wx.StaticText(panel, label="All result options will be available after results are calculated.")
         sizer.Add(text, 0, wx.ALL | wx.EXPAND, 5)
-
         panel.SetSizer(sizer)
         return panel
 
