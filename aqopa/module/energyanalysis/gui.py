@@ -121,6 +121,7 @@ class SingleVersionPanel(wx.Panel):
             wx.MessageBox("Voltage '%s' is incorrect float number. Please correct it." % voltageText, 
                           'Error', wx.OK | wx.ICON_ERROR)
             return
+        self.module.set_voltage(voltage)
         
         if self.oneECRB.GetValue():
             self.ShowHostsConsumption(simulator, hosts, voltage)

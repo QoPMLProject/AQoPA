@@ -14,6 +14,13 @@ class Module(module.Module):
         """ """
         self.guis = {}                                  # Divided by simulators - the reason for dict
         self.timeanalysis_module = timeanalysis_module
+        self.voltage = 0
+
+    def get_voltage(self):
+        return self.voltage
+
+    def set_voltage(self, voltage):
+        self.voltage = voltage
 
     def get_gui(self):
         if not getattr(self, '__gui', None):

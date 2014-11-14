@@ -12,12 +12,12 @@ from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED
 @author     Katarzyna Mazur
 """
 
-class Module(module.Module):
 
-    def __init__(self, energyanalysis_module) :
+class Module(module.Module):
+    def __init__(self, energyanalysis_module):
         self.guis = {}
         self.energyanalysis_module = energyanalysis_module
-        self.cost_per_kWh = 0.0
+        self.consumption_costs = {}
 
     def get_gui(self):
         if not getattr(self, '__gui', None):
@@ -41,11 +41,12 @@ class Module(module.Module):
         self._install(simulator)
         return simulator
 
-    def get_cost_per_kWh(self):
-        return self.cost_per_kWh
-
-    def set_cost_per_kWh(self, cost):
-        self.cost_per_kWh = cost
-
-    def get_total_cost(self):
-        pass
+    def get_all_hosts_consumption(self, simulator):
+        hosts = simulator.context.hosts
+        voltage = self.energyanalysis_module.get_voltage()
+        consumptions = self.energyanalysis_module.get_hosts_consumptions(simulator, hosts, voltage)
+        return consumptions
+        # lblText = ""
+        # for h in hosts:
+        #     lblText += "%s: %.2f mJ" % (h.name, consumptions[h])
+        # print lblText

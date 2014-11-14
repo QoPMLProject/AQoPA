@@ -11,6 +11,7 @@ from aqopa.gui.general_purpose_frame_gui import GeneralFrame
 @author     Katarzyna Mazur
 """
 
+
 class SingleVersionPanel(wx.Panel):
     def __init__(self, module, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
@@ -25,7 +26,7 @@ class SingleVersionPanel(wx.Panel):
 
         versionBox = wx.StaticBox(self, label="Version")
         versionsLabel = wx.StaticText(self, label="Choose Version To See\nAnalysis Results:")
-        self.versionsList = wx.ComboBox(self, style=wx.TE_READONLY, size=(200,-1))
+        self.versionsList = wx.ComboBox(self, style=wx.TE_READONLY, size=(200, -1))
         self.versionsList.Bind(wx.EVT_COMBOBOX, self.OnVersionChanged)
         versionBoxSizer = wx.StaticBoxSizer(versionBox, wx.HORIZONTAL)
         versionBoxSizer.Add(versionsLabel, 0, wx.ALL | wx.ALIGN_CENTER, 5)
@@ -38,8 +39,8 @@ class SingleVersionPanel(wx.Panel):
 
         self.cashBox = wx.StaticBox(self, label="The Financial Analysis Results")
         self.cashLabel = wx.StaticText(self, label="Price of one kWh [$]:")
-        self.cashInput = wx.lib.masked.NumCtrl(self, fractionWidth = 10, size=(200,-1))
-        #self.cashInput = wx.TextCtrl(self)
+        self.cashInput = wx.TextCtrl(self, size=(200, -1))
+        #self.cashInput = wx.lib.masked.NumCtrl(self, fractionWidth = 10, size=(200,-1))
         #self.cashInput.Bind(wx.EVT_CHAR, self.CashInputValidator)
         cashSizer = wx.BoxSizer(wx.HORIZONTAL)
         cashSizer.Add(self.cashLabel, 0, wx.ALL | wx.EXPAND, 5)
@@ -71,18 +72,42 @@ class SingleVersionPanel(wx.Panel):
 
         self.SetVersionsResultsVisibility(False)
 
-    def CashInputValidator(self, event):
-        raw_value = self.cashInput.GetValue().strip()
-        print raw_value
-        if all(x in '0123456789.+-' for x in raw_value):
-            self.value = round(float(raw_value), 2)
-            self.cashInput.ChangeValue(str(self.value))
-
-        else:
-            self.cashInput.ChangeValue("Number only")
+    # def CashInputValidator(self, event):
+    #     raw_value = self.cashInput.GetValue().strip()
+    #     print raw_value
+    #     if all(x in '0123456789.+-' for x in raw_value):
+    #         self.value = round(float(raw_value), 2)
+    #         self.cashInput.ChangeValue(str(self.value))
+    #
+    #     else:
+    #         self.cashInput.ChangeValue("Number only")
 
     def OnShowFinanceResultsBtnClicked(self, event):
-        pass
+        cashText = self.cashInput.GetValue().strip()
+        try:
+            cash = float(cashText)
+        except ValueError:
+            wx.MessageBox("'%s' is not a valid price. Please correct it." % cashText,
+                          'Error', wx.OK | wx.ICON_ERROR)
+            return
+
+        def convert_to_kWh(joules):
+            return joules / 3600000.0
+
+        def find_host_with_min_cost():
+            pass
+
+        def find_host_with_max_cost():
+            pass
+
+        def find_avg_cost():
+            pass
+
+        versionName = self.versionsList.GetValue()
+        simulator = self.versionSimulator[versionName]
+
+        cs = self.module.get_all_hosts_consumption(simulator)
+        print str(cs[self._GetSelectedHost(simulator)]) + " joules " + str(convert_to_kWh(cs[self._GetSelectedHost(simulator)])) + " kwhs "
 
     def _GetSelectedHost(self, simulator):
 
@@ -113,7 +138,7 @@ class SingleVersionPanel(wx.Panel):
         """ """
 
         self.chooseHostLbl = wx.StaticText(self, label="Choose Host To See\nit's Total Cost:")
-        self.hostsList = wx.ComboBox(self, style=wx.TE_READONLY, size=(200,-1))
+        self.hostsList = wx.ComboBox(self, style=wx.TE_READONLY, size=(200, -1))
 
         self.hostsBox = wx.StaticBox(self, label="Host(s)")
         self.hostsBoxSizer = wx.StaticBoxSizer(self.hostsBox, wx.HORIZONTAL)
