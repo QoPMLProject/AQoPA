@@ -70,6 +70,11 @@ class MainNotebook(wx.Notebook):
         fm = financialanalysis.Module(energyanalysis)
         self.availableModules.append(fm)
 
+        # add gogreen! module - it depends on energy analysis module - KM
+        from aqopa.module import greenanalysis
+        gm = greenanalysis.Module(energyanalysis)
+        self.availableModules.append(gm)
+
         # list containing notebook images:
         # .ico seem to be more OS portable, although we use .png here
         # the (20, 20) is the size in pixels of the images
