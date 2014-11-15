@@ -169,6 +169,19 @@ class SingleVersionPanel(wx.Panel):
         print "cost: " + str(all_costs[selected_host]) + " from host " + selected_host.name
         print "total cost: " + str(get_total_cost(all_costs))
 
+        # after all calculations, build the GUI
+        title = "Financial Analysis for host: "
+        title += selected_host.original_name()
+
+        cashWindow = GeneralFrame(self, "Financial Analysis Results", title, "modules_results.png")
+        cashPanel = wx.Panel(cashWindow)
+
+        cashPanel.Layout()
+        cashWindow.CentreOnScreen()
+        cashWindow.AddPanel(cashPanel)
+        cashWindow.SetWindowSize(600, 300)
+        cashWindow.Show()
+
         # def find_host_with_min_cost(version, simulator, consumptions):
         #     min_cost = +1000000000.0
         #     host_with_max_cost = None
