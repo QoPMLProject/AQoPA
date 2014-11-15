@@ -18,7 +18,6 @@ class SingleVersionPanel(wx.Panel):
 
         self.module = module
         self.versionSimulator = {}
-        self.cost = []
 
         #################
         # VERSION BOX
@@ -85,29 +84,118 @@ class SingleVersionPanel(wx.Panel):
     def OnShowFinanceResultsBtnClicked(self, event):
         cashText = self.cashInput.GetValue().strip()
         try:
-            cash = float(cashText)
+            price = float(cashText)
         except ValueError:
             wx.MessageBox("'%s' is not a valid price. Please correct it." % cashText,
                           'Error', wx.OK | wx.ICON_ERROR)
             return
 
+        def convert_to_joules(milijoules) :
+            return milijoules / 1000.0
+
         def convert_to_kWh(joules):
             return joules / 3600000.0
 
-        def find_host_with_min_cost():
-            pass
+        def calculate_cost(consumed_joules, cost_per_kWh):
+            kWhs = convert_to_kWh(consumed_joules)
+            cost = kWhs * cost_per_kWh
+            return cost
 
-        def find_host_with_max_cost():
-            pass
+        def calculate_cost_for_host(simulator, host, cost_per_kWh) :
+            all_consumptions = self.module.get_all_hosts_consumption(simulator)
+            joules = convert_to_joules(all_consumptions[host])
+            cost_for_host = calculate_cost(joules, cost_per_kWh)
+            return cost_for_host
 
-        def find_avg_cost():
-            pass
+        def calculate_all_costs(simulator, cost_per_kWh):
+            hosts = simulator.context.hosts
+            all_costs = {}
+            for host in hosts :
+                all_costs[host] = calculate_cost_for_host(simulator, host, cost_per_kWh)
+            return all_costs
+
+        def get_min_cost(all_costs):
+            hosts = simulator.context.hosts
+            host = None
+            min_cost = 0.0
+            for h in hosts :
+                if all_costs[h] > min_cost :
+                    min_cost = all_costs[h]
+                    host = h
+            return host, min_cost
+
+        def get_max_cost(all_costs):
+            hosts = simulator.context.hosts
+            host = None
+            max_cost = 0.0
+            for h in hosts :
+                if all_costs[h] > max_cost :
+                    max_cost = all_costs[h]
+                    host = h
+            return host, max_cost
+
+        def get_avg_cost(all_costs):
+            hosts = simulator.context.hosts
+            host = None
+            sum = 0.0
+            i = 0
+            for h in hosts :
+                sum += all_costs[h]
+                host = h
+                i += 1
+            return host, sum / i
+
+        def get_total_cost(all_costs):
+            hosts = simulator.context.hosts
+            sum = 0.0
+            for h in hosts :
+                sum += all_costs[h]
+                host = h
+            return sum
 
         versionName = self.versionsList.GetValue()
         simulator = self.versionSimulator[versionName]
+        selected_host = self._GetSelectedHost(simulator)
+        all_costs = calculate_all_costs(simulator, price)
 
-        cs = self.module.get_all_hosts_consumption(simulator)
-        print str(cs[self._GetSelectedHost(simulator)]) + " joules " + str(convert_to_kWh(cs[self._GetSelectedHost(simulator)])) + " kwhs "
+        # populate module with calculated costs
+        self.module.set_all_costs(all_costs)
+
+        minhost, mincost = get_min_cost(all_costs)
+        maxhost, maxcost = get_max_cost(all_costs)
+
+        print "min cost: " + str(mincost) + " from host: " + minhost.name
+        print "max cost: " + str(maxcost) + " from host: " + maxhost.name
+        print "cost: " + str(all_costs[selected_host]) + " from host " + selected_host.name
+        print "total cost: " + str(get_total_cost(all_costs))
+
+        # def find_host_with_min_cost(version, simulator, consumptions):
+        #     min_cost = +1000000000.0
+        #     host_with_max_cost = None
+        #     for host in simulator.context.hosts :
+        #         if consumptions[host] < min_cost :
+        #             min_cost = consumptions[host]
+        #             host_with_max_cost = host
+        #     return  host, min_cost
+        #
+        # def find_host_with_max_cost(version, simulator, consumptions):
+        #     max_cost = -1000000000.0
+        #     host_with_max_cost = None
+        #     for host in simulator.context.hosts :
+        #         if consumptions[host] > max_cost :
+        #             max_cost = consumptions[host]
+        #             host_with_max_cost = host
+        #     return  host, max_cost
+        #
+        # def find_avg_cost(version, simulator, consumptions):
+        #     sum = 0.0
+        #     i = 0
+        #     for host in simulator.context.hosts :
+        #         sum += consumptions[host]
+        #         i += 1
+        #     return sum / i
+
+        #print str(cs[self._GetSelectedHost(simulator)]) + " joules " + str(convert_to_kWh(cs[self._GetSelectedHost(simulator)])) + " kwhs "
 
     def _GetSelectedHost(self, simulator):
 
