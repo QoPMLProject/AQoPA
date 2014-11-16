@@ -42,6 +42,26 @@ class Module(module.Module):
         self._install(simulator)
         return simulator
 
+    def get_min_cost(self, simulator):
+        hosts = simulator.context.hosts
+        host = hosts[0]
+        min_cost = self.consumption_costs[simulator][hosts[0]]
+        for h in hosts:
+            if self.consumption_costs[simulator][h] < min_cost:
+                min_cost = self.consumption_costs[simulator][h]
+                host = h
+        return min_cost, host
+
+    def get_max_cost(self, simulator):
+        hosts = simulator.context.hosts
+        host = hosts[0]
+        max_cost = self.consumption_costs[simulator][hosts[0]]
+        for h in hosts:
+            if self.consumption_costs[simulator][h] > max_cost:
+                max_cost = self.consumption_costs[simulator][h]
+                host = h
+        return max_cost, host
+
     def add_cost(self, simulator, host, cost):
         """
         @brief adds cost of power consumption to
@@ -53,7 +73,7 @@ class Module(module.Module):
         if simulator not in self.consumption_costs:
             self.consumption_costs[simulator] = {}
         # add a new host if not available yet
-        if host not in self.consumption_costs[simulator] :
+        if host not in self.consumption_costs[simulator]:
             self.consumption_costs[simulator][host] = []
         # add cost for the host - but only if we
         # have not added it yet and if it is not 'empty'
@@ -65,15 +85,11 @@ class Module(module.Module):
             return []
         return self.consumption_costs[simulator]
 
-    def set_all_costs(self, consumption_costs):
-        self.consumption_costs = copy.deepcopy(consumption_costs)
+    # def set_all_costs(self, consumption_costs):
+    #     self.consumption_costs = copy.deepcopy(consumption_costs)
 
     def get_all_hosts_consumption(self, simulator):
         hosts = simulator.context.hosts
         voltage = self.energyanalysis_module.get_voltage()
         consumptions = self.energyanalysis_module.get_hosts_consumptions(simulator, hosts, voltage)
         return consumptions
-        # lblText = ""
-        # for h in hosts:
-        #     lblText += "%s: %.2f mJ" % (h.name, consumptions[h])
-        # print lblText

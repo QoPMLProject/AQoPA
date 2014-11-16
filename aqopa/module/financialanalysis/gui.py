@@ -2,7 +2,6 @@
 
 import wx
 import os
-from wx.lib.masked import NumCtrl
 from aqopa.gui.general_purpose_frame_gui import GeneralFrame
 
 """
@@ -39,8 +38,6 @@ class SingleVersionPanel(wx.Panel):
         self.cashBox = wx.StaticBox(self, label="The Financial Analysis Results")
         self.cashLabel = wx.StaticText(self, label="Price of one kWh [$]:")
         self.cashInput = wx.TextCtrl(self, size=(200, -1))
-        #self.cashInput = wx.lib.masked.NumCtrl(self, fractionWidth = 10, size=(200,-1))
-        #self.cashInput.Bind(wx.EVT_CHAR, self.CashInputValidator)
         cashSizer = wx.BoxSizer(wx.HORIZONTAL)
         cashSizer.Add(self.cashLabel, 0, wx.ALL | wx.EXPAND, 5)
         cashSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
@@ -70,16 +67,6 @@ class SingleVersionPanel(wx.Panel):
         self.SetSizer(sizer)
 
         self.SetVersionsResultsVisibility(False)
-
-    # def CashInputValidator(self, event):
-    #     raw_value = self.cashInput.GetValue().strip()
-    #     print raw_value
-    #     if all(x in '0123456789.+-' for x in raw_value):
-    #         self.value = round(float(raw_value), 2)
-    #         self.cashInput.ChangeValue(str(self.value))
-    #
-    #     else:
-    #         self.cashInput.ChangeValue("Number only")
 
     def OnShowFinanceResultsBtnClicked(self, event):
         cashText = self.cashInput.GetValue().strip()
@@ -116,18 +103,18 @@ class SingleVersionPanel(wx.Panel):
 
         def get_min_cost(all_costs):
             hosts = simulator.context.hosts
-            host = None
-            min_cost = 0.0
+            host = hosts[0]
+            min_cost = all_costs[hosts[0]]
             for h in hosts :
-                if all_costs[h] > min_cost :
+                if all_costs[h] < min_cost :
                     min_cost = all_costs[h]
                     host = h
             return host, min_cost
 
         def get_max_cost(all_costs):
             hosts = simulator.context.hosts
-            host = None
-            max_cost = 0.0
+            host = hosts[0]
+            max_cost = all_costs[hosts[0]]
             for h in hosts :
                 if all_costs[h] > max_cost :
                     max_cost = all_costs[h]
@@ -136,21 +123,18 @@ class SingleVersionPanel(wx.Panel):
 
         def get_avg_cost(all_costs):
             hosts = simulator.context.hosts
-            host = None
             sum = 0.0
             i = 0
             for h in hosts :
                 sum += all_costs[h]
-                host = h
                 i += 1
-            return host, sum / i
+            return sum / i
 
         def get_total_cost(all_costs):
             hosts = simulator.context.hosts
             sum = 0.0
             for h in hosts :
                 sum += all_costs[h]
-                host = h
             return sum
 
         versionName = self.versionsList.GetValue()
@@ -158,57 +142,121 @@ class SingleVersionPanel(wx.Panel):
         selected_host = self._GetSelectedHost(simulator)
         all_costs = calculate_all_costs(simulator, price)
 
-        # populate module with calculated costs
-        self.module.set_all_costs(all_costs)
-
         minhost, mincost = get_min_cost(all_costs)
         maxhost, maxcost = get_max_cost(all_costs)
+        curr_cost = all_costs[selected_host]
+        total_cost = get_total_cost(all_costs)
+        avg_cost = get_avg_cost(all_costs)
 
+        # populate module with calculated costs
+        for host in simulator.context.hosts :
+            self.module.add_cost(simulator, host, all_costs[host])
+
+        # some kind of debugging
         print "min cost: " + str(mincost) + " from host: " + minhost.name
         print "max cost: " + str(maxcost) + " from host: " + maxhost.name
-        print "cost: " + str(all_costs[selected_host]) + " from host " + selected_host.name
-        print "total cost: " + str(get_total_cost(all_costs))
+        print "cost: " + str(curr_cost) + " from host " + selected_host.name
+        print "avg cost: " + str(avg_cost)
+        print "total cost: " + str(total_cost)
+
+        print "from module (min): " + str(self.module.get_min_cost(simulator))
+        print "from module (max): " + str(self.module.get_max_cost(simulator))
 
         # after all calculations, build the GUI
-        title = "Financial Analysis for host: "
+        title = "Financial Analysis for Host: "
         title += selected_host.original_name()
 
         cashWindow = GeneralFrame(self, "Financial Analysis Results", title, "modules_results.png")
         cashPanel = wx.Panel(cashWindow)
 
+        #########################################################################
+        # ACTUAL COSTS
+        #########################################################################
+        actualCostsBox = wx.StaticBox(cashPanel, label="Actual Costs of CPU Power Consumption")
+        actualCostsBoxSizer = wx.StaticBoxSizer(actualCostsBox, wx.VERTICAL)
+        #########################################################################
+        # cost of the selected host
+        #########################################################################
+        infoLabel = "Cost for Host: "
+        hostInfoLabel = wx.StaticText(cashPanel, label=infoLabel)
+        costLabel = str(all_costs[selected_host]) + " $"
+        hostCostLabel = wx.StaticText(cashPanel, label=costLabel)
+        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer1.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
+        sizer1.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+        sizer1.Add(hostCostLabel, 0, wx.ALL | wx.EXPAND, 5)
+        #########################################################################
+        # minimal cost of version (minimal cost of every host in given version)
+        #########################################################################
+        infoLabel = "Minimal Version Cost (Host: " + minhost.original_name() + ")"
+        hostInfoLabel = wx.StaticText(cashPanel, label=infoLabel)
+        costLabel = str(mincost) + " $"
+        hostCostLabel = wx.StaticText(cashPanel, label=costLabel)
+        sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer2.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
+        sizer2.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+        sizer2.Add(hostCostLabel, 0, wx.ALL | wx.EXPAND, 5)
+        #########################################################################
+        # maximal cost of version (maximal cost of every host in given version)
+        #########################################################################
+        infoLabel = "Maximal Version Cost (Host: " + maxhost.original_name() + ")"
+        hostInfoLabel = wx.StaticText(cashPanel, label=infoLabel)
+        costLabel = str(maxcost) + " $"
+        hostCostLabel = wx.StaticText(cashPanel, label=costLabel)
+        sizer3 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer3.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
+        sizer3.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+        sizer3.Add(hostCostLabel, 0, wx.ALL | wx.EXPAND, 5)
+        #########################################################################
+        # average version cost
+        #########################################################################
+        infoLabel = "Average Version Cost: "
+        hostInfoLabel = wx.StaticText(cashPanel, label=infoLabel)
+        costLabel = str(avg_cost) + " $"
+        hostCostLabel = wx.StaticText(cashPanel, label=costLabel)
+        sizer4 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer4.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
+        sizer4.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+        sizer4.Add(hostCostLabel, 0, wx.ALL | wx.EXPAND, 5)
+        #########################################################################
+        # total version cost
+        #########################################################################
+        infoLabel = "Total Version Cost: "
+        hostInfoLabel = wx.StaticText(cashPanel, label=infoLabel)
+        costLabel = str(total_cost) + " $"
+        hostCostLabel = wx.StaticText(cashPanel, label=costLabel)
+        sizer5 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer5.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
+        sizer5.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+        sizer5.Add(hostCostLabel, 0, wx.ALL | wx.EXPAND, 5)
+
+        actualCostsBoxSizer.Add(sizer1, 0, wx.ALL | wx.EXPAND, 5)
+        actualCostsBoxSizer.Add(sizer2, 0, wx.ALL | wx.EXPAND, 5)
+        actualCostsBoxSizer.Add(sizer3, 0, wx.ALL | wx.EXPAND, 5)
+        actualCostsBoxSizer.Add(sizer4, 0, wx.ALL | wx.EXPAND, 5)
+        actualCostsBoxSizer.Add(sizer5, 0, wx.ALL | wx.EXPAND, 5)
+
+        #########################################################################
+        # ESTIMATED COSTS
+        #########################################################################
+        estimatedCostsBox = wx.StaticBox(cashPanel, label="Estimated Costs of CPU Power Consumption (7/24/365)")
+        estimatedCostsBoxSizer = wx.StaticBoxSizer(estimatedCostsBox, wx.VERTICAL)
+
+        #########################################################################
+        # MAIN LAYOUT
+        #########################################################################
+
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer.Add(actualCostsBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
+        mainSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+        mainSizer.Add(estimatedCostsBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
+
+        cashPanel.SetSizer(mainSizer)
         cashPanel.Layout()
         cashWindow.CentreOnScreen()
         cashWindow.AddPanel(cashPanel)
-        cashWindow.SetWindowSize(600, 300)
+        cashWindow.SetWindowSize(600, 350)
         cashWindow.Show()
-
-        # def find_host_with_min_cost(version, simulator, consumptions):
-        #     min_cost = +1000000000.0
-        #     host_with_max_cost = None
-        #     for host in simulator.context.hosts :
-        #         if consumptions[host] < min_cost :
-        #             min_cost = consumptions[host]
-        #             host_with_max_cost = host
-        #     return  host, min_cost
-        #
-        # def find_host_with_max_cost(version, simulator, consumptions):
-        #     max_cost = -1000000000.0
-        #     host_with_max_cost = None
-        #     for host in simulator.context.hosts :
-        #         if consumptions[host] > max_cost :
-        #             max_cost = consumptions[host]
-        #             host_with_max_cost = host
-        #     return  host, max_cost
-        #
-        # def find_avg_cost(version, simulator, consumptions):
-        #     sum = 0.0
-        #     i = 0
-        #     for host in simulator.context.hosts :
-        #         sum += consumptions[host]
-        #         i += 1
-        #     return sum / i
-
-        #print str(cs[self._GetSelectedHost(simulator)]) + " joules " + str(convert_to_kWh(cs[self._GetSelectedHost(simulator)])) + " kwhs "
 
     def _GetSelectedHost(self, simulator):
 
@@ -279,9 +327,11 @@ class SingleVersionPanel(wx.Panel):
     def SetVersionsResultsVisibility(self, visible):
         """ """
         widgets = []
+        widgets.append(self.cashLabel)
+        widgets.append(self.cashBox)
+        widgets.append(self.cashInput)
         widgets.append(self.hostsList)
         widgets.append(self.hostsBox)
-        widgets.append(self.cashBox)
         widgets.append(self.showFinanceResultsBtn)
         widgets.append(self.chooseHostLbl)
 
