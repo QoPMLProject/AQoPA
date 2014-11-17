@@ -10,7 +10,6 @@ from aqopa.gui.general_purpose_frame_gui import GeneralFrame
 @author     Katarzyna Mazur
 """
 
-
 class SingleVersionPanel(wx.Panel):
     def __init__(self, module, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)

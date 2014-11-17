@@ -6,12 +6,12 @@ from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED, HOOK_TYPE_PRE_I
 from aqopa.module.energyanalysis.console import PrintResultsHook
 from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED
 
-class Module(module.Module):
 
-    def __init__(self, energyanalysis_module) :
+class Module(module.Module):
+    def __init__(self, energyanalysis_module):
         self.guis = {}
         self.energyanalysis_module = energyanalysis_module
-        self.co2_per_kWh = 0.0
+        self.carbon_dioxide_emissions = {}
 
     def get_gui(self):
         if not getattr(self, '__gui', None):
@@ -35,11 +35,64 @@ class Module(module.Module):
         self._install(simulator)
         return simulator
 
-    def get_co2_per_kWh(self):
-        return self.co2_per_kWh
+    def add_co2_emission(self, simulator, host, co2_emission):
+        # add a new simulator if not available yet
+        if simulator not in self.carbon_dioxide_emissions:
+            self.carbon_dioxide_emissions[simulator] = {}
+        # add a new host if not available yet
+        if host not in self.carbon_dioxide_emissions[simulator]:
+            self.carbon_dioxide_emissions[simulator][host] = []
+        # add he amount of released carbon dioxide for the
+        # host - but only if we have not added it yet and
+        # if it is not 'empty'
+        if co2_emission not in self.carbon_dioxide_emissions[simulator][host] and co2_emission:
+            self.carbon_dioxide_emissions[simulator][host].append(co2_emission)
 
-    def set_co2_per_kWh(self, co2):
-        self.co2_per_kWh = co2
+    def get_min_emission(self, simulator):
+        hosts = simulator.context.hosts
+        host = hosts[0]
+        min_cost = self.carbon_dioxide_emissions[simulator][hosts[0]]
+        for h in hosts:
+            if self.carbon_dioxide_emissions[simulator][h] < min_cost:
+                min_cost = self.carbon_dioxide_emissions[simulator][h]
+                host = h
+        return min_cost, host
 
-    def get_total_co2_consumption(self):
-        pass
+    def get_max_emission(self, simulator):
+        hosts = simulator.context.hosts
+        host = hosts[0]
+        max_cost = self.carbon_dioxide_emissions[simulator][hosts[0]]
+        for h in hosts:
+            if self.carbon_dioxide_emissions[simulator][h] > max_cost:
+                max_cost = self.carbon_dioxide_emissions[simulator][h]
+                host = h
+        return max_cost, host
+
+    def get_avg_emission(self, simulator):
+        hosts = simulator.context.hosts
+        cost_sum = 0.0
+        i = 0
+        for host in hosts:
+            for cost in self.carbon_dioxide_emissions[simulator][host]:
+                cost_sum += cost
+                i += 1
+        return cost_sum / i
+
+    def get_total_emission(self, simulator):
+        hosts = simulator.context.hosts
+        cost_sum = 0.0
+        for host in hosts:
+            for cost in self.carbon_dioxide_emissions[simulator][host]:
+                cost_sum += cost
+        return cost_sum
+
+    def get_all_emissions(self, simulator):
+        if simulator not in self.carbon_dioxide_emissions:
+            return []
+        return self.carbon_dioxide_emissions[simulator]
+
+    def get_all_hosts_consumption(self, simulator):
+        hosts = simulator.context.hosts
+        voltage = self.energyanalysis_module.get_voltage()
+        consumptions = self.energyanalysis_module.get_hosts_consumptions(simulator, hosts, voltage)
+        return consumptions

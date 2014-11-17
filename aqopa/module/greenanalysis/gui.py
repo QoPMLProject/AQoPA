@@ -2,7 +2,6 @@
 
 import wx
 import os
-from wx.lib.masked import NumCtrl
 from aqopa.gui.general_purpose_frame_gui import GeneralFrame
 
 """
@@ -18,7 +17,6 @@ class SingleVersionPanel(wx.Panel):
 
         self.module = module
         self.versionSimulator = {}
-        self.co2 = []
 
         #################
         # VERSION BOX
@@ -26,7 +24,7 @@ class SingleVersionPanel(wx.Panel):
 
         versionBox = wx.StaticBox(self, label="Version")
         versionsLabel = wx.StaticText(self, label="Choose Version To See\nAnalysis Results:")
-        self.versionsList = wx.ComboBox(self, style=wx.TE_READONLY)
+        self.versionsList = wx.ComboBox(self, style=wx.TE_READONLY, size=(200, -1))
         self.versionsList.Bind(wx.EVT_COMBOBOX, self.OnVersionChanged)
         versionBoxSizer = wx.StaticBoxSizer(versionBox, wx.HORIZONTAL)
         versionBoxSizer.Add(versionsLabel, 0, wx.ALL | wx.ALIGN_CENTER, 5)
@@ -39,7 +37,7 @@ class SingleVersionPanel(wx.Panel):
 
         self.co2Box = wx.StaticBox(self, label="The Carbon Dioxide Emissions Analysis Results")
         self.co2Label = wx.StaticText(self, label="CO2 produced per   \none kWh [pounds]:")
-        self.co2Input = wx.lib.masked.NumCtrl(self, fractionWidth = 10)
+        self.co2Input = wx.TextCtrl(self, size=(200, -1))
         co2Sizer = wx.BoxSizer(wx.HORIZONTAL)
         co2Sizer.Add(self.co2Label, 0, wx.ALL | wx.EXPAND, 5)
         co2Sizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
@@ -71,7 +69,53 @@ class SingleVersionPanel(wx.Panel):
         self.SetVersionsResultsVisibility(False)
 
     def OnShowCo2ResultsBtnClicked(self, event):
-            pass
+        co2Text = self.co2Input.GetValue().strip()
+        try:
+            co2 = float(co2Text)
+        except ValueError:
+            wx.MessageBox("'%s' is not valid CO2 amount. Please correct it." % co2Text,
+                          'Error', wx.OK | wx.ICON_ERROR)
+            return
+
+        def convert_to_joules(milijoules) :
+            return milijoules / 1000.0
+
+        def convert_to_kWh(joules):
+            return joules / 3600000.0
+
+        def calculate_emission(consumed_joules, pounds_of_co2_per_kWh):
+            kWhs = convert_to_kWh(consumed_joules)
+            pounds = kWhs * pounds_of_co2_per_kWh
+            return pounds
+
+        def calculate_emission_for_host(simulator, host, pounds_of_co2_per_kWh) :
+            all_consumptions = self.module.get_all_hosts_consumption(simulator)
+            joules = convert_to_joules(all_consumptions[host])
+            pounds_for_host = calculate_emission(joules, pounds_of_co2_per_kWh)
+            return pounds_for_host
+
+        def calculate_all_emissions(simulator, pounds_of_co2_per_kWh):
+            hosts = simulator.context.hosts
+            all_emissions = {}
+            for host in hosts :
+                all_emissions[host] = calculate_emission_for_host(simulator, host, pounds_of_co2_per_kWh)
+            return all_emissions
+
+        versionName = self.versionsList.GetValue()
+        simulator = self.versionSimulator[versionName]
+        selected_host = self._GetSelectedHost(simulator)
+        all_emissions = calculate_all_emissions(simulator, co2)
+
+        # populate module with calculated costs
+        for host in simulator.context.hosts :
+            self.module.add_co2_emission(simulator, host, all_emissions[host])
+
+        # get some financial info from module
+        minemission, minhost = self.module.get_min_cost(simulator)
+        maxemission, maxhost = self.module.get_max_cost(simulator)
+        total_emission = self.module.get_total_cost(simulator)
+        avg_emission = self.module.get_avg_cost(simulator)
+        curr_emission = all_emissions[selected_host]
 
     def _GetSelectedHost(self, simulator):
 
@@ -102,7 +146,7 @@ class SingleVersionPanel(wx.Panel):
         """ """
 
         self.chooseHostLbl = wx.StaticText(self, label="Choose Host To See\nit's Total Cost:")
-        self.hostsList = wx.ComboBox(self, style=wx.TE_READONLY)
+        self.hostsList = wx.ComboBox(self, style=wx.TE_READONLY, size=(200, -1))
 
         self.hostsBox = wx.StaticBox(self, label="Host(s)")
         self.hostsBoxSizer = wx.StaticBoxSizer(self.hostsBox, wx.HORIZONTAL)
