@@ -10,6 +10,7 @@ from aqopa.gui.general_purpose_frame_gui import GeneralFrame
 @author     Katarzyna Mazur
 """
 
+
 class SingleVersionPanel(wx.Panel):
     def __init__(self, module, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
@@ -17,7 +18,7 @@ class SingleVersionPanel(wx.Panel):
         self.module = module
         self.versionSimulator = {}
 
-        #################
+        # ################
         # VERSION BOX
         #################
 
@@ -76,7 +77,7 @@ class SingleVersionPanel(wx.Panel):
                           'Error', wx.OK | wx.ICON_ERROR)
             return
 
-        def convert_to_joules(milijoules) :
+        def convert_to_joules(milijoules):
             return milijoules / 1000.0
 
         def convert_to_kWh(joules):
@@ -87,7 +88,7 @@ class SingleVersionPanel(wx.Panel):
             cost = kWhs * cost_per_kWh
             return cost
 
-        def calculate_cost_for_host(simulator, host, cost_per_kWh) :
+        def calculate_cost_for_host(simulator, host, cost_per_kWh):
             all_consumptions = self.module.get_all_hosts_consumption(simulator)
             joules = convert_to_joules(all_consumptions[host])
             cost_for_host = calculate_cost(joules, cost_per_kWh)
@@ -96,7 +97,7 @@ class SingleVersionPanel(wx.Panel):
         def calculate_all_costs(simulator, cost_per_kWh):
             hosts = simulator.context.hosts
             all_costs = {}
-            for host in hosts :
+            for host in hosts:
                 all_costs[host] = calculate_cost_for_host(simulator, host, cost_per_kWh)
             return all_costs
 
@@ -106,7 +107,7 @@ class SingleVersionPanel(wx.Panel):
         all_costs = calculate_all_costs(simulator, price)
 
         # populate module with calculated costs
-        for host in simulator.context.hosts :
+        for host in simulator.context.hosts:
             self.module.add_cost(simulator, host, all_costs[host])
 
         # get some financial info from module
@@ -123,7 +124,7 @@ class SingleVersionPanel(wx.Panel):
         cashWindow = GeneralFrame(self, "Financial Analysis Results", title, "modules_results.png")
         cashPanel = wx.Panel(cashWindow)
 
-        #########################################################################
+        # ########################################################################
         # ACTUAL COSTS
         #########################################################################
         actualCostsBox = wx.StaticBox(cashPanel, label="Actual Costs of CPU Power Consumption")
@@ -233,7 +234,7 @@ class SingleVersionPanel(wx.Panel):
         self.hostsList.Clear()
         self.hostsList.AppendItems(hostsNames)
 
-    #################
+    # ################
     # LAYOUT
     #################
 
@@ -377,7 +378,7 @@ class ModuleGui(wx.EvtHandler):
         # costConfBox = wx.StaticBox(panel, label="Cost Per One Kilowatt-Hour")
         # # create info label
         # moduleInfoLabel = wx.StaticText(panel, label="To obtain meaningful results, you need to select The Time Analysis and The Energy Analysis Modules as well. "
-        #                                              "Also, remember to give the price of one kilowatt-hour in US dollars.")
+        # "Also, remember to give the price of one kilowatt-hour in US dollars.")
         # cashInfoLabel = wx.StaticText(panel, label="Cost per kWh [$]")
         # # create sizers = some kind of layout management
         # sizer = wx.StaticBoxSizer(costConfBox, wx.VERTICAL)

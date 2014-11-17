@@ -56,7 +56,7 @@ class Module(module.Module):
             if self.carbon_dioxide_emissions[simulator][h] < min_cost:
                 min_cost = self.carbon_dioxide_emissions[simulator][h]
                 host = h
-        return min_cost, host
+        return min_cost[0], host
 
     def get_max_emission(self, simulator):
         hosts = simulator.context.hosts
@@ -66,7 +66,7 @@ class Module(module.Module):
             if self.carbon_dioxide_emissions[simulator][h] > max_cost:
                 max_cost = self.carbon_dioxide_emissions[simulator][h]
                 host = h
-        return max_cost, host
+        return max_cost[0], host
 
     def get_avg_emission(self, simulator):
         hosts = simulator.context.hosts

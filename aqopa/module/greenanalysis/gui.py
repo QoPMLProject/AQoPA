@@ -18,7 +18,7 @@ class SingleVersionPanel(wx.Panel):
         self.module = module
         self.versionSimulator = {}
 
-        #################
+        # ################
         # VERSION BOX
         #################
 
@@ -77,7 +77,7 @@ class SingleVersionPanel(wx.Panel):
                           'Error', wx.OK | wx.ICON_ERROR)
             return
 
-        def convert_to_joules(milijoules) :
+        def convert_to_joules(milijoules):
             return milijoules / 1000.0
 
         def convert_to_kWh(joules):
@@ -88,7 +88,7 @@ class SingleVersionPanel(wx.Panel):
             pounds = kWhs * pounds_of_co2_per_kWh
             return pounds
 
-        def calculate_emission_for_host(simulator, host, pounds_of_co2_per_kWh) :
+        def calculate_emission_for_host(simulator, host, pounds_of_co2_per_kWh):
             all_consumptions = self.module.get_all_hosts_consumption(simulator)
             joules = convert_to_joules(all_consumptions[host])
             pounds_for_host = calculate_emission(joules, pounds_of_co2_per_kWh)
@@ -97,7 +97,7 @@ class SingleVersionPanel(wx.Panel):
         def calculate_all_emissions(simulator, pounds_of_co2_per_kWh):
             hosts = simulator.context.hosts
             all_emissions = {}
-            for host in hosts :
+            for host in hosts:
                 all_emissions[host] = calculate_emission_for_host(simulator, host, pounds_of_co2_per_kWh)
             return all_emissions
 
@@ -107,15 +107,59 @@ class SingleVersionPanel(wx.Panel):
         all_emissions = calculate_all_emissions(simulator, co2)
 
         # populate module with calculated costs
-        for host in simulator.context.hosts :
+        for host in simulator.context.hosts:
             self.module.add_co2_emission(simulator, host, all_emissions[host])
 
         # get some financial info from module
-        minemission, minhost = self.module.get_min_cost(simulator)
-        maxemission, maxhost = self.module.get_max_cost(simulator)
-        total_emission = self.module.get_total_cost(simulator)
-        avg_emission = self.module.get_avg_cost(simulator)
+        minemission, minhost = self.module.get_min_emission(simulator)
+        maxemission, maxhost = self.module.get_max_emission(simulator)
+        total_emission = self.module.get_total_emission(simulator)
+        avg_emission = self.module.get_avg_emission(simulator)
         curr_emission = all_emissions[selected_host]
+
+        # after all calculations, build the GUI
+        title = "Carbon Dioxide Emissions Analysis for Host: "
+        title += selected_host.original_name()
+
+        co2Window = GeneralFrame(self, "Carbon Dioxide Emissions Analysis Results", title, "modules_results.png")
+        co2Panel = wx.Panel(co2Window)
+
+        conv_constant = 0.45539237
+
+        # ########################################################################
+        # ACTUAL CARBON DIOXIDE EMISSIONS
+        #########################################################################
+        actualEmissionsBox = wx.StaticBox(co2Panel, label="Actual Carbon Dioxide Emissions of CPU")
+        actualEmissionsBoxSizer = wx.StaticBoxSizer(actualEmissionsBox, wx.VERTICAL)
+        #########################################################################
+        # cost of the selected host
+        #########################################################################
+        infoLabel = "Emission for Host: "
+        hostInfoLabel = wx.StaticText(co2Panel, label=infoLabel)
+        co2Label = str(all_emissions[selected_host]) + " pounds / " + str(
+            all_emissions[selected_host] * conv_constant) + " kg"
+        hostCO2Label = wx.StaticText(co2Panel, label=co2Label)
+        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer1.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
+        sizer1.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+        sizer1.Add(hostCO2Label, 0, wx.ALL | wx.EXPAND, 5)
+
+        actualEmissionsBoxSizer.Add(sizer1, 0, wx.ALL | wx.EXPAND, 5)
+
+        #########################################################################
+        # MAIN LAYOUT
+        #########################################################################
+
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer.Add(actualEmissionsBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
+        mainSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+
+        co2Panel.SetSizer(mainSizer)
+        co2Panel.Layout()
+        co2Window.CentreOnScreen()
+        co2Window.AddPanel(co2Panel)
+        co2Window.SetWindowSize(600, 350)
+        co2Window.Show()
 
     def _GetSelectedHost(self, simulator):
 
@@ -138,7 +182,7 @@ class SingleVersionPanel(wx.Panel):
         self.hostsList.Clear()
         self.hostsList.AppendItems(hostsNames)
 
-    #################
+    # ################
     # LAYOUT
     #################
 

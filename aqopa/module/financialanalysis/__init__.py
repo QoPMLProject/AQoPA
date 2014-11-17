@@ -68,7 +68,7 @@ class Module(module.Module):
             if self.consumption_costs[simulator][h] < min_cost:
                 min_cost = self.consumption_costs[simulator][h]
                 host = h
-        return min_cost, host
+        return min_cost[0], host
 
     def get_max_cost(self, simulator):
         hosts = simulator.context.hosts
@@ -78,7 +78,7 @@ class Module(module.Module):
             if self.consumption_costs[simulator][h] > max_cost:
                 max_cost = self.consumption_costs[simulator][h]
                 host = h
-        return max_cost, host
+        return max_cost[0], host
 
     def get_avg_cost(self, simulator):
         hosts = simulator.context.hosts
