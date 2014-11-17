@@ -136,7 +136,7 @@ class SingleVersionPanel(wx.Panel):
         #########################################################################
         infoLabel = "Emission for Host: "
         hostInfoLabel = wx.StaticText(co2Panel, label=infoLabel)
-        co2Label = str(all_emissions[selected_host]) + " pounds / " + str(
+        co2Label ="%.2f" % str(all_emissions[selected_host]) + " pounds / " + "%.2f" % str(
             all_emissions[selected_host] * conv_constant) + " kg"
         hostCO2Label = wx.StaticText(co2Panel, label=co2Label)
         sizer1 = wx.BoxSizer(wx.HORIZONTAL)
