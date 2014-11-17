@@ -13,7 +13,6 @@ from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED
 @author     Katarzyna Mazur
 """
 
-
 class Module(module.Module):
     def __init__(self, energyanalysis_module):
         self.guis = {}
@@ -62,6 +61,24 @@ class Module(module.Module):
                 host = h
         return max_cost, host
 
+    def get_avg_cost(self, simulator):
+        hosts = simulator.context.hosts
+        cost_sum = 0.0
+        i = 0
+        for host in hosts:
+            for cost in self.consumption_costs[simulator][host]:
+                cost_sum += cost
+                i += 1
+        return cost_sum / i
+
+    def get_total_cost(self, simulator):
+        hosts = simulator.context.hosts
+        cost_sum = 0.0
+        for host in hosts:
+            for cost in self.consumption_costs[simulator][host]:
+                cost_sum += cost
+        return cost_sum
+
     def add_cost(self, simulator, host, cost):
         """
         @brief adds cost of power consumption to
@@ -86,7 +103,7 @@ class Module(module.Module):
         return self.consumption_costs[simulator]
 
     # def set_all_costs(self, consumption_costs):
-    #     self.consumption_costs = copy.deepcopy(consumption_costs)
+    # self.consumption_costs = copy.deepcopy(consumption_costs)
 
     def get_all_hosts_consumption(self, simulator):
         hosts = simulator.context.hosts

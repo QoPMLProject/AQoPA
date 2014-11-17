@@ -101,66 +101,21 @@ class SingleVersionPanel(wx.Panel):
                 all_costs[host] = calculate_cost_for_host(simulator, host, cost_per_kWh)
             return all_costs
 
-        def get_min_cost(all_costs):
-            hosts = simulator.context.hosts
-            host = hosts[0]
-            min_cost = all_costs[hosts[0]]
-            for h in hosts :
-                if all_costs[h] < min_cost :
-                    min_cost = all_costs[h]
-                    host = h
-            return host, min_cost
-
-        def get_max_cost(all_costs):
-            hosts = simulator.context.hosts
-            host = hosts[0]
-            max_cost = all_costs[hosts[0]]
-            for h in hosts :
-                if all_costs[h] > max_cost :
-                    max_cost = all_costs[h]
-                    host = h
-            return host, max_cost
-
-        def get_avg_cost(all_costs):
-            hosts = simulator.context.hosts
-            sum = 0.0
-            i = 0
-            for h in hosts :
-                sum += all_costs[h]
-                i += 1
-            return sum / i
-
-        def get_total_cost(all_costs):
-            hosts = simulator.context.hosts
-            sum = 0.0
-            for h in hosts :
-                sum += all_costs[h]
-            return sum
-
         versionName = self.versionsList.GetValue()
         simulator = self.versionSimulator[versionName]
         selected_host = self._GetSelectedHost(simulator)
         all_costs = calculate_all_costs(simulator, price)
 
-        minhost, mincost = get_min_cost(all_costs)
-        maxhost, maxcost = get_max_cost(all_costs)
-        curr_cost = all_costs[selected_host]
-        total_cost = get_total_cost(all_costs)
-        avg_cost = get_avg_cost(all_costs)
-
         # populate module with calculated costs
         for host in simulator.context.hosts :
             self.module.add_cost(simulator, host, all_costs[host])
 
-        # some kind of debugging
-        print "min cost: " + str(mincost) + " from host: " + minhost.name
-        print "max cost: " + str(maxcost) + " from host: " + maxhost.name
-        print "cost: " + str(curr_cost) + " from host " + selected_host.name
-        print "avg cost: " + str(avg_cost)
-        print "total cost: " + str(total_cost)
-
-        print "from module (min): " + str(self.module.get_min_cost(simulator))
-        print "from module (max): " + str(self.module.get_max_cost(simulator))
+        # get some financial info from module
+        mincost, minhost = self.module.get_min_cost(simulator)
+        maxcost, maxhost = self.module.get_max_cost(simulator)
+        total_cost = self.module.get_total_cost(simulator)
+        avg_cost = self.module.get_avg_cost(simulator)
+        curr_cost = all_costs[selected_host]
 
         # after all calculations, build the GUI
         title = "Financial Analysis for Host: "
