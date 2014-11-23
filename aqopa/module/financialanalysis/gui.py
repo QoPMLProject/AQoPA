@@ -134,7 +134,7 @@ class SingleVersionPanel(wx.Panel):
         #########################################################################
         infoLabel = "Cost for Host: "
         hostInfoLabel = wx.StaticText(cashPanel, label=infoLabel)
-        costLabel = str(all_costs[selected_host]) + " $"
+        costLabel ="%.15f" % all_costs[selected_host] + " $"
         hostCostLabel = wx.StaticText(cashPanel, label=costLabel)
         sizer1 = wx.BoxSizer(wx.HORIZONTAL)
         sizer1.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
@@ -145,7 +145,7 @@ class SingleVersionPanel(wx.Panel):
         #########################################################################
         infoLabel = "Minimal Version Cost (Host: " + minhost.original_name() + ")"
         hostInfoLabel = wx.StaticText(cashPanel, label=infoLabel)
-        costLabel = str(mincost) + " $"
+        costLabel ="%.15f" % mincost + " $"
         hostCostLabel = wx.StaticText(cashPanel, label=costLabel)
         sizer2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer2.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
@@ -156,7 +156,7 @@ class SingleVersionPanel(wx.Panel):
         #########################################################################
         infoLabel = "Maximal Version Cost (Host: " + maxhost.original_name() + ")"
         hostInfoLabel = wx.StaticText(cashPanel, label=infoLabel)
-        costLabel = str(maxcost) + " $"
+        costLabel ="%.15f" % maxcost + " $"
         hostCostLabel = wx.StaticText(cashPanel, label=costLabel)
         sizer3 = wx.BoxSizer(wx.HORIZONTAL)
         sizer3.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
@@ -167,7 +167,7 @@ class SingleVersionPanel(wx.Panel):
         #########################################################################
         infoLabel = "Average Version Cost: "
         hostInfoLabel = wx.StaticText(cashPanel, label=infoLabel)
-        costLabel = str(avg_cost) + " $"
+        costLabel ="%.15f" % avg_cost + " $"
         hostCostLabel = wx.StaticText(cashPanel, label=costLabel)
         sizer4 = wx.BoxSizer(wx.HORIZONTAL)
         sizer4.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
@@ -178,7 +178,7 @@ class SingleVersionPanel(wx.Panel):
         #########################################################################
         infoLabel = "Total Version Cost: "
         hostInfoLabel = wx.StaticText(cashPanel, label=infoLabel)
-        costLabel = str(total_cost) + " $"
+        costLabel ="%.15f" % total_cost + " $"
         hostCostLabel = wx.StaticText(cashPanel, label=costLabel)
         sizer5 = wx.BoxSizer(wx.HORIZONTAL)
         sizer5.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
@@ -194,23 +194,23 @@ class SingleVersionPanel(wx.Panel):
         #########################################################################
         # ESTIMATED COSTS
         #########################################################################
-        estimatedCostsBox = wx.StaticBox(cashPanel, label="Estimated Costs of CPU Power Consumption (7/24/365)")
-        estimatedCostsBoxSizer = wx.StaticBoxSizer(estimatedCostsBox, wx.VERTICAL)
+        # estimatedCostsBox = wx.StaticBox(cashPanel, label="Estimated Costs of CPU Power Consumption (7/24/365)")
+        # estimatedCostsBoxSizer = wx.StaticBoxSizer(estimatedCostsBox, wx.VERTICAL)
 
         #########################################################################
         # MAIN LAYOUT
         #########################################################################
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(actualCostsBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
-        mainSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
-        mainSizer.Add(estimatedCostsBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
+        mainSizer.Add(actualCostsBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
+        #mainSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+        # mainSizer.Add(estimatedCostsBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
 
         cashPanel.SetSizer(mainSizer)
         cashPanel.Layout()
         cashWindow.CentreOnScreen()
         cashWindow.AddPanel(cashPanel)
-        cashWindow.SetWindowSize(600, 350)
+        cashWindow.SetWindowSize(600, 300)
         cashWindow.Show()
 
     def _GetSelectedHost(self, simulator):

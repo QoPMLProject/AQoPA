@@ -124,6 +124,7 @@ class SingleVersionPanel(wx.Panel):
         co2Window = GeneralFrame(self, "Carbon Dioxide Emissions Analysis Results", title, "modules_results.png")
         co2Panel = wx.Panel(co2Window)
 
+        # conversion constant used to convert pounds to kgs
         conv_constant = 0.45539237
 
         # ########################################################################
@@ -132,18 +133,66 @@ class SingleVersionPanel(wx.Panel):
         actualEmissionsBox = wx.StaticBox(co2Panel, label="Actual Carbon Dioxide Emissions of CPU")
         actualEmissionsBoxSizer = wx.StaticBoxSizer(actualEmissionsBox, wx.VERTICAL)
         #########################################################################
-        # cost of the selected host
+        # emission of the selected host
         #########################################################################
         infoLabel = "Emission for Host: "
         hostInfoLabel = wx.StaticText(co2Panel, label=infoLabel)
-        co2Label ="%.2f" % all_emissions[selected_host] + " pounds / " + "%.2f" % all_emissions[selected_host] * conv_constant + " kg"
+        co2Label ="%.15f" % curr_emission + " pounds" # + " / " + "%.15f" % float(curr_emission * conv_constant) + " kg"
         hostCO2Label = wx.StaticText(co2Panel, label=co2Label)
         sizer1 = wx.BoxSizer(wx.HORIZONTAL)
         sizer1.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
         sizer1.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
         sizer1.Add(hostCO2Label, 0, wx.ALL | wx.EXPAND, 5)
+        #########################################################################
+        # minimal emission of version (minimal emissions of every host in given version)
+        #########################################################################
+        infoLabel = "Minimal Version Emission (Host: " + minhost.original_name() + ")"
+        hostInfoLabel = wx.StaticText(co2Panel, label=infoLabel)
+        co2Label ="%.15f" % minemission + " pounds" # + " / " + "%.15f" % float(minemission * conv_constant) + " kg"
+        hostCO2Label = wx.StaticText(co2Panel, label=co2Label)
+        sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer2.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
+        sizer2.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+        sizer2.Add(hostCO2Label, 0, wx.ALL | wx.EXPAND, 5)
+        #########################################################################
+        # maximal emission of version (maximal emissions of every host in given version)
+        #########################################################################
+        infoLabel = "Maximal Version Emission (Host: " + maxhost.original_name() + ")"
+        hostInfoLabel = wx.StaticText(co2Panel, label=infoLabel)
+        co2Label ="%.15f" % maxemission + " pounds" # + " / " + "%.15f" % float(maxemission * conv_constant) + " kg"
+        hostCO2Label = wx.StaticText(co2Panel, label=co2Label)
+        sizer3 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer3.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
+        sizer3.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+        sizer3.Add(hostCO2Label, 0, wx.ALL | wx.EXPAND, 5)
+        #########################################################################
+        # average version emission
+        #########################################################################
+        infoLabel = "Average Version Emission: "
+        hostInfoLabel = wx.StaticText(co2Panel, label=infoLabel)
+        co2Label ="%.15f" % avg_emission + " pounds" # + " / " + "%.15f" % float(avg_emission * conv_constant) + " kg"
+        hostCO2Label = wx.StaticText(co2Panel, label=co2Label)
+        sizer4 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer4.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
+        sizer4.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+        sizer4.Add(hostCO2Label, 0, wx.ALL | wx.EXPAND, 5)
+        #########################################################################
+        # total version emission
+        #########################################################################
+        infoLabel = "Total Version Emission: "
+        hostInfoLabel = wx.StaticText(co2Panel, label=infoLabel)
+        co2Label ="%.15f" % total_emission + " pounds" # + " / " + "%.15f" % float(total_emission * conv_constant) + " kg"
+        hostCO2Label = wx.StaticText(co2Panel, label=co2Label)
+        sizer5 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer5.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)
+        sizer5.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
+        sizer5.Add(hostCO2Label, 0, wx.ALL | wx.EXPAND, 5)
 
         actualEmissionsBoxSizer.Add(sizer1, 0, wx.ALL | wx.EXPAND, 5)
+        actualEmissionsBoxSizer.Add(sizer2, 0, wx.ALL | wx.EXPAND, 5)
+        actualEmissionsBoxSizer.Add(sizer3, 0, wx.ALL | wx.EXPAND, 5)
+        actualEmissionsBoxSizer.Add(sizer4, 0, wx.ALL | wx.EXPAND, 5)
+        actualEmissionsBoxSizer.Add(sizer5, 0, wx.ALL | wx.EXPAND, 5)
 
         #########################################################################
         # MAIN LAYOUT
@@ -157,7 +206,7 @@ class SingleVersionPanel(wx.Panel):
         co2Panel.Layout()
         co2Window.CentreOnScreen()
         co2Window.AddPanel(co2Panel)
-        co2Window.SetWindowSize(600, 350)
+        co2Window.SetWindowSize(600, 300)
         co2Window.Show()
 
     def _GetSelectedHost(self, simulator):
@@ -230,6 +279,7 @@ class SingleVersionPanel(wx.Panel):
         """ """
         widgets = []
         widgets.append(self.hostsList)
+        widgets.append(self.co2Box)
         widgets.append(self.hostsBox)
         widgets.append(self.chooseHostLbl)
 

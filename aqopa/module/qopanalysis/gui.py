@@ -51,13 +51,13 @@ class SingleVersionPanel(wx.Panel):
         # BUTTONS LAY
         #################
         self.showQoPBtn = wx.Button(self, label="Show")
-        self.launchSMEBtn = wx.Button(self, label="Evaluate")
         self.showQoPBtn.Bind(wx.EVT_BUTTON, self.OnShowQoPBtnClicked)
-        self.launchSMEBtn.Bind(wx.EVT_BUTTON, self.OnLaunchSMEClicked)
+        #self.launchSMEBtn = wx.Button(self, label="Evaluate")
+        #self.launchSMEBtn.Bind(wx.EVT_BUTTON, self.OnLaunchSMEClicked)
         buttonsSizer = wx.BoxSizer(wx.HORIZONTAL)
         buttonsSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
         buttonsSizer.Add(self.showQoPBtn, 0, wx.ALL | wx.EXPAND, 5)
-        buttonsSizer.Add(self.launchSMEBtn, 0, wx.ALL | wx.EXPAND, 5)
+        #buttonsSizer.Add(self.launchSMEBtn, 0, wx.ALL | wx.EXPAND, 5)
 
         #################
         # MAIN LAY
@@ -156,7 +156,7 @@ class SingleVersionPanel(wx.Panel):
         widgets.append(self.hostsList)
         widgets.append(self.hostsBox)
         widgets.append(self.showQoPBtn)
-        widgets.append(self.launchSMEBtn)
+        #widgets.append(self.launchSMEBtn)
         widgets.append(self.qopParamsBox)
         widgets.append(self.chooseHostLbl)
 
@@ -213,7 +213,7 @@ class SingleVersionPanel(wx.Panel):
 
         # some kind of debugging
         #print "Occured facts from GUI: "+str(self._GetoOccuredFacts(simulator))
-        print "All facts from GUI: "+str(self._GetAllFacts(simulator))
+        #print "All facts from GUI: "+str(self._GetAllFacts(simulator))
 
     def _GetAllFacts(self, simulator):
         return self.module.get_all_facts()
