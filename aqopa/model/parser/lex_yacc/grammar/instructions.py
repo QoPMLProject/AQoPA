@@ -9,7 +9,7 @@ from aqopa.model import AssignmentInstruction,\
     CommunicationInstruction,\
     WhileInstruction, IfInstruction, ContinueInstruction, FinishInstruction,\
     CallFunctionInstruction, COMMUNICATION_TYPE_OUT, COMMUNICATION_TYPE_IN,\
-    HostSubprocess, CallFunctionExpression, IdentifierExpression
+    HostSubprocess, CallFunctionExpression, IdentifierExpression, BreakInstruction
 
 
 class Builder():
@@ -191,11 +191,14 @@ class ModelParserExtension(LexYaccParserExtension):
     def instruction_special_command(self, t):
         """
         instruction_special_command : CONTINUE SEMICOLON
+                                | BREAK SEMICOLON
                                 | STOP SEMICOLON
                                 | END SEMICOLON
         """
         if t[1].lower() == 'continue':
             t[0] = ContinueInstruction()
+        elif t[1].lower() == 'break':
+            t[0] = BreakInstruction()
         elif t[1].lower() == 'end':
             t[0] = FinishInstruction('end')
         elif t[1].lower() == 'stop':

@@ -235,6 +235,7 @@ class ModelParserExtension(LexYaccParserExtension):
         self.parser.add_reserved_word('if', 'IF', state='host')
         self.parser.add_reserved_word('else', 'ELSE', state='host')
         self.parser.add_reserved_word('continue', 'CONTINUE', state='host')
+        self.parser.add_reserved_word('break', 'BREAK', state='host')
         self.parser.add_reserved_word('stop', 'STOP', state='host')
         self.parser.add_reserved_word('end', 'END', state='host')
 
