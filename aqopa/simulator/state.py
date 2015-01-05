@@ -8,8 +8,8 @@ from aqopa.model import BooleanExpression, IdentifierExpression,\
     AssignmentInstruction, CommunicationInstruction, FinishInstruction,\
     ContinueInstruction, CallFunctionInstruction, IfInstruction,\
     WhileInstruction, HostSubprocess, COMMUNICATION_TYPE_OUT,\
-    original_name, name_indexes
-    
+    original_name, name_indexes, BreakInstruction
+
 from aqopa.simulator.error import RuntimeException
 
 class Context():
@@ -364,7 +364,7 @@ class InstructionsContext:
         """
         Returns currently executed instruction.
         """
-        return self._get_current_list().get_current_instruction()
+        return self._get_current_list().get_current_instruction() if self._get_current_list() is not None else None
         
     def get_process_of_current_list(self):
         """
@@ -396,7 +396,7 @@ class InstructionsContext:
                     self._get_current_list().goto_next_instruction()
             # And repeat this process
         # When moving to the next instruction in instructions context is finished
-        # update host's status - it may be
+        # update host's status - it may become finished
         self.host.check_if_finished()
 
     def finished(self):
@@ -727,9 +727,11 @@ class ContinueInstructionExecutor(InstructionExecutor):
     def execute_instruction(self, context, **kwargs):
         """ Overriden """
         instructions_context = context.get_current_host().get_current_instructions_context()
-        instructions_context.stack.pop()
-        instructions_context.goto_next_instruction()
-        
+        instruction = instructions_context.get_current_instruction()
+        while instruction and not isinstance(instruction, WhileInstruction):
+            instructions_context.stack.pop()
+            instruction = instructions_context.get_current_instruction()
+
         context.get_current_host().mark_changed()
 
         return ExecutionResult(consumes_cpu=True, 
@@ -738,6 +740,29 @@ class ContinueInstructionExecutor(InstructionExecutor):
     def can_execute_instruction(self, instruction):
         """ Overriden """
         return isinstance(instruction, ContinueInstruction)
+
+class BreakInstructionExecutor(InstructionExecutor):
+    """
+    Executes continue insructions.
+    """
+
+    def execute_instruction(self, context, **kwargs):
+        """ Overriden """
+        instructions_context = context.get_current_host().get_current_instructions_context()
+        instruction = instructions_context.get_current_instruction()
+        while instruction and not isinstance(instruction, WhileInstruction):
+            instructions_context.stack.pop()
+            instruction = instructions_context.get_current_instruction()
+        instructions_context.goto_next_instruction()
+
+        context.get_current_host().mark_changed()
+
+        return ExecutionResult(consumes_cpu=True,
+                               custom_index_management=True)
+
+    def can_execute_instruction(self, instruction):
+        """ Overriden """
+        return isinstance(instruction, BreakInstruction)
     
 class IfInstructionExecutor(InstructionExecutor):
     """
