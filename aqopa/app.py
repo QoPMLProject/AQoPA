@@ -21,8 +21,8 @@ from aqopa.simulator.state import Executor,\
     ProcessInstructionExecutor, SubprocessInstructionExecutor,\
     FinishInstructionExecutor, CommunicationInstructionExecutor,\
     ContinueInstructionExecutor, WhileInstructionExecutor, Host, Process,\
-    CallFunctionInstructionExecutor, PrintExecutor
-    
+    CallFunctionInstructionExecutor, PrintExecutor, BreakInstructionExecutor
+
 from aqopa.simulator.error import EnvironmentDefinitionException
 
 class Builder():
@@ -558,6 +558,7 @@ class Builder():
         e.append_instruction_executor(CommunicationInstructionExecutor())
         e.append_instruction_executor(FinishInstructionExecutor())
         e.append_instruction_executor(ContinueInstructionExecutor())
+        e.append_instruction_executor(BreakInstructionExecutor())
         e.append_instruction_executor(IfInstructionExecutor())
         e.append_instruction_executor(WhileInstructionExecutor())
         return e

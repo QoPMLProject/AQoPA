@@ -226,6 +226,14 @@ class ContinueInstruction():
     
     def __unicode__(self):
         return u"continue;"
+
+class BreakInstruction():
+
+    def clone(self):
+        return BreakInstruction()
+
+    def __unicode__(self):
+        return u"break;"
     
 class AssignmentInstruction():
     

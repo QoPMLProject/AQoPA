@@ -4,6 +4,11 @@
 
 Next release:
 
+v0.8.3 (2015-01-05)
+- Added break instruction and fixed continue instruction.
+- Fixed conditional expression grammar in reputation model.
+- Fixed typo in grammar: semicolon in function's qop params.
+
 v0.8.2 (2014-09-30)
 - Added LICENSE
 
