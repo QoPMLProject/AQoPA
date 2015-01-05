@@ -150,7 +150,7 @@ class ModelParserExtension(LexYaccParserExtension):
     def function_qopml_params_list(self, t):
         """
         function_qopml_params_list : function_qop_param
-                    | function_qopml_params_list function_qop_param
+                    | function_qopml_params_list SEMICOLON function_qop_param
         """
         if len(t) > 2:
             t[0] = t[1] 
