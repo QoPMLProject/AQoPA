@@ -1,0 +1,12 @@
+<model>
+	<name>Roller Coaster SHM WSN</name>
+	<author>Damian Rusinek, Bogdan Ksiezopolski</author>
+	<author_email>damian.rusinek@gmail.com, bogdan.ksiezopolski@acm.org</author_email>
+	<description><![CDATA[The model presents wireless sensor network deployed on roller coaster for structural health monitoring. The aim of network is to collect acoustic data which is later analyzed for cracks. 
+]]></description>
+	<files>
+		<model>model.qopml</model>
+		<metrics>metrics.qopml</metrics>
+		<versions>versions.qopml</versions>
+	</files>
+</model>
