@@ -1,0 +1,96 @@
+
+metrics {
+
+conf (MicaZ) {
+	CPU = 8MHz ATmega128L;
+}
+
+conf (IMote2_104MHz) {
+	CPU = PXA271 XScale® processor @ 104 MHz;
+}
+
+data(MicaZ) {
+    primhead[function][size:exact(B)];
+    primitive[nonce][4];
+    primitive[id][1];
+    primitive[dh_key][16];
+    primitive[empty_list][0];
+    primitive[empty][0];
+    primitive[params][3];
+    #
+    primhead[function][size:sum_ratio];
+    primitive[add_to_list][1:1,2:1];
+    #
+    primhead[function][size:ratio];
+    primitive[pop_list][1:1];
+    #
+    primhead[function][size:exact(B)][time:exact(ms)];
+    primitive[collect_ae_data][200][1000]; % samples: 100, sample size: 2B
+    #
+    primhead[function][time:exact(ms)];
+    primitive[wait_one_millisec][1];
+    #
+    primhead[function][key_size][size:exact(b)];
+    primitive[pk][160][320];
+    primitive[ecies_temp_key][160][128];
+    primitive[ecies_mac][160][160];
+    #
+    primhead[function][alg][mode][key_size][time:block(ms,B)][size:ratio];
+    primitive[s_enc][AES][CTR][128][1:25.2:16][1:1];
+    #
+    primhead[function][alg][mode][key_size][time:block(ms,B)][size:nested];
+    primitive[s_dec][AES][CTR][128][1:25.2:16][1:1];
+    #
+    primhead[function][alg][inside_algorithm][key_size][time:exact(ms)][size:ratio];
+    primitive[a_enc][ECIES][AES][160][3907.46][1:1];
+    #
+    primhead[function][alg][inside_algorithm][key_size][time:exact(ms)][size:nested];
+    primitive[a_dec][ECIES][AES][160][2632.66][1:1];
+    #
+    primhead[function][current:exact(mA)];
+    primitive[cpu][8];
+}
+
+data(IMote2_104MHz) {
+    primhead[function][size:exact(B)];
+    primitive[nonce][4];
+    primitive[id][1];
+    primitive[dh_key][16];
+    primitive[empty_list][0];
+    primitive[empty][0];
+    primitive[params][3];
+    #
+    primhead[function][size:sum_ratio];
+    primitive[add_to_list][1:1,2:1];
+    #
+    primhead[function][size:ratio];
+    primitive[pop_list][1:1];
+    #
+    primhead[function][size:exact(B)][time:exact(ms)];
+    primitive[collect_ae_data][200][1000]; % freq.: 100Hz, sample size: 2B
+    #
+    primhead[function][time:exact(ms)];
+    primitive[wait_one_millisec][1];
+    #
+    primhead[function][key_size][size:exact(b)];
+    primitive[pk][160][320];
+    primitive[ecies_temp_key][160][128];
+    primitive[ecies_mac][160][160];
+    #
+    primhead[function][alg][mode][key_size][time:block(ms,B)][size:ratio];
+    primitive[s_enc][AES][CTR][128][1:1.9:16][1:1];
+    #
+    primhead[function][alg][mode][key_size][time:block(ms,B)][size:nested];
+    primitive[s_dec][AES][CTR][128][1:1.9:16][1:1];
+    #
+    primhead[function][alg][inside_algorithm][key_size][time:exact(ms)][size:ratio];
+    primitive[a_enc][ECIES][AES][160][92.06][1:1];
+    #
+    primhead[function][alg][inside_algorithm][key_size][time:exact(ms)][size:nested];
+    primitive[a_dec][ECIES][AES][160][58.15][1:1];
+    #
+    primhead[function][current:exact(mA)];
+    primitive[cpu][66];
+}
+
+}

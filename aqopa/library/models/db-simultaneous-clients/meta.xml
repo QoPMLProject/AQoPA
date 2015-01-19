@@ -1,7 +1,7 @@
 <model>
 	<name>DB Simultaneous Clients</name>
-	<author>Damian Rusinek</author>
-	<author_email>Damian.Rusinek@gmail.com</author_email>
+	<author>Damian Rusinek, Bogdan Ksiezopolski</author>
+	<author_email>damian.rusinek@gmail.com, bogdan.ksiezopolski@acm.org</author_email>
 	<description><![CDATA[Model analyses different configurations and scenarios of protocol retrieving and searching informations in encrypted database. Model examines the server load, depending on the number of concurrent client connections.
 
 One can imagine that database stores the details of company customers while employees use devices (e.g. smartphones) with thin clients to obtain information about particular customers.

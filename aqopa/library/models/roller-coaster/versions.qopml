@@ -1,0 +1,110 @@
+versions 
+{
+
+  % MicaZ
+
+  % LOW SECURITY LEVEL: No encrption
+  version NoEnc
+  {
+    set host Sink(MicaZ);
+    set host Sensor(MicaZ);
+    
+    run host Sink(*) {
+      run Main(RetrieveData_NoEnc)
+    }
+    run host Sensor(*){400} {
+      run Main(DataCollection_NoEnc)
+    }
+    run host Manager(*) {
+      run Main()
+    }
+  }
+
+  % MID SECURITY LEVEL: Symmetric Encrption
+  version SEnc
+  {
+    set host Sink(MicaZ);
+    set host Sensor(MicaZ);
+    
+    run host Sink(*) {
+      run Main(RetrieveData_SEnc)
+    }
+    run host Sensor(*){400} {
+      run Main(DataCollection_SEnc)
+    }
+    run host Manager(*) {
+      run Main()
+    }
+  }
+  
+  % HIGH SECURITY LEVEL: Asymmetric Encrption
+  version AEnc
+  {
+    set host Sink(MicaZ);
+    set host Sensor(MicaZ);
+    
+    run host Sink(*) {
+      run Main(RetrieveData_AEnc)
+    }
+    run host Sensor(*){400} {
+      run Main(DataCollection_AEnc)
+    }
+    run host Manager(*) {
+      run Main()
+    }
+  }
+
+  % IMote2 104MHz
+
+  % LOW SECURITY LEVEL: No encrption
+  version NoEnc
+  {
+    set host Sink(IMote2_104MHz);
+    set host Sensor(IMote2_104MHz);
+    
+    run host Sink(*) {
+      run Main(RetrieveData_NoEnc)
+    }
+    run host Sensor(*){400} {
+      run Main(DataCollection_NoEnc)
+    }
+    run host Manager(*) {
+      run Main()
+    }
+  }
+
+  % MID SECURITY LEVEL: Symmetric Encrption
+  version SEnc
+  {
+    set host Sink(IMote2_104MHz);
+    set host Sensor(IMote2_104MHz);
+    
+    run host Sink(*) {
+      run Main(RetrieveData_SEnc)
+    }
+    run host Sensor(*){400} {
+      run Main(DataCollection_SEnc)
+    }
+    run host Manager(*) {
+      run Main()
+    }
+  }
+  
+  % HIGH SECURITY LEVEL: Asymmetric Encrption
+  version AEnc
+  {
+    set host Sink(IMote2_104MHz);
+    set host Sensor(IMote2_104MHz);
+    
+    run host Sink(*) {
+      run Main(RetrieveData_AEnc)
+    }
+    run host Sensor(*){400} {
+      run Main(DataCollection_AEnc)
+    }
+    run host Manager(*) {
+      run Main()
+    }
+  }
+
+}
