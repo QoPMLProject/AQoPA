@@ -4,6 +4,9 @@
 
 Next release:
 
+v0.8.4 (2015-01-19)
+- Added model: roller coaster.
+
 v0.8.3 (2015-01-05)
 - Added break instruction and fixed continue instruction.
 - Fixed conditional expression grammar in reputation model.
