@@ -1,0 +1,269 @@
+functions
+{
+    % List operations
+    fun empty_list();
+    fun add_to_list(list, element);
+    fun get_from_list(list);
+    fun pop_list(list);
+    fun is_list_empty(list);
+
+    % Messages types
+    fun hello_msg();
+    fun confirm_msg();
+    fun data_req_msg();
+    fun data_resp_msg();
+    fun nodes_msg();
+    
+    fun empty(); % function representing no data
+
+    % SHM
+    fun collect_ae_data(); % returns acoustic emission data that has been sensed by sensor
+
+    fun nonce(); % generates nonce
+    fun sk(host_id); % secret key of id
+    fun pk(sk); % public key for sk secret key
+    
+    fun a_enc(data, PK); % asymetric encryption
+    fun a_dec(data, SK); % asymetric decryption
+    fun ecies_temp_key(); % generates temporary key for encryption
+    fun ecies_mac(); % generates MAC for encrypted message
+    
+    fun s_enc(data, K); % symmetric encryption
+    fun s_dec(data, K); % symmetric decryption
+
+    fun dh_key(PK_ID1, SK_ID2); %generates Diffie-Hellman key between two nodes ID1 and ID2 using their public and secret keys
+
+}
+equations
+{
+    % List equations
+    eq get_from_list(add_to_list(L, E)) = E;
+    eq pop_list(add_to_list(L, E)) = L;
+    eq is_list_empty(empty_list()) = true;
+	
+    % asymmetric equations
+    eq a_dec(a_enc(data, pk(SK)), SK) = data;
+
+    % symmetric equations
+    eq s_dec(s_enc(data, K), K) = data;
+
+    % DH keys symmetric enc/dec
+    eq s_dec(s_enc(data, dh_key(pk(sk(ID1)), sk(ID2))), dh_key(pk(sk(ID2)), sk(ID1))) = data;
+}
+channels
+{
+    channel ch_WSN(0)[wsn];
+    channel ch_MGNT(*)[mgnt];
+}
+hosts
+{
+
+    host Sensor(rr)(*)
+    {
+      # KEY = nonce();
+      # MY_SK = sk(id());
+      # MY_PK = pk(sk(id()));
+      
+      # SINK_PK = pk(sk(id(Sink)));
+      # NETWORK_KEY = nonce();
+      
+      process Main(*)
+      {
+	  % Communication with manager
+	  MY_DATA = (id(), id(Manager), hello_msg(), MY_PK);
+	  out(ch_MGNT:MY_DATA);
+	  wait_one_millisec();
+	  MY_DATA = (id(), id(Manager), confirm_msg());
+	  out(ch_MGNT:MY_DATA);
+	  
+	  subprocess DataCollection_NoEnc(*) {
+	    in(ch_WSN: DATA_REQ: |*, id(), data_req_msg()|);
+	    
+	    DATA = collect_ae_data();
+	    DATA_MSG = (id(), DATA_REQ[0], data_resp_msg(), DATA);
+	    out(ch_WSN: DATA_MSG);
+	  }
+	  
+	  subprocess DataCollection_SEnc(*) {
+	    in(ch_WSN: DATA_REQ_MSG: |*, id(), data_req_msg()|);
+	    REQ_DATA_ENC = DATA_REQ_MSG[3];
+	    REQ_DATA = s_dec(REQ_DATA_ENC, NETWORK_KEY)[AES,CTR,128];
+	    
+	    RESP_DATA = (REQ_DATA[0], id(), collect_ae_data());
+	    RESP_DATA_ENC = s_enc(RESP_DATA,NETWORK_KEY)[AES,CTR,128];
+	    
+	    RESP_DATA_MSG = (id(), DATA_REQ_MSG[0], data_resp_msg(), RESP_DATA_ENC);
+	    out(ch_WSN: RESP_DATA_MSG);
+	  }
+	  
+	  subprocess DataCollection_AEnc(*) {
+	    DHKEY_Sink_Sensor = dh_key(SINK_PK, MY_SK);
+
+	    in(ch_WSN: DATA_REQ_MSG: |*, id(), data_req_msg()|);
+	    REQ_DATA_ENC = DATA_REQ_MSG[3];
+	    REQ_DATA = s_dec(REQ_DATA_ENC, DHKEY_Sink_Sensor)[AES,CTR,128];
+	    
+	    RESP_DATA = (REQ_DATA[0], id(), collect_ae_data());
+	    RESP_DATA_ENC = a_enc(RESP_DATA,SINK_PK)[ECIES,AES,160];
+	    RESP_DATA_ENC_FULL = (RESP_DATA_ENC, ecies_temp_key()[160], ecies_mac()[160]);
+	    
+	    RESP_DATA_MSG = (id(), DATA_REQ_MSG[0], data_resp_msg(), RESP_DATA_ENC_FULL);
+	    out(ch_WSN: RESP_DATA_MSG);
+	  }
+      }
+
+    }
+
+    host Sink(rr)(*) 
+    {
+      # KEY = nonce();
+      # MY_SK = sk(id());
+      
+      # NETWORK_KEY = nonce();
+
+      process Main(*)
+      {
+	in(ch_MGNT: NODES_MSG: |*, id(), nodes_msg()|);
+	NODES_LIST = NODES_MSG[3];
+	PKS_LIST = NODES_MSG[4];
+
+	TMP_NODES_LIST = NODES_LIST;
+	TMP_PKS_LIST = PKS_LIST;
+	while (is_list_empty(TMP_NODES_LIST) != true) {
+	  NODE_ID = get_from_list(TMP_NODES_LIST);
+	  TMP_NODES_LIST = pop_list(TMP_NODES_LIST);
+	  
+	  NODE_PK = get_from_list(TMP_PKS_LIST);
+	  TMP_PKS_LIST = pop_list(TMP_PKS_LIST);
+	  
+	  subprocess RetrieveData_NoEnc(*) {
+	    REQ_MSG = (id(), NODE_ID, data_req_msg(), empty());
+	    out(ch_WSN: REQ_MSG);
+	    in(ch_WSN: RESP_MSG: |*, id(), data_resp_msg()|);
+	    DATA = RESP_MSG[3];
+	  }
+	  
+	  subprocess RetrieveData_SEnc(*) {
+	    REQ_NONCE = nonce();
+	    REQ = (REQ_NONCE, id());
+	    REQ_ENC = s_enc(REQ, NETWORK_KEY)[AES,CTR,128];
+	    REQ_MSG = (id(), NODE_ID, data_req_msg(), REQ_ENC);
+	    out(ch_WSN: REQ_MSG);
+	    
+	    in(ch_WSN: RESP_MSG: |*, id(), data_resp_msg()|);
+	    DATA_RESP_ENC = RESP_MSG[3];
+	    DATA_RESP = s_dec(DATA_RESP_ENC, NETWORK_KEY)[AES,CTR,128];
+	    
+	    if (REQ_NONCE != DATA_RESP[0]) {
+	      stop;
+	    }
+	    if (NODE_ID != DATA_RESP[1]) {
+	      stop;
+	    }
+
+	    DATA = DATA_RESP[2];
+	  }
+	  
+	  subprocess RetrieveData_AEnc(*) {
+	    DHKEY_Sink_Sensor = dh_key(NODE_PK, MY_SK);
+
+	    REQ_NONCE = nonce();
+	    REQ = (REQ_NONCE, id());
+	    REQ_ENC = s_enc(REQ, DHKEY_Sink_Sensor)[AES,CTR,128];
+	    REQ_MSG = (id(), NODE_ID, data_req_msg(), REQ_ENC);
+	    out(ch_WSN: REQ_MSG);
+	    
+	    in(ch_WSN: RESP_MSG: |*, id(), data_resp_msg()|);
+	    DATA_RESP_ENC_FULL = RESP_MSG[3];
+	    DATA_RESP_ENC = DATA_RESP_ENC_FULL[0];
+
+	    DATA_RESP = a_dec(DATA_RESP_ENC, MY_SK)[ECIES,AES,160];
+	    
+	    if (REQ_NONCE != DATA_RESP[0]) {
+	      stop;
+	    }
+	    if (NODE_ID != DATA_RESP[1]) {
+	      stop;
+	    }
+
+	    DATA = DATA_RESP[2];
+	  }
+	  
+	}
+      }
+    }
+
+    host Manager(rr)(*) 
+    {
+
+	process Main(*) 
+	{
+	    % Create list of all sensors
+	    NODES_LIST = empty_list();
+	    
+	    % Create list of all sensors' public keys
+	    PKS_LIST = empty_list();
+	    
+	    while (true) {
+	      in(ch_MGNT: SENSOR_INFO: |*, id()|);
+	      
+	      if (SENSOR_INFO[2] == hello_msg()) {
+		NODES_LIST = add_to_list(NODES_LIST, SENSOR_INFO[0]);
+		PKS_LIST = add_to_list(PKS_LIST, SENSOR_INFO[3]);
+	      } else {
+		% Send list of nodes to sink
+		NODES_MSG = (id(), id(Sink), nodes_msg(), NODES_LIST, PKS_LIST);
+		out(ch_MGNT: NODES_MSG);
+		break;
+	      }
+	    }
+	}
+    }
+
+}
+
+communication {
+  medium[wsn] {
+    default_q = 1;
+    default_time = wsn_time [ms];
+    default_listening_current = 0.02 mA;
+    default_sending_current = 17.4 mA;
+    default_receiving_current = 19.7 mA;
+  
+    topology {
+      Sink <-> Sensor;
+    }
+  }
+  
+  medium[mgnt] {
+    default_q = 1;
+    default_time = 0ms;
+    default_listening_current = 0 mA; 
+    default_sending_current = 0 mA;
+    default_receiving_current = 0 mA;
+      
+    topology {
+      Manager <-> Sink;
+      Manager <-> Sensor;
+    }
+  }
+}
+
+algorithms {
+    alg wsn_time(msg) {
+	msg_size = size(msg[3]); 
+	xtime = 0;
+	while (msg_size > 0) {
+	    sending = 18;
+	    one_size = 110;
+	    if (msg_size < one_size) {
+		one_size = msg_size;
+	    }
+	    transmitting = one_size * 0.12;
+	    xtime = xtime + sending + transmitting;
+	    msg_size = msg_size - 110;
+	}
+	return xtime;
+    }
+}
+
