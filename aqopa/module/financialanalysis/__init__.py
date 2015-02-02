@@ -62,23 +62,29 @@ class Module(module.Module):
 
     def get_min_cost(self, simulator):
         hosts = simulator.context.hosts
-        host = hosts[0]
-        min_cost = self.consumption_costs[simulator][hosts[0]]
-        for h in hosts:
-            if self.consumption_costs[simulator][h] < min_cost:
-                min_cost = self.consumption_costs[simulator][h]
-                host = h
-        return min_cost[0], host
+        if len(hosts) > 0 :
+            host = hosts[0]
+            min_cost = self.consumption_costs[simulator][hosts[0]]
+            for h in hosts:
+                if self.consumption_costs[simulator][h] < min_cost:
+                    min_cost = self.consumption_costs[simulator][h]
+                    host = h
+            return min_cost[0], host
+        else :
+            return 0, None
 
     def get_max_cost(self, simulator):
         hosts = simulator.context.hosts
-        host = hosts[0]
-        max_cost = self.consumption_costs[simulator][hosts[0]]
-        for h in hosts:
-            if self.consumption_costs[simulator][h] > max_cost:
-                max_cost = self.consumption_costs[simulator][h]
-                host = h
-        return max_cost[0], host
+        if len(hosts) > 0 :
+            host = hosts[0]
+            max_cost = self.consumption_costs[simulator][hosts[0]]
+            for h in hosts:
+                if self.consumption_costs[simulator][h] > max_cost:
+                    max_cost = self.consumption_costs[simulator][h]
+                    host = h
+            return max_cost[0], host
+        else :
+            return 0, None
 
     def get_avg_cost(self, simulator):
         hosts = simulator.context.hosts
@@ -88,7 +94,10 @@ class Module(module.Module):
             for cost in self.consumption_costs[simulator][host]:
                 cost_sum += cost
                 i += 1
-        return cost_sum / i
+        if i != 0 :
+            return cost_sum / i
+        else :
+            return 0
 
     def get_total_cost(self, simulator):
         hosts = simulator.context.hosts
