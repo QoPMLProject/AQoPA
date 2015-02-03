@@ -77,34 +77,10 @@ class SingleVersionPanel(wx.Panel):
                           'Error', wx.OK | wx.ICON_ERROR)
             return
 
-        def convert_to_joules(milijoules):
-            return milijoules / 1000.0
-
-        def convert_to_kWh(joules):
-            return joules / 3600000.0
-
-        def calculate_cost(consumed_joules, cost_per_kWh):
-            kWhs = convert_to_kWh(consumed_joules)
-            cost = kWhs * cost_per_kWh
-            return cost
-
-        def calculate_cost_for_host(simulator, host, cost_per_kWh):
-            all_consumptions = self.module.get_all_hosts_consumption(simulator)
-            joules = convert_to_joules(all_consumptions[host])
-            cost_for_host = calculate_cost(joules, cost_per_kWh)
-            return cost_for_host
-
-        def calculate_all_costs(simulator, cost_per_kWh):
-            hosts = simulator.context.hosts
-            all_costs = {}
-            for host in hosts:
-                all_costs[host] = calculate_cost_for_host(simulator, host, cost_per_kWh)
-            return all_costs
-
         versionName = self.versionsList.GetValue()
         simulator = self.versionSimulator[versionName]
         selected_host = self._GetSelectedHost(simulator)
-        all_costs = calculate_all_costs(simulator, price)
+        all_costs = self.module.calculate_all_costs(simulator, simulator.context.hosts, price)
 
         # populate module with calculated costs
         for host in simulator.context.hosts:

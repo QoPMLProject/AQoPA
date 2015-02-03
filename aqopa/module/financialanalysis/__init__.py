@@ -19,6 +19,13 @@ class Module(module.Module):
         self.guis = {}
         self.energyanalysis_module = energyanalysis_module
         self.consumption_costs = {}
+        self.cost_per_kWh = 0
+
+    def get_cost_per_kWh(self):
+        return self.cost_per_kWh
+
+    def set_cost_per_kWh(self, cost_per_kWh):
+        self.cost_per_kWh = cost_per_kWh
 
     def get_gui(self):
         if not getattr(self, '__gui', None):
@@ -41,6 +48,29 @@ class Module(module.Module):
         """ Install module for gui simulation """
         self._install(simulator)
         return simulator
+
+    def convert_to_joules(self, milijoules):
+        return milijoules / 1000.0
+
+    def convert_to_kWh(self, joules):
+        return joules / 3600000.0
+
+    def calculate_cost(self, consumed_joules, cost_per_kWh):
+        kWhs = self.convert_to_kWh(consumed_joules)
+        cost = kWhs * cost_per_kWh
+        return cost
+
+    def calculate_cost_for_host(self, simulator, host, cost_per_kWh):
+        all_consumptions = self.get_all_hosts_consumption(simulator)
+        joules = self.convert_to_joules(all_consumptions[host])
+        cost_for_host = self.calculate_cost(joules, cost_per_kWh)
+        return cost_for_host
+
+    def calculate_all_costs(self, simulator, hosts, cost_per_kWh):
+        all_costs = {}
+        for host in hosts:
+            all_costs[host] = self.calculate_cost_for_host(simulator, host, cost_per_kWh)
+        return all_costs
 
     def add_cost(self, simulator, host, cost):
         """

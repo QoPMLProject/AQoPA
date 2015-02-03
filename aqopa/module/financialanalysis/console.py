@@ -24,4 +24,6 @@ class PrintResultsHook(Hook):
         self.output_file.write('Module\tFinance Analysis')
         self.output_file.write('\n')
         self.output_file.write('Version\t%s\n' % self.simulator.context.version.name)
-        # to be continued ...
+
+        # default cost 
+        cost_per_kWh = 0.15
