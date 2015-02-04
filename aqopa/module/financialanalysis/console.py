@@ -35,7 +35,14 @@ class PrintResultsHook(Hook):
         totalcost = self.module.get_total_cost(self.simulator, context.hosts)
         avgcost = self.module.get_avg_cost(self.simulator, context.hosts)
 
-        self.output_file.write("Minimal cost :")
+        self.output_file.write("Minimal cost:" + str(mincost) + " for host: " + minhost.original_name())
+        self.output_file.write("Maximal cost:" + str(maxcost) + " for host: " + maxhost.original_name())
+        self.output_file.write("Total cost:" + str(totalcost))
+        self.output_file.write("Average cost:" + str(avgcost))
+
+        self.output_file.write("\nActual costs:\n")
 
         for host, cost in context.hosts, costs:
             self.output_file.write("Host: " + host.original_name() + ", Cost: " + str(cost) + " $\n")
+
+        self.output_file.write("\n")

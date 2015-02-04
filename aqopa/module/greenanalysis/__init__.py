@@ -12,6 +12,13 @@ class Module(module.Module):
         self.guis = {}
         self.energyanalysis_module = energyanalysis_module
         self.carbon_dioxide_emissions = {}
+        self.pounds_of_co2_per_kWh = 0
+
+    def get_pounds_of_co2_per_kWh(self):
+        return self.pounds_of_co2_per_kWh
+
+    def set_pounds_of_co2_per_kWh(self, pounds_of_co2_per_kWh):
+        self.pounds_of_co2_per_kWh = pounds_of_co2_per_kWh
 
     def get_gui(self):
         if not getattr(self, '__gui', None):
@@ -34,6 +41,30 @@ class Module(module.Module):
         """ Install module for gui simulation """
         self._install(simulator)
         return simulator
+
+    def __convert_to_joules(self, millijoules):
+        return millijoules / 1000.0
+
+    def __convert_to_kWh(self, joules):
+        return joules / 3600000.0
+
+    def calculate_emission(self, consumed_joules, pounds_of_co2_per_kWh):
+        kWhs = self.__convert_to_kWh(consumed_joules)
+        pounds = kWhs * pounds_of_co2_per_kWh
+        return pounds
+
+    def calculate_emission_for_host(self, simulator, host, pounds_of_co2_per_kWh):
+        all_consumptions = self.module.get_all_hosts_consumption(simulator)
+        joules = self.__convert_to_joules(all_consumptions[host])
+        pounds_for_host = self.__calculate_emission(joules, pounds_of_co2_per_kWh)
+        return pounds_for_host
+
+    def calculate_all_emissions(self, simulator, pounds_of_co2_per_kWh):
+        hosts = simulator.context.hosts
+        all_emissions = {}
+        for host in hosts:
+            all_emissions[host] = self.calculate_emission_for_host(simulator, host, pounds_of_co2_per_kWh)
+        return all_emissions
 
     def add_co2_emission(self, simulator, host, co2_emission):
         # add a new simulator if not available yet
