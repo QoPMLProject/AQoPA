@@ -87,10 +87,10 @@ class SingleVersionPanel(wx.Panel):
             self.module.add_cost(simulator, host, all_costs[host])
 
         # get some financial info from module
-        mincost, minhost = self.module.get_min_cost(simulator)
-        maxcost, maxhost = self.module.get_max_cost(simulator)
-        total_cost = self.module.get_total_cost(simulator)
-        avg_cost = self.module.get_avg_cost(simulator)
+        mincost, minhost = self.module.get_min_cost(simulator, simulator.context.hosts)
+        maxcost, maxhost = self.module.get_max_cost(simulator, simulator.context.hosts)
+        total_cost = self.module.get_total_cost(simulator, simulator.context.hosts)
+        avg_cost = self.module.get_avg_cost(simulator, simulator.context.hosts)
         curr_cost = all_costs[selected_host]
 
         # after all calculations, build the GUI

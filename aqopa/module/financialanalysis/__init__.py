@@ -49,20 +49,20 @@ class Module(module.Module):
         self._install(simulator)
         return simulator
 
-    def convert_to_joules(self, milijoules):
+    def __convert_to_joules(self, milijoules):
         return milijoules / 1000.0
 
-    def convert_to_kWh(self, joules):
+    def __convert_to_kWh(self, joules):
         return joules / 3600000.0
 
     def calculate_cost(self, consumed_joules, cost_per_kWh):
-        kWhs = self.convert_to_kWh(consumed_joules)
+        kWhs = self.__convert_to_kWh(consumed_joules)
         cost = kWhs * cost_per_kWh
         return cost
 
     def calculate_cost_for_host(self, simulator, host, cost_per_kWh):
         all_consumptions = self.get_all_hosts_consumption(simulator)
-        joules = self.convert_to_joules(all_consumptions[host])
+        joules = self.__convert_to_joules(all_consumptions[host])
         cost_for_host = self.calculate_cost(joules, cost_per_kWh)
         return cost_for_host
 
@@ -90,8 +90,7 @@ class Module(module.Module):
         if cost not in self.consumption_costs[simulator][host] and cost:
             self.consumption_costs[simulator][host].append(cost)
 
-    def get_min_cost(self, simulator):
-        hosts = simulator.context.hosts
+    def get_min_cost(self, simulator, hosts):
         if len(hosts) > 0 :
             host = hosts[0]
             min_cost = self.consumption_costs[simulator][hosts[0]]
@@ -103,8 +102,7 @@ class Module(module.Module):
         else :
             return 0, None
 
-    def get_max_cost(self, simulator):
-        hosts = simulator.context.hosts
+    def get_max_cost(self, simulator, hosts):
         if len(hosts) > 0 :
             host = hosts[0]
             max_cost = self.consumption_costs[simulator][hosts[0]]
@@ -116,8 +114,7 @@ class Module(module.Module):
         else :
             return 0, None
 
-    def get_avg_cost(self, simulator):
-        hosts = simulator.context.hosts
+    def get_avg_cost(self, simulator, hosts):
         cost_sum = 0.0
         i = 0
         for host in hosts:
@@ -129,8 +126,7 @@ class Module(module.Module):
         else :
             return 0
 
-    def get_total_cost(self, simulator):
-        hosts = simulator.context.hosts
+    def get_total_cost(self, simulator, hosts):
         cost_sum = 0.0
         for host in hosts:
             for cost in self.consumption_costs[simulator][host]:
