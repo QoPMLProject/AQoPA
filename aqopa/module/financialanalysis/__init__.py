@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 
-import copy
 from aqopa import module
-from aqopa.module import energyanalysis
 from .gui import ModuleGui
-from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED, HOOK_TYPE_PRE_INSTRUCTION_EXECUTION
-from aqopa.module.energyanalysis.console import PrintResultsHook
 from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED
+from .console import PrintResultsHook
 
 """
 @file       __init__.py

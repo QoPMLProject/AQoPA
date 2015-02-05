@@ -2,10 +2,8 @@
 
 from aqopa import module
 from .gui import ModuleGui
-from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED, HOOK_TYPE_PRE_INSTRUCTION_EXECUTION
-from aqopa.module.energyanalysis.console import PrintResultsHook
 from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED
-
+from .console import PrintResultsHook
 
 class Module(module.Module):
     def __init__(self, energyanalysis_module):
@@ -88,7 +86,6 @@ class Module(module.Module):
         return min_cost[0], host
 
     def get_max_emission(self, simulator, hosts):
-        hosts = simulator.context.hosts
         host = hosts[0]
         max_cost = self.carbon_dioxide_emissions[simulator][hosts[0]]
         for h in hosts:

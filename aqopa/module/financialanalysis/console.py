@@ -28,7 +28,6 @@ class PrintResultsHook(Hook):
         # default cost per one kilowatt-hour
         cost_per_kWh = 0.15
 
-        # # calculate costs for every host: total, min, max, avg
         # costs = self.module.calculate_all_costs(self.simulator, context.hosts, cost_per_kWh)
         # mincost, minhost = self.module.get_min_cost(self.simulator, context.hosts)
         # maxcost, maxhost = self.module.get_max_cost(self.simulator, context.hosts)

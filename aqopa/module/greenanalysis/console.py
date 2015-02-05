@@ -21,7 +21,11 @@ class PrintResultsHook(Hook):
 
         self.output_file.write('-'*20)
         self.output_file.write('\n')
-        self.output_file.write('Module\tCarbon Dioxide Emissions Analysis')
+        self.output_file.write('Module\tCarbon Dioxide Emissions Analysis (pounds of CO2 produced per kWh)')
         self.output_file.write('\n')
         self.output_file.write('Version\t%s\n' % self.simulator.context.version.name)
-        # to be continued ...
+
+        # temp default value
+        pounds_of_co2_per_kWh = 1.85
+
+        emissions = self.module.get_all_emissions(self.simulator)
