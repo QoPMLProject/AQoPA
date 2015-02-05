@@ -110,7 +110,7 @@ class SingleVersionPanel(wx.Panel):
         #########################################################################
         infoLabel = "Cost for Host: "
         hostInfoLabel = wx.StaticText(cashPanel, label=infoLabel)
-        costLabel ="%.15f" % all_costs[selected_host] + " $"
+        costLabel ="%.15f" % curr_cost + " $"
         hostCostLabel = wx.StaticText(cashPanel, label=costLabel)
         sizer1 = wx.BoxSizer(wx.HORIZONTAL)
         sizer1.Add(hostInfoLabel, 0, wx.ALL | wx.EXPAND, 5)

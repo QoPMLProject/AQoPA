@@ -13,7 +13,7 @@ from aqopa.model.parser import ModelParserException,\
     MetricsParserException, ConfigurationParserException
 from aqopa.app import Builder, ConsoleInterpreter
 from aqopa.simulator import EnvironmentDefinitionException
-from aqopa.module import timeanalysis, energyanalysis, reputation, qopanalysis
+from aqopa.module import timeanalysis, energyanalysis, reputation, financialanalysis, greenanalysis, qopanalysis
 
 
 class ProgressThread(threading.Thread):
@@ -68,12 +68,14 @@ def run(qopml_model, qopml_metrics, qopml_configuration,
 
     # Prepare all available modules
 
+    # here you can add modules to the console version of AQoPA
     time_module = timeanalysis.Module()
     energy_module = energyanalysis.Module(time_module)
     reputation_module = reputation.Module()
-    #qop_module = qopanalysis.Module()
+    financial_module = financialanalysis.Module(energy_module)
+    green_module = greenanalysis.Module(energy_module)
 
-    available_modules = [time_module, energy_module, reputation_module]
+    available_modules = [time_module, energy_module, reputation_module, financial_module, green_module]
 
     ############### DEBUG ###############    
     if debug:
@@ -105,7 +107,9 @@ def run(qopml_model, qopml_metrics, qopml_configuration,
         interpreter.register_qopml_module(time_module)
         interpreter.register_qopml_module(energy_module)
         interpreter.register_qopml_module(reputation_module)
-        
+        interpreter.register_qopml_module(financial_module)
+        interpreter.register_qopml_module(green_module)
+
         interpreter.parse(available_modules)
         interpreter.prepare()
         

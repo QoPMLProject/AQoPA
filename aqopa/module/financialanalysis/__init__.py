@@ -2,6 +2,7 @@
 
 import copy
 from aqopa import module
+from aqopa.module import energyanalysis
 from .gui import ModuleGui
 from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED, HOOK_TYPE_PRE_INSTRUCTION_EXECUTION
 from aqopa.module.energyanalysis.console import PrintResultsHook
@@ -12,7 +13,6 @@ from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED
 @brief      initial file for the financialanalysis module
 @author     Katarzyna Mazur
 """
-
 
 class Module(module.Module):
     def __init__(self, energyanalysis_module):
@@ -61,7 +61,7 @@ class Module(module.Module):
         return cost
 
     def calculate_cost_for_host(self, simulator, host, cost_per_kWh):
-        all_consumptions = self.get_all_hosts_consumption(simulator)
+        all_consumptions = self.get_all_hosts_consumption(simulator, simulator.context.hosts)
         joules = self.__convert_to_joules(all_consumptions[host])
         cost_for_host = self.calculate_cost(joules, cost_per_kWh)
         return cost_for_host
@@ -141,8 +141,7 @@ class Module(module.Module):
     # def set_all_costs(self, consumption_costs):
     # self.consumption_costs = copy.deepcopy(consumption_costs)
 
-    def get_all_hosts_consumption(self, simulator):
-        hosts = simulator.context.hosts
+    def get_all_hosts_consumption(self, simulator, hosts):
         voltage = self.energyanalysis_module.get_voltage()
         consumptions = self.energyanalysis_module.get_hosts_consumptions(simulator, hosts, voltage)
         return consumptions

@@ -21,28 +21,28 @@ class PrintResultsHook(Hook):
 
         self.output_file.write('-'*20)
         self.output_file.write('\n')
-        self.output_file.write('Module\tFinance Analysis')
+        self.output_file.write('Module\tFinance Analysis (cost in $)')
         self.output_file.write('\n')
         self.output_file.write('Version\t%s\n' % self.simulator.context.version.name)
 
         # default cost per one kilowatt-hour
         cost_per_kWh = 0.15
 
-        # calculate costs for every host: total, min, max, avg
-        costs = self.module.calculate_all_costs(self.simulator, context.hosts, cost_per_kWh)
-        mincost, minhost = self.module.get_min_cost(self.simulator, context.hosts)
-        maxcost, maxhost = self.module.get_max_cost(self.simulator, context.hosts)
-        totalcost = self.module.get_total_cost(self.simulator, context.hosts)
-        avgcost = self.module.get_avg_cost(self.simulator, context.hosts)
-
-        self.output_file.write("Minimal cost:" + str(mincost) + " for host: " + minhost.original_name())
-        self.output_file.write("Maximal cost:" + str(maxcost) + " for host: " + maxhost.original_name())
-        self.output_file.write("Total cost:" + str(totalcost))
-        self.output_file.write("Average cost:" + str(avgcost))
-
-        self.output_file.write("\nActual costs:\n")
-
-        for host, cost in context.hosts, costs:
-            self.output_file.write("Host: " + host.original_name() + ", Cost: " + str(cost) + " $\n")
-
-        self.output_file.write("\n")
+        # # calculate costs for every host: total, min, max, avg
+        # costs = self.module.calculate_all_costs(self.simulator, context.hosts, cost_per_kWh)
+        # mincost, minhost = self.module.get_min_cost(self.simulator, context.hosts)
+        # maxcost, maxhost = self.module.get_max_cost(self.simulator, context.hosts)
+        # totalcost = self.module.get_total_cost(self.simulator, context.hosts)
+        # avgcost = self.module.get_avg_cost(self.simulator, context.hosts)
+        #
+        # self.output_file.write("Minimal cost:" + str(mincost) + " for host: " + minhost.original_name())
+        # self.output_file.write("Maximal cost:" + str(maxcost) + " for host: " + maxhost.original_name())
+        # self.output_file.write("Total cost:" + str(totalcost))
+        # self.output_file.write("Average cost:" + str(avgcost))
+        #
+        # self.output_file.write("\nActual costs:\n")
+        #
+        # for host, cost in context.hosts, costs:
+        #     self.output_file.write("Host: " + host.original_name() + ", Cost: " + str(cost) + " $\n")
+        #
+        # self.output_file.write("\n")

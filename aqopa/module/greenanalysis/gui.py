@@ -77,44 +77,20 @@ class SingleVersionPanel(wx.Panel):
                           'Error', wx.OK | wx.ICON_ERROR)
             return
 
-        def convert_to_joules(milijoules):
-            return milijoules / 1000.0
-
-        def convert_to_kWh(joules):
-            return joules / 3600000.0
-
-        def calculate_emission(consumed_joules, pounds_of_co2_per_kWh):
-            kWhs = convert_to_kWh(consumed_joules)
-            pounds = kWhs * pounds_of_co2_per_kWh
-            return pounds
-
-        def calculate_emission_for_host(simulator, host, pounds_of_co2_per_kWh):
-            all_consumptions = self.module.get_all_hosts_consumption(simulator)
-            joules = convert_to_joules(all_consumptions[host])
-            pounds_for_host = calculate_emission(joules, pounds_of_co2_per_kWh)
-            return pounds_for_host
-
-        def calculate_all_emissions(simulator, pounds_of_co2_per_kWh):
-            hosts = simulator.context.hosts
-            all_emissions = {}
-            for host in hosts:
-                all_emissions[host] = calculate_emission_for_host(simulator, host, pounds_of_co2_per_kWh)
-            return all_emissions
-
         versionName = self.versionsList.GetValue()
         simulator = self.versionSimulator[versionName]
         selected_host = self._GetSelectedHost(simulator)
-        all_emissions = calculate_all_emissions(simulator, co2)
+        all_emissions = self.module.calculate_all_emissions(simulator, simulator.context.hosts, co2)
 
         # populate module with calculated costs
         for host in simulator.context.hosts:
             self.module.add_co2_emission(simulator, host, all_emissions[host])
 
         # get some financial info from module
-        minemission, minhost = self.module.get_min_emission(simulator)
-        maxemission, maxhost = self.module.get_max_emission(simulator)
-        total_emission = self.module.get_total_emission(simulator)
-        avg_emission = self.module.get_avg_emission(simulator)
+        minemission, minhost = self.module.get_min_emission(simulator, simulator.context.hosts)
+        maxemission, maxhost = self.module.get_max_emission(simulator, simulator.context.hosts)
+        total_emission = self.module.get_total_emission(simulator, simulator.context.hosts)
+        avg_emission = self.module.get_avg_emission(simulator, simulator.context.hosts)
         curr_emission = all_emissions[selected_host]
 
         # after all calculations, build the GUI

@@ -40,7 +40,7 @@ class MainNotebook(wx.Notebook):
         ###########
 
 
-        # create and add some aqopa modules
+        # here you can add modules to the GUI version of AQoPA
         self.availableModules = []
 
         # add time analysis module
