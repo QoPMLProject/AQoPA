@@ -82,10 +82,6 @@ class SingleVersionPanel(wx.Panel):
         selected_host = self._GetSelectedHost(simulator)
         all_emissions = self.module.calculate_all_emissions(simulator, simulator.context.hosts, co2)
 
-        # populate module with calculated costs
-        for host in simulator.context.hosts:
-            self.module.add_co2_emission(simulator, host, all_emissions[host])
-
         # get some financial info from module
         minemission, minhost = self.module.get_min_emission(simulator, simulator.context.hosts)
         maxemission, maxhost = self.module.get_max_emission(simulator, simulator.context.hosts)

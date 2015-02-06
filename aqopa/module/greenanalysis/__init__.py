@@ -61,6 +61,7 @@ class Module(module.Module):
         all_emissions = {}
         for host in hosts:
             all_emissions[host] = self.calculate_emission_for_host(simulator, host, pounds_of_co2_per_kWh)
+            self.add_co2_emission(simulator, host, all_emissions[host])
         return all_emissions
 
     def add_co2_emission(self, simulator, host, co2_emission):
@@ -101,7 +102,10 @@ class Module(module.Module):
             for cost in self.carbon_dioxide_emissions[simulator][host]:
                 cost_sum += cost
                 i += 1
-        return cost_sum / i
+        if i != 0 :
+            return cost_sum / i
+        else :
+            return 0
 
     def get_total_emission(self, simulator, hosts):
         cost_sum = 0.0

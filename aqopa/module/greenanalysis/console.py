@@ -23,9 +23,24 @@ class PrintResultsHook(Hook):
         self.output_file.write('\n')
         self.output_file.write('Module\tCarbon Dioxide Emissions Analysis (pounds of CO2 produced per kWh)')
         self.output_file.write('\n')
-        self.output_file.write('Version\t%s\n' % self.simulator.context.version.name)
+        self.output_file.write('Version\t%s\n\n' % self.simulator.context.version.name)
 
         # temp default value
         pounds_of_co2_per_kWh = 1.85
 
-        emissions = self.module.get_all_emissions(self.simulator)
+        emissions = self.module.calculate_all_emissions(self.simulator, context.hosts, pounds_of_co2_per_kWh)
+
+        minemission, minhost = self.module.get_min_emission(self.simulator, context.hosts)
+        maxemission, maxhost = self.module.get_max_emission(self.simulator, context.hosts)
+        totalemission = self.module.get_total_emission(self.simulator, context.hosts)
+        avgemission = self.module.get_avg_emission(self.simulator, context.hosts)
+
+        self.output_file.write('Minimal emission:\t{0} (pounds/kWh)\tHost: {1:}\t\n'.format(str(minemission), minhost.name))
+        self.output_file.write('Maximal emission: \t{0} (pounds/kWh)\tHost: {1:}\t\n'.format(str(maxemission), maxhost.name))
+        self.output_file.write('Total emission:\t\t{0} (pounds/kWh)\n'.format(str(totalemission)))
+        self.output_file.write('Average emission:\t{0} (pounds/kWh)\n'.format(str(avgemission)))
+
+        self.output_file.write("\nActual emissions:\n")
+        for host in context.hosts:
+            self.output_file.write('{0}\t\t{1:}\t'.format(host.name, str(emissions[host])))
+            self.output_file.write("\n")

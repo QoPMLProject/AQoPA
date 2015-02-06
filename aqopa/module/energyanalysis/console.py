@@ -26,6 +26,7 @@ class PrintResultsHook(Hook):
         self.output_file.write('\n')
 
         voltage = 3.0
+        self.module.set_voltage(voltage)
 
         consumptions = self.module.get_hosts_consumptions(self.simulator, context.hosts, voltage)
         for h in context.hosts:
