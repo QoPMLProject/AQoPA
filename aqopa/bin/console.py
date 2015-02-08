@@ -72,7 +72,7 @@ def run(qopml_model, qopml_metrics, qopml_configuration,
     time_module = timeanalysis.Module()
     energy_module = energyanalysis.Module(time_module)
     reputation_module = reputation.Module()
-   # financial_module = financialanalysis.Module(energy_module)
+    financial_module = financialanalysis.Module(energy_module)
     green_module = greenanalysis.Module(energy_module)
 
     available_modules = [time_module, energy_module, reputation_module, green_module]
@@ -107,7 +107,7 @@ def run(qopml_model, qopml_metrics, qopml_configuration,
         interpreter.register_qopml_module(time_module)
         interpreter.register_qopml_module(energy_module)
         interpreter.register_qopml_module(reputation_module)
-       # interpreter.register_qopml_module(financial_module)
+        interpreter.register_qopml_module(financial_module)
         interpreter.register_qopml_module(green_module)
 
         interpreter.parse(available_modules)
