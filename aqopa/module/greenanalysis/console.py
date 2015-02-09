@@ -21,7 +21,7 @@ class PrintResultsHook(Hook):
 
         self.output_file.write('-'*20)
         self.output_file.write('\n')
-        self.output_file.write('Module\tCarbon Dioxide Emissions Analysis (pounds of CO2 produced per kWh)')
+        self.output_file.write('Module\tCarbon Dioxide Emissions Analysis\n(pounds of CO2 produced per kWh)')
         self.output_file.write('\n')
         self.output_file.write('Version\t%s\n\n' % self.simulator.context.version.name)
 
