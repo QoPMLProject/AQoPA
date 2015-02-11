@@ -14,7 +14,6 @@ from .console import PrintResultsHook
 
 class Module(module.Module):
     def __init__(self, energyanalysis_module):
-        self.guis = {}
         self.energyanalysis_module = energyanalysis_module
         self.consumption_costs = {}
         self.cost_per_kWh = 0
