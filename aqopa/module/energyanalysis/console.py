@@ -18,7 +18,7 @@ class PrintResultsHook(Hook):
     def execute(self, context, **kwargs):
         """ """
 
-        self.output_file.write('-'*20)
+        self.output_file.write('-'*80)
         self.output_file.write('\n')
         self.output_file.write('Module\tEnergy Analysis (consumption in J)')
         self.output_file.write('\n')

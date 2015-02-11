@@ -74,8 +74,9 @@ def run(qopml_model, qopml_metrics, qopml_configuration,
     reputation_module = reputation.Module()
     financial_module = financialanalysis.Module(energy_module)
     green_module = greenanalysis.Module(energy_module)
+    qop_module = qopanalysis.Module()
 
-    available_modules = [time_module, energy_module, reputation_module, green_module]
+    available_modules = [time_module, energy_module, reputation_module, green_module, qop_module]
 
     ############### DEBUG ###############    
     if debug:
@@ -109,6 +110,7 @@ def run(qopml_model, qopml_metrics, qopml_configuration,
         interpreter.register_qopml_module(reputation_module)
         interpreter.register_qopml_module(financial_module)
         interpreter.register_qopml_module(green_module)
+        interpreter.register_qopml_module(qop_module)
 
         interpreter.parse(available_modules)
         interpreter.prepare()

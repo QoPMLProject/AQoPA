@@ -82,10 +82,6 @@ class SingleVersionPanel(wx.Panel):
         selected_host = self._GetSelectedHost(simulator)
         all_costs = self.module.calculate_all_costs(simulator, simulator.context.hosts, price)
 
-        # populate module with calculated costs
-        for host in simulator.context.hosts:
-            self.module.add_cost(simulator, host, all_costs[host])
-
         # get some financial info from module
         mincost, minhost = self.module.get_min_cost(simulator, simulator.context.hosts)
         maxcost, maxhost = self.module.get_max_cost(simulator, simulator.context.hosts)

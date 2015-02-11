@@ -19,9 +19,9 @@ class PrintResultsHook(Hook):
     def execute(self, context, **kwargs):
         """ """
 
-        self.output_file.write('-'*20)
+        self.output_file.write('-'*80)
         self.output_file.write('\n')
-        self.output_file.write('Module\tCarbon Dioxide Emissions Analysis\n(pounds of CO2 produced per kWh)')
+        self.output_file.write('Module\tCarbon Dioxide Emissions Analysis (pounds of CO2 produced per kWh)')
         self.output_file.write('\n')
         self.output_file.write('Version\t%s\n\n' % self.simulator.context.version.name)
 
@@ -35,10 +35,10 @@ class PrintResultsHook(Hook):
         totalemission = self.module.get_total_emission(self.simulator, context.hosts)
         avgemission = self.module.get_avg_emission(self.simulator, context.hosts)
 
-        self.output_file.write('Minimal emission:\t{0} (pounds/kWh)\tHost: {1:}\t\n'.format(str(minemission), minhost.name))
-        self.output_file.write('Maximal emission: \t{0} (pounds/kWh)\tHost: {1:}\t\n'.format(str(maxemission), maxhost.name))
-        self.output_file.write('Total emission:\t\t{0} (pounds/kWh)\n'.format(str(totalemission)))
-        self.output_file.write('Average emission:\t{0} (pounds/kWh)\n'.format(str(avgemission)))
+        self.output_file.write('Minimal emission:\t{0}\tHost: {1:}\t\n'.format(str(minemission), minhost.name))
+        self.output_file.write('Maximal emission: \t{0}\tHost: {1:}\t\n'.format(str(maxemission), maxhost.name))
+        self.output_file.write('Total emission:\t\t{0}\n'.format(str(totalemission)))
+        self.output_file.write('Average emission:\t{0}\n'.format(str(avgemission)))
 
         self.output_file.write("\nActual emissions:\n")
         for host in context.hosts:
