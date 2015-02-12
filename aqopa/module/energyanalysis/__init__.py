@@ -397,7 +397,7 @@ class Module(module.Module):
                         hosts_consumption[host]['energy'] += energy_consumption
                         hosts_consumption[host]['amp-hour'] += amp_hour
 
-                    # Remove surplus consumtpion
+                    # Remove surplus consumption
                     hosts_consumption[host]['energy'] -= consumptions_to_remove['energy']
                     hosts_consumption[host]['amp-hour'] -= consumptions_to_remove['amp-hour']
 
