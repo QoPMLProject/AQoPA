@@ -116,9 +116,9 @@ class ModelDescriptionPanel(wx.Panel):
         cancelButton = wx.Button(self, label="Close")
 
         # create static texts aka labels
-        moduleNameLabel = wx.StaticText(self, label="Name:   ")
+        moduleNameLabel = wx.StaticText(self, label="Name: ")
         moduleAuthorsNameLabel = wx.StaticText(self, label="Author: ")
-        moduleAuthorsEmailLabel = wx.StaticText(self, label="E-mail:   ")
+        moduleAuthorsEmailLabel = wx.StaticText(self, label="E-mail: ")
 
         # create font for static texts = same as default panel font, just bold
         defSysFont = self.GetFont()
@@ -154,24 +154,24 @@ class ModelDescriptionPanel(wx.Panel):
 
         # align name label and name
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(moduleNameLabel, 0, wx.ALL | wx.TOP, 5)
-        sizer.AddSpacer(__verticalSpace)
-        sizer.Add(self.moduleNameText, 0, wx.ALL | wx.TOP, 5)
-        modelGeneralInfoBoxSizer.Add(sizer, 0, wx.LEFT)
+        sizer.Add(moduleNameLabel, 0, wx.ALL | wx.LEFT, 5)
+        sizer.Add(wx.StaticText(self), 0, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(self.moduleNameText, 1, wx.ALL | wx.ALIGN_CENTRE_HORIZONTAL, 5)
+        modelGeneralInfoBoxSizer.Add(sizer, 0, wx.ALL | wx.EXPAND, 5)
 
         # align author label and author
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(moduleAuthorsNameLabel, 0, wx.ALL | wx.TOP, 5)
-        sizer.AddSpacer(__verticalSpace)
-        sizer.Add(self.moduleAuthorsNameText, 0, wx.ALL | wx.TOP, 5)
-        modelGeneralInfoBoxSizer.Add(sizer, 0, wx.LEFT)
+        sizer.Add(moduleAuthorsNameLabel, 0, wx.ALL | wx.LEFT, 5)
+        sizer.Add(wx.StaticText(self), 0, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(self.moduleAuthorsNameText, 1, wx.ALL | wx.ALIGN_CENTRE_HORIZONTAL, 5)
+        modelGeneralInfoBoxSizer.Add(sizer, 0, wx.ALL | wx.EXPAND, 5)
 
         # align email label and email
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(moduleAuthorsEmailLabel, 0, wx.ALL | wx.TOP, 5)
-        sizer.AddSpacer(__verticalSpace)
-        sizer.Add(self.moduleAuthorsEmailText, 0, wx.ALL | wx.TOP, 5)
-        modelGeneralInfoBoxSizer.Add(sizer, 0, wx.LEFT)
+        sizer.Add(moduleAuthorsEmailLabel, 0, wx.ALL | wx.LEFT, 5)
+        sizer.Add(wx.StaticText(self), 0, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(self.moduleAuthorsEmailText, 1, wx.ALL | wx.ALIGN_CENTRE_HORIZONTAL, 5)
+        modelGeneralInfoBoxSizer.Add(sizer, 0, wx.ALL | wx.EXPAND, 5)
 
         # add group box 'general model info' at the top of the 'model's about' group box
         modelAboutBoxSizer.Add(modelGeneralInfoBoxSizer, 0, wx.ALL | wx.TOP | wx.EXPAND, 10)

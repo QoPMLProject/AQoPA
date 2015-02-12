@@ -29,7 +29,7 @@ class ResultsPanel(wx.Panel):
         self.modulesChooserBoxSizer = wx.StaticBoxSizer(self.modulesChooserBox, wx.HORIZONTAL)
 
         # create combobox, empty at first
-        self.modulesChooserComboBox = wx.ComboBox(self, style=wx.TE_READONLY, size=(-1, 20))
+        self.modulesChooserComboBox = wx.ComboBox(self, style=wx.TE_READONLY)
         # clear combo, do not remember prev choices
         self.modulesChooserComboBox.Clear()
         # DO NOT select, selecting can mess up many things

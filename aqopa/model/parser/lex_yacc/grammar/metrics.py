@@ -16,7 +16,9 @@ class Builder():
         """
         metrics_configuration : METRICS_CONFIGURATION LPARAN IDENTIFIER RPARAN BLOCKOPEN metrics_configuration_params BLOCKCLOSE
         """
-        return MetricsConfiguration(token[3], token[6])
+        hostname = token[3]
+        host_conf_params = token[6]
+        return MetricsConfiguration(hostname, host_conf_params)
     
     def create_metrics_data(self, token):
         """

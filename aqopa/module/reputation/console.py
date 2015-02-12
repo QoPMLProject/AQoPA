@@ -17,12 +17,12 @@ class PrintResultsHook(Hook):
         
     def execute(self, context, **kwargs):
         """ """
-        self.output_file.write('-'*20)
+        self.output_file.write('-'*80)
         self.output_file.write('\n')
         self.output_file.write('Module\tReputation')
         self.output_file.write('\n')
-        self.output_file.write('Version\t%s\n' % self.simulator.context.version.name)
-        self.output_file.write('\n')
+        self.output_file.write('Version\t%s\n\n' % self.simulator.context.version.name)
+
         for h in context.hosts:
             self.output_file.write('{0}:'.format(h.name))
             variables = self.module.get_host_vars(h)

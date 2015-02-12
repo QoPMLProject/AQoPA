@@ -1,11 +1,13 @@
+#!/bin/env/python
+
+import copy
+#from aqopa.simulator.error import RuntimeException
+
 '''
 Created on 23-04-2013
 
 @author: Damian Rusinek <damian.rusinek@gmail.com>
 '''
-
-import copy
-#from aqopa.simulator.error import RuntimeException
 
 ################################################
 #             Names functions
@@ -499,7 +501,7 @@ class MetricsSet():
     
     def __init__(self, host_name, configuration_name):
         self.host_name = host_name
-        self.configuration_name = configuration_name     
+        self.configuration_name = configuration_name
     
     def __unicode__(self):
         return u"set host %s (%s) { ... }" % (self.host_name, self.configuration_name)
@@ -554,7 +556,7 @@ class MetricsPrimitiveHeader():
 class MetricsServiceParam():
     
     def __init__(self, service_name, param_name, unit=None):
-        self.service_name = service_name 
+        self.service_name = service_name
         self.param_name = param_name
         self.unit = unit
         

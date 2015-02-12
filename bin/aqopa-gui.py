@@ -6,7 +6,9 @@ Created on 31-10-2013
 
 import sys
 import os
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 from aqopa import cmd
+
 cmd.gui_command()

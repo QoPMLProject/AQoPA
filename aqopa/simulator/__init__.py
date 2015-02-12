@@ -32,7 +32,7 @@ class Simulator():
         """
         Execute all hooks of given type.
         Pre instruction and post instruction hooks 
-        cannot be executet manually.
+        cannot be executed manually.
         """
         
         if hook_type not in self._hooks:

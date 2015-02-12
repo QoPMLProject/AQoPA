@@ -126,7 +126,7 @@ class Manager():
                         call_function_expression.qop_arguments))
                 
         if len(normal_metrics) + len(plus_metrics) + len(star_metrics) > 1:
-            raise RuntimeException("Found many metrics for function '%s' with qop arguments: %s." \
+            raise RuntimeException("Found many metrics for function '%s' with qopanalysis arguments: %s." \
                                    % (call_function_expression.function_name,
                                       ', '.join(call_function_expression.qop_arguments)))
         

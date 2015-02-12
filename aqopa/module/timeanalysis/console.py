@@ -18,11 +18,11 @@ class PrintResultsHook(Hook):
     def execute(self, context, **kwargs):
         """ """
 
-        self.output_file.write('-'*20)
+        self.output_file.write('-'*80)
         self.output_file.write('\n')
         self.output_file.write('Module\tTime Analysis (time in s)')
         self.output_file.write('\n')
-        self.output_file.write('Version\t%s\n' % self.simulator.context.version.name)
+        self.output_file.write('Version\t%s\n\n' % self.simulator.context.version.name)
         
         if self.simulator.infinite_loop_occured():
             self.output_file.write('ERROR\tInfinite loop on {0} -> {1}\n'.format(
