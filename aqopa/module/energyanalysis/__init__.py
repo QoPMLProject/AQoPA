@@ -15,6 +15,13 @@ class Module(module.Module):
         """ """
         self.guis = {}                                  # Divided by simulators - the reason for dict
         self.timeanalysis_module = timeanalysis_module
+        self.voltage = 0
+
+    def get_voltage(self):
+        return self.voltage
+
+    def set_voltage(self, voltage):
+        self.voltage = voltage
 
     def get_gui(self):
         if not getattr(self, '__gui', None):
@@ -23,7 +30,7 @@ class Module(module.Module):
     
     def extend_metrics_parser(self, parser):
         """
-        Overriden
+        Overridden
         """
         parser.add_extension(MetricsParserExtension())
         return parser
@@ -192,7 +199,7 @@ class Module(module.Module):
                                 while j < len(unsorted_time_tuples):
                                     tt = unsorted_time_tuples[j]
                                     if tt[0] > t[1]:
-                                        unsorted_time_tuples.inssert(j, new_tuple)
+                                        unsorted_time_tuples.insert(j, new_tuple)
                                         added = True
                                         break
                                     j += 1
@@ -219,7 +226,7 @@ class Module(module.Module):
                         while j < len(unsorted_time_tuples):
                             tt = unsorted_time_tuples[j]
                             if tt[0] > current_time_to:
-                                unsorted_time_tuples.inssert(j, new_tuple)
+                                unsorted_time_tuples.insert(j, new_tuple)
                                 added = True
                                 break
                             j += 1
@@ -294,7 +301,7 @@ class Module(module.Module):
 
         # Traverse timetraces
         # Additionaly create list of finish times of instructions for each host
-        # (List of times when instructions has been finished)  
+        # (List of times when instructions has been finished)  ze co
 
         for timetrace in timetraces:
             
@@ -390,7 +397,7 @@ class Module(module.Module):
                         hosts_consumption[host]['energy'] += energy_consumption
                         hosts_consumption[host]['amp-hour'] += amp_hour
 
-                    # Remove surplus consumtpion
+                    # Remove surplus consumption
                     hosts_consumption[host]['energy'] -= consumptions_to_remove['energy']
                     hosts_consumption[host]['amp-hour'] -= consumptions_to_remove['amp-hour']
 

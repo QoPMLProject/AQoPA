@@ -42,10 +42,12 @@ class SingleVersionPanel(wx.Panel):
         #################
         
         versionBox = wx.StaticBox(self, label="Version")
+        versionsLabel = wx.StaticText(self, label="Choose Version To See\nAnalysis Results:")
         self.versionsList = wx.ComboBox(self, style=wx.TE_READONLY)
         self.versionsList.Bind(wx.EVT_COMBOBOX, self.OnVersionChanged)
-        
-        versionBoxSizer = wx.StaticBoxSizer(versionBox, wx.VERTICAL)
+        versionBoxSizer = wx.StaticBoxSizer(versionBox, wx.HORIZONTAL)
+        versionBoxSizer.Add(versionsLabel, 0, wx.ALL | wx.ALIGN_CENTER, 5)
+        versionBoxSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
         versionBoxSizer.Add(self.versionsList, 1, wx.ALL | wx.ALIGN_CENTER, 5)
 
         ##################################
@@ -69,17 +71,13 @@ class SingleVersionPanel(wx.Panel):
         consumptionsHBoxSizer.Add(operationBoxSizer, 0, wx.ALL | wx.EXPAND)
         consumptionsHBoxSizer.Add(hostsBoxSizer, 1, wx.ALL | wx.EXPAND)
         
-        self.showConsumptionBtn = wx.Button(self, label="Show energy conspumption")
+        self.showConsumptionBtn = wx.Button(self, label="Show")
         self.showConsumptionBtn.Bind(wx.EVT_BUTTON, self.OnShowConsumptionButtonClicked)
-
-        self.consumptionsResultBox = wx.StaticBox(self, label="Results")
-        self.consumptionsResultBoxSizer = wx.StaticBoxSizer(self.consumptionsResultBox, wx.VERTICAL)
         
         consumptionsBoxSizer.Add(voltageHBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
         consumptionsBoxSizer.Add(consumptionsHBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
         consumptionsBoxSizer.Add(wx.StaticText(self), 1, wx.EXPAND, 5)
         consumptionsBoxSizer.Add(self.showConsumptionBtn, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
-        consumptionsBoxSizer.Add(self.consumptionsResultBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(versionBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
@@ -96,7 +94,6 @@ class SingleVersionPanel(wx.Panel):
         """ """
         version = simulator.context.version
         self.versionsList.Append(version.name)
-        
         self.versionSimulator[version.name] = simulator
         
     def OnVersionChanged(self, event):
@@ -124,6 +121,7 @@ class SingleVersionPanel(wx.Panel):
             wx.MessageBox("Voltage '%s' is incorrect float number. Please correct it." % voltageText, 
                           'Error', wx.OK | wx.ICON_ERROR)
             return
+        self.module.set_voltage(voltage)
         
         if self.oneECRB.GetValue():
             self.ShowHostsConsumption(simulator, hosts, voltage)
@@ -232,7 +230,6 @@ class SingleVersionPanel(wx.Panel):
         widgets.append(self.maxECRB)
         widgets.append(self.hostsBox)
         widgets.append(self.showConsumptionBtn)
-        widgets.append(self.consumptionsResultBox)
         widgets.append(self.voltageLabel)
         widgets.append(self.voltageInput)
         
@@ -249,7 +246,7 @@ class SingleVersionPanel(wx.Panel):
     #################
         
     def _GetSelectedHosts(self, simulator):
-        """ Returns list of hosts selected by user """
+        """ Returns list of hosts selected by the user """
         
         def ValidateHostsRange(indexesRange):
             """ """
@@ -432,11 +429,11 @@ class MainResultsNotebook(wx.Notebook):
     """ """
     def __init__(self, module, *args, **kwargs):
         wx.Notebook.__init__(self, *args, **kwargs)
-        
+
         self.module = module
 
-        il = wx.ImageList(20, 20)
-        singleVersionImg = il.Add(wx.Bitmap(self.CreatePath4Resource('PuzzlePiece.png'), wx.BITMAP_TYPE_PNG))
+        il = wx.ImageList(24,24)
+        singleVersionImg = il.Add(wx.Bitmap(self.CreatePath4Resource('energy.png'), wx.BITMAP_TYPE_PNG))
         self.AssignImageList(il)
 
         self.oneVersionTab = SingleVersionPanel(self.module, self)

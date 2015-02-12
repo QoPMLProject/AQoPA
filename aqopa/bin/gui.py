@@ -39,8 +39,11 @@ class MainNotebook(wx.Notebook):
         # MODULES
         ###########
 
+
+        # here you can add modules to the GUI version of AQoPA
         self.availableModules = []
 
+        # add time analysis module
         from aqopa.module import timeanalysis
         timeanalysis_module = timeanalysis.Module()
         timeanalysis_module.get_gui().Bind(EVT_MODULE_SIMULATION_REQUEST,
@@ -49,12 +52,28 @@ class MainNotebook(wx.Notebook):
                                            self.OnModuleSimulationFinished)
         self.availableModules.append(timeanalysis_module)
 
+        # add energy analysis module - it depends on time analysis module
         from aqopa.module import energyanalysis
-        m = energyanalysis.Module(timeanalysis_module)
-        self.availableModules.append(m)
+        energyanalysis_module = energyanalysis.Module(timeanalysis_module)
+        self.availableModules.append(energyanalysis_module)
 
+        # add reputation module
         from aqopa.module import reputation
         self.availableModules.append(reputation.Module())
+
+        # add qop module - KM
+        from aqopa.module import qopanalysis
+        self.availableModules.append(qopanalysis.Module())
+
+        # add finance module - it depends on energy analysis module - KM
+        from aqopa.module import financialanalysis
+        fm = financialanalysis.Module(energyanalysis_module)
+        self.availableModules.append(fm)
+
+        # add gogreen! module - it depends on energy analysis module - KM
+        from aqopa.module import greenanalysis
+        gm = greenanalysis.Module(energyanalysis_module)
+        self.availableModules.append(gm)
 
         # list containing notebook images:
         # .ico seem to be more OS portable, although we use .png here
@@ -204,14 +223,14 @@ class MainFrame(wx.Frame):
         libraryMenu = wx.Menu()
         # create models menu item
         item = wx.MenuItem(libraryMenu, wx.NewId(), u"&Browse models\tCTRL+M")
-        item.SetBitmap(wx.Bitmap(self.CreatePath4Resource('models_lib.png')))
+        item.SetBitmap(wx.Bitmap(self.CreatePath4Resource('lib.png')))
         libraryMenu.AppendItem(item)
         self.Bind(wx.EVT_MENU, self.OnBrowseModels, item)
 
         # create metric menu item
-        item = wx.MenuItem(libraryMenu, wx.NewId(), u"&Browse metrics\tCTRL+F")
-        item.SetBitmap(wx.Bitmap(self.CreatePath4Resource('metrics.png')))
-        libraryMenu.AppendItem(item)
+        # item = wx.MenuItem(libraryMenu, wx.NewId(), u"&Browse metrics\tCTRL+F")
+        # item.SetBitmap(wx.Bitmap(self.CreatePath4Resource('metrics.png')))
+        # libraryMenu.AppendItem(item)
 
         # add 'library' menu to the menubar
         menuBar.Append(libraryMenu, "&Library")

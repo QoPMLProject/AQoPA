@@ -18,14 +18,15 @@ class PrintResultsHook(Hook):
     def execute(self, context, **kwargs):
         """ """
 
-        self.output_file.write('-'*20)
+        self.output_file.write('-'*80)
         self.output_file.write('\n')
-        self.output_file.write('Module\tEnergy Analysis (consumption in J and Ah )')
+        self.output_file.write('Module\tEnergy Analysis (consumption in J and Ah)')
         self.output_file.write('\n')
         self.output_file.write('Version\t%s\n' % self.simulator.context.version.name)
         self.output_file.write('\n')
 
         voltage = 3.0
+        self.module.set_voltage(voltage)
 
         consumptions = self.module.get_hosts_consumptions(self.simulator, context.hosts, voltage)
         for h in context.hosts:

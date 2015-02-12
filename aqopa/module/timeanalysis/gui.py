@@ -43,10 +43,12 @@ class SingleVersionPanel(wx.Panel):
         #################
         
         versionBox = wx.StaticBox(self, label="Version")
+        versionsLabel = wx.StaticText(self, label="Choose Version To See\nAnalysis Results:")
         self.versionsList = wx.ComboBox(self, style=wx.TE_READONLY)
         self.versionsList.Bind(wx.EVT_COMBOBOX, self.OnVersionChanged)
-        
-        versionBoxSizer = wx.StaticBoxSizer(versionBox, wx.VERTICAL)
+        versionBoxSizer = wx.StaticBoxSizer(versionBox, wx.HORIZONTAL)
+        versionBoxSizer.Add(versionsLabel, 0, wx.ALL | wx.ALIGN_CENTER, 5)
+        versionBoxSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
         versionBoxSizer.Add(self.versionsList, 1, wx.ALL | wx.ALIGN_CENTER, 5)
 
         #################
@@ -74,7 +76,7 @@ class SingleVersionPanel(wx.Panel):
         timesHBoxSizer.Add(operationBoxSizer, 0, wx.ALL | wx.EXPAND)
         timesHBoxSizer.Add(hostsBoxSizer, 1, wx.ALL | wx.EXPAND)
         
-        self.showTimeBtn = wx.Button(self, label="Show time")
+        self.showTimeBtn = wx.Button(self, label="Show")
         self.showTimeBtn.Bind(wx.EVT_BUTTON, self.OnShowTimeButtonClicked)
 
         timesBoxSizer.Add(timesHBoxSizer, 0, wx.ALL | wx.EXPAND)
@@ -1540,17 +1542,6 @@ class DistributedSystemOptimizationPanel(wx.ScrolledWindow):
         self.statusText.Hide()
         self.dotsText.Hide()
         self.repetitionText.Hide()
-
-        # self.maximumBox.Hide()
-        # self.versionsLabel.Hide()
-        # self.timeLabel.Hide()
-        # self.hostsNumberLabel.Hide()
-        # self.maximumRepetitionText.Hide()
-        # self.maximumRepetitionText.SetLabel("")
-        # self.maximumTimeText.Hide()
-        # self.maximumTimeText.SetLabel("")
-        # self.maximumVersionText.Hide()
-        # self.maximumVersionText.SetLabel("")
 
         # clear versions combocheckbox
         self.tcp.ClearChoices()

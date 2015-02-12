@@ -8,8 +8,10 @@ functions
     fun is_list_empty(list);
 
     % Messages types
+    fun start_auth_msg();
     fun nodes_msg();
     fun params_msg();
+    fun auth_request();
     fun start_sensing_msg();
     fun start_collecting_msg();
     fun data_collected_msg();
@@ -61,7 +63,7 @@ equations
 }
 channels
 {
-    channel ch_WSN(0)[wsn];
+    channel ch_WSN(*)[wsn];
     channel ch_MGNT(*)[mgnt];
     channel ch_TIMER(*)[timer];
 }
@@ -77,29 +79,47 @@ hosts
       process MainUpdated(*)
       {
 	  wait_time_sync()[UPDATED];
-
+	  
+	  subprocess StartAuthProcess(*) {
+	    in(ch_MGNT: PK_S_MSG: |*, *, start_auth_msg()|);
+	    
+	    PK_S_MSG = PK_S_MSG[3];
+	    ID_S = PK_S_MSG[0];
+	    PK_S = PK_S_MSG[1];
+	  
+	    DH_KEY = dh_key(PK_S, MY_SK);
+	    REQ = (id(), nonce());
+	    REQ = s_enc(REQ, DH_KEY)[AES-CTR,128];
+	    
+	    REQ_MSG = (id(), ID_S, auth_request(), REQ);
+	    out(ch_WSN: REQ_MSG);
+	  }
+	  
 	  in(ch_WSN: PARAMS_MSG: |*, id(), params_msg()|);
-	  PARAMS = PARAMS_MSG[3];
+	  PARAMS_MSG = PARAMS_MSG[3];
 	  
 	  subprocess DeauthParams(*) {
 	    ecies_kdf()[160];
-	    PARAMS = ecies_dec(PARAMS, MY_SK)[AES,160];
-	  }
-	  
-	  subprocess DecParams(*) {
-	    PARAMS = s_dec(PARAMS, KEY)[AES-CTR,128];
-	    PARAMS = PARAMS[0];
+	    PARAMS_MSG = ecies_dec(PARAMS_MSG, MY_SK)[AES,160];
+	    
+	    nAD = PARAMS_MSG[1];
+	    PARAMS = PARAMS_MSG[3];
+	    KEY = PARAMS_MSG[4];
 	  }
 	  
 	  in(ch_TIMER: START_MSG: |*, *, start_sensing_msg()|);
 
 	  DATA = collected_data()[UPDATED];
 	  save_collected_data(DATA)[UPDATED];
-	  
+	 
 	  subprocess EncCollectedData(*) {
-	    DATA = (DATA, nonce());
+	    DATA = (DATA);
 	    DATA = s_enc(DATA, KEY)[AES-CTR,128];
-	    save_collected_data(DATA)[UPDATED];
+	  }
+	  
+	  subprocess EncAuthCollectedData(*) {
+	    DATA = (nAD, DATA);
+	    DATA = s_enc(DATA, KEY)[AES-CTR,128];
 	  }
 	  
 	  COLLECTED_NOTIFICATION_MSG = (id(), broadcast(), data_collected_msg());
@@ -130,23 +150,35 @@ hosts
 	TMP_NODES_LIST = NODES_LIST;
 	TMP_PKS_LIST = PKS_LIST;
 	while (is_list_empty(TMP_NODES_LIST) != true) {
-	  NODE_ID = get_from_list(TMP_NODES_LIST);
-	  TMP_NODES_LIST = pop_list(TMP_NODES_LIST);
-	  
-	  NODE_PK = get_from_list(TMP_PKS_LIST);
-	  TMP_PKS_LIST = pop_list(TMP_PKS_LIST);
-	  
+	
 	  PARAMS = generate_params();
-	  
-	  subprocess EncParams(*) {
-	    PARAMS = (PARAMS, nonce());
-	    PARAMS = s_enc(PARAMS, KEY)[AES-CTR,128];
-	  }
-	  
-	  subprocess AuthParams(*) {
+	
+	  % Wait for request from sensor which will start protocol
+	  % Node ID will be taken from request
+	  subprocess HandleAuthRequest(*) {
+	    in(ch_WSN: S_REQ: |*, id(), auth_request()|);
+	    NODE_ID = S_REQ[0];
+	    NODE_PK = pk(sk(NODE_ID));
+	    S_REQ = S_REQ[3];
+	    
+	    DH_KEY = dh_key(NODE_PK, MY_SK);
+	    S_REQ = s_dec(S_REQ, DH_KEY)[AES-CTR,128];
+	    
+	    nI = S_REQ[0];
+	    nAD = nonce();
+	    
+	    K_IS = nonce();
+	    S_RESP = (nI, nAD, id(), PARAMS, K_IS);
 	    ecies_kdf_mac()[160];
-	    PARAMS = ecies_enc(PARAMS, NODE_PK)[AES,160];
+	    PARAMS = ecies_enc(S_RESP, NODE_PK)[AES,160];
 	  }
+	
+	  subprocess GetNodeId(*) {
+	    NODE_ID = get_from_list(TMP_NODES_LIST);
+	  }
+	  
+	  TMP_NODES_LIST = pop_list(TMP_NODES_LIST);
+	  TMP_PKS_LIST = pop_list(TMP_PKS_LIST);
 	  
 	  PARAMS_MSG = (id(), NODE_ID, params_msg(), PARAMS);
 	  out(ch_WSN: PARAMS_MSG);
@@ -163,14 +195,17 @@ hosts
 	  
 	  in(ch_WSN: DATA_MSG: |*, id(), data_msg()|);
 	  DATA = DATA_MSG[3];
-	  save_collected_data(DATA)[UPDATED];
 
 	  subprocess DecCollectedData(*) {
 	    DATA = s_dec(DATA, KEY)[AES-CTR,128];
 	    DATA = DATA[0];
-	    save_collected_data(DATA)[UPDATED];
 	  }
 	  
+	  subprocess DecAuthCollectedData(*) {
+	    DATA = s_dec(DATA, K_IS)[AES-CTR,128];
+	    DATA = DATA[1];
+	  }
+	  save_collected_data(DATA)[UPDATED];
 	}
       }
     }
@@ -261,6 +296,12 @@ hosts
 
 	    % Wait until time synchronization process is finished
             wait_time_sync()[UPDATED];
+	    
+	    % Send Sink info to Sensors
+	    subprocess StartAuthProcess(*) {
+	      START_AUTH_MSG = (id(), any(), start_auth_msg(), (id(Sink.0), pk(sk(id(Sink.0)))));
+	      out(ch_MGNT: START_AUTH_MSG);
+	    }
             
             subprocess Wait_NoAuth(*) {
 	      % Wait until all parameters are sent
@@ -377,6 +418,12 @@ hosts
 
 	    % Wait until time synchronization process is finished
             wait_time_sync()[UPDATED];
+	    
+	    % Send Sink info to Sensors
+	    subprocess StartAuthProcess(*) {
+	      START_AUTH_MSG = (id(), any(), start_auth_msg(), (id(Sink.1), pk(sk(id(Sink.1)))));
+	      out(ch_MGNT: START_AUTH_MSG);
+	    }
             
             subprocess Wait_NoAuth(*) {
 	      % Wait until all parameters are sent

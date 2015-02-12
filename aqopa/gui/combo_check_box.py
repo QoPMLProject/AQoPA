@@ -109,7 +109,7 @@ class ComboCheckBox(wx.combo.ComboPopup):
         return wx.combo.ComboPopup.GetAdjustedSize(self, minWidth, 100, maxHeight)
 
 """
-@brief  Simple testing, should be removed or commented
+@brief  Simple testing (example usage), should be removed or commented
 """
 
 """
