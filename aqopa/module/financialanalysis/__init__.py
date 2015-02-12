@@ -91,20 +91,26 @@ class Module(module.Module):
     def get_min_cost(self, simulator, hosts):
         host = hosts[0]
         min_cost = self.consumption_costs[simulator][hosts[0]]
-        for h in hosts:
-            if self.consumption_costs[simulator][h] < min_cost:
-                min_cost = self.consumption_costs[simulator][h]
-                host = h
-        return min_cost[0], host
+        if len(min_cost) > 0 :
+            for h in hosts:
+                if self.consumption_costs[simulator][h] < min_cost:
+                    min_cost = self.consumption_costs[simulator][h]
+                    host = h
+            return min_cost[0], host
+        else :
+            return 0, host
 
     def get_max_cost(self, simulator, hosts):
         host = hosts[0]
         max_cost = self.consumption_costs[simulator][hosts[0]]
-        for h in hosts:
-            if self.consumption_costs[simulator][h] > max_cost:
-                max_cost = self.consumption_costs[simulator][h]
-                host = h
-        return max_cost[0], host
+        if len(max_cost) > 0 :
+            for h in hosts:
+                if self.consumption_costs[simulator][h] > max_cost:
+                    max_cost = self.consumption_costs[simulator][h]
+                    host = h
+            return max_cost[0], host
+        else:
+            return 0, host
 
     def get_avg_cost(self, simulator, hosts):
         cost_sum = 0.0
