@@ -46,8 +46,8 @@ class Module(module.Module):
         self._install(simulator)
         return simulator
 
-    def __convert_to_joules(self, milijoules):
-        return milijoules / 1000.0
+    def __convert_to_joules(self, millijoules):
+        return millijoules / 1000.0
 
     def __convert_to_kWh(self, joules):
         return joules / 3600000.0
@@ -59,7 +59,7 @@ class Module(module.Module):
 
     def calculate_cost_for_host(self, simulator, host, cost_per_kWh):
         all_consumptions = self.get_all_hosts_consumption(simulator, simulator.context.hosts)
-        joules = self.__convert_to_joules(all_consumptions[host])
+        joules = all_consumptions[host]['energy']
         cost_for_host = self.calculate_cost(joules, cost_per_kWh)
         return cost_for_host
 

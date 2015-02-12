@@ -52,7 +52,7 @@ class Module(module.Module):
 
     def calculate_emission_for_host(self, simulator, host, pounds_of_co2_per_kWh):
         all_consumptions = self.get_all_hosts_consumption(simulator)
-        joules = self.__convert_to_joules(all_consumptions[host])
+        joules = all_consumptions[host]['energy']
         pounds_for_host = self.calculate_emission(joules, pounds_of_co2_per_kWh)
         return pounds_for_host
 
