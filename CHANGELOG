@@ -4,6 +4,9 @@
 
 Next release:
 
+v0.9.1 (13-02-2015)
+- Fixed metrics searching for nested expressions with variables.
+
 v0.9 (12.02.2015)
 - Financial Analysis Module (console and gui version) added.
 - Carbon Dioxide Emission Analysis Module (console and gui version) added.
