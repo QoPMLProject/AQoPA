@@ -232,8 +232,12 @@ class Manager():
                     nested_element_index = int(mparts[1])-1
 
                     nested_expression = expression.arguments[element_index]
-                    if not isinstance(expression, CallFunctionExpression) and \
-                        not isinstance(expression, CallFunctionInstruction):
+
+                    if isinstance(nested_expression, IdentifierExpression):
+                        nested_expression = host.get_variable(nested_expression.identifier)
+
+                    if not isinstance(nested_expression, CallFunctionExpression) and \
+                        not isinstance(nested_expression, CallFunctionInstruction):
                         raise RuntimeException('Cannot get nested expression size: Not a function call.')
 
                     size = self.get_expression_size(nested_expression.arguments[nested_element_index], context, host)
