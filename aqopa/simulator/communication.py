@@ -324,6 +324,13 @@ class Channel():
         if self.is_synchronous():
             for i in self._buffers:
                 self._buffers[i] = []
+        elif self._buffer_size > 0:  # Channel has a limit in buffer
+            for i in self._buffers:
+                if len(self._buffers[i]) > self._buffer_size:
+                    self._dropped_messages_cnt += len(self._buffers[i]) - self._buffer_size
+                    for j in range(self._buffer_size, len(self._buffers[i])):
+                        del self._buffers[i][j]
+
 
 class Manager():
     """ Channels manager class """
