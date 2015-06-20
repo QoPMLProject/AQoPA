@@ -4,6 +4,9 @@
 
 Next release:
 
+v0.9.2 (20-06-2015)
+- Fixed limited buffer channels error.
+
 v0.9.1 (13-02-2015)
 - Fixed metrics searching for nested expressions with variables.
 
