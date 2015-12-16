@@ -227,6 +227,7 @@ class Channel():
 
         # If it does not exist add
         if not existing_request:
+            # print 'IN', unicode(self.name), unicode(request.receiver), unicode(request.instruction)
             self._waiting_requests.append(request)
         else:
             # If request exists, check if it is waiting on IN instruction now
@@ -280,6 +281,8 @@ class Channel():
         if not self.is_connected_with_host(sender_host):
             raise RuntimeException("Channel '%s' is not connected with host '%s'." % (self.name, sender_host.name))
 
+        # print 'OUT', unicode(self.name), unicode(sender_host), unicode(message.expression)
+
         # Put sent message in the buffers of receivers
         # Receivers are retrieved from the requests present in the channel
         # When the channel is synchronous the buffers are cleaned after the binding try
@@ -330,6 +333,13 @@ class Channel():
                     self._dropped_messages_cnt += len(self._buffers[i]) - self._buffer_size
                     for j in range(self._buffer_size, len(self._buffers[i])):
                         del self._buffers[i][j]
+
+    def add_left_messages_to_dropped(self):
+        """
+        If there are any undelivered messages, add their number to the number of dropped messages.
+        """
+        for i in self._buffers:
+            self._dropped_messages_cnt += len(self._buffers[i])
 
 
 class Manager():

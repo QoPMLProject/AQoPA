@@ -370,7 +370,7 @@ class InstructionsContext:
         """
         Returns the process that current list is in.
         """
-        return self._get_current_list().process
+        return self._get_current_list().process if self._get_current_list() is not None else None
         
     def add_instructions_list(self, instructions_list, process=None):
         """
@@ -385,6 +385,38 @@ class InstructionsContext:
         """
         # Go to next instruction in current list
         self._get_current_list().goto_next_instruction()
+
+        # Check if process has follower and if it should be started now
+        current_process = self.get_process_of_current_list()
+        if current_process is not None and current_process.follower is not None:
+            # We will move to next instruction only if the stack has been popped at least once and no follower was added
+            move_to_next_instruction = False
+            while len(self.stack) > 0 and self._get_current_list().finished():
+                self.stack.pop()
+                # Stack is popped so we set move flag to True, because in upper instructions list
+                # the pointer should be moved
+                move_to_next_instruction = True
+                new_current_process = self.get_process_of_current_list()
+                # Compare processes between and after stack pop
+                # If they are different it means that process has been finished
+                if new_current_process != current_process:
+                    # Add follower's instructions to the context
+                    instructions_list = current_process.follower.instructions_list
+                    # If follower has at least one instruction
+                    if len(instructions_list) > 0:
+                        self.add_instructions_list(instructions_list, current_process.follower)
+                        # When new instructions are added to the context it should not be moved to the next instruction
+                        # because we would omit the first new instruction
+                        move_to_next_instruction = False
+                        break
+            if not self.finished() and move_to_next_instruction:
+                # If context is still not finished and new current list is not LOOP
+                # Go to next instruction in new current list
+                if not isinstance(self._get_current_list().get_current_instruction(), WhileInstruction):
+                    self._get_current_list().goto_next_instruction()
+
+        # Now we handle the situation when current process has no follower
+
         # While current list is finished but context is not finished
         while not self.finished() and self._get_current_list().finished():
             # Remove current list
@@ -597,16 +629,16 @@ class ProcessInstructionExecutor(InstructionExecutor):
     def execute_instruction(self, context, **kwargs):
         """ Overriden """
         process_instruction = context.get_current_instruction()
-        current_process = context.get_current_host().get_current_process()
         instructions_list = process_instruction.instructions_list
 
         # If process has at least one instruction
         if len(instructions_list) > 0:
-            context.get_current_host().get_current_instructions_context().add_instructions_list(instructions_list, current_process)
-        else: 
+            context.get_current_host().get_current_instructions_context().add_instructions_list(instructions_list,
+                                                                                                process_instruction)
+        else:
             # Go to next instruction if proces has no instructions
             context.get_current_host().get_current_instructions_context().goto_next_instruction()
-            
+
         context.get_current_host().mark_changed()
 
         return ExecutionResult(custom_index_management=True)

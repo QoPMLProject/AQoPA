@@ -73,7 +73,7 @@ class Simulator():
                     for ch in self.context.channels_manager.channels:
                         if ch.get_dropped_messages_nb() > 0:
                             raise InfiniteLoopException()
-                        
+
                     for h in self.context.hosts:
                         if not h.finished():
                             h.finish_failed(u'Infinite loop occured on instruction: %s' % 
@@ -148,7 +148,14 @@ class Simulator():
         Simulation can end with success or error (eg. infinite loop occured).
         """
         return self.is_ready_to_run() and (self.context.all_hosts_finished() or self.infinite_loop_occured())
-    
+
+    def count_dropped_messages(self):
+        """
+        Counts left (undelivered) messages as dropped on each channel
+        """
+        for ch in self.context.channels_manager.channels:
+            ch.add_left_messages_to_dropped()
+
     def run(self):
         """
         Runs whole simulation process.
@@ -165,5 +172,6 @@ class Simulator():
             except InfiniteLoopException:
                 self._infinite_loop_error = True
 
+        self.count_dropped_messages()
         self._execute_hook(HOOK_TYPE_SIMULATION_FINISHED)
         
