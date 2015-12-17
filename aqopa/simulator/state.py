@@ -211,7 +211,7 @@ class Host():
         # Touches equal to zero means that new epoch has been started.
         # The counter is started when the forst context is executed.
         if self._touches == 0:
-            if self._scheduler.get_current_context_index() == 0:
+            if self._scheduler.is_current_context_first():
                 self._touches += 1
         else:
             self._touches += 1
@@ -220,7 +220,7 @@ class Host():
         """
         Returns True when host tried to execute each instructions context in current epoch.
         """
-        return self._touches > self._scheduler.get_contexts_number()
+        return self._touches > self._scheduler.get_unfinished_contexts_number()
 
     def mark_changed(self):
         """ Marks host changed. Means that host have changes in last state. """

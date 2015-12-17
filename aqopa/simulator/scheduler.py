@@ -48,9 +48,15 @@ class Scheduler():
         """
         raise NotImplementedError()
 
-    def get_current_context_index(self):
+    def get_unfinished_contexts_number(self):
         """
-        Returns the index of current context (zero-based)
+        Returns the number of contexts in scheduler that are not yet finished.
+        """
+        raise NotImplementedError()
+
+    def is_current_context_first(self):
+        """
+        Returns True if the current context is the first unfinished.
         """
         raise NotImplementedError()
 
@@ -100,11 +106,17 @@ class FifoScheduler(Scheduler):
         """
         return 1
 
-    def get_current_context_index(self):
+    def get_unfinished_contexts_number(self):
+        """
+        Returns the number of contexts in scheduler that are not yet finished.
+        """
+        return 1 if not self.context.finished() else 0
+
+    def is_current_context_first(self):
         """
         Returns the index of current context (zero-based)
         """
-        return 0
+        return True
         
 
 class RoundRobinScheduler(Scheduler):
@@ -183,11 +195,27 @@ class RoundRobinScheduler(Scheduler):
         """
         return len(self.contexts)
 
-    def get_current_context_index(self):
+    def get_unfinished_contexts_number(self):
+        """
+        Returns the number of contexts in scheduler that are not yet finished.
+        """
+        nb = 0
+        for c in self.contexts:
+            if not c.finished():
+                nb += 1
+        return nb
+
+    def is_current_context_first(self):
         """
         Returns the index of current context (zero-based)
         """
-        return self._current_context_index
+        indexes = []
+        i = 0
+        for c in self.contexts:
+            if not c.finished():
+                indexes.append(i)
+            i += 1
+        return self._current_context_index == min(indexes)
         
         
 SCHEDULE_ALGORITHM_ROUND_ROBIN = 'rr'

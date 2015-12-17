@@ -4,6 +4,10 @@
 
 Next release:
 
+v0.9.4 (17-12-2015)
+- Fixed epoch end bug.
+- Fixed communication quality bug.
+
 v0.9.3 (16-12-2015)
 - Fixed execution of follower process error.
 
