@@ -281,7 +281,7 @@ class Channel():
         if not self.is_connected_with_host(sender_host):
             raise RuntimeException("Channel '%s' is not connected with host '%s'." % (self.name, sender_host.name))
 
-        # print 'OUT', unicode(self.name), unicode(sender_host), unicode(message.expression)
+        #print 'OUT', unicode(self.name), unicode(sender_host), unicode(message.expression)
 
         # Put sent message in the buffers of receivers
         # Receivers are retrieved from the requests present in the channel
@@ -535,7 +535,7 @@ class Router():
         if 'default_q' in defaults:
             default_quality = defaults['default_q']
         sender_topology = medium['topology'][sender]
-        sender_qualities = sender_topology['q'] if 'q' in sender_topology else {}
+        sender_qualities = sender_topology['parameters']['q'] if 'q' in sender_topology['parameters'] else {}
         qualities = {}
         for h in sender_topology['hosts']:
             if h is None and exclude_broadcast:
@@ -649,8 +649,7 @@ class Router():
                         hosts_path.insert(0, prev_host)
                         break
 
-#        Printer().print_routing(self.routing[topology_name])
-
+        # Printer().print_routing(self.routing[medium_name])
         if receiver not in distances:
             raise RuntimeException("The path between {0} and {1} undefined.".format(sender.name, receiver.name))
 
