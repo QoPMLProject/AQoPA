@@ -1,9 +1,10 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 
 from aqopa import module
 from .gui import ModuleGui
 from aqopa.simulator.state import HOOK_TYPE_SIMULATION_FINISHED
 from .console import PrintResultsHook
+
 
 class Module(module.Module):
     def __init__(self, energyanalysis_module):
@@ -79,20 +80,26 @@ class Module(module.Module):
     def get_min_emission(self, simulator, hosts):
         host = hosts[0]
         min_cost = self.carbon_dioxide_emissions[simulator][hosts[0]]
-        for h in hosts:
-            if self.carbon_dioxide_emissions[simulator][h] < min_cost:
-                min_cost = self.carbon_dioxide_emissions[simulator][h]
-                host = h
-        return min_cost[0], host
+        if len(min_cost) > 0:
+            for h in hosts:
+                if self.carbon_dioxide_emissions[simulator][h] < min_cost:
+                    min_cost = self.carbon_dioxide_emissions[simulator][h]
+                    host = h
+            return min_cost[0], host
+        else:
+            return 0, None
 
     def get_max_emission(self, simulator, hosts):
         host = hosts[0]
         max_cost = self.carbon_dioxide_emissions[simulator][hosts[0]]
-        for h in hosts:
-            if self.carbon_dioxide_emissions[simulator][h] > max_cost:
-                max_cost = self.carbon_dioxide_emissions[simulator][h]
-                host = h
-        return max_cost[0], host
+        if len(max_cost) > 0:
+            for h in hosts:
+                if self.carbon_dioxide_emissions[simulator][h] > max_cost:
+                    max_cost = self.carbon_dioxide_emissions[simulator][h]
+                    host = h
+            return max_cost[0], host
+        else :
+            return 0, None
 
     def get_avg_emission(self, simulator, hosts):
         cost_sum = 0.0
@@ -101,9 +108,9 @@ class Module(module.Module):
             for cost in self.carbon_dioxide_emissions[simulator][host]:
                 cost_sum += cost
                 i += 1
-        if i != 0 :
+        if i != 0:
             return cost_sum / i
-        else :
+        else:
             return 0
 
     def get_total_emission(self, simulator, hosts):

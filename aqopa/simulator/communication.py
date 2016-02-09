@@ -119,8 +119,10 @@ class ChannelMessageRequest():
         self.receiver.set_variable(self.instruction.variable_name, self.assigned_message.expression.clone())
 
         # Move instructions context to the next instruction
+        # print unicode(self.receiver.get_instructions_context_of_instruction(self.instruction).get_current_instruction())
         self.receiver.get_instructions_context_of_instruction(self.instruction)\
             .goto_next_instruction()
+        # print unicode(self.receiver.get_instructions_context_of_instruction(self.instruction))
         self.receiver.mark_changed()
 
 
@@ -281,7 +283,7 @@ class Channel():
         if not self.is_connected_with_host(sender_host):
             raise RuntimeException("Channel '%s' is not connected with host '%s'." % (self.name, sender_host.name))
 
-        #print 'OUT', unicode(self.name), unicode(sender_host), unicode(message.expression)
+        # print 'OUT', unicode(self.name), unicode(sender_host), unicode(message.expression)
 
         # Put sent message in the buffers of receivers
         # Receivers are retrieved from the requests present in the channel
@@ -314,6 +316,7 @@ class Channel():
             if request.ready_to_fulfill():
                 # Fulfill it
                 request.fulfill()
+                # print "Binded: ", unicode(request.instruction), unicode(request.receiver)
 
                 # If channel is synchronous, delete the request - a new one will be created
                 # when the intruction is executed again
@@ -604,6 +607,7 @@ class Router():
         out = []
         closest, closes_distance = find_closest_host(distances, out)
         while (closest is not None) and (closest != receiver):
+
             if closest in topology:
                 qualities = self.get_sender_links_qualities(medium_name, closest, exclude_broadcast=True)
                 for next_host in qualities:
@@ -637,7 +641,7 @@ class Router():
                         # Go one step earlier
                         current_host = prev_host
                         # Decrease current distance
-                        distance -= prev_quality
+                        distance = distances[prev_host]
                         if prev_host not in routing:
                             routing[prev_host] = {}
                         next_host = hosts_path[0]

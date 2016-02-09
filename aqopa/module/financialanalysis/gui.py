@@ -80,9 +80,9 @@ class SingleVersionPanel(wx.Panel):
         versionName = self.versionsList.GetValue()
         simulator = self.versionSimulator[versionName]
         selected_host = self._GetSelectedHost(simulator)
-        all_costs = self.module.calculate_all_costs(simulator, simulator.context.hosts, price)
 
         # get some financial info from module
+        all_costs = self.module.calculate_all_costs(simulator, simulator.context.hosts, price)
         mincost, minhost = self.module.get_min_cost(simulator, simulator.context.hosts)
         maxcost, maxhost = self.module.get_max_cost(simulator, simulator.context.hosts)
         total_cost = self.module.get_total_cost(simulator, simulator.context.hosts)
@@ -164,19 +164,11 @@ class SingleVersionPanel(wx.Panel):
         actualCostsBoxSizer.Add(sizer5, 0, wx.ALL | wx.EXPAND, 5)
 
         #########################################################################
-        # ESTIMATED COSTS
-        #########################################################################
-        # estimatedCostsBox = wx.StaticBox(cashPanel, label="Estimated Costs of CPU Power Consumption (7/24/365)")
-        # estimatedCostsBoxSizer = wx.StaticBoxSizer(estimatedCostsBox, wx.VERTICAL)
-
-        #########################################################################
         # MAIN LAYOUT
         #########################################################################
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(actualCostsBoxSizer, 1, wx.ALL | wx.EXPAND, 5)
-        #mainSizer.Add(wx.StaticText(self), 1, wx.ALL | wx.EXPAND, 5)
-        # mainSizer.Add(estimatedCostsBoxSizer, 0, wx.ALL | wx.EXPAND, 5)
 
         cashPanel.SetSizer(mainSizer)
         cashPanel.Layout()
