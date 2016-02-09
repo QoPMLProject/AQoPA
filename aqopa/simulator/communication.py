@@ -607,6 +607,7 @@ class Router():
         out = []
         closest, closes_distance = find_closest_host(distances, out)
         while (closest is not None) and (closest != receiver):
+
             if closest in topology:
                 qualities = self.get_sender_links_qualities(medium_name, closest, exclude_broadcast=True)
                 for next_host in qualities:
@@ -640,7 +641,7 @@ class Router():
                         # Go one step earlier
                         current_host = prev_host
                         # Decrease current distance
-                        distance -= prev_quality
+                        distance = distances[prev_host]
                         if prev_host not in routing:
                             routing[prev_host] = {}
                         next_host = hosts_path[0]
