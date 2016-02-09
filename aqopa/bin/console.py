@@ -14,6 +14,7 @@ from aqopa.model.parser import ModelParserException,\
 from aqopa.app import Builder, ConsoleInterpreter
 from aqopa.simulator import EnvironmentDefinitionException
 from aqopa.module import timeanalysis, energyanalysis, reputation, financialanalysis, greenanalysis, qopanalysis
+from aqopa.simulator.error import RuntimeException
 
 
 class ProgressThread(threading.Thread):
@@ -24,6 +25,7 @@ class ProgressThread(threading.Thread):
         self.interpreter = interpreter
         self.signs = '|/-\\'
         self.sign_no = 0
+        self.finished = False
         
     def get_progress(self):
         all_progress = 0.0
@@ -39,7 +41,7 @@ class ProgressThread(threading.Thread):
     def run(self):
         
         progress = self.get_progress()
-        while progress < 1 and not self.interpreter.is_finished():
+        while progress < 1 and not self.interpreter.is_finished() and not self.finished:
             self.print_progressbar(progress)
             time.sleep(0.2)
             progress = self.get_progress()
@@ -122,8 +124,14 @@ def run(qopml_model, qopml_metrics, qopml_configuration,
         if show_progressbar:
             progressbar_thread = ProgressThread(sys.stdout, interpreter)
             progressbar_thread.start()
-        
-        interpreter.run()
+
+        try:
+            interpreter.run()
+        except RuntimeException:
+            if show_progressbar:
+                progressbar_thread.finished = True
+            raise
+
 
     except EnvironmentDefinitionException, e:
         sys.stderr.write('Error on creating environment: %s\n' % e)
